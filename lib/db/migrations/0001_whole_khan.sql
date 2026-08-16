@@ -1,0 +1,2 @@
+ALTER TABLE "app_state" ADD COLUMN "singleton_key" text DEFAULT 'singleton' NOT NULL;--> statement-breakpoint
+ALTER TABLE "app_state" ADD CONSTRAINT "app_state_singleton_key_unique" UNIQUE("singleton_key");

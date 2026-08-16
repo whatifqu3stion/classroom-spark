@@ -6,6 +6,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
 import Home from '@/pages/home';
 import Present from '@/pages/present';
+import History from '@/pages/history';
 import { BoardworkProvider } from '@/store/boardwork-context';
 import {
   Route,
@@ -21,6 +22,9 @@ function Router() {
     <RoutedErrorBoundary>
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/activity/:id" component={Home} />
+        <Route path="/history" component={History} />
+        <Route path="/present/:id" component={Present} />
         <Route path="/present" component={Present} />
         <Route component={NotFound} />
       </Switch>

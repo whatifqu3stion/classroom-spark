@@ -10,6 +10,16 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: app-state
+    description: Application bootstrap and selection
+  - name: classes
+    description: Class profile operations
+  - name: instructional-context
+    description: Per-class instructional context operations
+  - name: chips
+    description: Class chip operations
+  - name: activities
+    description: Activity/history operations
 paths:
   /healthz:
     get:
@@ -24,7 +34,452 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /app-state:
+    get:
+      operationId: getAppState
+      tags: [app-state]
+      summary: Bootstrap application state
+      description: Returns all classes, instructional contexts, chips, activities, and the most recently used class id so the frontend can restore workspace state.
+      responses:
+        "200":
+          description: Application state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppState"
+
+  /classes:
+    get:
+      operationId: listClasses
+      tags: [classes]
+      summary: List classes
+      responses:
+        "200":
+          description: List of classes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClassProfile"
+    post:
+      operationId: createClass
+      tags: [classes]
+      summary: Create a class
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClassProfileInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassProfile"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /classes/{classId}:
+    patch:
+      operationId: updateClass
+      tags: [classes]
+      summary: Update a class
+      parameters:
+        - $ref: "#/components/parameters/ClassIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClassProfileUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassProfile"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteClass
+      tags: [classes]
+      summary: Delete a class
+      description: Atomically deletes the class and cascades instructional context, chips, and activities. If the deleted class was most recently used, selection is cleared/reassigned in a transaction.
+      parameters:
+        - $ref: "#/components/parameters/ClassIdParam"
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /classes/{classId}/select:
+    post:
+      operationId: selectClass
+      tags: [classes]
+      summary: Mark a class as most recently used
+      description: Records the class as the most recently used (active) class.
+      parameters:
+        - $ref: "#/components/parameters/ClassIdParam"
+      responses:
+        "200":
+          description: Selection applied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActiveSelection"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /classes/{classId}/instructional-context:
+    get:
+      operationId: getInstructionalContext
+      tags: [instructional-context]
+      summary: Get instructional context for a class
+      parameters:
+        - $ref: "#/components/parameters/ClassIdParam"
+      responses:
+        "200":
+          description: Instructional context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstructionalContext"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      operationId: updateInstructionalContext
+      tags: [instructional-context]
+      summary: Update instructional context for a class
+      description: Upserts the per-class instructional context.
+      parameters:
+        - $ref: "#/components/parameters/ClassIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InstructionalContextInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstructionalContext"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /classes/{classId}/chips:
+    post:
+      operationId: createChip
+      tags: [chips]
+      summary: Create a chip for a class
+      parameters:
+        - $ref: "#/components/parameters/ClassIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChipInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Chip"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /chips/{chipId}:
+    patch:
+      operationId: updateChip
+      tags: [chips]
+      summary: Update a chip
+      parameters:
+        - $ref: "#/components/parameters/ChipIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChipUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Chip"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteChip
+      tags: [chips]
+      summary: Delete a chip
+      parameters:
+        - $ref: "#/components/parameters/ChipIdParam"
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /activities:
+    get:
+      operationId: listActivities
+      tags: [activities]
+      summary: List activities
+      description: Lists activities, optionally filtered by class.
+      parameters:
+        - name: classId
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of activities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Activity"
+    post:
+      operationId: createActivity
+      tags: [activities]
+      summary: Create an activity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivityInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Activity"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /activities/{activityId}:
+    get:
+      operationId: getActivity
+      tags: [activities]
+      summary: Get an activity
+      parameters:
+        - $ref: "#/components/parameters/ActivityIdParam"
+      responses:
+        "200":
+          description: Activity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Activity"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      operationId: updateActivity
+      tags: [activities]
+      summary: Update an activity
+      description: Updates activity fields, including toggling favorite.
+      parameters:
+        - $ref: "#/components/parameters/ActivityIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivityUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Activity"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteActivity
+      tags: [activities]
+      summary: Delete an activity
+      parameters:
+        - $ref: "#/components/parameters/ActivityIdParam"
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /activities/{activityId}/duplicate:
+    post:
+      operationId: duplicateActivity
+      tags: [activities]
+      summary: Duplicate an activity
+      description: Copies an activity as a new editable record without mutating the original. Sets duplicatedFrom to the source activity id and clears favorite.
+      parameters:
+        - $ref: "#/components/parameters/ActivityIdParam"
+      responses:
+        "201":
+          description: Created copy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Activity"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /activities/{activityId}/favorite:
+    patch:
+      operationId: setActivityFavorite
+      tags: [activities]
+      summary: Set an activity's favorite flag
+      parameters:
+        - $ref: "#/components/parameters/ActivityIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FavoriteInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Activity"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
 components:
+  parameters:
+    ClassIdParam:
+      name: classId
+      in: path
+      required: true
+      schema:
+        type: string
+    ChipIdParam:
+      name: chipId
+      in: path
+      required: true
+      schema:
+        type: string
+    ActivityIdParam:
+      name: activityId
+      in: path
+      required: true
+      schema:
+        type: string
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +489,364 @@ components:
       required:
         - status
 
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    DeviceMode:
+      type: string
+      enum: [off, on]
+
+    Duration:
+      type: integer
+      enum: [5, 7, 10]
+
+    ClassProfile:
+      type: object
+      required:
+        - id
+        - name
+        - grade
+        - subject
+        - defaultDeviceMode
+        - defaultDuration
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        grade:
+          type: string
+        subject:
+          type: string
+        curriculumFramework:
+          type: ["string", "null"]
+        curriculumDetails:
+          type: ["string", "null"]
+        generalContext:
+          type: ["string", "null"]
+        arrivalRoutine:
+          type: ["string", "null"]
+        defaultDeviceMode:
+          $ref: "#/components/schemas/DeviceMode"
+        defaultDuration:
+          $ref: "#/components/schemas/Duration"
+        color:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ClassProfileInput:
+      type: object
+      required:
+        - name
+        - grade
+        - subject
+        - defaultDeviceMode
+        - defaultDuration
+      properties:
+        name:
+          type: string
+          minLength: 1
+        grade:
+          type: string
+        subject:
+          type: string
+        curriculumFramework:
+          type: ["string", "null"]
+        curriculumDetails:
+          type: ["string", "null"]
+        generalContext:
+          type: ["string", "null"]
+        arrivalRoutine:
+          type: ["string", "null"]
+        defaultDeviceMode:
+          $ref: "#/components/schemas/DeviceMode"
+        defaultDuration:
+          $ref: "#/components/schemas/Duration"
+        color:
+          type: ["string", "null"]
+
+    ClassProfileUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        grade:
+          type: string
+        subject:
+          type: string
+        curriculumFramework:
+          type: ["string", "null"]
+        curriculumDetails:
+          type: ["string", "null"]
+        generalContext:
+          type: ["string", "null"]
+        arrivalRoutine:
+          type: ["string", "null"]
+        defaultDeviceMode:
+          $ref: "#/components/schemas/DeviceMode"
+        defaultDuration:
+          $ref: "#/components/schemas/Duration"
+        color:
+          type: ["string", "null"]
+
+    InstructionalContext:
+      type: object
+      required:
+        - classId
+        - unitOrProject
+        - conceptsTopics
+        - skills
+        - standardsObjectives
+        - updatedAt
+      properties:
+        classId:
+          type: string
+        unitOrProject:
+          type: string
+        conceptsTopics:
+          type: string
+        skills:
+          type: string
+        standardsObjectives:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+
+    InstructionalContextInput:
+      type: object
+      properties:
+        unitOrProject:
+          type: string
+        conceptsTopics:
+          type: string
+        skills:
+          type: string
+        standardsObjectives:
+          type: string
+
+    Chip:
+      type: object
+      required:
+        - id
+        - classId
+        - label
+        - createdAt
+      properties:
+        id:
+          type: string
+        classId:
+          type: string
+        label:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ChipInput:
+      type: object
+      required:
+        - label
+      properties:
+        label:
+          type: string
+          minLength: 1
+
+    ChipUpdate:
+      type: object
+      required:
+        - label
+      properties:
+        label:
+          type: string
+          minLength: 1
+
+    Activity:
+      type: object
+      required:
+        - id
+        - classId
+        - title
+        - task
+        - prompts
+        - durationMinutes
+        - deviceMode
+        - favorite
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        classId:
+          type: string
+        eyebrow:
+          type: ["string", "null"]
+        title:
+          type: string
+        task:
+          type: string
+        prompts:
+          type: array
+          items:
+            type: string
+        durationMinutes:
+          $ref: "#/components/schemas/Duration"
+        deviceMode:
+          $ref: "#/components/schemas/DeviceMode"
+        arrivalInstructions:
+          type: ["string", "null"]
+        resourceUrl:
+          type: ["string", "null"]
+        sourceTopic:
+          type: ["string", "null"]
+        sourceGoal:
+          type: ["string", "null"]
+        sourceChipIds:
+          type: array
+          items:
+            type: string
+        style:
+          type: ["string", "null"]
+        favorite:
+          type: boolean
+        duplicatedFrom:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ActivityInput:
+      type: object
+      required:
+        - classId
+        - title
+        - task
+        - durationMinutes
+        - deviceMode
+      properties:
+        classId:
+          type: string
+        eyebrow:
+          type: ["string", "null"]
+        title:
+          type: string
+        task:
+          type: string
+        prompts:
+          type: array
+          items:
+            type: string
+        durationMinutes:
+          $ref: "#/components/schemas/Duration"
+        deviceMode:
+          $ref: "#/components/schemas/DeviceMode"
+        arrivalInstructions:
+          type: ["string", "null"]
+        resourceUrl:
+          type: ["string", "null"]
+        sourceTopic:
+          type: ["string", "null"]
+        sourceGoal:
+          type: ["string", "null"]
+        sourceChipIds:
+          type: array
+          items:
+            type: string
+        style:
+          type: ["string", "null"]
+        favorite:
+          type: boolean
+
+    ActivityUpdate:
+      type: object
+      properties:
+        eyebrow:
+          type: ["string", "null"]
+        title:
+          type: string
+        task:
+          type: string
+        prompts:
+          type: array
+          items:
+            type: string
+        durationMinutes:
+          $ref: "#/components/schemas/Duration"
+        deviceMode:
+          $ref: "#/components/schemas/DeviceMode"
+        arrivalInstructions:
+          type: ["string", "null"]
+        resourceUrl:
+          type: ["string", "null"]
+        sourceTopic:
+          type: ["string", "null"]
+        sourceGoal:
+          type: ["string", "null"]
+        sourceChipIds:
+          type: array
+          items:
+            type: string
+        style:
+          type: ["string", "null"]
+        favorite:
+          type: boolean
+
+    FavoriteInput:
+      type: object
+      required:
+        - favorite
+      properties:
+        favorite:
+          type: boolean
+
+    ActiveSelection:
+      type: object
+      required:
+        - activeClassId
+      properties:
+        activeClassId:
+          type: ["string", "null"]
+
+    AppState:
+      type: object
+      required:
+        - classes
+        - instructionalContexts
+        - chips
+        - activities
+        - activeClassId
+      properties:
+        classes:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClassProfile"
+        instructionalContexts:
+          type: array
+          items:
+            $ref: "#/components/schemas/InstructionalContext"
+        chips:
+          type: array
+          items:
+            $ref: "#/components/schemas/Chip"
+        activities:
+          type: array
+          items:
+            $ref: "#/components/schemas/Activity"
+        activeClassId:
+          type: ["string", "null"]

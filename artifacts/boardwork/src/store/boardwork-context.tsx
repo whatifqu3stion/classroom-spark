@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useMemo, ReactNode } from "react";
+import React, { createContext, useContext, useEffect, useState, useMemo, ReactNode } from "react";
+import { useGetAppState, AppState } from "@workspace/api-client-react";
+import { Loader2 } from "lucide-react";
 
 export type DeviceMode = "off" | "on";
 export type Duration = 5 | 7 | 10;
@@ -14,128 +16,73 @@ export interface ClassProfile {
   name: string;
   grade: string;
   subject: string;
-  courseContext?: string;
-  currentUnit?: string;
-  arrivalInstructions?: string;
+  curriculumFramework?: string | null;
+  curriculumDetails?: string | null;
+  generalContext?: string | null;
+  arrivalRoutine?: string | null;
   defaultDeviceMode: DeviceMode;
   defaultDuration: Duration;
+  color?: string | null;
+}
+
+export interface CurrentInstructionalContext {
+  classId: string;
+  unitOrProject: string;
+  conceptsTopics: string;
+  skills: string;
+  standardsObjectives: string;
 }
 
 export interface ActivityDraft {
-  id: string;
+  id?: string;
   classId: string;
-  eyebrow?: string;
+  eyebrow?: string | null;
   title: string;
   task: string;
   prompts: string[];
   durationMinutes: Duration;
   deviceMode: DeviceMode;
-  arrivalInstructions?: string;
-  resourceUrl?: string;
+  arrivalInstructions?: string | null;
+  resourceUrl?: string | null;
+  sourceTopic?: string | null;
+  sourceGoal?: string | null;
+  sourceChipIds?: string[];
+  style?: string | null;
+  favorite?: boolean;
 }
 
-interface BoardworkState {
-  classes: ClassProfile[];
-  chips: Chip[];
+interface BoardworkContextType {
+  appState: AppState | undefined;
+  isLoading: boolean;
   activeClassId: string | null;
-  activeDraft: ActivityDraft | null;
   selectedChipIds: string[];
-  
-  // Actions
-  addClass: (profile: Omit<ClassProfile, "id">) => void;
-  updateClass: (id: string, profile: Omit<ClassProfile, "id">) => void;
-  deleteClass: (id: string) => void;
-  setActiveClass: (id: string | null) => void;
-  
-  addChip: (classId: string, label: string) => void;
-  updateChip: (id: string, label: string) => void;
-  deleteChip: (id: string) => void;
   toggleChipSelection: (id: string) => void;
   clearChipSelection: () => void;
-  
-  generateActivity: (params: {
-    topic: string;
-    goal: string;
-    deviceMode: DeviceMode;
-    durationMinutes: Duration;
-    resourceUrl?: string;
-    surprise?: boolean;
-  }) => Promise<void>;
-  
-  startBlank: () => void;
-  updateDraft: (updates: Partial<ActivityDraft>) => void;
-  clearDraft: () => void;
 }
 
-const defaultSampleClassId = "sample-class-1";
-const sampleClass: ClassProfile = {
-  id: defaultSampleClassId,
-  name: "6th Grade Science",
-  grade: "Grade 6",
-  subject: "Science",
-  courseContext: "Students are learning core life science practices. Keep reading demands moderate.",
-  currentUnit: "Cells and transport",
-  arrivalInstructions: "Grab your notebook, take your seat, and begin silently.",
-  defaultDeviceMode: "off",
-  defaultDuration: 7,
-};
+const BoardworkContext = createContext<BoardworkContextType | undefined>(undefined);
 
-const sampleChips: Chip[] = [
-  { id: "chip-1", classId: defaultSampleClassId, label: "predict" },
-  { id: "chip-2", classId: defaultSampleClassId, label: "draw" },
-  { id: "chip-3", classId: defaultSampleClassId, label: "explain" },
-  { id: "chip-4", classId: defaultSampleClassId, label: "scientific reasoning" },
-];
-
-const BoardworkContext = createContext<BoardworkState | undefined>(undefined);
+const classNameCollator = new Intl.Collator(undefined, { sensitivity: "base", numeric: true });
 
 export function BoardworkProvider({ children }: { children: ReactNode }) {
-  const [classes, setClasses] = useState<ClassProfile[]>([sampleClass]);
-  const [chips, setChips] = useState<Chip[]>(sampleChips);
-  const [activeClassId, setActiveClassId] = useState<string | null>(defaultSampleClassId);
-  const [activeDraft, setActiveDraft] = useState<ActivityDraft | null>(null);
+  const { data: appState, isLoading, isError, refetch } = useGetAppState();
   const [selectedChipIds, setSelectedChipIds] = useState<string[]>([]);
 
-  const activeClass = classes.find((c) => c.id === activeClassId) || null;
+  const activeClassId = appState?.activeClassId || null;
 
-  const addClass = (profile: Omit<ClassProfile, "id">) => {
-    const id = `class-${Date.now()}`;
-    setClasses((prev) => [...prev, { ...profile, id }]);
-    setActiveClassId(id);
-  };
-
-  const updateClass = (id: string, profile: Omit<ClassProfile, "id">) => {
-    setClasses((prev) => prev.map((c) => (c.id === id ? { ...c, ...profile } : c)));
-  };
-
-  const deleteClass = (id: string) => {
-    setClasses((prev) => prev.filter((c) => c.id !== id));
-    setChips((prev) => prev.filter((c) => c.classId !== id));
-    if (activeClassId === id) {
-      setActiveClassId(null);
-      setActiveDraft(null);
-    }
-  };
-
-  const setActiveClass = (id: string | null) => {
-    setActiveClassId(id);
+  useEffect(() => {
     setSelectedChipIds([]);
-    setActiveDraft(null);
-  };
+  }, [activeClassId]);
 
-  const addChip = (classId: string, label: string) => {
-    const id = `chip-${Date.now()}`;
-    setChips((prev) => [...prev, { id, classId, label }]);
-  };
+  useEffect(() => {
+    const validChipIds = new Set(appState?.chips.map((chip) => chip.id) ?? []);
+    setSelectedChipIds((current) => current.filter((id) => validChipIds.has(id)));
+  }, [appState?.chips]);
 
-  const updateChip = (id: string, label: string) => {
-    setChips((prev) => prev.map((c) => (c.id === id ? { ...c, label } : c)));
-  };
-
-  const deleteChip = (id: string) => {
-    setChips((prev) => prev.filter((c) => c.id !== id));
-    setSelectedChipIds((prev) => prev.filter((chipId) => chipId !== id));
-  };
+  const sortedClasses = useMemo(() => {
+    if (!appState?.classes) return [];
+    return [...appState.classes].sort((a, b) => classNameCollator.compare(a.name, b.name));
+  }, [appState?.classes]);
 
   const toggleChipSelection = (id: string) => {
     setSelectedChipIds((prev) =>
@@ -147,110 +94,46 @@ export function BoardworkProvider({ children }: { children: ReactNode }) {
     setSelectedChipIds([]);
   };
 
-  const startBlank = () => {
-    if (!activeClassId || !activeClass) return;
-    setActiveDraft({
-      id: `draft-${Date.now()}`,
-      classId: activeClassId,
-      title: "",
-      task: "",
-      prompts: [],
-      durationMinutes: activeClass.defaultDuration,
-      deviceMode: activeClass.defaultDeviceMode,
-      arrivalInstructions: activeClass.arrivalInstructions,
-    });
-  };
-
-  const generateActivity = async (params: {
-    topic: string;
-    goal: string;
-    deviceMode: DeviceMode;
-    durationMinutes: Duration;
-    resourceUrl?: string;
-    surprise?: boolean;
-  }) => {
-    if (!activeClassId || !activeClass) return;
-
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    // Mock response logic
-    let mockDraft: ActivityDraft;
-
-    if (params.surprise) {
-      mockDraft = {
-        id: `draft-${Date.now()}`,
-        classId: activeClassId,
-        eyebrow: "SURPRISE ME",
-        title: "One sentence, two moods",
-        task: "Write one sentence describing an empty hallway. Rewrite the same event so it feels threatening without using the words 'scary', 'afraid', or 'danger'.",
-        prompts: [],
-        durationMinutes: params.durationMinutes,
-        deviceMode: params.deviceMode,
-        arrivalInstructions: activeClass.arrivalInstructions,
-      };
-    } else if (params.deviceMode === "on") {
-      mockDraft = {
-        id: `draft-${Date.now()}`,
-        classId: activeClassId,
-        eyebrow: "THINK & WRITE",
-        title: "Find the strongest evidence",
-        task: "Open the provided article. Read the first three paragraphs and choose one sentence that best supports the author's main claim.",
-        prompts: ["Copy or paraphrase the evidence.", "Explain your choice in one sentence."],
-        durationMinutes: params.durationMinutes,
-        deviceMode: params.deviceMode,
-        resourceUrl: params.resourceUrl,
-        arrivalInstructions: activeClass.arrivalInstructions,
-      };
-    } else {
-      // Device Off Default Mock
-      mockDraft = {
-        id: `draft-${Date.now()}`,
-        classId: activeClassId,
-        eyebrow: "DO NOW",
-        title: "Which cell is in trouble?",
-        task: "Draw two simple cells: one in very salty water and one in fresh water. Add arrows showing where you think water will move.",
-        prompts: ["What changes in each cell?", "Use 'osmosis' in one sentence."],
-        durationMinutes: params.durationMinutes,
-        deviceMode: params.deviceMode,
-        arrivalInstructions: activeClass.arrivalInstructions,
-      };
-    }
-
-    setActiveDraft(mockDraft);
-  };
-
-  const updateDraft = (updates: Partial<ActivityDraft>) => {
-    setActiveDraft((prev) => (prev ? { ...prev, ...updates } : null));
-  };
-
-  const clearDraft = () => {
-    setActiveDraft(null);
-  };
-
   const value = useMemo(
     () => ({
-      classes,
-      chips,
+      appState: appState ? { ...appState, classes: sortedClasses } : undefined,
+      isLoading,
       activeClassId,
-      activeDraft,
       selectedChipIds,
-      addClass,
-      updateClass,
-      deleteClass,
-      setActiveClass,
-      addChip,
-      updateChip,
-      deleteChip,
       toggleChipSelection,
       clearChipSelection,
-      generateActivity,
-      startBlank,
-      updateDraft,
-      clearDraft,
     }),
-    [classes, chips, activeClassId, activeDraft, selectedChipIds]
+    [appState, sortedClasses, isLoading, activeClassId, selectedChipIds]
   );
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[100dvh] flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="min-h-[100dvh] flex items-center justify-center bg-background px-6 text-center">
+        <div className="max-w-sm">
+          <h1 className="text-xl font-semibold text-foreground">Boardwork couldn&apos;t load</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Check the connection and try again. Your saved work is still in the database.
+          </p>
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="mt-6 inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            data-testid="button-retry-app-state"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return <BoardworkContext.Provider value={value}>{children}</BoardworkContext.Provider>;
 }

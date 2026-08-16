@@ -1,1 +1,2 @@
-- [Approved Stage 1 direction](approved-stage-one-direction.md) — Preserve Boardwork’s existing core workflow and restrained visual direction during later stages.
+- [Approved Boardwork direction](approved-stage-one-direction.md) — Preserve Boardwork’s core workflow, restrained visual direction, and three-layer class context model.
+- [Drizzle migration paths](drizzle-migration-paths.md) — Package-run Drizzle generation requires package-relative schema and output paths.

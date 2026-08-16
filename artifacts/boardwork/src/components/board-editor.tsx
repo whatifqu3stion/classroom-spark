@@ -1,14 +1,16 @@
 import React, { useRef, useEffect } from "react";
 import { ActivityDraft } from "@/store/boardwork-context";
 import { Button } from "./ui/button";
-import { Plus, X, Monitor, Clock, FileText } from "lucide-react";
+import { Plus, X, Monitor, Clock, FileText, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 
 interface BoardEditorProps {
   draft: ActivityDraft;
   onChange: (updates: Partial<ActivityDraft>) => void;
-  onPresent?: () => void;
+  onPresent?: (e: React.MouseEvent) => void;
+  saveStatus?: "idle" | "saving" | "saved" | "error";
+  isMeaningful?: boolean;
 }
 
 function EditableText({
@@ -58,7 +60,7 @@ function EditableText({
   );
 }
 
-export function BoardEditor({ draft, onChange, onPresent }: BoardEditorProps) {
+export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", isMeaningful = true }: BoardEditorProps) {
   const addPrompt = () => {
     if (draft.prompts.length < 3) {
       onChange({ prompts: [...draft.prompts, ""] });
@@ -77,18 +79,50 @@ export function BoardEditor({ draft, onChange, onPresent }: BoardEditorProps) {
     onChange({ prompts: newPrompts });
   };
 
+  const disablePresent = !draft.id && !isMeaningful;
+
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background rounded-xl border shadow-sm">
       <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
-        <div className="text-sm font-medium text-foreground flex items-center gap-2">
-          <FileText className="w-4 h-4 text-muted-foreground" />
-          Board Preview
+        <div className="text-sm font-medium text-foreground flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <FileText className="w-4 h-4 text-muted-foreground" />
+            Board Preview
+          </div>
+          <div className="h-4 w-px bg-border mx-1" />
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground min-w-[80px]" data-testid="text-save-status">
+            {saveStatus === "saving" && (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Saving...
+              </>
+            )}
+            {saveStatus === "saved" && (
+              <>
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                Saved
+              </>
+            )}
+            {saveStatus === "error" && (
+              <>
+                <AlertCircle className="w-3 h-3 text-destructive" />
+                Save failed
+              </>
+            )}
+          </div>
         </div>
         <div className="flex gap-2">
-          <Link href="/present" onClick={onPresent} className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring gap-1.5 cursor-pointer" data-testid="button-present">
-  <Monitor className="w-4 h-4" />
-  Present Screen
-</Link>
+          {disablePresent ? (
+            <span className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md bg-muted px-3 text-sm font-medium text-muted-foreground gap-1.5 cursor-not-allowed opacity-50" data-testid="button-present-disabled">
+              <Monitor className="w-4 h-4" />
+              Present Screen
+            </span>
+          ) : (
+            <Link href={`/present/${draft.id || ''}`} onClick={onPresent} className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring gap-1.5 cursor-pointer" data-testid="button-present">
+              <Monitor className="w-4 h-4" />
+              Present Screen
+            </Link>
+          )}
         </div>
       </div>
 

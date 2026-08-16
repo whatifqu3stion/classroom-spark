@@ -1,0 +1,194 @@
+Proceed to Stage 2: Persistence.
+
+Before coding, read "replit.md" and the relevant "/docs" files, especially "TECHNICAL.md", "PRODUCT.md", and "BUILD_STAGES.md".
+
+Goal
+
+Make the approved Stage 1 experience durable.
+
+Preserve the existing UI and workflows. Do not connect real AI or implement PNG export yet.
+
+Use:
+
+- Replit PostgreSQL
+- Drizzle ORM
+- checked-in migrations
+
+Replace local/mock storage with database-backed persistence where appropriate.
+
+1. Persist Class Profiles
+
+Persist the existing Class Profile data:
+
+- class name
+- grade / age level
+- subject
+- curriculum / framework
+- curriculum details
+- general class context
+- arrival routine
+- default Device Off / Device On
+- default duration
+- class color
+
+Preserve:
+
+- alphabetical class sorting;
+- class color dots;
+- the existing create/edit experience;
+- return to the most recently used class when practical.
+
+2. Persist Current Instructional Context
+
+Persist the separate Current Instructional Context for each class.
+
+This is periodically changing information such as:
+
+- current unit/project
+- concepts/topics
+- current skills
+- standards/objectives currently emphasized
+
+Keep this separate from the permanent Class Profile and editable from the class workspace.
+
+Do not build curriculum mapping, standards lookup, or unit-planning features.
+
+3. Persist Focus chips
+
+Persist reusable Focus chips per class.
+
+Support the existing:
+
+- create
+- edit
+- delete
+- multi-select
+
+behavior.
+
+Chips must remain associated with the correct class.
+
+4. Persist activities
+
+Persist the existing structured activity data.
+
+For Generate / Surprise Me, automatically save the resulting activity.
+
+For Start Blank, create/save the activity when the teacher first enters meaningful content.
+
+Persist subsequent teacher edits automatically using a short sensible debounce.
+
+A teacher must be able to edit an activity, refresh the page, and find the edited version intact.
+
+Do not store presentation content as arbitrary HTML.
+
+5. Add lightweight History
+
+Implement the History experience described in the product specification.
+
+Keep it simple and consistent with the existing visual system.
+
+Support:
+
+- Open
+- Present
+- Duplicate / Remix
+- Favorite
+- Delete
+
+Duplicate / Remix should create a new editable copy. It should not modify the original and should not call AI yet.
+
+Do not turn History into a dashboard or analytics feature.
+
+6. Class deletion
+
+Deleting a class should require confirmation.
+
+For this single-user MVP, confirmed class deletion should also remove its associated:
+
+- Current Instructional Context
+- Focus chips
+- activities
+
+Use appropriate database relationships/transactions so this cannot leave broken orphan records.
+
+Make the consequence clear in the confirmation message.
+
+7. Preserve Start Blank
+
+Start Blank must continue to work without AI.
+
+It should now benefit from persistence like other activities once the teacher begins entering content.
+
+8. Keep generation mocked
+
+Continue using the existing Stage 1 mocked generation.
+
+Do not connect an AI provider yet.
+
+Stage 2 is specifically validating that Boardwork correctly models and persists:
+
+Class Profile + Current Instructional Context + Today's Boardwork Context + Activities
+
+before real generation is introduced.
+
+9. Keep the architecture single-user
+
+Do not add:
+
+- user accounts
+- teacher profiles
+- organizations
+- invitations
+- roles/permissions
+- multi-user ownership
+
+Follow the existing access approach in "replit.md".
+
+Do not create speculative multi-user infrastructure.
+
+10. Avoid visual regressions
+
+Do not redesign:
+
+- class setup
+- generator
+- presentation
+- Start Blank
+- navigation
+- typography/color system
+
+Small persistence states such as Saving… / Saved are fine if subtle.
+
+Acceptance check
+
+Before stopping, verify:
+
+- Create/edit/delete classes persists correctly.
+- Multiple classes remain alphabetically sorted after refresh.
+- Class colors persist.
+- Most recently used class is restored.
+- Current Instructional Context persists per class.
+- Focus chips persist per class.
+- Generated/mock activities persist automatically.
+- Start Blank persists after the teacher begins entering content.
+- Activity edits survive refresh.
+- History can Open, Present, Duplicate/Remix, Favorite, and Delete.
+- Class deletion correctly handles associated data.
+- Generator, Start Blank, presentation, and mobile teacher UI still work without visual regressions.
+
+Stop condition
+
+When Stage 2 is complete, stop.
+
+Do not connect real AI and do not implement PNG export.
+
+Report:
+
+1. what is now persistent;
+2. the database structure/migrations created;
+3. any UI changes required for persistence;
+4. acceptance checks that pass or fail;
+5. anything that should be resolved before Stage 3.
+
+Wait for approval before proceeding.

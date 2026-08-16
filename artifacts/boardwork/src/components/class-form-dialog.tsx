@@ -1,164 +1,406 @@
-import { ClassProfile, Chip, ActivityDraft } from "@/store/boardwork-context";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "./ui/dialog";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { Button } from "./ui/button";
-import { Textarea } from "./ui/textarea";
-import { useState, useEffect } from "react";
-import { Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ChevronDown, Trash2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { ClassProfile } from "@/store/boardwork-context";
+import {
+  CLASS_COLOR_OPTIONS,
+  CURRICULUM_OPTIONS,
+  GRADE_OPTIONS,
+  SUBJECT_OPTIONS,
+} from "@/lib/class-options";
+import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+
+const classProfileSchema = z.object({
+  name: z.string().trim().min(1, "Enter a class name."),
+  grade: z.string().trim().min(1, "Enter a grade or age level."),
+  subject: z.string().trim().min(1, "Enter a subject."),
+  curriculumFramework: z.string(),
+  curriculumDetails: z.string(),
+  generalContext: z.string(),
+  arrivalRoutine: z.string(),
+  defaultDeviceMode: z.enum(["off", "on"]),
+  defaultDuration: z.union([z.literal(5), z.literal(7), z.literal(10)]),
+  color: z.string(),
+});
+
+type ClassProfileFormValues = z.infer<typeof classProfileSchema>;
 
 interface ClassFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: Omit<ClassProfile, "id" | "chips">) => void;
+  onSubmit: (data: Omit<ClassProfile, "id">) => void;
   onDelete?: () => void;
   initialData?: ClassProfile | null;
 }
 
-export function ClassFormDialog({ open, onOpenChange, onSubmit, onDelete, initialData }: ClassFormDialogProps) {
-  const [name, setName] = useState("");
-  const [grade, setGrade] = useState("");
-  const [subject, setSubject] = useState("");
-  const [courseContext, setCourseContext] = useState("");
-  const [currentUnit, setCurrentUnit] = useState("");
-  const [arrivalInstructions, setArrivalInstructions] = useState("");
-  const [defaultDeviceMode, setDefaultDeviceMode] = useState<"off" | "on">("off");
-  const [defaultDuration, setDefaultDuration] = useState<5 | 7 | 10>(7);
+const getDefaultValues = (initialData?: ClassProfile | null): ClassProfileFormValues => ({
+  name: initialData?.name ?? "",
+  grade: initialData?.grade ?? "",
+  subject: initialData?.subject ?? "",
+  curriculumFramework: initialData?.curriculumFramework ?? "",
+  curriculumDetails: initialData?.curriculumDetails ?? "",
+  generalContext: initialData?.generalContext ?? "",
+  arrivalRoutine: initialData?.arrivalRoutine ?? "",
+  defaultDeviceMode: initialData?.defaultDeviceMode ?? "off",
+  defaultDuration: initialData?.defaultDuration ?? 7,
+  color: initialData?.color ?? "",
+});
+
+const optionalValue = (value: string) => value.trim() || undefined;
+
+export function ClassFormDialog({
+  open,
+  onOpenChange,
+  onSubmit,
+  onDelete,
+  initialData,
+}: ClassFormDialogProps) {
+  const [moreOpen, setMoreOpen] = useState(false);
+  const form = useForm<ClassProfileFormValues>({
+    resolver: zodResolver(classProfileSchema),
+    defaultValues: getDefaultValues(initialData),
+  });
 
   useEffect(() => {
     if (open) {
-      setName(initialData?.name || "");
-      setGrade(initialData?.grade || "");
-      setSubject(initialData?.subject || "");
-      setCourseContext(initialData?.courseContext || "");
-      setCurrentUnit(initialData?.currentUnit || "");
-      setArrivalInstructions(initialData?.arrivalInstructions || "");
-      setDefaultDeviceMode(initialData?.defaultDeviceMode || "off");
-      setDefaultDuration(initialData?.defaultDuration || 7);
+      form.reset(getDefaultValues(initialData));
+      setMoreOpen(false);
     }
-  }, [open, initialData]);
+  }, [form, initialData, open]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (values: ClassProfileFormValues) => {
     onSubmit({
-      name,
-      grade,
-      subject,
-      courseContext,
-      currentUnit,
-      arrivalInstructions,
-      defaultDeviceMode,
-      defaultDuration,
+      name: values.name.trim(),
+      grade: values.grade.trim(),
+      subject: values.subject.trim(),
+      curriculumFramework: optionalValue(values.curriculumFramework),
+      curriculumDetails: optionalValue(values.curriculumDetails),
+      generalContext: optionalValue(values.generalContext),
+      arrivalRoutine: optionalValue(values.arrivalRoutine),
+      defaultDeviceMode: values.defaultDeviceMode,
+      defaultDuration: values.defaultDuration,
+      color: optionalValue(values.color),
     });
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-h-[92dvh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{initialData ? "Edit Class" : "Create Class"}</DialogTitle>
+          <DialogTitle>{initialData ? "Edit class profile" : "Create class"}</DialogTitle>
           <DialogDescription>
-            Provide details about your class. Boardwork uses this context to create relevant activities.
+            {initialData
+              ? "Update the details Boardwork should remember for this class."
+              : "Start with the essentials. You can add more context now or later."}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="className">Class Name *</Label>
-              <Input
-                id="className"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. 6th Grade Science"
-                data-testid="input-class-name"
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem className="sm:col-span-2">
+                    <FormLabel>Class name</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        autoFocus
+                        placeholder="e.g. Period 2 Science"
+                        data-testid="input-class-name"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="grade"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Grade / age level</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        list="boardwork-grade-options"
+                        placeholder="Choose or type your own"
+                        data-testid="input-class-grade"
+                      />
+                    </FormControl>
+                    <datalist id="boardwork-grade-options">
+                      {GRADE_OPTIONS.map((option) => <option key={option} value={option} />)}
+                    </datalist>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="subject"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Subject</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        list="boardwork-subject-options"
+                        placeholder="Choose or type your own"
+                        data-testid="input-class-subject"
+                      />
+                    </FormControl>
+                    <datalist id="boardwork-subject-options">
+                      {SUBJECT_OPTIONS.map((option) => <option key={option} value={option} />)}
+                    </datalist>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="grade">Grade/Age *</Label>
-              <Input
-                id="grade"
-                required
-                value={grade}
-                onChange={(e) => setGrade(e.target.value)}
-                placeholder="e.g. Grade 6"
-                data-testid="input-class-grade"
-              />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="subject">Subject *</Label>
-            <Input
-              id="subject"
-              required
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="e.g. Life Science"
-              data-testid="input-class-subject"
-            />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="courseContext">Course Context</Label>
-            <Textarea
-              id="courseContext"
-              value={courseContext}
-              onChange={(e) => setCourseContext(e.target.value)}
-              placeholder="e.g. Students are learning core life science practices. Keep reading demands moderate."
-              className="resize-none"
-              data-testid="textarea-class-context"
-            />
-          </div>
+            <Collapsible open={moreOpen} onOpenChange={setMoreOpen} className="rounded-lg border">
+              <CollapsibleTrigger
+                className="flex w-full items-center justify-between gap-4 p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
+                data-testid="button-toggle-more-class-details"
+              >
+                <span>
+                  <span className="block text-sm font-medium">More about this class</span>
+                  <span className="block text-xs text-muted-foreground">
+                    Curriculum, class context, arrival routine, defaults, and color
+                  </span>
+                </span>
+                <ChevronDown className={`size-4 text-muted-foreground transition-transform ${moreOpen ? "rotate-180" : ""}`} />
+              </CollapsibleTrigger>
 
-          <div className="grid grid-cols-2 gap-4">
-             <div className="space-y-2">
-              <Label>Default Device Mode</Label>
-              <Select value={defaultDeviceMode} onValueChange={(val: "off" | "on") => setDefaultDeviceMode(val)}>
-                <SelectTrigger data-testid="select-default-device">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="off">Device Off</SelectItem>
-                  <SelectItem value="on">Device On</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-             <div className="space-y-2">
-              <Label>Default Duration</Label>
-              <Select value={String(defaultDuration)} onValueChange={(val) => setDefaultDuration(Number(val) as 5 | 7 | 10)}>
-                <SelectTrigger data-testid="select-default-duration">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="5">5 Minutes</SelectItem>
-                  <SelectItem value="7">7 Minutes</SelectItem>
-                  <SelectItem value="10">10 Minutes</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter className="mt-6 sm:justify-between">
-            {initialData && onDelete ? (
-              <Button type="button" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={onDelete} data-testid="button-delete-class">
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete Class
-              </Button>
-            ) : (
-              <div />
-            )}
-            <div className="flex gap-2">
-              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" data-testid="button-save-class">
-                {initialData ? "Save Changes" : "Create Class"}
-              </Button>
-            </div>
-          </DialogFooter>
-        </form>
+              <CollapsibleContent className="border-t px-4 pb-5 pt-4">
+                <div className="grid gap-5">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="curriculumFramework"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Curriculum / Framework</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              list="boardwork-curriculum-options"
+                              placeholder="Choose or type your own"
+                              data-testid="input-class-curriculum"
+                            />
+                          </FormControl>
+                          <datalist id="boardwork-curriculum-options">
+                            {CURRICULUM_OPTIONS.map((option) => <option key={option} value={option} />)}
+                          </datalist>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="curriculumDetails"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Curriculum details</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="e.g. IB MYP Design, Year 2"
+                              data-testid="input-class-curriculum-details"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="generalContext"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>General class context</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            placeholder="Persistent information about the course, learners, or class—not the current unit."
+                            className="min-h-20 resize-y"
+                            data-testid="textarea-class-context"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="arrivalRoutine"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Arrival routine</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            placeholder="e.g. Grab your notebook, take your seat, and begin silently."
+                            className="min-h-20 resize-y"
+                            data-testid="textarea-arrival-routine"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="defaultDeviceMode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Default device mode</FormLabel>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-default-device">
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="off">Device Off</SelectItem>
+                              <SelectItem value="on">Device On</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="defaultDuration"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Default duration</FormLabel>
+                          <Select
+                            value={String(field.value)}
+                            onValueChange={(value) => field.onChange(Number(value))}
+                          >
+                            <FormControl>
+                              <SelectTrigger data-testid="select-default-duration">
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="5">5 minutes</SelectItem>
+                              <SelectItem value="7">7 minutes</SelectItem>
+                              <SelectItem value="10">10 minutes</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="color"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Class color</FormLabel>
+                        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Class color">
+                          <button
+                            type="button"
+                            role="radio"
+                            aria-checked={!field.value}
+                            onClick={() => field.onChange("")}
+                            className={`flex size-9 items-center justify-center rounded-full border text-[10px] text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${!field.value ? "border-foreground ring-1 ring-foreground" : "border-border"}`}
+                            title="No color"
+                            data-testid="button-class-color-none"
+                          >
+                            —
+                          </button>
+                          {CLASS_COLOR_OPTIONS.map((option) => (
+                            <button
+                              key={option.value}
+                              type="button"
+                              role="radio"
+                              aria-checked={field.value === option.value}
+                              onClick={() => field.onChange(option.value)}
+                              className={`flex size-9 items-center justify-center rounded-full border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${field.value === option.value ? "border-foreground ring-1 ring-foreground" : "border-transparent"}`}
+                              title={option.label}
+                              data-testid={`button-class-color-${option.label.toLowerCase()}`}
+                            >
+                              <span
+                                className="size-5 rounded-full"
+                                style={{ backgroundColor: option.value }}
+                                aria-hidden="true"
+                              />
+                              <span className="sr-only">{option.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            <DialogFooter className="pt-1 sm:justify-between">
+              {initialData && onDelete ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  onClick={onDelete}
+                  data-testid="button-delete-class"
+                >
+                  <Trash2 className="mr-2 size-4" />
+                  Delete class
+                </Button>
+              ) : (
+                <div />
+              )}
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => onOpenChange(false)}
+                  data-testid="button-cancel-class"
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" data-testid="button-save-class">
+                  {initialData ? "Save changes" : "Create class"}
+                </Button>
+              </div>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

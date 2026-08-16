@@ -1,10 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useBoardwork } from "@/store/boardwork-context";
 import { Maximize, Minimize, ChevronLeft } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useRoute } from "wouter";
 
 export default function Present() {
-  const { activeDraft } = useBoardwork();
+  const [, params] = useRoute("/present/:id");
+  const activityId = params?.id;
+  const { appState } = useBoardwork();
+
+  const activeDraft = React.useMemo(() => {
+    return appState?.activities.find(a => a.id === activityId);
+  }, [appState, activityId]);
+
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const controlsTimeoutRef = useRef<number | undefined>(undefined);
@@ -57,57 +64,45 @@ export default function Present() {
   }
 
   const arrivalInstruction = activeDraft.arrivalInstructions?.trim();
-  const footerText = arrivalInstruction
-    ? arrivalInstruction
-    : activeDraft.deviceMode === "off"
-      ? "Notebook • Work independently"
-      : "Device on • Open the provided resource";
-
   return (
-    <div 
+    <div
       ref={containerRef}
-      className={`relative bg-[#FAFAFA] text-[#171717] overflow-hidden flex flex-col items-center justify-center font-sans
-        ${isFullscreen ? 'w-screen h-screen' : 'min-h-[100dvh] w-full'}
-      `}
+      className={`presentation-page ${isFullscreen ? "presentation-page--fullscreen" : ""}`}
       onMouseEnter={() => setShowControls(true)}
     >
-      {/* 16:9 Aspect Ratio Container for Presentation Content */}
-      <div className="w-full h-full max-w-[1920px] max-h-[1080px] aspect-video flex flex-col px-[clamp(3rem,7vw,8.5rem)] py-[clamp(2.25rem,5vh,4.5rem)]">
-        
-        {/* Header: Eyebrow + Time */}
-        <header className="flex items-start justify-between shrink-0">
+      <div className="presentation-surface">
+        <header className="presentation-header">
           {activeDraft.eyebrow ? (
-            <div className="font-semibold tracking-[0.2em] text-[clamp(0.72rem,1.1vw,1rem)] uppercase leading-none text-[#171717]/58" data-testid="present-eyebrow">
+            <div className="presentation-eyebrow" data-testid="present-eyebrow">
               {activeDraft.eyebrow}
             </div>
           ) : (
-            <div />
+            <div aria-hidden="true" />
           )}
-          <div className="font-semibold tracking-[0.16em] text-[clamp(0.8rem,1.25vw,1.1rem)] text-[#171717]/58 uppercase leading-none" data-testid="present-time">
+          <div className="presentation-time" data-testid="present-time">
             {activeDraft.durationMinutes} MIN
           </div>
         </header>
 
-        {/* Main Content Body */}
-        <main className="flex-1 flex flex-col justify-start pt-[clamp(2.75rem,7vh,6rem)] min-h-0">
-          <div className="max-w-[82%] space-y-[clamp(1.35rem,2.7vh,2.6rem)]">
+        <main className="presentation-main">
+          <div className="presentation-content">
             {activeDraft.title && (
-              <h1 className="font-bold tracking-[-0.045em] text-[clamp(2.8rem,5.5vw,5.8rem)] leading-[1.02] text-[#171717]" data-testid="present-title">
+              <h1 className="presentation-title" data-testid="present-title">
                 {activeDraft.title}
               </h1>
             )}
-            
+
             {activeDraft.task && (
-              <p className="font-medium text-[clamp(1.55rem,3.05vw,3rem)] leading-[1.26] text-[#171717]/88 max-w-[38ch]" data-testid="present-task">
+              <p className="presentation-task" data-testid="present-task">
                 {activeDraft.task}
               </p>
             )}
 
-            {activeDraft.prompts.length > 0 && (
-              <ul className="space-y-[clamp(0.55rem,1.25vh,1rem)] pt-[clamp(0.25rem,0.8vh,0.75rem)]">
+            {activeDraft.prompts && activeDraft.prompts.length > 0 && (
+              <ul className="presentation-prompts">
                 {activeDraft.prompts.map((prompt, idx) => (
-                  <li key={idx} className="flex gap-[clamp(0.8rem,1.4vw,1.4rem)] items-start font-medium text-[clamp(1.15rem,2vw,2rem)] leading-[1.28] text-[#171717]/76 max-w-[44ch]">
-                    <span className="text-primary shrink-0 font-bold" aria-hidden="true">•</span>
+                  <li key={idx} className="presentation-prompt">
+                    <span className="presentation-prompt-marker" aria-hidden="true">•</span>
                     <span>{prompt}</span>
                   </li>
                 ))}
@@ -116,45 +111,45 @@ export default function Present() {
           </div>
         </main>
 
-        {/* Footer: one clear arrival or material instruction */}
-        <footer className="shrink-0 min-h-[clamp(3.5rem,7vh,5.25rem)] pr-[clamp(8.5rem,16vw,15rem)] flex items-end border-t border-[#171717]/10 pt-[clamp(1rem,2.2vh,1.6rem)]">
-          <div
-            className="font-medium text-[clamp(0.95rem,1.35vw,1.35rem)] text-[#171717]/52 max-w-[52ch] leading-snug"
-            data-testid={arrivalInstruction ? "present-arrival" : "present-device-mode"}
+        <footer className="presentation-footer">
+          {arrivalInstruction ? (
+            <div
+              className="presentation-arrival"
+              data-testid="present-arrival"
+            >
+              {arrivalInstruction}
+            </div>
+          ) : (
+            <div aria-hidden="true" />
+          )}
+
+          <nav
+            className={`presentation-controls ${showControls ? "presentation-controls--visible" : ""}`}
+            aria-label="Presentation controls"
+            onMouseEnter={() => setShowControls(true)}
+            onFocusCapture={() => setShowControls(true)}
           >
-            {footerText}
-          </div>
+            <Link
+              href={activityId ? `/activity/${activityId}` : "/"}
+              className="presentation-control"
+              title="Back to Workspace"
+              data-testid="button-exit-present"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>Back</span>
+            </Link>
+            <button
+              onClick={toggleFullscreen}
+              className="presentation-control"
+              title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+              data-testid="button-fullscreen"
+            >
+              {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+              <span>{isFullscreen ? "Exit" : "Full screen"}</span>
+            </button>
+          </nav>
         </footer>
       </div>
-
-      {/* Teacher controls live in a reserved footer-safe corner. */}
-      <div 
-        className={`fixed z-50 bottom-[clamp(1.25rem,3vw,3rem)] right-[clamp(1.25rem,3vw,3rem)] flex items-center gap-1.5 rounded-lg bg-[#FAFAFA]/92 p-1 shadow-sm ring-1 ring-[#171717]/10 backdrop-blur-sm transition-opacity duration-300 motion-reduce:transition-none
-          ${showControls ? 'opacity-100' : 'opacity-25'}
-        `}
-        onMouseEnter={() => setShowControls(true)}
-        onFocusCapture={() => setShowControls(true)}
-      >
-        <Link 
-          href="/" 
-          className="inline-flex h-10 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium text-[#171717]/65 transition-colors hover:bg-[#171717]/6 hover:text-[#171717] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          title="Back to Workspace"
-          data-testid="button-exit-present"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          <span>Back</span>
-        </Link>
-        <button
-          onClick={toggleFullscreen}
-          className="inline-flex h-10 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium text-[#171717]/65 transition-colors hover:bg-[#171717]/6 hover:text-[#171717] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-          data-testid="button-fullscreen"
-        >
-          {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
-          <span>{isFullscreen ? "Exit" : "Full screen"}</span>
-        </button>
-      </div>
-
     </div>
   );
 }

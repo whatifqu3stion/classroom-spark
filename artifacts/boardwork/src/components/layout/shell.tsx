@@ -1,11 +1,16 @@
 import React from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
+import { History, LayoutDashboard } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ShellProps {
   children: React.ReactNode;
 }
 
 export function Shell({ children }: ShellProps) {
+  const [location] = useLocation();
+  const isHistory = location === "/history";
+
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background selection:bg-primary/20">
       <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md">
@@ -16,6 +21,30 @@ export function Shell({ children }: ShellProps) {
             </div>
             Boardwork
           </Link>
+          <nav className="flex items-center gap-1 sm:gap-2">
+            <Link
+              href="/"
+              data-testid="nav-workspace"
+              className={cn(
+                "flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                !isHistory ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              )}
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              <span className="hidden sm:inline">Workspace</span>
+            </Link>
+            <Link
+              href="/history"
+              data-testid="nav-history"
+              className={cn(
+                "flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                isHistory ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              )}
+            >
+              <History className="w-4 h-4" />
+              <span className="hidden sm:inline">History</span>
+            </Link>
+          </nav>
         </div>
       </header>
       <main className="flex-1">
