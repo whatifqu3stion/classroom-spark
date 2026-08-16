@@ -3,6 +3,7 @@ import { ActivityDraft } from "@/store/boardwork-context";
 import { Button } from "./ui/button";
 import { Plus, X, Monitor, Clock, FileText } from "lucide-react";
 import { Link } from "wouter";
+import { cn } from "@/lib/utils";
 
 interface BoardEditorProps {
   draft: ActivityDraft;
@@ -25,7 +26,6 @@ function EditableText({
 }) {
   const ref = useRef<HTMLElement>(null);
   
-  // Set initial text only once to preserve cursor position during typing
   useEffect(() => {
     if (ref.current && ref.current.textContent !== value) {
       ref.current.textContent = value;
@@ -45,7 +45,10 @@ function EditableText({
       suppressContentEditableWarning
       onInput={handleInput}
       data-placeholder={placeholder}
-      className={className}
+      className={cn(
+        "outline-none cursor-text transition-colors empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/40 hover:bg-muted/40 focus:bg-muted/20 focus:ring-2 focus:ring-primary/20 rounded-md px-1.5 -mx-1.5 py-0.5 -my-0.5",
+        className
+      )}
       onKeyDown={(e) => {
         if (!multiline && e.key === "Enter") {
           e.preventDefault();
@@ -98,7 +101,7 @@ export function BoardEditor({ draft, onChange, onPresent }: BoardEditorProps) {
                 value={draft.eyebrow || ""}
                 onChange={(val) => onChange({ eyebrow: val })}
                 placeholder="EYEBROW (OPTIONAL)"
-                className="text-xs font-bold tracking-widest text-muted-foreground uppercase outline-none focus:text-foreground transition-colors min-w-[200px]"
+                className="text-xs font-bold tracking-widest text-muted-foreground uppercase min-w-[200px] inline-block"
               />
               
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground bg-muted/50 px-2 py-1 rounded-md">
@@ -110,7 +113,7 @@ export function BoardEditor({ draft, onChange, onPresent }: BoardEditorProps) {
                     if (!isNaN(num)) onChange({ durationMinutes: num as 5|7|10 });
                   }}
                   placeholder="7"
-                  className="font-medium text-foreground outline-none min-w-[1ch] text-center"
+                  className="font-medium text-foreground min-w-[1ch] text-center inline-block"
                 />
                 <span className="font-medium">MIN</span>
               </div>
@@ -120,7 +123,7 @@ export function BoardEditor({ draft, onChange, onPresent }: BoardEditorProps) {
               value={draft.title}
               onChange={(val) => onChange({ title: val })}
               placeholder="Enter a short title..."
-              className="text-3xl md:text-4xl font-bold tracking-tight text-foreground outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/50"
+              className="text-3xl md:text-4xl font-bold tracking-tight text-foreground block w-full"
             />
           </div>
 
@@ -129,7 +132,7 @@ export function BoardEditor({ draft, onChange, onPresent }: BoardEditorProps) {
             value={draft.task}
             onChange={(val) => onChange({ task: val })}
             placeholder="Describe the main task for students..."
-            className="text-lg md:text-xl leading-relaxed text-foreground outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/50"
+            className="text-lg md:text-xl leading-relaxed text-foreground block w-full"
           />
 
           {draft.prompts.length > 0 && (
@@ -142,11 +145,11 @@ export function BoardEditor({ draft, onChange, onPresent }: BoardEditorProps) {
                     value={prompt}
                     onChange={(val) => updatePrompt(idx, val)}
                     placeholder="Enter prompt..."
-                    className="flex-1 outline-none leading-relaxed empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/50"
+                    className="flex-1 leading-relaxed"
                   />
                   <button
                     onClick={() => removePrompt(idx)}
-                    className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-muted rounded-md absolute -left-8 top-1 transition-opacity"
+                    className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-muted rounded-md absolute -left-10 top-1 transition-opacity"
                     title="Remove prompt"
                   >
                     <X className="w-4 h-4 text-muted-foreground" />
@@ -174,7 +177,7 @@ export function BoardEditor({ draft, onChange, onPresent }: BoardEditorProps) {
               value={draft.arrivalInstructions || ""}
               onChange={(val) => onChange({ arrivalInstructions: val })}
               placeholder="Arrival instructions (optional footer)..."
-              className="text-muted-foreground text-sm outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/50"
+              className="text-muted-foreground text-sm block w-full"
             />
           </div>
           

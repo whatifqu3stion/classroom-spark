@@ -16,9 +16,6 @@ export function Shell({ children }: ShellProps) {
             </div>
             Boardwork
           </Link>
-          <div className="text-sm font-medium text-muted-foreground">
-            Stage 1 MVP
-          </div>
         </div>
       </header>
       <main className="flex-1">

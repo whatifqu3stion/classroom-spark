@@ -1,0 +1,1 @@
+- [Approved Stage 1 direction](approved-stage-one-direction.md) — Preserve Boardwork’s existing core workflow and restrained visual direction during later stages.

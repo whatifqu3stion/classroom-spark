@@ -248,7 +248,7 @@ export default function Home() {
                 ) : (
                   <Play className="w-5 h-5 fill-current" />
                 )}
-                {isGenerating ? "Creating board..." : "Generate Activity"}
+                {isGenerating ? "Creating board..." : "Generate"}
               </Button>
               <div className="grid grid-cols-2 gap-3">
                 <Button

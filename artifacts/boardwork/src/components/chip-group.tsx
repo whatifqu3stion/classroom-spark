@@ -85,7 +85,7 @@ export function ChipGroup({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-foreground">Instructional Focus (Optional)</span>
+        <span className="text-sm font-medium text-foreground">Focus</span>
         {selectedChipIds.length > 0 && (
           <button
             type="button"

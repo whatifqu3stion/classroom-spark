@@ -60,7 +60,7 @@
   --foreground: 220 10% 15%; /* Charcoal */
   --border: 40 20% 90%; 
   --input: 40 20% 90%;
-  --ring: 230 60% 40%; 
+  --ring: 215 25% 27%; 
 
   --card: 0 0% 100%;
   --card-foreground: 220 10% 15%;
@@ -70,9 +70,9 @@
   --popover-foreground: 220 10% 15%;
   --popover-border: 40 20% 90%;
 
-  --primary: 230 60% 40%; /* Calm deep indigo */
+  --primary: 215 25% 27%; /* Sophisticated dark slate */
   --primary-foreground: 0 0% 100%;
-  --primary-border: 230 60% 35%;
+  --primary-border: 215 25% 20%;
 
   --secondary: 40 20% 94%;
   --secondary-foreground: 220 10% 20%;
@@ -83,7 +83,7 @@
   --muted-border: 40 10% 90%;
 
   --accent: 40 30% 94%;
-  --accent-foreground: 230 60% 40%;
+  --accent-foreground: 215 25% 27%;
   --accent-border: 40 30% 88%;
 
   --destructive: 0 70% 50%;
@@ -93,11 +93,11 @@
   --sidebar: 40 33% 98%;
   --sidebar-foreground: 220 10% 15%;
   --sidebar-border: 40 20% 90%;
-  --sidebar-primary: 230 60% 40%;
+  --sidebar-primary: 215 25% 27%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 40 20% 94%;
   --sidebar-accent-foreground: 220 10% 20%;
-  --sidebar-ring: 230 60% 40%;
+  --sidebar-ring: 215 25% 27%;
   
   --shadow-2xs: 0px 1px 2px 0px rgba(0,0,0,0.02);
   --shadow-xs: 0px 1px 3px 0px rgba(0,0,0,0.04);
@@ -110,7 +110,7 @@
   --foreground: 40 10% 95%;
   --border: 220 15% 20%;
   --input: 220 15% 20%;
-  --ring: 230 60% 60%;
+  --ring: 215 25% 60%;
 
   --card: 220 15% 12%;
   --card-foreground: 40 10% 95%;
@@ -120,9 +120,9 @@
   --popover-foreground: 40 10% 95%;
   --popover-border: 220 15% 18%;
 
-  --primary: 230 60% 60%;
-  --primary-foreground: 0 0% 100%;
-  --primary-border: 230 60% 50%;
+  --primary: 215 25% 70%;
+  --primary-foreground: 220 15% 10%;
+  --primary-border: 215 25% 60%;
 
   --secondary: 220 15% 20%;
   --secondary-foreground: 40 10% 95%;
@@ -132,9 +132,9 @@
   --muted-foreground: 220 10% 60%;
   --muted-border: 220 15% 20%;
 
-  --accent: 230 30% 20%;
-  --accent-foreground: 230 60% 80%;
-  --accent-border: 230 30% 25%;
+  --accent: 215 25% 20%;
+  --accent-foreground: 215 25% 80%;
+  --accent-border: 215 25% 25%;
 
   --destructive: 0 60% 50%;
   --destructive-foreground: 0 0% 100%;
