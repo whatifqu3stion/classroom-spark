@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Boardwork"
+description = "A polished single-user classroom tool for teachers to create, quickly edit, and present excellent 5–10 minute independent start-of-class activities. Stage 1 uses mocked generation and local in-memory state only."
+version = "1.0.0"
+id = "artifacts/boardwork"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19516
+
+[services.development]
+run = "pnpm --filter @workspace/boardwork run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/boardwork", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/boardwork/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19516"
+BASE_PATH = "/"
