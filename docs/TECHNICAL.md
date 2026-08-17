@@ -61,6 +61,8 @@ Prefer a straightforward client-side DOM-to-image approach for PNG export.
 
 Do not add a server-side headless browser solely for export unless necessary.
 
+Stage 4 uses a client-side DOM-to-image capture of a dedicated fixed 1920×1080 render of the same student presentation component. The export render excludes presentation controls and teacher-only notes by construction, so exports are deterministic from desktop and portrait viewports without changing the live responsive presentation.
+
 ## Why this stack
 Boardwork is a modest CRUD + generation application.
 
@@ -305,6 +307,8 @@ Then manually test:
 - generation failure/retry with retained teacher inputs
 - teacher-note exclusion from presentation
 - PNG output
+
+Stage 4 additionally verifies duplicate-action guards, export failure recovery, direct presentation routes, 0/1/3-prompt presentation states, reduced motion, and keyboard access. Subjective classroom-distance readability remains a real projector/manual check.
 
 ## Future-friendly, not future-built
 The data model should not make later multi-user productization impossible, but do not implement account abstractions now.

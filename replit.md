@@ -198,6 +198,8 @@ Capture the 16:9 presentation canvas only.
 
 Do not introduce heavyweight rendering infrastructure unless a simple browser approach cannot meet quality needs.
 
+Stage 4 uses a client-side fixed 1920×1080 render of the shared student presentation canvas. Keep presentation controls and teacher-only notes outside the export render, and preserve the live presentation over perfect export fidelity.
+
 ## Implementation behavior
 Before substantial changes:
 1. state briefly what will change

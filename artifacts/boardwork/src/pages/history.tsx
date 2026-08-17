@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { format } from "date-fns";
 import { MoreHorizontal, MonitorSmartphone, MonitorOff, Star, Trash2, Copy, Play, FileText } from "lucide-react";
@@ -35,6 +35,7 @@ export default function History() {
   const favoriteMutation = useSetActivityFavorite();
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const duplicateInFlightRef = useRef(false);
 
   const activities = appState?.activities || [];
   const classes = appState?.classes || [];
@@ -42,15 +43,21 @@ export default function History() {
   const sortedActivities = [...activities].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
   const handleDuplicate = (id: string) => {
+    if (duplicateInFlightRef.current) return;
+    duplicateInFlightRef.current = true;
     duplicateMutation.mutate({ activityId: id }, {
       onSuccess: (newActivity) => {
         queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
         setLocation(`/activity/${newActivity.id}`);
-      }
+      },
+      onSettled: () => {
+        duplicateInFlightRef.current = false;
+      },
     });
   };
 
   const handleFavorite = (id: string, favorite: boolean) => {
+    if (favoriteMutation.isPending) return;
     favoriteMutation.mutate({ activityId: id, data: { favorite } }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
@@ -59,7 +66,7 @@ export default function History() {
   };
 
   const handleDelete = () => {
-    if (!deleteId) return;
+    if (!deleteId || deleteMutation.isPending) return;
     deleteMutation.mutate({ activityId: deleteId }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
@@ -97,6 +104,8 @@ export default function History() {
                       onClick={() => handleFavorite(activity.id, !activity.favorite)}
                       className={`shrink-0 p-1 rounded-md transition-colors ${activity.favorite ? "text-amber-500 hover:text-amber-600" : "text-muted-foreground/30 hover:text-muted-foreground"}`}
                       title={activity.favorite ? "Unfavorite" : "Favorite"}
+                      aria-label={`${activity.favorite ? "Unfavorite" : "Favorite"} ${activity.title || "Untitled Activity"}`}
+                      disabled={favoriteMutation.isPending}
                       data-testid={`button-favorite-${activity.id}`}
                     >
                       <Star className={`w-5 h-5 ${activity.favorite ? "fill-current" : ""}`} />
@@ -147,7 +156,13 @@ export default function History() {
                     
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" data-testid={`button-menu-${activity.id}`}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            aria-label={`Actions for ${activity.title || "Untitled Activity"}`}
+                            data-testid={`button-menu-${activity.id}`}
+                          >
                           <MoreHorizontal className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -165,7 +180,12 @@ export default function History() {
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => handleDuplicate(activity.id)} className="cursor-pointer" data-testid={`menu-duplicate-${activity.id}`}>
+                        <DropdownMenuItem
+                          onClick={() => handleDuplicate(activity.id)}
+                          disabled={duplicateMutation.isPending}
+                          className="cursor-pointer"
+                          data-testid={`menu-duplicate-${activity.id}`}
+                        >
                           <Copy className="w-4 h-4 mr-2" />
                           Remix / Copy
                         </DropdownMenuItem>
@@ -194,8 +214,12 @@ export default function History() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? "Deleting…" : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

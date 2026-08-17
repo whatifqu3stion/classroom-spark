@@ -66,13 +66,13 @@ Initial provider: OpenAI through Replit AI Integrations, configured with `AI_MOD
 Keep AI invisible in the visual design.
 
 ## Stage 4 — Convenience and QA
-Add:
+Implemented:
 - PNG export
 - final responsive checks
 - accessibility checks
 - projector tests
 - acceptance-test cleanup
 
-Then stop.
+The planned MVP development release candidate is complete. Stop feature development and move to the first private production smoke test and real classroom observation before declaring the classroom release complete.
 
 Do not add integrations or new feature categories before classroom use produces evidence that they are needed.

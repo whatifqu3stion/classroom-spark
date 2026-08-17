@@ -1,13 +1,31 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useBoardwork } from "@/store/boardwork-context";
-import { Maximize, Minimize, ChevronLeft, ExternalLink } from "lucide-react";
+import { Maximize, Minimize, ChevronLeft, Download, Loader2 } from "lucide-react";
 import { Link, useRoute } from "wouter";
-import { getSafeResourceUrl } from "@/lib/resource-url";
+import { toPng } from "html-to-image";
+import { useToast } from "@/hooks/use-toast";
+import { PresentationCanvas } from "@/components/presentation-canvas";
+
+const EXPORT_WIDTH = 1920;
+const EXPORT_HEIGHT = 1080;
+
+const getExportFilename = (title: string) => {
+  const slug = title
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 72);
+
+  return `${slug || "boardwork-activity"}.png`;
+};
 
 export default function Present() {
   const [, params] = useRoute("/present/:id");
   const activityId = params?.id;
   const { appState } = useBoardwork();
+  const { toast } = useToast();
 
   const activeDraft = React.useMemo(() => {
     return appState?.activities.find(a => a.id === activityId);
@@ -15,8 +33,10 @@ export default function Present() {
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
   const controlsTimeoutRef = useRef<number | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
+  const exportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -51,6 +71,42 @@ export default function Present() {
     }
   };
 
+  const exportPng = async () => {
+    if (!exportRef.current || isExporting) return;
+
+    setIsExporting(true);
+    try {
+      await document.fonts?.ready;
+      const dataUrl = await toPng(exportRef.current, {
+        width: EXPORT_WIDTH,
+        height: EXPORT_HEIGHT,
+        canvasWidth: EXPORT_WIDTH,
+        canvasHeight: EXPORT_HEIGHT,
+        pixelRatio: 1,
+        backgroundColor: "#fafafa",
+        cacheBust: true,
+        skipFonts: true,
+      });
+
+      const download = document.createElement("a");
+      download.download = getExportFilename(activeDraft?.title ?? "");
+      download.href = dataUrl;
+      download.click();
+    } catch (error) {
+      console.error(
+        "PNG export failed",
+        error instanceof Error ? error.message : "Unknown export error",
+      );
+      toast({
+        title: "Couldn’t export PNG",
+        description: "Try again. Your board is unchanged.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (!activeDraft) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background text-center p-8">
@@ -64,122 +120,67 @@ export default function Present() {
     );
   }
 
-  const arrivalInstruction = activeDraft.arrivalInstructions?.trim();
-  const safeResourceUrl = getSafeResourceUrl(activeDraft.resourceUrl);
+  const controls = (
+    <nav
+      className={`presentation-controls ${showControls ? "presentation-controls--visible" : ""}`}
+      aria-label="Presentation controls"
+      onMouseEnter={() => setShowControls(true)}
+      onFocusCapture={() => setShowControls(true)}
+    >
+      <Link
+        href={activityId ? `/activity/${activityId}` : "/"}
+        className="presentation-control"
+        title="Back to Workspace"
+        data-testid="button-exit-present"
+      >
+        <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+        <span>Back</span>
+      </Link>
+      <button
+        type="button"
+        onClick={() => void exportPng()}
+        disabled={isExporting}
+        className="presentation-control"
+        title="Export board as PNG"
+        data-testid="button-export-png"
+      >
+        {isExporting ? (
+          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+        ) : (
+          <Download className="w-4 h-4" aria-hidden="true" />
+        )}
+        <span>{isExporting ? "Exporting…" : "Export PNG"}</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => void toggleFullscreen()}
+        className="presentation-control"
+        title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+        data-testid="button-fullscreen"
+      >
+        {isFullscreen ? (
+          <Minimize className="w-4 h-4" aria-hidden="true" />
+        ) : (
+          <Maximize className="w-4 h-4" aria-hidden="true" />
+        )}
+        <span>{isFullscreen ? "Exit" : "Full screen"}</span>
+      </button>
+    </nav>
+  );
+
   return (
     <div
       ref={containerRef}
       className={`presentation-page ${isFullscreen ? "presentation-page--fullscreen" : ""}`}
       onMouseEnter={() => setShowControls(true)}
     >
-      <div className="presentation-surface">
-        <header className="presentation-header">
-          {activeDraft.eyebrow ? (
-            <div className="presentation-eyebrow" data-testid="present-eyebrow">
-              {activeDraft.eyebrow}
-            </div>
-          ) : (
-            <div aria-hidden="true" />
-          )}
-          <div className="presentation-time" data-testid="present-time">
-            {activeDraft.durationMinutes} MIN
-          </div>
-        </header>
-
-        <main className="presentation-main">
-          <div className="presentation-content">
-            {activeDraft.title && (
-              <h1 className="presentation-title" data-testid="present-title">
-                {activeDraft.title}
-              </h1>
-            )}
-
-            {activeDraft.task && (
-              <p className="presentation-task" data-testid="present-task">
-                {activeDraft.task}
-              </p>
-            )}
-
-            {activeDraft.prompts && activeDraft.prompts.length > 0 && (
-              <ul className="presentation-prompts">
-                {activeDraft.prompts.map((prompt, idx) => (
-                  <li key={idx} className="presentation-prompt">
-                    <span className="presentation-prompt-marker" aria-hidden="true">•</span>
-                    <span>{prompt}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {activeDraft.materials && activeDraft.materials.length > 0 && (
-              <p
-                className="mt-6 text-[clamp(0.9rem,1.4vw,1.35rem)] font-medium text-muted-foreground"
-                data-testid="present-materials"
-              >
-                Materials: {activeDraft.materials.join(", ")}
-              </p>
-            )}
-
-            {safeResourceUrl && (
-              <div className="mt-6" data-testid="present-resource">
-                <a
-                  href={safeResourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-[clamp(0.9rem,1.3vw,1.2rem)] font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
-                  data-testid="present-resource-link"
-                >
-                  Open resource
-                  <ExternalLink className="h-[1em] w-[1em]" aria-hidden="true" />
-                </a>
-                {activeDraft.resourceNote && (
-                  <p className="mt-2 text-[clamp(0.8rem,1.1vw,1rem)] text-muted-foreground">
-                    {activeDraft.resourceNote}
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-        </main>
-
-        <footer className="presentation-footer">
-          {arrivalInstruction ? (
-            <div
-              className="presentation-arrival"
-              data-testid="present-arrival"
-            >
-              {arrivalInstruction}
-            </div>
-          ) : (
-            <div aria-hidden="true" />
-          )}
-
-          <nav
-            className={`presentation-controls ${showControls ? "presentation-controls--visible" : ""}`}
-            aria-label="Presentation controls"
-            onMouseEnter={() => setShowControls(true)}
-            onFocusCapture={() => setShowControls(true)}
-          >
-            <Link
-              href={activityId ? `/activity/${activityId}` : "/"}
-              className="presentation-control"
-              title="Back to Workspace"
-              data-testid="button-exit-present"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              <span>Back</span>
-            </Link>
-            <button
-              onClick={toggleFullscreen}
-              className="presentation-control"
-              title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-              data-testid="button-fullscreen"
-            >
-              {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
-              <span>{isFullscreen ? "Exit" : "Full screen"}</span>
-            </button>
-          </nav>
-        </footer>
+      <PresentationCanvas activity={activeDraft} controls={controls} />
+      <div className="presentation-export-stage" aria-hidden="true">
+        <PresentationCanvas
+          activity={activeDraft}
+          exportLayout
+          surfaceRef={exportRef}
+        />
       </div>
     </div>
   );

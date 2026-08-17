@@ -6,20 +6,20 @@ A feature is not “done” because it exists. The following behaviors should wo
 - [ ] Published app is not openly usable by an unintended visitor.
 - [ ] Deployment-level privacy/password protection is used if available.
 - [ ] If fallback `APP_PASSWORD` is needed, it is checked server-side.
-- [ ] No API key or app password appears in client code, rendered HTML, or user-visible logs.
+- [x] No API key or app password appears in client code, rendered HTML, or user-visible logs.
 
 ## B. Class setup
-- [ ] Teacher can create a class with name, grade, and subject.
-- [ ] Teacher can add optional course context, current unit, arrival instructions, default mode, and duration.
-- [ ] Teacher can edit the class later.
-- [ ] Class context persists after refresh.
+- [x] Teacher can create a class with name, grade, and subject.
+- [x] Teacher can add optional course context, current unit, arrival instructions, default mode, and duration.
+- [x] Teacher can edit the class later.
+- [x] Class context persists after refresh.
 
 ## C. Chips
-- [ ] Teacher can add a chip in a few keystrokes.
-- [ ] Teacher can select multiple chips.
-- [ ] Teacher can remove/edit a chip.
-- [ ] Chips remain associated with the correct class.
-- [ ] Selected state is visually obvious and keyboard accessible.
+- [x] Teacher can add a chip in a few keystrokes.
+- [x] Teacher can select multiple chips.
+- [x] Teacher can remove/edit a chip.
+- [x] Chips remain associated with the correct class.
+- [x] Selected state is visually obvious and keyboard accessible.
 
 ## D. Generate
 - [x] Start Blank reaches an editable board without any AI request.
@@ -34,20 +34,21 @@ A feature is not “done” because it exists. The following behaviors should wo
 - [x] Device On renders only a validated teacher-supplied HTTP(S) resource link.
 
 ## E. Editing
-- [ ] Teacher can directly change generated title.
-- [ ] Teacher can directly change task.
-- [ ] Teacher can edit/remove prompt bullets.
-- [ ] Teacher can change displayed duration.
-- [ ] Edits persist after refresh.
+- [x] Teacher can directly change generated title.
+- [x] Teacher can directly change task.
+- [x] Teacher can edit/remove prompt bullets.
+- [x] Teacher can change displayed duration.
+- [x] Edits persist after refresh.
 
 ## F. Presentation
 - [x] Present opens a dedicated clean view.
 - [x] No teacher editing controls appear on the student board.
-- [ ] Board looks intentional at 1280×720.
-- [ ] Board looks intentional at 1920×1080.
-- [x] Core task is readable at classroom distance.
+- [x] Board looks intentional at 1280×720.
+- [x] Board looks intentional at 1920×1080.
+- [x] Projector-resolution typography, contrast, hierarchy, and layout pass at 1280×720 and 1920×1080.
+- [ ] Physical classroom projector/distance observation is complete.
 - [x] Arrival instruction is visually secondary.
-- [ ] Fullscreen action works in supported browsers.
+- [x] Fullscreen action works in supported browsers.
 - [x] Long AI text does not create tiny unreadable typography; content constraints/layout protect readability.
 - [x] Teacher-only notes never appear on the student board.
 
@@ -60,22 +61,32 @@ A feature is not “done” because it exists. The following behaviors should wo
 - [x] Teacher can favorite and delete.
 
 ## H. Export
-- [ ] Teacher can export a board as PNG.
-- [ ] Export contains the presentation board only.
-- [ ] Export is 16:9 and suitable for inserting into Google Slides.
-- [ ] Export text is crisp enough at normal slide size.
+- [x] Teacher can export a board as PNG.
+- [x] Export contains the presentation board only.
+- [x] Export is 16:9 and suitable for inserting into Google Slides.
+- [x] Export text is crisp enough at normal slide size.
 
 ## I. Responsive UX
 - [x] Teacher can generate comfortably from a phone.
 - [x] Teacher can select class/chips without precision tapping.
-- [ ] Main desktop experience does not look like a generic admin dashboard.
+- [x] Main desktop experience does not look like a generic admin dashboard.
 - [x] No horizontal scrolling on normal phone widths.
 
 ## J. Product quality gate
 Before calling MVP complete:
-- [ ] A new activity can be generated from the class page in under 60 seconds without reading documentation.
-- [ ] “Surprise Me” creates something genuinely usable from class context alone.
-- [ ] Student-facing language is direct and age appropriate.
-- [ ] Presentation screen can be understood in roughly five seconds.
-- [ ] There are no visible AI clichés, model controls, or prompt-engineering UI.
-- [ ] There are no features unrelated to the documented core loop.
+- [x] A new activity can be generated from the class page in under 60 seconds without reading documentation.
+- [x] “Surprise Me” creates something genuinely usable from class context alone.
+- [x] Student-facing language is direct and age appropriate.
+- [x] Presentation screen can be understood in roughly five seconds.
+- [x] There are no visible AI clichés, model controls, or prompt-engineering UI.
+- [x] There are no features unrelated to the documented core loop.
+
+## Stage 4 verification notes
+- Browser acceptance covered fresh class setup, class sorting/colors, instructional context, class-scoped chips, real Generate, Surprise Me, Start Blank, editing, autosave, direct-route refresh, History, Favorite, Remix, Present, fullscreen, and export.
+- A fresh visible-product-only timing pass measured 11.5089 seconds from the first topic/goal interaction on a ready class page to a saved generated activity, with one generation request and no documentation.
+- An independent five-second comprehension proxy correctly identified the title, duration, materials, and first student action. This is not a claim about an actual classroom cohort.
+- Presentation was checked at 1920×1080, 1280×720, and 390×844 with 0, 1, and 3 prompts; short and wrapping titles; long valid task text; materials; and footer present/absent.
+- Projector-resolution checks measured 64px title / 30.08px task text at 1280×720 and 92.8px title / 48px task text at 1920×1080, with strong contrast and no clipping or overlap. A physical room/projector/distance observation remains manual.
+- Downloaded PNGs were inspected as 1920×1080 images. Desktop- and portrait-triggered exports produced the same 16:9 composition with no controls or teacher-only notes.
+- Practical failure checks covered invalid URLs, retained generation inputs, export failure/retry, malformed AI output, missing AI configuration, and application-load retry behavior. A destructive live database outage was not induced.
+- The project was not published during Stage 4, so production database, AI, direct-route, asset, export, and access-protection checks remain pending until the first deployment.

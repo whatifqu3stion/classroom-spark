@@ -48,6 +48,9 @@ function EditableText({
       suppressContentEditableWarning
       onInput={handleInput}
       data-placeholder={placeholder}
+      role="textbox"
+      aria-label={placeholder}
+      aria-multiline={multiline}
       className={cn(
         "outline-none cursor-text transition-colors empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/40 hover:bg-muted/40 focus:bg-muted/20 focus:ring-2 focus:ring-primary/20 rounded-md px-1.5 -mx-1.5 py-0.5 -my-0.5",
         className
@@ -184,9 +187,11 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
                     className="flex-1 leading-relaxed"
                   />
                   <button
+                    type="button"
                     onClick={() => removePrompt(idx)}
-                    className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-muted rounded-md absolute -left-10 top-1 transition-opacity"
+                    className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-1.5 hover:bg-muted rounded-md absolute -left-10 top-1 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     title="Remove prompt"
+                    aria-label={`Remove prompt ${idx + 1}`}
                   >
                     <X className="w-4 h-4 text-muted-foreground" />
                   </button>
