@@ -46,10 +46,13 @@ Full user accounts and per-user ownership are a later productization step.
 
 ### AI
 Add after the UX/persistence stages:
-- server-only provider adapter
-- model configured by environment variable
-- structured JSON response
-- Zod validation
+- provider-neutral server generation service
+- injected provider interface with a server-only OpenAI adapter
+- OpenAI access through Replit AI Integrations
+- model configured by `AI_MODEL` (`gpt-5.6-luna` for Stage 3)
+- strict structured JSON response plus application Zod validation
+- one controlled malformed-output repair attempt
+- validated-only activity persistence
 
 ### Export
 Add after the classroom loop is stable.
@@ -141,7 +144,7 @@ Never expose secrets to client code.
 - prompts JSON/JSONB
 - duration_minutes
 - device_mode
-- materials JSON/JSONB nullable
+- materials JSON/JSONB, non-null with an empty-array default
 - resource_url nullable
 - resource_note nullable
 - teacher_note nullable
@@ -289,12 +292,18 @@ Prioritize:
 Automate critical logic:
 - schema validation
 - Device Off generation contract
+- exact Device On URL allowlisting
+- unsafe activity resource URL rejection
+- malformed-output repair behavior
 - generation route error handling
 - persistence behavior
 
 Then manually test:
 - refresh/recovery
 - history/reuse
+- real generation across rich/sparse and grade-level contexts
+- generation failure/retry with retained teacher inputs
+- teacher-note exclusion from presentation
 - PNG output
 
 ## Future-friendly, not future-built

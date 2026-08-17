@@ -12,7 +12,7 @@ import { BoardEditor } from "@/components/board-editor";
 import { ClassFormDialog } from "@/components/class-form-dialog";
 import { ClassColorDot } from "@/components/class-color-dot";
 import { InstructionalContextPanel } from "@/components/instructional-context-panel";
-import { Settings, Plus, Play, Shuffle, FilePlus, MonitorOff, MonitorSmartphone, Loader2 } from "lucide-react";
+import { Settings, Plus, Play, Shuffle, FilePlus, MonitorOff, MonitorSmartphone, Loader2, AlertCircle } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useToast } from "@/hooks/use-toast";
@@ -26,9 +26,11 @@ import {
   useUpdateChip,
   useDeleteChip,
   useCreateActivity,
+  useGenerateActivity,
   useUpdateActivity,
   getGetAppStateQueryKey,
-  ActivityInput
+  ActivityInput,
+  GenerateActivityInput,
 } from "@workspace/api-client-react";
 import {
   AlertDialog,
@@ -44,6 +46,36 @@ import {
 const shouldShowSubject = (className: string, subject: string) =>
   !className.toLocaleLowerCase().includes(subject.toLocaleLowerCase());
 
+const activityStyles = [
+  "Auto",
+  "Curiosity Hook",
+  "Retrieval Practice",
+  "Explain / Reason",
+  "Observe & Notice",
+  "Draw / Sketch",
+  "Predict",
+  "Compare / Contrast",
+  "Evaluate / Critique",
+  "Quick Write",
+  "Apply",
+  "Reflect",
+] as const;
+
+const getGenerationErrorMessage = (error: unknown) => {
+  if (
+    error &&
+    typeof error === "object" &&
+    "data" in error &&
+    error.data &&
+    typeof error.data === "object" &&
+    "error" in error.data &&
+    typeof error.data.error === "string"
+  ) {
+    return error.data.error;
+  }
+  return "Boardwork couldn’t generate an activity. Try again.";
+};
+
 const isMeaningful = (
   draft: Partial<ActivityDraft>,
   inheritedArrivalRoutine?: string | null,
@@ -56,6 +88,9 @@ const isMeaningful = (
     draft.task?.trim() ||
     draft.eyebrow?.trim() ||
     draft.resourceUrl?.trim() ||
+    draft.resourceNote?.trim() ||
+    draft.materials?.some((material) => material.trim()) ||
+    draft.teacherNote?.trim() ||
     draft.prompts?.some((prompt) => prompt.trim()) ||
     (arrivalInstructions && arrivalInstructions !== inheritedArrival)
   );
@@ -70,6 +105,9 @@ const activitySavePayload = (draft: ActivityDraft) => ({
   durationMinutes: draft.durationMinutes,
   deviceMode: draft.deviceMode,
   resourceUrl: draft.resourceUrl,
+  resourceNote: draft.resourceNote,
+  materials: draft.materials,
+  teacherNote: draft.teacherNote,
   style: draft.style,
 });
 
@@ -106,6 +144,7 @@ export default function Home() {
   const deleteChipMut = useDeleteChip();
 
   const createActivityMut = useCreateActivity();
+  const generateActivityMut = useGenerateActivity();
   const updateActivityMut = useUpdateActivity();
 
   // Local UI State
@@ -114,7 +153,11 @@ export default function Home() {
   const [deviceMode, setDeviceMode] = useState<DeviceMode>("off");
   const [duration, setDuration] = useState<Duration>(7);
   const [resourceUrl, setResourceUrl] = useState("");
+  const [resourceNote, setResourceNote] = useState("");
+  const [activityStyle, setActivityStyle] = useState<(typeof activityStyles)[number]>("Auto");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
+  const [lastGenerationWasSurprise, setLastGenerationWasSurprise] = useState(false);
 
   const [classDialogOpen, setClassDialogOpen] = useState(false);
   const [editingClassId, setEditingClassId] = useState<string | null>(null);
@@ -418,67 +461,46 @@ export default function Home() {
 
   const handleGenerate = async (surprise: boolean = false) => {
     if (isGenerating || !activeClassId || !activeClass) return;
+    setLastGenerationWasSurprise(surprise);
+    setGenerationError(null);
     setIsGenerating(true);
     try {
-      await new Promise(r => setTimeout(r, 1200)); // Mock latency
+      const payload: GenerateActivityInput = {
+        classId: activeClassId,
+        topic: topic.trim() || undefined,
+        goal: goal.trim() || undefined,
+        chipIds: selectedChipIds,
+        deviceMode,
+        durationMinutes: duration,
+        activityStyle:
+          !surprise && activityStyle !== "Auto" ? activityStyle : null,
+        teacherProvidedUrl:
+          deviceMode === "on" ? resourceUrl.trim() || null : null,
+        teacherProvidedResourceNote:
+          deviceMode === "on" ? resourceNote.trim() || null : null,
+        surprise,
+      };
 
-      let payload: ActivityInput;
-      if (surprise) {
-        payload = {
-          classId: activeClassId,
-          eyebrow: "SURPRISE ME",
-          title: "One sentence, two moods",
-          task: "Write one sentence describing an empty hallway. Rewrite the same event so it feels threatening without using the words 'scary', 'afraid', or 'danger'.",
-          prompts: [],
-          durationMinutes: duration,
-          deviceMode,
-          style: "Surprise Me",
-          arrivalInstructions: activeClass.arrivalRoutine,
-          sourceTopic: topic || undefined,
-          sourceGoal: goal || undefined,
-          sourceChipIds: selectedChipIds
+      const newActivity = await generateActivityMut.mutateAsync({ data: payload });
+      queryClient.setQueryData(getGetAppStateQueryKey(), (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          activities: [
+            newActivity,
+            ...old.activities.filter((activity: any) => activity.id !== newActivity.id),
+          ],
         };
-      } else if (deviceMode === "on") {
-        payload = {
-          classId: activeClassId,
-          eyebrow: "THINK & WRITE",
-          title: "Find the strongest evidence",
-          task: "Open the provided article. Read the first three paragraphs and choose one sentence that best supports the author's main claim.",
-          prompts: ["Copy or paraphrase the evidence.", "Explain your choice in one sentence."],
-          durationMinutes: duration,
-          deviceMode,
-          resourceUrl,
-          style: "Evaluate / Critique",
-          arrivalInstructions: activeClass.arrivalRoutine,
-          sourceTopic: topic || undefined,
-          sourceGoal: goal || undefined,
-          sourceChipIds: selectedChipIds
-        };
-      } else {
-        payload = {
-          classId: activeClassId,
-          eyebrow: "DO NOW",
-          title: "Which cell is in trouble?",
-          task: "Draw two simple cells: one in very salty water and one in fresh water. Add arrows showing where you think water will move.",
-          prompts: ["What changes in each cell?", "Use 'osmosis' in one sentence."],
-          durationMinutes: duration,
-          deviceMode,
-          style: "Observe & Notice",
-          arrivalInstructions: activeClass.arrivalRoutine,
-          sourceTopic: topic || undefined,
-          sourceGoal: goal || undefined,
-          sourceChipIds: selectedChipIds
-        };
-      }
-
-      await createActivityMut.mutateAsync({ data: payload }, {
-        onSuccess: (newActivity) => {
-          queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
-          setLocation(`/activity/${newActivity.id}`);
-        }
       });
-    } catch (e) {
-      toast({ title: "Failed to generate activity", variant: "destructive" });
+      setLocation(`/activity/${newActivity.id}`);
+    } catch (error) {
+      const message = getGenerationErrorMessage(error);
+      setGenerationError(message);
+      toast({
+        title: "Couldn’t generate activity",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setIsGenerating(false);
     }
@@ -675,20 +697,48 @@ export default function Home() {
               </div>
 
               {deviceMode === "on" && (
-                <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <Label htmlFor="resourceUrl">Resource URL (Required for Device On)</Label>
-                  <Input
-                    id="resourceUrl"
-                    placeholder="https://..."
-                    value={resourceUrl}
-                    onChange={(e) => setResourceUrl(e.target.value)}
-                    data-testid="input-resource-url"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Boardwork will not invent URLs. Provide the exact link students need.
-                  </p>
+                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="space-y-2">
+                    <Label htmlFor="resourceUrl">Resource URL (optional)</Label>
+                    <Input
+                      id="resourceUrl"
+                      placeholder="https://..."
+                      value={resourceUrl}
+                      onChange={(e) => setResourceUrl(e.target.value)}
+                      data-testid="input-resource-url"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="resourceNote">Resource description (optional)</Label>
+                    <Input
+                      id="resourceNote"
+                      placeholder="e.g. A short article introducing biomimicry"
+                      value={resourceNote}
+                      onChange={(e) => setResourceNote(e.target.value)}
+                      data-testid="input-resource-note"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Boardwork uses your description, but never opens or invents links.
+                    </p>
+                  </div>
                 </div>
               )}
+
+              <div className="space-y-2">
+                <Label htmlFor="activityStyle">Activity style</Label>
+                <Select value={activityStyle} onValueChange={(value) => setActivityStyle(value as (typeof activityStyles)[number])}>
+                  <SelectTrigger id="activityStyle" data-testid="select-activity-style">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activityStyles.map((style) => (
+                      <SelectItem key={style} value={style}>
+                        {style}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="flex flex-col gap-3 pt-4 mt-auto">
@@ -728,6 +778,30 @@ export default function Home() {
                   Start Blank
                 </Button>
               </div>
+              {generationError && (
+                <div
+                  className="rounded-lg border border-destructive/20 bg-destructive/5 p-3"
+                  role="alert"
+                  data-testid="generation-error"
+                >
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-foreground">{generationError}</p>
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="mt-1 h-auto p-0 text-sm"
+                        onClick={() => handleGenerate(lastGenerationWasSurprise)}
+                        disabled={isGenerating}
+                        data-testid="button-retry-generation"
+                      >
+                        Retry
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

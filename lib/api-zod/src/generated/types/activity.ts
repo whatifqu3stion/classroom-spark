@@ -23,6 +23,11 @@ export interface Activity {
   /** @nullable */
   resourceUrl?: string | null;
   /** @nullable */
+  resourceNote?: string | null;
+  materials?: string[];
+  /** @nullable */
+  teacherNote?: string | null;
+  /** @nullable */
   sourceTopic?: string | null;
   /** @nullable */
   sourceGoal?: string | null;

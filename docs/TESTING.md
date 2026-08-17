@@ -22,15 +22,16 @@ A feature is not “done” because it exists. The following behaviors should wo
 - [ ] Selected state is visually obvious and keyboard accessible.
 
 ## D. Generate
-- [ ] Start Blank reaches an editable board without any AI request.
-- [ ] Teacher can generate with only a class selected.
-- [ ] Teacher can generate using topic + goal + chips.
-- [ ] Device Off produces no required web/device action.
-- [ ] Device On never invents a URL.
-- [ ] Generated activity fits the requested 5/7/10 minute category.
-- [ ] Output is concise enough to project.
-- [ ] Generate button cannot fire duplicate overlapping requests.
-- [ ] Generation error preserves inputs and offers Retry.
+- [x] Start Blank reaches an editable board without any AI request.
+- [x] Teacher can generate with only a class selected.
+- [x] Teacher can generate using topic + goal + chips.
+- [x] Device Off produces no required web/device action.
+- [x] Device On never invents a URL.
+- [x] Generated activity fits the requested 5/7/10 minute category.
+- [x] Output is concise enough to project.
+- [x] Generate button cannot fire duplicate overlapping requests.
+- [x] Generation error preserves inputs and offers Retry.
+- [x] Device On renders only a validated teacher-supplied HTTP(S) resource link.
 
 ## E. Editing
 - [ ] Teacher can directly change generated title.
@@ -40,22 +41,23 @@ A feature is not “done” because it exists. The following behaviors should wo
 - [ ] Edits persist after refresh.
 
 ## F. Presentation
-- [ ] Present opens a dedicated clean view.
-- [ ] No teacher editing controls appear on the student board.
+- [x] Present opens a dedicated clean view.
+- [x] No teacher editing controls appear on the student board.
 - [ ] Board looks intentional at 1280×720.
 - [ ] Board looks intentional at 1920×1080.
-- [ ] Core task is readable at classroom distance.
-- [ ] Arrival instruction is visually secondary.
+- [x] Core task is readable at classroom distance.
+- [x] Arrival instruction is visually secondary.
 - [ ] Fullscreen action works in supported browsers.
-- [ ] Long AI text does not create tiny unreadable typography; content constraints/layout protect readability.
+- [x] Long AI text does not create tiny unreadable typography; content constraints/layout protect readability.
+- [x] Teacher-only notes never appear on the student board.
 
 ## G. History
-- [ ] Successful generations are not lost on refresh.
-- [ ] History shows recent activities by class/date.
-- [ ] Teacher can open an old activity.
-- [ ] Teacher can present an old activity.
-- [ ] Teacher can duplicate/remix an old activity.
-- [ ] Teacher can favorite and delete.
+- [x] Successful generations are not lost on refresh.
+- [x] History shows recent activities by class/date.
+- [x] Teacher can open an old activity.
+- [x] Teacher can present an old activity.
+- [x] Teacher can duplicate/remix an old activity.
+- [x] Teacher can favorite and delete.
 
 ## H. Export
 - [ ] Teacher can export a board as PNG.
@@ -64,10 +66,10 @@ A feature is not “done” because it exists. The following behaviors should wo
 - [ ] Export text is crisp enough at normal slide size.
 
 ## I. Responsive UX
-- [ ] Teacher can generate comfortably from a phone.
-- [ ] Teacher can select class/chips without precision tapping.
+- [x] Teacher can generate comfortably from a phone.
+- [x] Teacher can select class/chips without precision tapping.
 - [ ] Main desktop experience does not look like a generic admin dashboard.
-- [ ] No horizontal scrolling on normal phone widths.
+- [x] No horizontal scrolling on normal phone widths.
 
 ## J. Product quality gate
 Before calling MVP complete:

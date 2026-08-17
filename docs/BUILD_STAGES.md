@@ -49,7 +49,7 @@ Add:
 Do not redesign Stage 1 unless testing revealed a problem.
 
 ## Stage 3 — Add intelligence
-Add:
+Implemented:
 - server-side AI adapter
 - model/config environment variables
 - structured output
@@ -57,6 +57,11 @@ Add:
 - error/retry behavior
 - Device Off/On enforcement
 - teacher-provided Device On URL + resource note
+- validated-generation persistence through the Stage 2 activity flow
+- materials and teacher-only notes
+- lightweight recent title/style summaries for variety
+
+Initial provider: OpenAI through Replit AI Integrations, configured with `AI_MODEL=gpt-5.6-luna`.
 
 Keep AI invisible in the visual design.
 

@@ -15,6 +15,13 @@
       "when": 1786912598609,
       "tag": "0001_whole_khan",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786978356699,
+      "tag": "0002_foamy_maddog",
+      "breakpoints": true
     }
   ]
 }

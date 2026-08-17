@@ -62,6 +62,9 @@ export const GetAppStateResponse = zod.object({
   "deviceMode": zod.enum(['off', 'on']),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
+  "resourceNote": zod.string().nullish(),
+  "materials": zod.array(zod.string()).optional(),
+  "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
   "sourceGoal": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
@@ -239,6 +242,60 @@ export const UpdateInstructionalContextResponse = zod.object({
 
 
 /**
+ * Builds canonical generation context server-side, generates one validated activity, saves it, and returns the persisted activity.
+ * @summary Generate and save a Boardwork activity
+ */
+export const generateActivityBodyTopicMax = 1000;
+
+export const generateActivityBodyGoalMax = 1000;
+
+export const generateActivityBodyChipIdsMax = 20;
+
+export const generateActivityBodyTeacherProvidedUrlMax = 2000;
+
+export const generateActivityBodyTeacherProvidedResourceNoteMax = 1000;
+
+
+
+export const GenerateActivityBody = zod.object({
+  "classId": zod.string(),
+  "topic": zod.string().max(generateActivityBodyTopicMax).optional(),
+  "goal": zod.string().max(generateActivityBodyGoalMax).optional(),
+  "chipIds": zod.array(zod.string()).max(generateActivityBodyChipIdsMax),
+  "deviceMode": zod.enum(['off', 'on']),
+  "durationMinutes": zod.union([zod.literal(5),zod.literal(7),zod.literal(10)]),
+  "activityStyle": zod.union([zod.enum(['Curiosity Hook', 'Retrieval Practice', 'Explain / Reason', 'Observe & Notice', 'Draw / Sketch', 'Predict', 'Compare / Contrast', 'Evaluate / Critique', 'Quick Write', 'Apply', 'Reflect']),zod.null()]).optional(),
+  "teacherProvidedUrl": zod.string().max(generateActivityBodyTeacherProvidedUrlMax).nullish(),
+  "teacherProvidedResourceNote": zod.string().max(generateActivityBodyTeacherProvidedResourceNoteMax).nullish(),
+  "surprise": zod.boolean()
+})
+
+export const GenerateActivityResponse = zod.object({
+  "id": zod.string(),
+  "classId": zod.string(),
+  "eyebrow": zod.string().nullish(),
+  "title": zod.string(),
+  "task": zod.string(),
+  "prompts": zod.array(zod.string()),
+  "durationMinutes": zod.union([zod.literal(5),zod.literal(7),zod.literal(10)]),
+  "deviceMode": zod.enum(['off', 'on']),
+  "arrivalInstructions": zod.string().nullish(),
+  "resourceUrl": zod.string().nullish(),
+  "resourceNote": zod.string().nullish(),
+  "materials": zod.array(zod.string()).optional(),
+  "teacherNote": zod.string().nullish(),
+  "sourceTopic": zod.string().nullish(),
+  "sourceGoal": zod.string().nullish(),
+  "sourceChipIds": zod.array(zod.string()).optional(),
+  "style": zod.string().nullish(),
+  "favorite": zod.boolean(),
+  "duplicatedFrom": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
  * @summary Create a chip for a class
  */
 export const CreateChipParams = zod.object({
@@ -311,6 +368,9 @@ export const ListActivitiesResponseItem = zod.object({
   "deviceMode": zod.enum(['off', 'on']),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
+  "resourceNote": zod.string().nullish(),
+  "materials": zod.array(zod.string()).optional(),
+  "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
   "sourceGoal": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
@@ -336,6 +396,9 @@ export const CreateActivityBody = zod.object({
   "deviceMode": zod.enum(['off', 'on']),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
+  "resourceNote": zod.string().nullish(),
+  "materials": zod.array(zod.string()).optional(),
+  "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
   "sourceGoal": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
@@ -354,6 +417,9 @@ export const CreateActivityResponse = zod.object({
   "deviceMode": zod.enum(['off', 'on']),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
+  "resourceNote": zod.string().nullish(),
+  "materials": zod.array(zod.string()).optional(),
+  "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
   "sourceGoal": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
@@ -383,6 +449,9 @@ export const GetActivityResponse = zod.object({
   "deviceMode": zod.enum(['off', 'on']),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
+  "resourceNote": zod.string().nullish(),
+  "materials": zod.array(zod.string()).optional(),
+  "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
   "sourceGoal": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
@@ -411,6 +480,9 @@ export const UpdateActivityBody = zod.object({
   "deviceMode": zod.enum(['off', 'on']).optional(),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
+  "resourceNote": zod.string().nullish(),
+  "materials": zod.array(zod.string()).optional(),
+  "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
   "sourceGoal": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
@@ -429,6 +501,9 @@ export const UpdateActivityResponse = zod.object({
   "deviceMode": zod.enum(['off', 'on']),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
+  "resourceNote": zod.string().nullish(),
+  "materials": zod.array(zod.string()).optional(),
+  "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
   "sourceGoal": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
@@ -469,6 +544,9 @@ export const DuplicateActivityResponse = zod.object({
   "deviceMode": zod.enum(['off', 'on']),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
+  "resourceNote": zod.string().nullish(),
+  "materials": zod.array(zod.string()).optional(),
+  "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
   "sourceGoal": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
@@ -502,6 +580,9 @@ export const SetActivityFavoriteResponse = zod.object({
   "deviceMode": zod.enum(['off', 'on']),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
+  "resourceNote": zod.string().nullish(),
+  "materials": zod.array(zod.string()).optional(),
+  "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
   "sourceGoal": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),

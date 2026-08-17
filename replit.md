@@ -142,7 +142,11 @@ Keep model name configurable with environment variables.
 
 Keep provider-specific logic behind a small adapter.
 
+Stage 3 uses OpenAI through Replit AI Integrations. The route injects the provider through a provider-neutral generation interface, and `AI_MODEL` selects the model (`gpt-5.6-luna` for the initial implementation).
+
 Return structured activity data validated with Zod.
+
+Allow one controlled repair attempt for malformed structured output. Never fabricate fallback activity content after an AI failure.
 
 Every generation request should include canonical class context plus today’s request.
 

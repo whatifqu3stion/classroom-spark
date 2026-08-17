@@ -20,6 +20,8 @@ tags:
     description: Class chip operations
   - name: activities
     description: Activity/history operations
+  - name: generation
+    description: Server-side Boardwork activity generation
 paths:
   /healthz:
     get:
@@ -206,6 +208,68 @@ paths:
                 $ref: "#/components/schemas/Error"
         "404":
           description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /generate:
+    post:
+      operationId: generateActivity
+      tags: [generation]
+      summary: Generate and save a Boardwork activity
+      description: Builds canonical generation context server-side, generates one validated activity, saves it, and returns the persisted activity.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateActivityInput"
+      responses:
+        "201":
+          description: Generated and saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Activity"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Class or Focus chip not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Generation already in progress for this class
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: AI provider rate limited the request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: AI provider or structured output failure
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: AI generation is not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "504":
+          description: AI provider timed out
           content:
             application/json:
               schema:
@@ -505,6 +569,21 @@ components:
       type: integer
       enum: [5, 7, 10]
 
+    ActivityStyle:
+      type: string
+      enum:
+        - Curiosity Hook
+        - Retrieval Practice
+        - Explain / Reason
+        - Observe & Notice
+        - Draw / Sketch
+        - Predict
+        - Compare / Contrast
+        - Evaluate / Critique
+        - Quick Write
+        - Apply
+        - Reflect
+
     ClassProfile:
       type: object
       required:
@@ -710,6 +789,14 @@ components:
           type: ["string", "null"]
         resourceUrl:
           type: ["string", "null"]
+        resourceNote:
+          type: ["string", "null"]
+        materials:
+          type: array
+          items:
+            type: string
+        teacherNote:
+          type: ["string", "null"]
         sourceTopic:
           type: ["string", "null"]
         sourceGoal:
@@ -760,6 +847,14 @@ components:
           type: ["string", "null"]
         resourceUrl:
           type: ["string", "null"]
+        resourceNote:
+          type: ["string", "null"]
+        materials:
+          type: array
+          items:
+            type: string
+        teacherNote:
+          type: ["string", "null"]
         sourceTopic:
           type: ["string", "null"]
         sourceGoal:
@@ -794,6 +889,14 @@ components:
           type: ["string", "null"]
         resourceUrl:
           type: ["string", "null"]
+        resourceNote:
+          type: ["string", "null"]
+        materials:
+          type: array
+          items:
+            type: string
+        teacherNote:
+          type: ["string", "null"]
         sourceTopic:
           type: ["string", "null"]
         sourceGoal:
@@ -805,6 +908,45 @@ components:
         style:
           type: ["string", "null"]
         favorite:
+          type: boolean
+
+    GenerateActivityInput:
+      type: object
+      required:
+        - classId
+        - chipIds
+        - deviceMode
+        - durationMinutes
+        - surprise
+      properties:
+        classId:
+          type: string
+        topic:
+          type: string
+          maxLength: 1000
+        goal:
+          type: string
+          maxLength: 1000
+        chipIds:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+        deviceMode:
+          $ref: "#/components/schemas/DeviceMode"
+        durationMinutes:
+          $ref: "#/components/schemas/Duration"
+        activityStyle:
+          anyOf:
+            - $ref: "#/components/schemas/ActivityStyle"
+            - type: "null"
+        teacherProvidedUrl:
+          type: ["string", "null"]
+          maxLength: 2000
+        teacherProvidedResourceNote:
+          type: ["string", "null"]
+          maxLength: 1000
+        surprise:
           type: boolean
 
     FavoriteInput:

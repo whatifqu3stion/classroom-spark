@@ -44,6 +44,9 @@ export interface ActivityDraft {
   deviceMode: DeviceMode;
   arrivalInstructions?: string | null;
   resourceUrl?: string | null;
+  resourceNote?: string | null;
+  materials?: string[];
+  teacherNote?: string | null;
   sourceTopic?: string | null;
   sourceGoal?: string | null;
   sourceChipIds?: string[];

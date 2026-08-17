@@ -19,6 +19,10 @@ import {
   SetActivityFavoriteResponse,
 } from "@workspace/api-zod";
 import { duplicateActivity } from "../lib/boardwork-repo";
+import {
+  ActivityResourceValidationError,
+  normalizeActivityResourceUrl,
+} from "../lib/activity-resource";
 
 const router: IRouter = Router();
 
@@ -56,9 +60,23 @@ router.post("/activities", async (req, res): Promise<void> => {
     return;
   }
 
+  let resourceUrl: string | null;
+  try {
+    resourceUrl = normalizeActivityResourceUrl(
+      parsed.data.resourceUrl,
+      parsed.data.deviceMode,
+    );
+  } catch (error) {
+    if (error instanceof ActivityResourceValidationError) {
+      res.status(400).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
+
   const [created] = await db
     .insert(activitiesTable)
-    .values(parsed.data)
+    .values({ ...parsed.data, resourceUrl })
     .returning();
 
   res.status(201).json(CreateActivityResponse.parse(created));
@@ -96,16 +114,43 @@ router.patch("/activities/:activityId", async (req, res): Promise<void> => {
     return;
   }
 
-  const [updated] = await db
-    .update(activitiesTable)
-    .set(parsed.data)
-    .where(eq(activitiesTable.id, params.data.activityId))
-    .returning();
+  const [existing] = await db
+    .select()
+    .from(activitiesTable)
+    .where(eq(activitiesTable.id, params.data.activityId));
 
-  if (!updated) {
+  if (!existing) {
     res.status(404).json({ error: "Activity not found" });
     return;
   }
+
+  const deviceMode = parsed.data.deviceMode ?? existing.deviceMode;
+  if (deviceMode !== "off" && deviceMode !== "on") {
+    res.status(400).json({ error: "Activity has an invalid device mode." });
+    return;
+  }
+
+  let resourceUrl: string | null;
+  try {
+    resourceUrl = normalizeActivityResourceUrl(
+      parsed.data.resourceUrl === undefined
+        ? existing.resourceUrl
+        : parsed.data.resourceUrl,
+      deviceMode,
+    );
+  } catch (error) {
+    if (error instanceof ActivityResourceValidationError) {
+      res.status(400).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
+
+  const [updated] = await db
+    .update(activitiesTable)
+    .set({ ...parsed.data, resourceUrl })
+    .where(eq(activitiesTable.id, params.data.activityId))
+    .returning();
 
   res.json(UpdateActivityResponse.parse(updated));
 });

@@ -189,5 +189,9 @@ For school-facing output:
 - API key lives only in Replit Secrets / server environment.
 - Never send the secret to browser code.
 - Keep model name configurable through an environment variable.
-- Keep one provider adapter module so provider/model changes do not touch UI code.
+- Route composition injects a provider through the provider-neutral Boardwork generation interface.
+- Keep OpenAI SDK calls and response handling inside the OpenAI adapter so provider/model changes do not touch UI code or generation orchestration.
+- Use strict structured output, then application Zod validation and deterministic duration/device/URL checks.
+- Permit one repair attempt only for malformed structured output; never fabricate fallback activity content.
+- Build canonical context server-side and include only the three most recent activity title/style summaries.
 - Do not build provider selection UI in MVP.

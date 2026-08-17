@@ -33,6 +33,7 @@ import type {
   ClassProfileUpdate,
   Error,
   FavoriteInput,
+  GenerateActivityInput,
   HealthStatus,
   InstructionalContext,
   InstructionalContextInput,
@@ -734,6 +735,78 @@ export const useUpdateInstructionalContext = <TError = ErrorType<Error>,
         TContext
       > => {
       return useMutation(getUpdateInstructionalContextMutationOptions(options));
+    }
+
+export const getGenerateActivityUrl = () => {
+
+
+
+
+  return `/api/generate`
+}
+
+/**
+ * Builds canonical generation context server-side, generates one validated activity, saves it, and returns the persisted activity.
+ * @summary Generate and save a Boardwork activity
+ */
+export const generateActivity = async (generateActivityInput: GenerateActivityInput, options?: Parameters<typeof customFetch>[1]): Promise<Activity> => {
+
+  return customFetch<Activity>(getGenerateActivityUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(generateActivityInput)
+  }
+);}
+
+
+
+
+
+export const getGenerateActivityMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateActivity>>, TError,{data: BodyType<GenerateActivityInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof generateActivity>>, TError,{data: BodyType<GenerateActivityInput>}, TContext> => {
+
+const mutationKey = ['generateActivity'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof generateActivity>>, {data: BodyType<GenerateActivityInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  generateActivity(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GenerateActivityMutationResult = NonNullable<Awaited<ReturnType<typeof generateActivity>>>
+    export type GenerateActivityMutationBody = BodyType<GenerateActivityInput>
+    export type GenerateActivityMutationError = ErrorType<Error>
+
+    /**
+ * @summary Generate and save a Boardwork activity
+ */
+export const useGenerateActivity = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateActivity>>, TError,{data: BodyType<GenerateActivityInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof generateActivity>>,
+        TError,
+        {data: BodyType<GenerateActivityInput>},
+        TContext
+      > => {
+      return useMutation(getGenerateActivityMutationOptions(options));
     }
 
 export const getCreateChipUrl = (classId: string,) => {

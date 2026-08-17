@@ -30,6 +30,23 @@ export const Duration = {
   NUMBER_10: 10,
 } as const;
 
+export type ActivityStyle = typeof ActivityStyle[keyof typeof ActivityStyle];
+
+
+export const ActivityStyle = {
+  Curiosity_Hook: 'Curiosity Hook',
+  Retrieval_Practice: 'Retrieval Practice',
+  'Explain_/_Reason': 'Explain / Reason',
+  'Observe_&_Notice': 'Observe & Notice',
+  'Draw_/_Sketch': 'Draw / Sketch',
+  Predict: 'Predict',
+  'Compare_/_Contrast': 'Compare / Contrast',
+  'Evaluate_/_Critique': 'Evaluate / Critique',
+  Quick_Write: 'Quick Write',
+  Apply: 'Apply',
+  Reflect: 'Reflect',
+} as const;
+
 export interface ClassProfile {
   id: string;
   name: string;
@@ -137,6 +154,11 @@ export interface Activity {
   /** @nullable */
   resourceUrl?: string | null;
   /** @nullable */
+  resourceNote?: string | null;
+  materials?: string[];
+  /** @nullable */
+  teacherNote?: string | null;
+  /** @nullable */
   sourceTopic?: string | null;
   /** @nullable */
   sourceGoal?: string | null;
@@ -164,6 +186,11 @@ export interface ActivityInput {
   /** @nullable */
   resourceUrl?: string | null;
   /** @nullable */
+  resourceNote?: string | null;
+  materials?: string[];
+  /** @nullable */
+  teacherNote?: string | null;
+  /** @nullable */
   sourceTopic?: string | null;
   /** @nullable */
   sourceGoal?: string | null;
@@ -186,6 +213,11 @@ export interface ActivityUpdate {
   /** @nullable */
   resourceUrl?: string | null;
   /** @nullable */
+  resourceNote?: string | null;
+  materials?: string[];
+  /** @nullable */
+  teacherNote?: string | null;
+  /** @nullable */
   sourceTopic?: string | null;
   /** @nullable */
   sourceGoal?: string | null;
@@ -193,6 +225,30 @@ export interface ActivityUpdate {
   /** @nullable */
   style?: string | null;
   favorite?: boolean;
+}
+
+export interface GenerateActivityInput {
+  classId: string;
+  /** @maxLength 1000 */
+  topic?: string;
+  /** @maxLength 1000 */
+  goal?: string;
+  /** @maxItems 20 */
+  chipIds: string[];
+  deviceMode: DeviceMode;
+  durationMinutes: Duration;
+  activityStyle?: ActivityStyle | null;
+  /**
+     * @maxLength 2000
+     * @nullable
+     */
+  teacherProvidedUrl?: string | null;
+  /**
+     * @maxLength 1000
+     * @nullable
+     */
+  teacherProvidedResourceNote?: string | null;
+  surprise: boolean;
 }
 
 export interface FavoriteInput {

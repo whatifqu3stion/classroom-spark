@@ -9,6 +9,7 @@
 export * from './activeSelection';
 export * from './activity';
 export * from './activityInput';
+export * from './activityStyle';
 export * from './activityUpdate';
 export * from './appState';
 export * from './chip';
@@ -21,6 +22,7 @@ export * from './deviceMode';
 export * from './duration';
 export * from './error';
 export * from './favoriteInput';
+export * from './generateActivityInput';
 export * from './healthStatus';
 export * from './instructionalContext';
 export * from './instructionalContextInput';

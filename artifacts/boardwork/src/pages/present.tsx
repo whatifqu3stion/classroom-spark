@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useBoardwork } from "@/store/boardwork-context";
-import { Maximize, Minimize, ChevronLeft } from "lucide-react";
+import { Maximize, Minimize, ChevronLeft, ExternalLink } from "lucide-react";
 import { Link, useRoute } from "wouter";
+import { getSafeResourceUrl } from "@/lib/resource-url";
 
 export default function Present() {
   const [, params] = useRoute("/present/:id");
@@ -64,6 +65,7 @@ export default function Present() {
   }
 
   const arrivalInstruction = activeDraft.arrivalInstructions?.trim();
+  const safeResourceUrl = getSafeResourceUrl(activeDraft.resourceUrl);
   return (
     <div
       ref={containerRef}
@@ -107,6 +109,35 @@ export default function Present() {
                   </li>
                 ))}
               </ul>
+            )}
+
+            {activeDraft.materials && activeDraft.materials.length > 0 && (
+              <p
+                className="mt-6 text-[clamp(0.9rem,1.4vw,1.35rem)] font-medium text-muted-foreground"
+                data-testid="present-materials"
+              >
+                Materials: {activeDraft.materials.join(", ")}
+              </p>
+            )}
+
+            {safeResourceUrl && (
+              <div className="mt-6" data-testid="present-resource">
+                <a
+                  href={safeResourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-[clamp(0.9rem,1.3vw,1.2rem)] font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+                  data-testid="present-resource-link"
+                >
+                  Open resource
+                  <ExternalLink className="h-[1em] w-[1em]" aria-hidden="true" />
+                </a>
+                {activeDraft.resourceNote && (
+                  <p className="mt-2 text-[clamp(0.8rem,1.1vw,1rem)] text-muted-foreground">
+                    {activeDraft.resourceNote}
+                  </p>
+                )}
+              </div>
             )}
           </div>
         </main>

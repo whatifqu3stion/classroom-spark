@@ -1,9 +1,10 @@
 import React, { useRef, useEffect } from "react";
 import { ActivityDraft } from "@/store/boardwork-context";
 import { Button } from "./ui/button";
-import { Plus, X, Monitor, Clock, FileText, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Plus, X, Monitor, Clock, FileText, Loader2, CheckCircle2, AlertCircle, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
+import { getSafeResourceUrl } from "@/lib/resource-url";
 
 interface BoardEditorProps {
   draft: ActivityDraft;
@@ -61,6 +62,7 @@ function EditableText({
 }
 
 export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", isMeaningful = true }: BoardEditorProps) {
+  const safeResourceUrl = getSafeResourceUrl(draft.resourceUrl);
   const addPrompt = () => {
     if (draft.prompts.length < 3) {
       onChange({ prompts: [...draft.prompts, ""] });
@@ -205,7 +207,61 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
             </Button>
           )}
 
-          <div className="pt-8 mt-8 border-t">
+          {safeResourceUrl && (
+            <div className="rounded-lg border bg-muted/20 p-4">
+              <a
+                href={safeResourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-primary underline-offset-4 hover:underline"
+                data-testid="activity-resource-link"
+              >
+                Open student resource
+                <ExternalLink className="h-4 w-4" aria-hidden="true" />
+              </a>
+              {draft.resourceNote && (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {draft.resourceNote}
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="space-y-3 pt-4">
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Materials
+            </div>
+            <EditableText
+              value={(draft.materials ?? []).join(", ")}
+              onChange={(value) =>
+                onChange({
+                  materials: value
+                    .split(",")
+                    .map((material) => material.trim())
+                    .filter(Boolean)
+                    .slice(0, 5),
+                })
+              }
+              placeholder="Optional materials, separated by commas..."
+              className="block w-full text-sm text-foreground"
+            />
+          </div>
+
+          <div className="space-y-5 pt-8 mt-8 border-t">
+            {draft.teacherNote != null && (
+              <div>
+                <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Teacher note
+                </div>
+                <EditableText
+                  multiline
+                  value={draft.teacherNote}
+                  onChange={(val) => onChange({ teacherNote: val || null })}
+                  placeholder="Optional note for the teacher..."
+                  className="text-muted-foreground text-sm block w-full"
+                />
+              </div>
+            )}
             <EditableText
               multiline
               value={draft.arrivalInstructions || ""}
