@@ -12,7 +12,8 @@ import { BoardEditor } from "@/components/board-editor";
 import { ClassFormDialog } from "@/components/class-form-dialog";
 import { ClassColorDot } from "@/components/class-color-dot";
 import { InstructionalContextPanel } from "@/components/instructional-context-panel";
-import { Settings, Plus, Play, Shuffle, FilePlus, MonitorOff, MonitorSmartphone, Loader2, AlertCircle } from "lucide-react";
+import { Settings, Plus, Play, Shuffle, FilePlus, MonitorOff, MonitorSmartphone, Loader2, AlertCircle, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useToast } from "@/hooks/use-toast";
@@ -157,6 +158,7 @@ export default function Home() {
   const [resourceUrl, setResourceUrl] = useState("");
   const [resourceNote, setResourceNote] = useState("");
   const [activityStyle, setActivityStyle] = useState<(typeof activityStyles)[number]>("Auto");
+  const [customizeOpen, setCustomizeOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [lastGenerationWasSurprise, setLastGenerationWasSurprise] = useState(false);
@@ -611,12 +613,12 @@ export default function Home() {
               </SelectContent>
             </Select>
             {activeClass && (
-              <Button variant="ghost" size="icon" onClick={() => { setEditingClassId(activeClassId); setClassDialogOpen(true); }} className="-ml-2 shrink-0 text-muted-foreground hover:text-foreground" title="Edit Class Settings" data-testid="button-edit-class">
+              <Button variant="ghost" size="icon" onClick={() => { setEditingClassId(activeClassId); setClassDialogOpen(true); }} className="-ml-2 shrink-0 text-muted-foreground hover:text-foreground" title="Edit class settings" aria-label="Edit class settings" data-testid="button-edit-class">
                 <Settings className="w-4 h-4" />
               </Button>
             )}
           </div>
-          <Button variant="outline" size="sm" onClick={() => { setEditingClassId(null); setClassDialogOpen(true); }} className="shrink-0 gap-2" data-testid="button-new-class">
+          <Button variant="outline" size="sm" onClick={() => { setEditingClassId(null); setClassDialogOpen(true); }} className="shrink-0 gap-2" title="New class" aria-label="New class" data-testid="button-new-class">
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">New Class</span>
           </Button>
@@ -626,21 +628,17 @@ export default function Home() {
         <div className="flex flex-col lg:flex-1 lg:flex-row gap-6 lg:gap-8 lg:min-h-0">
 
           {/* Left Column: Generator Controls */}
-          <div className="w-full lg:w-[400px] xl:w-[460px] flex flex-col gap-6 lg:overflow-y-auto lg:pr-2 pb-8">
-            {activeClassId && localContext && (
-              <InstructionalContextPanel
-                value={localContext}
-                onChange={(updates) => setLocalContext(prev => prev ? { ...prev, ...updates } : prev)}
-              />
-            )}
-
+          <div className="w-full lg:w-[400px] xl:w-[460px] flex flex-col gap-5 lg:overflow-y-auto lg:pr-2 pb-8">
             <div className="space-y-4">
               <div>
-                <h2 className="text-sm font-semibold text-foreground">Today&apos;s boardwork</h2>
-                <p className="text-xs text-muted-foreground">Optional context for this activity only</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Create today&apos;s board</p>
+                <h1 className="mt-1 text-xl font-semibold tracking-tight text-foreground">What should students practice?</h1>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  Add a topic or goal. You can fine-tune the board before presenting it.
+                </p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="topic">What are students working on?</Label>
+                <Label htmlFor="topic">Topic or unit <span className="font-normal text-muted-foreground">(optional)</span></Label>
                 <Input
                   id="topic"
                   placeholder="e.g. osmosis and diffusion"
@@ -650,10 +648,10 @@ export default function Home() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="goal">What should this practice?</Label>
+                <Label htmlFor="goal">Practice goal <span className="font-normal text-muted-foreground">(optional)</span></Label>
                 <Input
                   id="goal"
-                  placeholder="e.g. scientific reasoning"
+                  placeholder="e.g. explain the evidence"
                   value={goal}
                   onChange={(e) => setGoal(e.target.value)}
                   data-testid="input-goal"
@@ -661,89 +659,118 @@ export default function Home() {
               </div>
             </div>
 
-            <ChipGroup
-              chips={activeChips}
-              selectedChipIds={selectedChipIds}
-              onToggleSelection={toggleChipSelection}
-              onAddChip={(label) => createChipMut.mutate({ classId: activeClassId!, data: { label } }, { onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() }) })}
-              onUpdateChip={(id, label) => updateChipMut.mutate({ chipId: id, data: { label } }, { onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() }) })}
-              onDeleteChip={(id) => deleteChipMut.mutate({ chipId: id }, { onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() }) })}
-              onClearSelection={clearChipSelection}
-            />
-
-            <div className="space-y-4 pt-2">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Device Mode</Label>
-                  <SegmentedControl<DeviceMode>
-                    options={[
-                      { label: "Off", value: "off", icon: <MonitorOff className="w-4 h-4" /> },
-                      { label: "On", value: "on", icon: <MonitorSmartphone className="w-4 h-4" /> },
-                    ]}
-                    value={deviceMode}
-                    onChange={setDeviceMode}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Duration (min)</Label>
-                  <SegmentedControl<Duration>
-                    options={[
-                      { label: "5", value: 5 },
-                      { label: "7", value: 7 },
-                      { label: "10", value: 10 },
-                    ]}
-                    value={duration}
-                    onChange={setDuration}
-                  />
-                </div>
-              </div>
-
-              {deviceMode === "on" && (
-                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <div className="space-y-2">
-                    <Label htmlFor="resourceUrl">Resource URL (optional)</Label>
-                    <Input
-                      id="resourceUrl"
-                      placeholder="https://..."
-                      value={resourceUrl}
-                      onChange={(e) => setResourceUrl(e.target.value)}
-                      data-testid="input-resource-url"
+            <Collapsible open={customizeOpen} onOpenChange={setCustomizeOpen} className="rounded-xl border bg-muted/10">
+              <CollapsibleTrigger
+                className="group flex min-h-14 w-full items-center justify-between gap-4 px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-xl"
+                data-testid="button-toggle-customize"
+              >
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-foreground">Add context &amp; options</span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    Optional: class context, Focus, delivery, duration, and style
+                  </span>
+                </span>
+                <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform ${customizeOpen ? "rotate-180" : ""}`} />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="border-t px-4 pb-4 pt-4">
+                <div className="space-y-6">
+                  {activeClassId && localContext && (
+                    <InstructionalContextPanel
+                      value={localContext}
+                      onChange={(updates) => setLocalContext(prev => prev ? { ...prev, ...updates } : prev)}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="resourceNote">Resource description (optional)</Label>
-                    <Input
-                      id="resourceNote"
-                      placeholder="e.g. A short article introducing biomimicry"
-                      value={resourceNote}
-                      onChange={(e) => setResourceNote(e.target.value)}
-                      data-testid="input-resource-note"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Boardwork uses your description, but never opens or invents links.
-                    </p>
+                  )}
+
+                  <ChipGroup
+                    chips={activeChips}
+                    selectedChipIds={selectedChipIds}
+                    onToggleSelection={toggleChipSelection}
+                    onAddChip={(label) => createChipMut.mutate({ classId: activeClassId!, data: { label } }, { onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() }) })}
+                    onUpdateChip={(id, label) => updateChipMut.mutate({ chipId: id, data: { label } }, { onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() }) })}
+                    onDeleteChip={(id) => deleteChipMut.mutate({ chipId: id }, { onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() }) })}
+                    onClearSelection={clearChipSelection}
+                  />
+
+                  <div className="space-y-4">
+                    <div>
+                      <h2 className="text-sm font-semibold text-foreground">Board settings</h2>
+                      <p className="text-xs text-muted-foreground">These start with your class defaults.</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Device mode</Label>
+                        <SegmentedControl<DeviceMode>
+                          options={[
+                            { label: "Off", value: "off", icon: <MonitorOff className="w-4 h-4" /> },
+                            { label: "On", value: "on", icon: <MonitorSmartphone className="w-4 h-4" /> },
+                          ]}
+                          value={deviceMode}
+                          onChange={setDeviceMode}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Duration (min)</Label>
+                        <SegmentedControl<Duration>
+                          options={[
+                            { label: "5", value: 5 },
+                            { label: "7", value: 7 },
+                            { label: "10", value: 10 },
+                          ]}
+                          value={duration}
+                          onChange={setDuration}
+                        />
+                      </div>
+                    </div>
+
+                    {deviceMode === "on" && (
+                      <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="space-y-2">
+                          <Label htmlFor="resourceUrl">Resource URL (optional)</Label>
+                          <Input
+                            id="resourceUrl"
+                            placeholder="https://..."
+                            value={resourceUrl}
+                            onChange={(e) => setResourceUrl(e.target.value)}
+                            data-testid="input-resource-url"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="resourceNote">Resource description (optional)</Label>
+                          <Input
+                            id="resourceNote"
+                            placeholder="e.g. A short article introducing biomimicry"
+                            value={resourceNote}
+                            onChange={(e) => setResourceNote(e.target.value)}
+                            data-testid="input-resource-note"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Boardwork uses your description, but never opens or invents links.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="activityStyle">Activity style</Label>
+                      <Select value={activityStyle} onValueChange={(value) => setActivityStyle(value as (typeof activityStyles)[number])}>
+                        <SelectTrigger id="activityStyle" data-testid="select-activity-style">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {activityStyles.map((style) => (
+                            <SelectItem key={style} value={style}>
+                              {style}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
-              )}
+              </CollapsibleContent>
+            </Collapsible>
 
-              <div className="space-y-2">
-                <Label htmlFor="activityStyle">Activity style</Label>
-                <Select value={activityStyle} onValueChange={(value) => setActivityStyle(value as (typeof activityStyles)[number])}>
-                  <SelectTrigger id="activityStyle" data-testid="select-activity-style">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {activityStyles.map((style) => (
-                      <SelectItem key={style} value={style}>
-                        {style}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3 pt-4 mt-auto">
+            <div className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-3 border-t bg-background/95 px-4 py-3 backdrop-blur-sm lg:static lg:mx-0 lg:border-t-0 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none">
               <Button
                 size="lg"
                 className="w-full text-base font-semibold shadow-sm gap-2"
@@ -756,7 +783,7 @@ export default function Home() {
                 ) : (
                   <Play className="w-5 h-5 fill-current" />
                 )}
-                {isGenerating ? "Creating board..." : "Generate"}
+                {isGenerating ? "Creating board..." : "Create board"}
               </Button>
               <div className="grid grid-cols-2 gap-3">
                 <Button
@@ -767,7 +794,7 @@ export default function Home() {
                   data-testid="button-surprise"
                 >
                   <Shuffle className="w-4 h-4" />
-                  Surprise Me
+                  Surprise me
                 </Button>
                 <Button
                   variant="ghost"
@@ -777,7 +804,7 @@ export default function Home() {
                   data-testid="button-blank"
                 >
                   <FilePlus className="w-4 h-4" />
-                  Start Blank
+                  Start blank
                 </Button>
               </div>
               {generationError && (
@@ -833,12 +860,8 @@ export default function Home() {
                 <FilePlus className="w-12 h-12 mb-4 opacity-20" />
                 <h3 className="text-lg font-medium text-foreground mb-2">No activity created yet</h3>
                 <p className="max-w-sm mb-6">
-                  Set your topic and preferences on the left, then click Generate to create a new board.
+                  Add a topic or goal on the left, then choose Create board. You can also start blank from the creation actions.
                 </p>
-                <Button variant="outline" onClick={startBlank} className="gap-2">
-                  <FilePlus className="w-4 h-4" />
-                  Start from a blank board
-                </Button>
               </div>
             )}
           </div>

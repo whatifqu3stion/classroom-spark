@@ -89,10 +89,10 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background rounded-xl border shadow-sm">
       <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
-        <div className="text-sm font-medium text-foreground flex items-center gap-3">
+          <div className="text-sm font-medium text-foreground flex items-center gap-3">
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-muted-foreground" />
-            Board Preview
+              Edit your board
           </div>
           <div className="h-4 w-px bg-border mx-1" />
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground min-w-[80px]" data-testid="text-save-status">
@@ -112,6 +112,12 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
               <>
                 <AlertCircle className="w-3 h-3 text-destructive" />
                 Save failed
+              </>
+            )}
+            {saveStatus === "idle" && (
+              <>
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                {draft.id ? "Saved" : "Draft"}
               </>
             )}
           </div>
