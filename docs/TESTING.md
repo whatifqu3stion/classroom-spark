@@ -5,7 +5,7 @@ A feature is not “done” because it exists. The following behaviors should wo
 ## A. Access protection
 - [ ] Published app is not openly usable by an unintended visitor.
 - [ ] Deployment-level privacy/password protection is used if available.
-- [ ] If fallback `APP_PASSWORD` is needed, it is checked server-side.
+- [x] If fallback `APP_PASSWORD` is needed, it is checked server-side.
 - [x] No API key or app password appears in client code, rendered HTML, or user-visible logs.
 
 ## B. Class setup

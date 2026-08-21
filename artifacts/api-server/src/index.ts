@@ -1,5 +1,9 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { validateAuthConfig } from "./middlewares/auth";
+
+// Fail closed if APP_PASSWORD is set without a strong SESSION_SECRET
+validateAuthConfig();
 
 const rawPort = process.env["PORT"];
 

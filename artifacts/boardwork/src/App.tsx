@@ -8,6 +8,7 @@ import Home from '@/pages/home';
 import Present from '@/pages/present';
 import History from '@/pages/history';
 import { BoardworkProvider } from '@/store/boardwork-context';
+import { PasswordGate } from '@/components/password-gate';
 import {
   Route,
   Switch,
@@ -40,14 +41,20 @@ function RoutedErrorBoundary({ children }: { children: ReactNode }) {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BoardworkProvider>
-        <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-            <Router />
-          </WouterRouter>
-          <Toaster />
-        </TooltipProvider>
-      </BoardworkProvider>
+      <TooltipProvider>
+        {/*
+         * PasswordGate must wrap BoardworkProvider so the protected
+         * /api/app-state query never fires before authentication succeeds.
+         */}
+        <PasswordGate>
+          <BoardworkProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+              <Router />
+            </WouterRouter>
+            <Toaster />
+          </BoardworkProvider>
+        </PasswordGate>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
