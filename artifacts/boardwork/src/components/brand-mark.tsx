@@ -13,16 +13,18 @@ export function BrandMark({ className }: BrandMarkProps) {
         className,
       )}
     >
-      <span className="absolute inset-[4px] rounded-[3px] border border-current/70" />
       <svg
         aria-hidden="true"
-        className="relative h-3.5 w-3.5"
-        viewBox="0 0 16 16"
+        className="h-full w-full"
+        viewBox="0 0 24 24"
         focusable="false"
       >
         <path
           fill="currentColor"
-          d="M8 0.9 9.3 5.7 14.1 7l-4.8 1.3L8 13.1 6.7 8.3 1.9 7l4.8-1.3L8 0.9Z"
+          d="m12 1.75 2.35 7.9 7.9 2.35-7.9 2.35-2.35 7.9-2.35-7.9-7.9-2.35 7.9-2.35L12 1.75Z"
+          stroke="hsl(var(--primary))"
+          strokeLinejoin="round"
+          strokeWidth="1.2"
         />
       </svg>
     </span>

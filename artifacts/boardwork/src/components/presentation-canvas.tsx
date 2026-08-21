@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 interface PresentationCanvasProps {
   activity: ActivityDraft;
   controls?: ReactNode;
+  timerControls?: ReactNode;
   exportLayout?: boolean;
   surfaceRef?: Ref<HTMLDivElement>;
   timer?: { visible: boolean; mode: "standard" | "expanded"; remainingSeconds: number; status: "idle" | "running" | "paused" | "completed" };
@@ -18,6 +19,7 @@ const testId = (enabled: boolean, value: string) =>
 export function PresentationCanvas({
   activity,
   controls,
+  timerControls,
   exportLayout = false,
   surfaceRef,
   timer,
@@ -137,6 +139,7 @@ export function PresentationCanvas({
                  <span className="presentation-timer-label">{timer.status === "completed" ? "Time is up" : "Time remaining"}</span>
                  <strong>{formatTimer(timer.remainingSeconds)}</strong>
                  <span className="presentation-timer-progress" aria-hidden="true"><span style={{ width: `${Math.max(0, Math.min(100, (timer.remainingSeconds / (activity.durationMinutes * 60)) * 100))}%` }} /></span>
+                  {timerControls}
                </div>
              )}
            </aside>

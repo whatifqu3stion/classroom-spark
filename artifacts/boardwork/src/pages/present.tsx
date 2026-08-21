@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useBoardwork } from "@/store/boardwork-context";
-import { Maximize, Minimize, ChevronLeft, Download, Loader2, Play, Pause, RotateCcw, Plus, Minus, Volume2, VolumeX, Eye, EyeOff } from "lucide-react";
+import { Maximize, Minimize, ChevronLeft, Download, Loader2, Play, Pause, RotateCcw, Plus, Minus, Volume2, VolumeX, Eye, EyeOff, Settings2, ChevronDown } from "lucide-react";
 import { Link, useRoute } from "wouter";
 import { toPng } from "html-to-image";
 import { useToast } from "@/hooks/use-toast";
@@ -40,6 +40,7 @@ export default function Present() {
   const [timerMode, setTimerMode] = useState<"standard" | "expanded">("standard");
   const [timerVisible, setTimerVisible] = useState(true);
   const [alarmEnabled, setAlarmEnabled] = useState(true);
+  const [timerOptionsOpen, setTimerOptionsOpen] = useState(false);
   const endAtRef = useRef<number | null>(null);
   const pausedSecondsRef = useRef(0);
   const alarmPlayedRef = useRef(false);
@@ -227,18 +228,6 @@ export default function Present() {
         )}
         <span>{isExporting ? "Exporting…" : "Export PNG"}</span>
       </button>
-      <div className="presentation-timer-controls" aria-label="Timer controls">
-        <button type="button" className="presentation-control" onClick={timerStatus === "running" ? pauseTimer : startTimer} disabled={timerStatus === "completed" && remainingSeconds === 0} aria-label={timerStatus === "running" ? "Pause timer" : "Start or resume timer"}>
-          {timerStatus === "running" ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-          <span>{timerStatus === "running" ? "Pause" : timerStatus === "idle" ? "Start" : "Resume"}</span>
-        </button>
-        <button type="button" className="presentation-control" onClick={resetTimer} aria-label="Reset timer"><RotateCcw className="w-4 h-4" /><span>Reset</span></button>
-        <button type="button" className="presentation-control" onClick={() => adjustTimer(-60)} aria-label="Subtract one minute"><Minus className="w-4 h-4" /><span>1 min</span></button>
-        <button type="button" className="presentation-control" onClick={() => adjustTimer(60)} aria-label="Add one minute"><Plus className="w-4 h-4" /><span>1 min</span></button>
-        <button type="button" className="presentation-control" onClick={() => setTimerVisible((value) => !value)} aria-pressed={timerVisible} aria-label={timerVisible ? "Hide timer from students" : "Show timer to students"}>{timerVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}<span>{timerVisible ? "Hide" : "Show"}</span></button>
-        <label className="presentation-control"><span className="sr-only">Timer display mode</span><select value={timerMode} onChange={(event) => setTimerMode(event.target.value as "standard" | "expanded")} aria-label="Timer display mode"><option value="standard">Standard</option><option value="expanded">Expanded</option></select></label>
-        <button type="button" className="presentation-control" onClick={() => setAlarmEnabled((value) => !value)} aria-pressed={alarmEnabled} aria-label={alarmEnabled ? "Mute done alarm" : "Enable done alarm"}>{alarmEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}<span>{alarmEnabled ? "Alarm" : "Muted"}</span></button>
-      </div>
       <button
         type="button"
         onClick={() => void toggleFullscreen()}
@@ -255,6 +244,68 @@ export default function Present() {
       </button>
     </nav>
   );
+  const timerControls = (
+    <div className="presentation-timer-controls" aria-label="Timer controls">
+      <div className="presentation-timer-actions">
+        <button
+          type="button"
+          className="presentation-timer-action presentation-timer-action--primary"
+          onClick={timerStatus === "running" ? pauseTimer : startTimer}
+          disabled={timerStatus === "completed" && remainingSeconds === 0}
+          aria-label={timerStatus === "running" ? "Pause timer" : "Start or resume timer"}
+        >
+          {timerStatus === "running" ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+          <span>{timerStatus === "running" ? "Pause" : timerStatus === "idle" ? "Start" : "Resume"}</span>
+        </button>
+        <button
+          type="button"
+          className="presentation-timer-options-trigger"
+          onClick={() => setTimerOptionsOpen((value) => !value)}
+          aria-expanded={timerOptionsOpen}
+          aria-controls="timer-options"
+        >
+          <Settings2 className="h-3.5 w-3.5" aria-hidden="true" />
+          <span>Adjust</span>
+          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${timerOptionsOpen ? "rotate-180" : ""}`} aria-hidden="true" />
+        </button>
+      </div>
+      {timerOptionsOpen && (
+        <div id="timer-options" className="presentation-timer-options">
+          <div className="presentation-timer-option-row">
+            <button type="button" className="presentation-timer-option" onClick={resetTimer} aria-label="Reset timer">
+              <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>Reset</span>
+            </button>
+            <button type="button" className="presentation-timer-option" onClick={() => adjustTimer(-60)} aria-label="Subtract one minute">
+              <Minus className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>1 min</span>
+            </button>
+            <button type="button" className="presentation-timer-option" onClick={() => adjustTimer(60)} aria-label="Add one minute">
+              <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>1 min</span>
+            </button>
+          </div>
+          <div className="presentation-timer-option-row presentation-timer-option-row--settings">
+            <button type="button" className="presentation-timer-option" onClick={() => setTimerVisible((value) => !value)} aria-pressed={timerVisible} aria-label={timerVisible ? "Hide timer from students" : "Show timer to students"}>
+              {timerVisible ? <Eye className="h-3.5 w-3.5" aria-hidden="true" /> : <EyeOff className="h-3.5 w-3.5" aria-hidden="true" />}
+              <span>{timerVisible ? "Visible" : "Hidden"}</span>
+            </button>
+            <label className="presentation-timer-option">
+              <span className="sr-only">Timer display mode</span>
+              <select value={timerMode} onChange={(event) => setTimerMode(event.target.value as "standard" | "expanded")} aria-label="Timer display mode">
+                <option value="standard">Standard</option>
+                <option value="expanded">Expanded</option>
+              </select>
+            </label>
+            <button type="button" className="presentation-timer-option" onClick={() => setAlarmEnabled((value) => !value)} aria-pressed={alarmEnabled} aria-label={alarmEnabled ? "Mute done alarm" : "Enable done alarm"}>
+              {alarmEnabled ? <Volume2 className="h-3.5 w-3.5" aria-hidden="true" /> : <VolumeX className="h-3.5 w-3.5" aria-hidden="true" />}
+              <span>{alarmEnabled ? "Alarm" : "Muted"}</span>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div
@@ -262,7 +313,7 @@ export default function Present() {
       className={`presentation-page ${isFullscreen ? "presentation-page--fullscreen" : ""}`}
       onMouseEnter={() => setShowControls(true)}
     >
-      <PresentationCanvas activity={activeDraft} controls={controls} timer={{ visible: timerVisible, mode: timerMode, remainingSeconds, status: timerStatus }} />
+      <PresentationCanvas activity={activeDraft} controls={controls} timerControls={timerControls} timer={{ visible: timerVisible, mode: timerMode, remainingSeconds, status: timerStatus }} />
       <div className="presentation-export-stage" aria-hidden="true">
         <PresentationCanvas
           activity={activeDraft}
