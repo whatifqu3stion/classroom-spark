@@ -25,6 +25,8 @@ export const activitiesTable = pgTable("activities", {
   arrivalInstructions: text("arrival_instructions"),
   resourceUrl: text("resource_url"),
   resourceNote: text("resource_note"),
+  visualUrl: text("visual_url"),
+  visualDescription: text("visual_description"),
   materials: jsonb("materials").$type<string[]>().notNull().default([]),
   teacherNote: text("teacher_note"),
   sourceTopic: text("source_topic"),

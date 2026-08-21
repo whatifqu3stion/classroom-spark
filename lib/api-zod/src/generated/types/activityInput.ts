@@ -23,6 +23,10 @@ export interface ActivityInput {
   resourceUrl?: string | null;
   /** @nullable */
   resourceNote?: string | null;
+  /** @nullable */
+  visualUrl?: string | null;
+  /** @nullable */
+  visualDescription?: string | null;
   materials?: string[];
   /** @nullable */
   teacherNote?: string | null;

@@ -9,6 +9,7 @@ interface PresentationCanvasProps {
   controls?: ReactNode;
   exportLayout?: boolean;
   surfaceRef?: Ref<HTMLDivElement>;
+  timer?: { visible: boolean; mode: "standard" | "expanded"; remainingSeconds: number; status: "idle" | "running" | "paused" | "completed" };
 }
 
 const testId = (enabled: boolean, value: string) =>
@@ -19,10 +20,15 @@ export function PresentationCanvas({
   controls,
   exportLayout = false,
   surfaceRef,
+  timer,
 }: PresentationCanvasProps) {
   const arrivalInstruction = activity.arrivalInstructions?.trim();
   const safeResourceUrl = getSafeResourceUrl(activity.resourceUrl);
   const includeTestIds = !exportLayout;
+  const hasVisual = Boolean(activity.visualUrl);
+  const showTimer = !exportLayout && timer?.visible;
+  const railMode = showTimer ? (hasVisual ? "split" : "timer-only") : hasVisual ? "image-only" : "empty";
+  const formatTimer = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
   return (
     <div
@@ -54,7 +60,7 @@ export function PresentationCanvas({
 
       <main className="presentation-main">
         <div className="presentation-content">
-          {activity.title && (
+           {activity.title && (
             <h1
               className="presentation-title"
               {...testId(includeTestIds, "present-title")}
@@ -115,9 +121,26 @@ export function PresentationCanvas({
                   {activity.resourceNote}
                 </p>
               )}
-            </div>
+          </div>
           )}
-        </div>
+         </div>
+         {(hasVisual || (showTimer && timer)) && (
+           <aside className={cn("presentation-rail", `presentation-rail--${railMode}`, timer?.mode === "expanded" && "presentation-rail--expanded")}>
+             {hasVisual && (
+               <figure className="presentation-visual">
+                 <img src={activity.visualUrl ?? ""} alt={activity.visualDescription ?? ""} />
+                 {activity.visualDescription && <figcaption>{activity.visualDescription}</figcaption>}
+               </figure>
+             )}
+             {showTimer && timer && (
+               <div className={cn("presentation-timer", timer.status === "completed" && "presentation-timer--complete")} aria-live="polite">
+                 <span className="presentation-timer-label">{timer.status === "completed" ? "Time is up" : "Time remaining"}</span>
+                 <strong>{formatTimer(timer.remainingSeconds)}</strong>
+                 <span className="presentation-timer-progress" aria-hidden="true"><span style={{ width: `${Math.max(0, Math.min(100, (timer.remainingSeconds / (activity.durationMinutes * 60)) * 100))}%` }} /></span>
+               </div>
+             )}
+           </aside>
+          )}
       </main>
 
       <footer className="presentation-footer">

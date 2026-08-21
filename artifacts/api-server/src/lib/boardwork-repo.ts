@@ -172,6 +172,8 @@ export async function duplicateActivity(
       arrivalInstructions: source.arrivalInstructions,
       resourceUrl: source.resourceUrl,
       resourceNote: source.resourceNote,
+      visualUrl: source.visualUrl,
+      visualDescription: source.visualDescription,
       materials: source.materials,
       teacherNote: source.teacherNote,
       sourceTopic: source.sourceTopic,

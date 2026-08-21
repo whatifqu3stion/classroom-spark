@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useBoardwork } from "@/store/boardwork-context";
-import { Maximize, Minimize, ChevronLeft, Download, Loader2 } from "lucide-react";
+import { Maximize, Minimize, ChevronLeft, Download, Loader2, Play, Pause, RotateCcw, Plus, Minus, Volume2, VolumeX, Eye, EyeOff } from "lucide-react";
 import { Link, useRoute } from "wouter";
 import { toPng } from "html-to-image";
 import { useToast } from "@/hooks/use-toast";
@@ -34,9 +34,85 @@ export default function Present() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  type TimerStatus = "idle" | "running" | "paused" | "completed";
+  const [timerStatus, setTimerStatus] = useState<TimerStatus>("idle");
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
+  const [timerMode, setTimerMode] = useState<"standard" | "expanded">("standard");
+  const [timerVisible, setTimerVisible] = useState(true);
+  const [alarmEnabled, setAlarmEnabled] = useState(true);
+  const endAtRef = useRef<number | null>(null);
+  const pausedSecondsRef = useRef(0);
+  const alarmPlayedRef = useRef(false);
   const controlsTimeoutRef = useRef<number | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const initial = (activeDraft?.durationMinutes ?? 7) * 60;
+    setRemainingSeconds(initial);
+    setTimerStatus("idle");
+    pausedSecondsRef.current = initial;
+    endAtRef.current = null;
+    alarmPlayedRef.current = false;
+  }, [activeDraft?.id, activeDraft?.durationMinutes]);
+
+  useEffect(() => {
+    if (timerStatus !== "running") return;
+    const tick = () => {
+      const next = Math.max(0, Math.ceil(((endAtRef.current ?? Date.now()) - Date.now()) / 1000));
+      setRemainingSeconds(next);
+      if (next <= 0) {
+        setTimerStatus("completed");
+        endAtRef.current = null;
+        if (alarmEnabled && !alarmPlayedRef.current) {
+          alarmPlayedRef.current = true;
+          const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+          if (AudioContextClass) {
+            const audio = new AudioContextClass();
+            const oscillator = audio.createOscillator();
+            const gain = audio.createGain();
+            oscillator.frequency.value = 660;
+            gain.gain.value = 0.08;
+            oscillator.connect(gain).connect(audio.destination);
+            oscillator.start();
+            oscillator.stop(audio.currentTime + 0.22);
+          }
+        }
+      }
+    };
+    tick();
+    const interval = window.setInterval(tick, 250);
+    return () => window.clearInterval(interval);
+  }, [timerStatus, alarmEnabled]);
+
+  const startTimer = () => {
+    if (remainingSeconds <= 0) return;
+    endAtRef.current = Date.now() + remainingSeconds * 1000;
+    alarmPlayedRef.current = false;
+    setTimerStatus("running");
+  };
+  const pauseTimer = () => {
+    if (endAtRef.current) pausedSecondsRef.current = Math.max(0, Math.ceil((endAtRef.current - Date.now()) / 1000));
+    endAtRef.current = null;
+    setRemainingSeconds(pausedSecondsRef.current);
+    setTimerStatus("paused");
+  };
+  const resetTimer = () => {
+    const initial = (activeDraft?.durationMinutes ?? 7) * 60;
+    endAtRef.current = null;
+    pausedSecondsRef.current = initial;
+    alarmPlayedRef.current = false;
+    setRemainingSeconds(initial);
+    setTimerStatus("idle");
+  };
+  const adjustTimer = (delta: number) => {
+    const current = endAtRef.current ? Math.max(0, Math.ceil((endAtRef.current - Date.now()) / 1000)) : remainingSeconds;
+    const next = Math.max(0, current + delta);
+    pausedSecondsRef.current = next;
+    setRemainingSeconds(next);
+    if (timerStatus === "running") endAtRef.current = Date.now() + next * 1000;
+    if (next > 0 && timerStatus === "completed") setTimerStatus("paused");
+  };
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -151,6 +227,18 @@ export default function Present() {
         )}
         <span>{isExporting ? "Exporting…" : "Export PNG"}</span>
       </button>
+      <div className="presentation-timer-controls" aria-label="Timer controls">
+        <button type="button" className="presentation-control" onClick={timerStatus === "running" ? pauseTimer : startTimer} disabled={timerStatus === "completed" && remainingSeconds === 0} aria-label={timerStatus === "running" ? "Pause timer" : "Start or resume timer"}>
+          {timerStatus === "running" ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+          <span>{timerStatus === "running" ? "Pause" : timerStatus === "idle" ? "Start" : "Resume"}</span>
+        </button>
+        <button type="button" className="presentation-control" onClick={resetTimer} aria-label="Reset timer"><RotateCcw className="w-4 h-4" /><span>Reset</span></button>
+        <button type="button" className="presentation-control" onClick={() => adjustTimer(-60)} aria-label="Subtract one minute"><Minus className="w-4 h-4" /><span>1 min</span></button>
+        <button type="button" className="presentation-control" onClick={() => adjustTimer(60)} aria-label="Add one minute"><Plus className="w-4 h-4" /><span>1 min</span></button>
+        <button type="button" className="presentation-control" onClick={() => setTimerVisible((value) => !value)} aria-pressed={timerVisible} aria-label={timerVisible ? "Hide timer from students" : "Show timer to students"}>{timerVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}<span>{timerVisible ? "Hide" : "Show"}</span></button>
+        <label className="presentation-control"><span className="sr-only">Timer display mode</span><select value={timerMode} onChange={(event) => setTimerMode(event.target.value as "standard" | "expanded")} aria-label="Timer display mode"><option value="standard">Standard</option><option value="expanded">Expanded</option></select></label>
+        <button type="button" className="presentation-control" onClick={() => setAlarmEnabled((value) => !value)} aria-pressed={alarmEnabled} aria-label={alarmEnabled ? "Mute done alarm" : "Enable done alarm"}>{alarmEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}<span>{alarmEnabled ? "Alarm" : "Muted"}</span></button>
+      </div>
       <button
         type="button"
         onClick={() => void toggleFullscreen()}
@@ -174,7 +262,7 @@ export default function Present() {
       className={`presentation-page ${isFullscreen ? "presentation-page--fullscreen" : ""}`}
       onMouseEnter={() => setShowControls(true)}
     >
-      <PresentationCanvas activity={activeDraft} controls={controls} />
+      <PresentationCanvas activity={activeDraft} controls={controls} timer={{ visible: timerVisible, mode: timerMode, remainingSeconds, status: timerStatus }} />
       <div className="presentation-export-stage" aria-hidden="true">
         <PresentationCanvas
           activity={activeDraft}

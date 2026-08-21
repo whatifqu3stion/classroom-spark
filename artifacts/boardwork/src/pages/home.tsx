@@ -106,6 +106,8 @@ const activitySavePayload = (draft: ActivityDraft) => ({
   deviceMode: draft.deviceMode,
   resourceUrl: draft.resourceUrl,
   resourceNote: draft.resourceNote,
+  visualUrl: draft.visualUrl,
+  visualDescription: draft.visualDescription,
   materials: draft.materials,
   teacherNote: draft.teacherNote,
   style: draft.style,

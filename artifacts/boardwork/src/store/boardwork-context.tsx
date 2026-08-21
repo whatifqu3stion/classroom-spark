@@ -45,6 +45,8 @@ export interface ActivityDraft {
   arrivalInstructions?: string | null;
   resourceUrl?: string | null;
   resourceNote?: string | null;
+  visualUrl?: string | null;
+  visualDescription?: string | null;
   materials?: string[];
   teacherNote?: string | null;
   sourceTopic?: string | null;

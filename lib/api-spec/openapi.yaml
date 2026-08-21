@@ -791,6 +791,10 @@ components:
           type: ["string", "null"]
         resourceNote:
           type: ["string", "null"]
+        visualUrl:
+          type: ["string", "null"]
+        visualDescription:
+          type: ["string", "null"]
         materials:
           type: array
           items:
@@ -849,6 +853,10 @@ components:
           type: ["string", "null"]
         resourceNote:
           type: ["string", "null"]
+        visualUrl:
+          type: ["string", "null"]
+        visualDescription:
+          type: ["string", "null"]
         materials:
           type: array
           items:
@@ -890,6 +898,10 @@ components:
         resourceUrl:
           type: ["string", "null"]
         resourceNote:
+          type: ["string", "null"]
+        visualUrl:
+          type: ["string", "null"]
+        visualDescription:
           type: ["string", "null"]
         materials:
           type: array

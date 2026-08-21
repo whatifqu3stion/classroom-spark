@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from "react";
 import { ActivityDraft } from "@/store/boardwork-context";
 import { Button } from "./ui/button";
-import { Plus, X, Monitor, Clock, FileText, Loader2, CheckCircle2, AlertCircle, ExternalLink } from "lucide-react";
+import { Plus, X, Monitor, Clock, FileText, Loader2, CheckCircle2, AlertCircle, ExternalLink, ImagePlus } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { getSafeResourceUrl } from "@/lib/resource-url";
@@ -253,6 +253,48 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
           </div>
 
           <div className="space-y-5 pt-8 mt-8 border-t">
+            <div className="space-y-3">
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Presentation visual
+              </div>
+              <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-medium hover:bg-muted/50 focus-within:ring-2 focus-within:ring-ring">
+                <ImagePlus className="h-4 w-4" aria-hidden="true" />
+                {draft.visualUrl ? "Replace image" : "Add image"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 5 * 1024 * 1024) {
+                      window.alert("Choose an image smaller than 5 MB.");
+                      return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = () => onChange({ visualUrl: String(reader.result) });
+                    reader.readAsDataURL(file);
+                    event.target.value = "";
+                  }}
+                />
+              </label>
+              {draft.visualUrl && (
+                <>
+                  <img src={draft.visualUrl} alt="" className="h-24 w-full rounded-md border object-contain bg-muted/30" />
+                  <Button type="button" variant="ghost" size="sm" onClick={() => onChange({ visualUrl: null, visualDescription: null })}>
+                    Remove image
+                  </Button>
+                  <input
+                    aria-label="Visual description"
+                    value={draft.visualDescription ?? ""}
+                    onChange={(event) => onChange({ visualDescription: event.target.value })}
+                    placeholder="Optional description for students"
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </>
+              )}
+              <p className="text-xs text-muted-foreground">Local image only. It will be shown without cropping in Present and PNG export.</p>
+            </div>
             {draft.teacherNote != null && (
               <div>
                 <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
