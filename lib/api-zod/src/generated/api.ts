@@ -21,6 +21,14 @@ export const HealthCheckResponse = zod.object({
  * Returns all classes, instructional contexts, chips, activities, and the most recently used class id so the frontend can restore workspace state.
  * @summary Bootstrap application state
  */
+export const getAppStateResponseClassesItemDefaultDurationMax = 120;
+export const getAppStateResponseClassesItemDefaultDurationMultipleOf = 1;
+
+export const getAppStateResponseActivitiesItemDurationMinutesMax = 120;
+export const getAppStateResponseActivitiesItemDurationMinutesMultipleOf = 1;
+
+
+
 export const GetAppStateResponse = zod.object({
   "classes": zod.array(zod.object({
   "id": zod.string(),
@@ -32,7 +40,7 @@ export const GetAppStateResponse = zod.object({
   "generalContext": zod.string().nullish(),
   "arrivalRoutine": zod.string().nullish(),
   "defaultDeviceMode": zod.enum(['off', 'on']),
-  "defaultDuration": zod.union([zod.literal(5),zod.literal(7),zod.literal(10)]),
+  "defaultDuration": zod.number().min(1).max(getAppStateResponseClassesItemDefaultDurationMax).multipleOf(getAppStateResponseClassesItemDefaultDurationMultipleOf),
   "color": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -58,7 +66,7 @@ export const GetAppStateResponse = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
-  "durationMinutes": zod.union([zod.literal(5),zod.literal(7),zod.literal(10)]),
+  "durationMinutes": zod.number().min(1).max(getAppStateResponseActivitiesItemDurationMinutesMax).multipleOf(getAppStateResponseActivitiesItemDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
@@ -83,6 +91,11 @@ export const GetAppStateResponse = zod.object({
 /**
  * @summary List classes
  */
+export const listClassesResponseDefaultDurationMax = 120;
+export const listClassesResponseDefaultDurationMultipleOf = 1;
+
+
+
 export const ListClassesResponseItem = zod.object({
   "id": zod.string(),
   "name": zod.string(),
@@ -93,7 +106,7 @@ export const ListClassesResponseItem = zod.object({
   "generalContext": zod.string().nullish(),
   "arrivalRoutine": zod.string().nullish(),
   "defaultDeviceMode": zod.enum(['off', 'on']),
-  "defaultDuration": zod.union([zod.literal(5),zod.literal(7),zod.literal(10)]),
+  "defaultDuration": zod.number().min(1).max(listClassesResponseDefaultDurationMax).multipleOf(listClassesResponseDefaultDurationMultipleOf),
   "color": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -104,6 +117,9 @@ export const ListClassesResponse = zod.array(ListClassesResponseItem)
 /**
  * @summary Create a class
  */
+
+export const createClassBodyDefaultDurationMax = 120;
+export const createClassBodyDefaultDurationMultipleOf = 1;
 
 
 
@@ -116,9 +132,14 @@ export const CreateClassBody = zod.object({
   "generalContext": zod.string().nullish(),
   "arrivalRoutine": zod.string().nullish(),
   "defaultDeviceMode": zod.enum(['off', 'on']),
-  "defaultDuration": zod.union([zod.literal(5),zod.literal(7),zod.literal(10)]),
+  "defaultDuration": zod.number().min(1).max(createClassBodyDefaultDurationMax).multipleOf(createClassBodyDefaultDurationMultipleOf),
   "color": zod.string().nullish()
 })
+
+export const createClassResponseDefaultDurationMax = 120;
+export const createClassResponseDefaultDurationMultipleOf = 1;
+
+
 
 export const CreateClassResponse = zod.object({
   "id": zod.string(),
@@ -130,7 +151,7 @@ export const CreateClassResponse = zod.object({
   "generalContext": zod.string().nullish(),
   "arrivalRoutine": zod.string().nullish(),
   "defaultDeviceMode": zod.enum(['off', 'on']),
-  "defaultDuration": zod.union([zod.literal(5),zod.literal(7),zod.literal(10)]),
+  "defaultDuration": zod.number().min(1).max(createClassResponseDefaultDurationMax).multipleOf(createClassResponseDefaultDurationMultipleOf),
   "color": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -145,6 +166,9 @@ export const UpdateClassParams = zod.object({
 })
 
 
+export const updateClassBodyDefaultDurationMax = 120;
+export const updateClassBodyDefaultDurationMultipleOf = 1;
+
 
 
 export const UpdateClassBody = zod.object({
@@ -156,9 +180,14 @@ export const UpdateClassBody = zod.object({
   "generalContext": zod.string().nullish(),
   "arrivalRoutine": zod.string().nullish(),
   "defaultDeviceMode": zod.enum(['off', 'on']).optional(),
-  "defaultDuration": zod.union([zod.literal(5),zod.literal(7),zod.literal(10)]).optional(),
+  "defaultDuration": zod.number().min(1).max(updateClassBodyDefaultDurationMax).multipleOf(updateClassBodyDefaultDurationMultipleOf).optional(),
   "color": zod.string().nullish()
 })
+
+export const updateClassResponseDefaultDurationMax = 120;
+export const updateClassResponseDefaultDurationMultipleOf = 1;
+
+
 
 export const UpdateClassResponse = zod.object({
   "id": zod.string(),
@@ -170,7 +199,7 @@ export const UpdateClassResponse = zod.object({
   "generalContext": zod.string().nullish(),
   "arrivalRoutine": zod.string().nullish(),
   "defaultDeviceMode": zod.enum(['off', 'on']),
-  "defaultDuration": zod.union([zod.literal(5),zod.literal(7),zod.literal(10)]),
+  "defaultDuration": zod.number().min(1).max(updateClassResponseDefaultDurationMax).multipleOf(updateClassResponseDefaultDurationMultipleOf),
   "color": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -253,6 +282,9 @@ export const generateActivityBodyGoalMax = 1000;
 
 export const generateActivityBodyChipIdsMax = 20;
 
+export const generateActivityBodyDurationMinutesMax = 120;
+export const generateActivityBodyDurationMinutesMultipleOf = 1;
+
 export const generateActivityBodyTeacherProvidedUrlMax = 2000;
 
 export const generateActivityBodyTeacherProvidedResourceNoteMax = 1000;
@@ -265,12 +297,17 @@ export const GenerateActivityBody = zod.object({
   "goal": zod.string().max(generateActivityBodyGoalMax).optional(),
   "chipIds": zod.array(zod.string()).max(generateActivityBodyChipIdsMax),
   "deviceMode": zod.enum(['off', 'on']),
-  "durationMinutes": zod.union([zod.literal(5),zod.literal(7),zod.literal(10)]),
+  "durationMinutes": zod.number().min(1).max(generateActivityBodyDurationMinutesMax).multipleOf(generateActivityBodyDurationMinutesMultipleOf),
   "activityStyle": zod.union([zod.enum(['Curiosity Hook', 'Retrieval Practice', 'Explain / Reason', 'Observe & Notice', 'Draw / Sketch', 'Predict', 'Compare / Contrast', 'Evaluate / Critique', 'Quick Write', 'Apply', 'Reflect']),zod.null()]).optional(),
   "teacherProvidedUrl": zod.string().max(generateActivityBodyTeacherProvidedUrlMax).nullish(),
   "teacherProvidedResourceNote": zod.string().max(generateActivityBodyTeacherProvidedResourceNoteMax).nullish(),
   "surprise": zod.boolean()
 })
+
+export const generateActivityResponseDurationMinutesMax = 120;
+export const generateActivityResponseDurationMinutesMultipleOf = 1;
+
+
 
 export const GenerateActivityResponse = zod.object({
   "id": zod.string(),
@@ -279,7 +316,7 @@ export const GenerateActivityResponse = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
-  "durationMinutes": zod.union([zod.literal(5),zod.literal(7),zod.literal(10)]),
+  "durationMinutes": zod.number().min(1).max(generateActivityResponseDurationMinutesMax).multipleOf(generateActivityResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
@@ -361,6 +398,11 @@ export const ListActivitiesQueryParams = zod.object({
   "classId": zod.coerce.string().optional()
 })
 
+export const listActivitiesResponseDurationMinutesMax = 120;
+export const listActivitiesResponseDurationMinutesMultipleOf = 1;
+
+
+
 export const ListActivitiesResponseItem = zod.object({
   "id": zod.string(),
   "classId": zod.string(),
@@ -368,7 +410,7 @@ export const ListActivitiesResponseItem = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
-  "durationMinutes": zod.union([zod.literal(5),zod.literal(7),zod.literal(10)]),
+  "durationMinutes": zod.number().min(1).max(listActivitiesResponseDurationMinutesMax).multipleOf(listActivitiesResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
@@ -392,13 +434,18 @@ export const ListActivitiesResponse = zod.array(ListActivitiesResponseItem)
 /**
  * @summary Create an activity
  */
+export const createActivityBodyDurationMinutesMax = 120;
+export const createActivityBodyDurationMinutesMultipleOf = 1;
+
+
+
 export const CreateActivityBody = zod.object({
   "classId": zod.string(),
   "eyebrow": zod.string().nullish(),
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()).optional(),
-  "durationMinutes": zod.union([zod.literal(5),zod.literal(7),zod.literal(10)]),
+  "durationMinutes": zod.number().min(1).max(createActivityBodyDurationMinutesMax).multipleOf(createActivityBodyDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
@@ -414,6 +461,11 @@ export const CreateActivityBody = zod.object({
   "favorite": zod.boolean().optional()
 })
 
+export const createActivityResponseDurationMinutesMax = 120;
+export const createActivityResponseDurationMinutesMultipleOf = 1;
+
+
+
 export const CreateActivityResponse = zod.object({
   "id": zod.string(),
   "classId": zod.string(),
@@ -421,7 +473,7 @@ export const CreateActivityResponse = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
-  "durationMinutes": zod.union([zod.literal(5),zod.literal(7),zod.literal(10)]),
+  "durationMinutes": zod.number().min(1).max(createActivityResponseDurationMinutesMax).multipleOf(createActivityResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
@@ -448,6 +500,11 @@ export const GetActivityParams = zod.object({
   "activityId": zod.coerce.string()
 })
 
+export const getActivityResponseDurationMinutesMax = 120;
+export const getActivityResponseDurationMinutesMultipleOf = 1;
+
+
+
 export const GetActivityResponse = zod.object({
   "id": zod.string(),
   "classId": zod.string(),
@@ -455,7 +512,7 @@ export const GetActivityResponse = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
-  "durationMinutes": zod.union([zod.literal(5),zod.literal(7),zod.literal(10)]),
+  "durationMinutes": zod.number().min(1).max(getActivityResponseDurationMinutesMax).multipleOf(getActivityResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
@@ -483,12 +540,17 @@ export const UpdateActivityParams = zod.object({
   "activityId": zod.coerce.string()
 })
 
+export const updateActivityBodyDurationMinutesMax = 120;
+export const updateActivityBodyDurationMinutesMultipleOf = 1;
+
+
+
 export const UpdateActivityBody = zod.object({
   "eyebrow": zod.string().nullish(),
   "title": zod.string().optional(),
   "task": zod.string().optional(),
   "prompts": zod.array(zod.string()).optional(),
-  "durationMinutes": zod.union([zod.literal(5),zod.literal(7),zod.literal(10)]).optional(),
+  "durationMinutes": zod.number().min(1).max(updateActivityBodyDurationMinutesMax).multipleOf(updateActivityBodyDurationMinutesMultipleOf).optional(),
   "deviceMode": zod.enum(['off', 'on']).optional(),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
@@ -504,6 +566,11 @@ export const UpdateActivityBody = zod.object({
   "favorite": zod.boolean().optional()
 })
 
+export const updateActivityResponseDurationMinutesMax = 120;
+export const updateActivityResponseDurationMinutesMultipleOf = 1;
+
+
+
 export const UpdateActivityResponse = zod.object({
   "id": zod.string(),
   "classId": zod.string(),
@@ -511,7 +578,7 @@ export const UpdateActivityResponse = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
-  "durationMinutes": zod.union([zod.literal(5),zod.literal(7),zod.literal(10)]),
+  "durationMinutes": zod.number().min(1).max(updateActivityResponseDurationMinutesMax).multipleOf(updateActivityResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
@@ -558,6 +625,11 @@ export const DuplicateActivityParams = zod.object({
   "activityId": zod.coerce.string()
 })
 
+export const duplicateActivityResponseDurationMinutesMax = 120;
+export const duplicateActivityResponseDurationMinutesMultipleOf = 1;
+
+
+
 export const DuplicateActivityResponse = zod.object({
   "id": zod.string(),
   "classId": zod.string(),
@@ -565,7 +637,7 @@ export const DuplicateActivityResponse = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
-  "durationMinutes": zod.union([zod.literal(5),zod.literal(7),zod.literal(10)]),
+  "durationMinutes": zod.number().min(1).max(duplicateActivityResponseDurationMinutesMax).multipleOf(duplicateActivityResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
@@ -596,6 +668,11 @@ export const SetActivityFavoriteBody = zod.object({
   "favorite": zod.boolean()
 })
 
+export const setActivityFavoriteResponseDurationMinutesMax = 120;
+export const setActivityFavoriteResponseDurationMinutesMultipleOf = 1;
+
+
+
 export const SetActivityFavoriteResponse = zod.object({
   "id": zod.string(),
   "classId": zod.string(),
@@ -603,7 +680,7 @@ export const SetActivityFavoriteResponse = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
-  "durationMinutes": zod.union([zod.literal(5),zod.literal(7),zod.literal(10)]),
+  "durationMinutes": zod.number().min(1).max(setActivityFavoriteResponseDurationMinutesMax).multipleOf(setActivityFavoriteResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),

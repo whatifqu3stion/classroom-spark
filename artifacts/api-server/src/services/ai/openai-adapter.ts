@@ -65,7 +65,7 @@ const ACTIVITY_JSON_SCHEMA = {
       maxItems: 3,
       items: { type: "string", minLength: 1, maxLength: 160 },
     },
-    durationMinutes: { type: "integer", enum: [5, 7, 10] },
+    durationMinutes: { type: "integer", minimum: 1, maximum: 120 },
     deviceMode: { type: "string", enum: ["off", "on"] },
     materials: {
       type: "array",

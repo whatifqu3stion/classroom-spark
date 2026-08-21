@@ -27,9 +27,9 @@ export function InstructionalContextPanel({ value, onChange }: InstructionalCont
         data-testid="button-toggle-instructional-context"
       >
         <span className="min-w-0">
-          <span className="block text-sm font-medium text-foreground">Current instructional context</span>
+          <span className="block text-sm font-medium text-foreground">Class context for generation</span>
           <span className="block text-xs text-muted-foreground">
-            {hasContext ? "Saved for this class session" : "Unit, concepts, skills, and objectives"}
+            {hasContext ? "Saved for this class" : "Reused across this class’s activities"}
           </span>
         </span>
         <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
@@ -37,11 +37,11 @@ export function InstructionalContextPanel({ value, onChange }: InstructionalCont
 
       <CollapsibleContent className="pb-4 pt-2">
         <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
-          This changes periodically and stays separate from the permanent class profile.
+          Boardwork reuses this information across activities for this class. Update it when the unit or emphasis changes.
         </p>
         <div className="grid gap-4">
           <div className="space-y-2">
-            <Label htmlFor="current-unit-project">Current unit or project</Label>
+            <Label htmlFor="current-unit-project">Unit or project</Label>
             <Input
               id="current-unit-project"
               value={value.unitOrProject}
@@ -51,7 +51,7 @@ export function InstructionalContextPanel({ value, onChange }: InstructionalCont
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="current-concepts">Current concepts or topics</Label>
+            <Label htmlFor="current-concepts">Concepts or topics</Label>
             <Textarea
               id="current-concepts"
               value={value.conceptsTopics}
@@ -62,7 +62,7 @@ export function InstructionalContextPanel({ value, onChange }: InstructionalCont
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="current-skills">Current skills</Label>
+            <Label htmlFor="current-skills">Skills to reinforce</Label>
             <Input
               id="current-skills"
               value={value.skills}
@@ -72,7 +72,7 @@ export function InstructionalContextPanel({ value, onChange }: InstructionalCont
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="current-objectives">Standards or objectives currently emphasized</Label>
+            <Label htmlFor="current-objectives">Objectives currently emphasized</Label>
             <Textarea
               id="current-objectives"
               value={value.standardsObjectives}

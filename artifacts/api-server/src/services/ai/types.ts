@@ -19,7 +19,7 @@ export const generatedActivitySchema = z.object({
   title: z.string().trim().min(1).max(80),
   task: z.string().trim().min(1).max(500),
   prompts: z.array(z.string().trim().min(1).max(160)).max(3),
-  durationMinutes: z.union([z.literal(5), z.literal(7), z.literal(10)]),
+  durationMinutes: z.number().int().min(1).max(120),
   deviceMode: z.enum(["off", "on"]),
   materials: z.array(z.string().trim().min(1).max(80)).max(5),
   resourceUrl: z.string().trim().max(2000).nullable(),
@@ -50,7 +50,7 @@ export interface BoardworkGenerationContext {
     goal: string | null;
     focusChips: string[];
     deviceMode: "off" | "on";
-    durationMinutes: 5 | 7 | 10;
+    durationMinutes: number;
     activityStyle: (typeof generatedActivityStyles)[number] | null;
     teacherProvidedUrl: string | null;
     teacherProvidedResourceNote: string | null;

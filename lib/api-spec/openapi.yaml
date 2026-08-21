@@ -580,8 +580,10 @@ components:
       enum: [off, on]
 
     Duration:
-      type: integer
-      enum: [5, 7, 10]
+      type: number
+      multipleOf: 1
+      minimum: 1
+      maximum: 120
 
     ActivityStyle:
       type: string

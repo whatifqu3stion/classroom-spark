@@ -3,7 +3,7 @@ import { useGetAppState, AppState } from "@workspace/api-client-react";
 import { Loader2 } from "lucide-react";
 
 export type DeviceMode = "off" | "on";
-export type Duration = 5 | 7 | 10;
+export type Duration = number;
 
 export interface Chip {
   id: string;

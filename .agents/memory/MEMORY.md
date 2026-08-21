@@ -1,2 +1,3 @@
 - [Approved Boardwork direction](approved-stage-one-direction.md) — Preserve Boardwork’s core workflow, restrained visual direction, and three-layer class context model.
 - [Drizzle migration paths](drizzle-migration-paths.md) — Package-run Drizzle generation requires package-relative schema and output paths.
+- [OpenAPI bounded whole-minute values](openapi-duration-constraints.md) — Use number plus multipleOf 1 for generated Zod compatibility.

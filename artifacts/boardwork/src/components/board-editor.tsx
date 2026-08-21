@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react";
-import { ActivityDraft } from "@/store/boardwork-context";
+import { ActivityDraft, Duration } from "@/store/boardwork-context";
 import { Button } from "./ui/button";
 import { Plus, X, Monitor, Clock, FileText, Loader2, CheckCircle2, AlertCircle, ExternalLink, ImagePlus } from "lucide-react";
 import { Link } from "wouter";
@@ -155,7 +155,7 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
                   value={String(draft.durationMinutes)}
                   onChange={(val) => {
                     const num = parseInt(val);
-                    if (!isNaN(num)) onChange({ durationMinutes: num as 5|7|10 });
+                     if (!isNaN(num)) onChange({ durationMinutes: num as Duration });
                   }}
                   placeholder="7"
                   className="font-medium text-foreground min-w-[1ch] text-center inline-block"

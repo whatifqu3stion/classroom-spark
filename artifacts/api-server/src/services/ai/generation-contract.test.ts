@@ -107,6 +107,23 @@ describe("Boardwork generation contract", () => {
     ).toThrow(GenerationError);
   });
 
+  it("accepts custom whole-minute durations", () => {
+    const customDuration = 42;
+    const customContext: BoardworkGenerationContext = {
+      ...context,
+      today: { ...context.today, durationMinutes: customDuration },
+    };
+    const customActivity = { ...activity, durationMinutes: customDuration };
+
+    expect(validateApplicationContract(customActivity, customContext)).toEqual(customActivity);
+    expect(() =>
+      generatedActivitySchema.parse({ ...activity, durationMinutes: 0 }),
+    ).toThrow();
+    expect(() =>
+      generatedActivitySchema.parse({ ...activity, durationMinutes: 121 }),
+    ).toThrow();
+  });
+
   it("allows only the exact teacher-approved Device On URL", () => {
     const deviceOnContext: BoardworkGenerationContext = {
       ...context,

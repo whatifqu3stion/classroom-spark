@@ -21,14 +21,11 @@ export const DeviceMode = {
   on: 'on',
 } as const;
 
-export type Duration = typeof Duration[keyof typeof Duration];
-
-
-export const Duration = {
-  NUMBER_5: 5,
-  NUMBER_7: 7,
-  NUMBER_10: 10,
-} as const;
+/**
+ * @minimum 1
+ * @maximum 120
+ */
+export type Duration = number;
 
 export type ActivityStyle = typeof ActivityStyle[keyof typeof ActivityStyle];
 

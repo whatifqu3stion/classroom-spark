@@ -11,7 +11,6 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { BoardEditor } from "@/components/board-editor";
 import { ClassFormDialog } from "@/components/class-form-dialog";
 import { ClassColorDot } from "@/components/class-color-dot";
-import { InstructionalContextPanel } from "@/components/instructional-context-panel";
 import { Settings, Plus, Play, Shuffle, FilePlus, MonitorOff, MonitorSmartphone, Loader2, AlertCircle, ChevronDown } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useQueryClient } from "@tanstack/react-query";
@@ -61,6 +60,8 @@ const activityStyles = [
   "Apply",
   "Reflect",
 ] as const;
+
+const PRESET_DURATIONS = [5, 7, 10] as const;
 
 const getGenerationErrorMessage = (error: unknown) => {
   if (
@@ -155,6 +156,7 @@ export default function Home() {
   const [goal, setGoal] = useState("");
   const [deviceMode, setDeviceMode] = useState<DeviceMode>("off");
   const [duration, setDuration] = useState<Duration>(7);
+  const [customDurationInput, setCustomDurationInput] = useState("");
   const [resourceUrl, setResourceUrl] = useState("");
   const [resourceNote, setResourceNote] = useState("");
   const [activityStyle, setActivityStyle] = useState<(typeof activityStyles)[number]>("Auto");
@@ -162,6 +164,19 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [lastGenerationWasSurprise, setLastGenerationWasSurprise] = useState(false);
+
+  const isCustomDuration = !PRESET_DURATIONS.includes(duration as (typeof PRESET_DURATIONS)[number]);
+  const customDurationError = isCustomDuration
+    ? !/^\d+$/.test(customDurationInput)
+      ? "Enter a whole number from 1 to 120 minutes."
+      : Number(customDurationInput) < 1 || Number(customDurationInput) > 120
+        ? "Enter a whole number from 1 to 120 minutes."
+        : null
+    : null;
+
+  useEffect(() => {
+    setCustomDurationInput(isCustomDuration ? String(duration) : "");
+  }, [duration, isCustomDuration]);
 
   const [classDialogOpen, setClassDialogOpen] = useState(false);
   const [editingClassId, setEditingClassId] = useState<string | null>(null);
@@ -434,8 +449,25 @@ export default function Home() {
 
   const handleClassSubmit = (data: Omit<ClassProfile, "id">) => {
     if (editingClassId) {
+      const shouldApplyDefaults = editingClassId === activeClassId && !activityId && !localDraft;
+      const previousDeviceMode = activeClass?.defaultDeviceMode ?? deviceMode;
+      const previousDuration = activeClass?.defaultDuration ?? duration;
+
+      if (shouldApplyDefaults) {
+        setDeviceMode(data.defaultDeviceMode);
+        setDuration(data.defaultDuration);
+      }
+
       updateClassMut.mutate({ classId: editingClassId, data }, {
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() })
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
+        },
+        onError: () => {
+          if (shouldApplyDefaults) {
+            setDeviceMode(previousDeviceMode);
+            setDuration(previousDuration);
+          }
+        },
       });
     } else {
       createClassMut.mutate({ data }, {
@@ -464,7 +496,7 @@ export default function Home() {
   };
 
   const handleGenerate = async (surprise: boolean = false) => {
-    if (isGenerating || !activeClassId || !activeClass) return;
+    if (isGenerating || !activeClassId || !activeClass || customDurationError) return;
     setLastGenerationWasSurprise(surprise);
     setGenerationError(null);
     setIsGenerating(true);
@@ -659,28 +691,79 @@ export default function Home() {
               </div>
             </div>
 
+            <div className="space-y-3 rounded-xl border bg-card/50 p-4">
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">How will this board run?</h2>
+                <p className="mt-0.5 text-xs text-muted-foreground">Starts with your class defaults. Adjust for this board when needed.</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Device mode</Label>
+                  <SegmentedControl<DeviceMode>
+                    options={[
+                      { label: "Off", value: "off", icon: <MonitorOff className="w-4 h-4" /> },
+                      { label: "On", value: "on", icon: <MonitorSmartphone className="w-4 h-4" /> },
+                    ]}
+                    value={deviceMode}
+                    onChange={setDeviceMode}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Duration (min)</Label>
+                        <div className="flex items-center gap-2">
+                          <SegmentedControl<Duration>
+                            options={PRESET_DURATIONS.map((value) => ({ label: String(value), value }))}
+                            value={duration}
+                            onChange={setDuration}
+                            className="min-w-0 flex-1"
+                          />
+                          {isCustomDuration && (
+                            <Input
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={3}
+                              value={customDurationInput}
+                              onChange={(event) => {
+                                const value = event.target.value;
+                                setCustomDurationInput(value);
+                                if (/^\d+$/.test(value)) {
+                                  const parsed = Number(value);
+                                  if (parsed >= 1 && parsed <= 120) {
+                                    setDuration(parsed);
+                                  }
+                                }
+                              }}
+                              className="w-20 shrink-0"
+                              aria-label="Custom duration in minutes"
+                              aria-invalid={Boolean(customDurationError)}
+                              data-testid="input-custom-activity-duration"
+                            />
+                          )}
+                        </div>
+                        {isCustomDuration && (
+                          <p className={`text-xs ${customDurationError ? "text-destructive" : "text-muted-foreground"}`} role={customDurationError ? "alert" : undefined} data-testid={customDurationError ? "custom-duration-error" : undefined}>
+                            {customDurationError ?? "Custom class default"}
+                          </p>
+                        )}
+                </div>
+              </div>
+            </div>
+
             <Collapsible open={customizeOpen} onOpenChange={setCustomizeOpen} className="rounded-xl border bg-muted/10">
               <CollapsibleTrigger
                 className="group flex min-h-14 w-full items-center justify-between gap-4 px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-xl"
                 data-testid="button-toggle-customize"
               >
                 <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-foreground">Add context &amp; options</span>
+                  <span className="block text-sm font-semibold text-foreground">Add optional details</span>
                   <span className="mt-0.5 block text-xs text-muted-foreground">
-                    Optional: class context, Focus, delivery, duration, and style
+                    Focus, student resources, and activity style
                   </span>
                 </span>
                 <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform ${customizeOpen ? "rotate-180" : ""}`} />
               </CollapsibleTrigger>
               <CollapsibleContent className="border-t px-4 pb-4 pt-4">
                 <div className="space-y-6">
-                  {activeClassId && localContext && (
-                    <InstructionalContextPanel
-                      value={localContext}
-                      onChange={(updates) => setLocalContext(prev => prev ? { ...prev, ...updates } : prev)}
-                    />
-                  )}
-
                   <ChipGroup
                     chips={activeChips}
                     selectedChipIds={selectedChipIds}
@@ -692,36 +775,6 @@ export default function Home() {
                   />
 
                   <div className="space-y-4">
-                    <div>
-                      <h2 className="text-sm font-semibold text-foreground">Board settings</h2>
-                      <p className="text-xs text-muted-foreground">These start with your class defaults.</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Device mode</Label>
-                        <SegmentedControl<DeviceMode>
-                          options={[
-                            { label: "Off", value: "off", icon: <MonitorOff className="w-4 h-4" /> },
-                            { label: "On", value: "on", icon: <MonitorSmartphone className="w-4 h-4" /> },
-                          ]}
-                          value={deviceMode}
-                          onChange={setDeviceMode}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Duration (min)</Label>
-                        <SegmentedControl<Duration>
-                          options={[
-                            { label: "5", value: 5 },
-                            { label: "7", value: 7 },
-                            { label: "10", value: 10 },
-                          ]}
-                          value={duration}
-                          onChange={setDuration}
-                        />
-                      </div>
-                    </div>
-
                     {deviceMode === "on" && (
                       <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
                         <div className="space-y-2">
@@ -875,6 +928,8 @@ export default function Home() {
         onSubmit={handleClassSubmit}
         onDelete={handleDeleteClass}
         initialData={editingClassId ? activeClass : null}
+        instructionalContext={editingClassId ? localContext : null}
+        onInstructionalContextChange={(updates) => setLocalContext((previous) => previous ? { ...previous, ...updates } : previous)}
       />
 
       <AlertDialog open={deleteClassAlertOpen} onOpenChange={setDeleteClassAlertOpen}>
