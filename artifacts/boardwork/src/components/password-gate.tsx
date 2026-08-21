@@ -9,6 +9,7 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { BrandMark } from '@/components/brand-mark';
 
 interface AuthStatus {
   passwordRequired: boolean;
@@ -92,9 +93,12 @@ export function PasswordGate({ children }: Props) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F8F7F4]">
       <div className="w-full max-w-sm px-8 py-10 bg-white rounded-xl border border-[#E5E2DB] shadow-sm">
-        <h1 className="text-2xl font-semibold tracking-tight text-[#1C1C1C] mb-1">
-          Boardwork
-        </h1>
+        <div className="mb-1 flex items-center gap-2">
+          <BrandMark />
+          <h1 className="text-2xl font-semibold tracking-tight text-[#1C1C1C]">
+            Boardwork
+          </h1>
+        </div>
 
         {state.phase === 'status_error' ? (
           <>
