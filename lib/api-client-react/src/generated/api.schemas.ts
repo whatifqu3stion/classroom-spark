@@ -176,6 +176,11 @@ export interface Activity {
   updatedAt: string;
 }
 
+export interface BulkDeleteActivitiesResult {
+  /** Number of non-favorited activities removed; always returned as a whole-number count. */
+  deletedCount: number;
+}
+
 export interface ActivityInput {
   classId: string;
   /** @nullable */

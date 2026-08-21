@@ -17,8 +17,12 @@ import {
   SetActivityFavoriteParams,
   SetActivityFavoriteBody,
   SetActivityFavoriteResponse,
+  ClearNonFavoriteActivitiesResponse,
 } from "@workspace/api-zod";
-import { duplicateActivity } from "../lib/boardwork-repo";
+import {
+  deleteNonFavoriteActivities,
+  duplicateActivity,
+} from "../lib/boardwork-repo";
 import {
   ActivityResourceValidationError,
   normalizeActivityResourceUrl,
@@ -153,6 +157,11 @@ router.patch("/activities/:activityId", async (req, res): Promise<void> => {
     .returning();
 
   res.json(UpdateActivityResponse.parse(updated));
+});
+
+router.delete("/activities/non-favorites", async (_req, res): Promise<void> => {
+  const deletedCount = await deleteNonFavoriteActivities();
+  res.json(ClearNonFavoriteActivitiesResponse.parse({ deletedCount }));
 });
 
 router.delete("/activities/:activityId", async (req, res): Promise<void> => {

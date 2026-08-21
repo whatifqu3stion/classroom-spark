@@ -12,6 +12,7 @@ export * from './activityInput';
 export * from './activityStyle';
 export * from './activityUpdate';
 export * from './appState';
+export * from './bulkDeleteActivitiesResult';
 export * from './chip';
 export * from './chipInput';
 export * from './chipUpdate';

@@ -144,6 +144,19 @@ export async function deleteClassCascade(classId: string): Promise<boolean> {
 }
 
 /**
+ * Removes every non-favorited activity in one database operation. Favorites
+ * are protected by the database predicate rather than the client selection.
+ */
+export async function deleteNonFavoriteActivities(): Promise<number> {
+  const deleted = await db
+    .delete(activitiesTable)
+    .where(eq(activitiesTable.favorite, false))
+    .returning({ id: activitiesTable.id });
+
+  return deleted.length;
+}
+
+/**
  * Duplicate an activity as a new editable record. The original is not mutated.
  * The copy sets duplicatedFrom to the source id and resets favorite to false.
  */

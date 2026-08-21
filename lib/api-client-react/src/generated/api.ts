@@ -25,6 +25,7 @@ import type {
   ActivityInput,
   ActivityUpdate,
   AppState,
+  BulkDeleteActivitiesResult,
   Chip,
   ChipInput,
   ChipUpdate,
@@ -1399,6 +1400,78 @@ export const useDeleteActivity = <TError = ErrorType<Error>,
         TContext
       > => {
       return useMutation(getDeleteActivityMutationOptions(options));
+    }
+
+export const getClearNonFavoriteActivitiesUrl = () => {
+
+
+
+
+  return `/api/activities/non-favorites`
+}
+
+/**
+ * Permanently removes every activity whose favorite flag is false. Favorited activities are preserved.
+ * @summary Delete all non-favorited activities
+ */
+export const clearNonFavoriteActivities = async ( options?: Parameters<typeof customFetch>[1]): Promise<BulkDeleteActivitiesResult> => {
+
+  return customFetch<BulkDeleteActivitiesResult>(getClearNonFavoriteActivitiesUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getClearNonFavoriteActivitiesMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearNonFavoriteActivities>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof clearNonFavoriteActivities>>, TError,void, TContext> => {
+
+const mutationKey = ['clearNonFavoriteActivities'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof clearNonFavoriteActivities>>, void> = () => {
+
+
+          return  clearNonFavoriteActivities(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClearNonFavoriteActivitiesMutationResult = NonNullable<Awaited<ReturnType<typeof clearNonFavoriteActivities>>>
+
+    export type ClearNonFavoriteActivitiesMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete all non-favorited activities
+ */
+export const useClearNonFavoriteActivities = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearNonFavoriteActivities>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof clearNonFavoriteActivities>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getClearNonFavoriteActivitiesMutationOptions(options));
     }
 
 export const getDuplicateActivityUrl = (activityId: string,) => {

@@ -542,6 +542,15 @@ export const DeleteActivityResponse = zod.void()
 
 
 /**
+ * Permanently removes every activity whose favorite flag is false. Favorited activities are preserved.
+ * @summary Delete all non-favorited activities
+ */
+export const ClearNonFavoriteActivitiesResponse = zod.object({
+  "deletedCount": zod.number().describe('Number of non-favorited activities removed; always returned as a whole-number count.')
+})
+
+
+/**
  * Copies an activity as a new editable record without mutating the original. Sets duplicatedFrom to the source activity id and clears favorite.
  * @summary Duplicate an activity
  */

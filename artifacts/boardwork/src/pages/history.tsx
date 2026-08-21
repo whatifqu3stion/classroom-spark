@@ -4,7 +4,13 @@ import { format } from "date-fns";
 import { MoreHorizontal, MonitorSmartphone, MonitorOff, Star, Trash2, Copy, Play, FileText } from "lucide-react";
 import { Shell } from "@/components/layout/shell";
 import { useBoardwork } from "@/store/boardwork-context";
-import { useDeleteActivity, useDuplicateActivity, useSetActivityFavorite, getGetAppStateQueryKey } from "@workspace/api-client-react";
+import {
+  useClearNonFavoriteActivities,
+  useDeleteActivity,
+  useDuplicateActivity,
+  useSetActivityFavorite,
+  getGetAppStateQueryKey,
+} from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,14 +39,21 @@ export default function History() {
   const deleteMutation = useDeleteActivity();
   const duplicateMutation = useDuplicateActivity();
   const favoriteMutation = useSetActivityFavorite();
+  const clearMutation = useClearNonFavoriteActivities();
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [historyView, setHistoryView] = useState<"all" | "favorites">("all");
+  const [clearOpen, setClearOpen] = useState(false);
+  const [clearError, setClearError] = useState<string | null>(null);
   const duplicateInFlightRef = useRef(false);
 
   const activities = appState?.activities || [];
   const classes = appState?.classes || [];
 
   const sortedActivities = [...activities].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  const favoriteActivities = sortedActivities.filter((activity) => activity.favorite);
+  const nonFavoriteCount = sortedActivities.length - favoriteActivities.length;
+  const visibleActivities = historyView === "favorites" ? favoriteActivities : sortedActivities;
 
   const handleDuplicate = (id: string) => {
     if (duplicateInFlightRef.current) return;
@@ -75,27 +88,108 @@ export default function History() {
     });
   };
 
+  const handleClear = () => {
+    if (clearMutation.isPending || nonFavoriteCount === 0) return;
+
+    setClearError(null);
+    clearMutation.mutate(undefined, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
+        setClearOpen(false);
+      },
+      onError: () => {
+        setClearError("Couldn’t clear history. Your activities were not changed.");
+      },
+    });
+  };
+
   return (
     <Shell>
       <div className="container mx-auto px-4 md:px-8 py-8 max-w-5xl min-h-[calc(100dvh-3.5rem)]">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col gap-4 mb-8 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">History</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <div
+              role="tablist"
+              aria-label="History view"
+              className="inline-flex items-center rounded-md border bg-muted/30 p-1"
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected={historyView === "all"}
+                onClick={() => setHistoryView("all")}
+                className={`rounded px-3 py-1.5 text-sm font-medium transition-colors ${
+                  historyView === "all"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                data-testid="history-view-all"
+              >
+                All <span className="text-xs text-muted-foreground">({sortedActivities.length})</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={historyView === "favorites"}
+                onClick={() => setHistoryView("favorites")}
+                className={`rounded px-3 py-1.5 text-sm font-medium transition-colors ${
+                  historyView === "favorites"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                data-testid="history-view-favorites"
+              >
+                Favorites <span className="text-xs text-muted-foreground">({favoriteActivities.length})</span>
+              </button>
+            </div>
+            {nonFavoriteCount > 0 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-muted-foreground hover:text-destructive hover:border-destructive/40"
+                onClick={() => {
+                  setClearError(null);
+                  setClearOpen(true);
+                }}
+                data-testid="button-clear-history"
+              >
+                <Trash2 className="w-4 h-4" />
+                Clear history
+              </Button>
+            )}
+          </div>
         </div>
 
-        {sortedActivities.length === 0 ? (
+        {visibleActivities.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed rounded-xl bg-muted/10">
             <FileText className="w-12 h-12 text-muted-foreground/30 mb-4" />
-            <h3 className="text-lg font-medium text-foreground mb-2">No activities yet</h3>
-            <p className="text-muted-foreground max-w-sm mb-6">
-              Activities you generate or create will appear here.
-            </p>
-            <Button asChild variant="outline">
-              <Link href="/" data-testid="link-history-empty-workspace">Back to Workspace</Link>
-            </Button>
+            {historyView === "favorites" && sortedActivities.length > 0 ? (
+              <>
+                <h3 className="text-lg font-medium text-foreground mb-2">No favorites yet</h3>
+                <p className="text-muted-foreground max-w-sm mb-6">
+                  Star an activity to keep it easy to find here.
+                </p>
+                <Button variant="outline" onClick={() => setHistoryView("all")} data-testid="button-show-all-history">
+                  Show all activities
+                </Button>
+              </>
+            ) : (
+              <>
+                <h3 className="text-lg font-medium text-foreground mb-2">No activities yet</h3>
+                <p className="text-muted-foreground max-w-sm mb-6">
+                  Activities you generate or create will appear here.
+                </p>
+                <Button asChild variant="outline">
+                  <Link href="/" data-testid="link-history-empty-workspace">Back to Workspace</Link>
+                </Button>
+              </>
+            )}
           </div>
         ) : (
           <div className="grid gap-3">
-            {sortedActivities.map((activity) => {
+            {visibleActivities.map((activity) => {
               const cls = classes.find(c => c.id === activity.classId);
               return (
                 <div key={activity.id} className="group flex items-center justify-between p-4 rounded-xl border bg-card hover:border-foreground/20 transition-colors shadow-sm" data-testid={`history-item-${activity.id}`}>
@@ -220,6 +314,36 @@ export default function History() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {deleteMutation.isPending ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={clearOpen}
+        onOpenChange={(open) => {
+          setClearOpen(open);
+          if (!open) setClearError(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear non-favorited history?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {nonFavoriteCount > 0
+                ? `This will permanently remove ${nonFavoriteCount} non-favorited ${nonFavoriteCount === 1 ? "activity" : "activities"}. Your favorited activities will remain.`
+                : "There are no non-favorited activities to remove. Your favorited activities will remain."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {clearError && <p className="text-sm text-destructive">{clearError}</p>}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={clearMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleClear}
+              disabled={clearMutation.isPending || nonFavoriteCount === 0}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {clearMutation.isPending ? "Clearing…" : "Clear history"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

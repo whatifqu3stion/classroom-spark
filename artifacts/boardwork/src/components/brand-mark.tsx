@@ -1,4 +1,3 @@
-import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface BrandMarkProps {
@@ -15,7 +14,17 @@ export function BrandMark({ className }: BrandMarkProps) {
       )}
     >
       <span className="absolute inset-[4px] rounded-[3px] border border-current/70" />
-      <Sparkles className="relative h-3 w-3" strokeWidth={1.8} />
+      <svg
+        aria-hidden="true"
+        className="relative h-3.5 w-3.5"
+        viewBox="0 0 16 16"
+        focusable="false"
+      >
+        <path
+          fill="currentColor"
+          d="M8 0.9 9.3 5.7 14.1 7l-4.8 1.3L8 13.1 6.7 8.3 1.9 7l4.8-1.3L8 0.9Z"
+        />
+      </svg>
     </span>
   );
 }
