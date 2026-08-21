@@ -90,3 +90,9 @@ Before calling MVP complete:
 - Downloaded PNGs were inspected as 1920×1080 images. Desktop- and portrait-triggered exports produced the same 16:9 composition with no controls or teacher-only notes.
 - Practical failure checks covered invalid URLs, retained generation inputs, export failure/retry, malformed AI output, missing AI configuration, and application-load retry behavior. A destructive live database outage was not induced.
 - The project was not published during Stage 4, so production database, AI, direct-route, asset, export, and access-protection checks remain pending until the first deployment.
+
+## Stage 5 production verification
+
+- Production verification is blocked as of August 21, 2026: the deployment service reports no active published deployment, so there is no live URL against which to run the access-gate, real-AI persistence, direct-route, projector-asset, fullscreen, or PNG-export smoke tests.
+- The three unchecked items above are intentionally still unchecked. They require either a published deployment (A) or a physical classroom projector/distance observation (F); marking them complete without those observations would be misleading.
+- Local production builds succeed when the required `PORT` and `BASE_PATH` values are supplied. Local typecheck and persistence tests currently expose an existing database/schema mismatch (`activities.visual_url` is present in the Drizzle model but absent from the test database); this was not changed as part of a production verification task.
