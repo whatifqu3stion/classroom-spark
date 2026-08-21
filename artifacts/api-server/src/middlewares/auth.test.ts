@@ -86,7 +86,10 @@ async function req(
 // ── validateAuthConfig ─────────────────────────────────────────────────────
 
 describe("validateAuthConfig", () => {
-  afterEach(clearAuth);
+  afterEach(() => {
+    clearAuth();
+    vi.useRealTimers();
+  });
 
   it("passes when APP_PASSWORD is not set", async () => {
     clearAuth();
@@ -145,7 +148,10 @@ describe("requireAuth — gate enabled", () => {
     app = await makeApp();
   });
 
-  afterEach(clearAuth);
+  afterEach(() => {
+    clearAuth();
+    vi.useRealTimers();
+  });
 
   it("returns 401 on protected route without cookie", async () => {
     const { status, body } = await req(app, "GET", "/api/protected");
@@ -213,6 +219,45 @@ describe("requireAuth — gate enabled", () => {
       cookie: cookieValue,
     });
     expect(body).toMatchObject({ passwordRequired: true, authenticated: true });
+  });
+
+  it("refreshes the session cookie on an authenticated status check", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-21T12:00:00.000Z"));
+    const { setCookie } = await req(app, "POST", "/api/auth/login", {
+      body: { password: STRONG_PASSWORD },
+    });
+    const originalCookie = setCookie!.split(";")[0];
+
+    vi.setSystemTime(new Date("2026-08-22T12:00:00.000Z"));
+    const { body, setCookie: refreshedCookie } = await req(app, "GET", "/api/auth/status", {
+      cookie: originalCookie,
+    });
+
+    expect(body).toMatchObject({ passwordRequired: true, authenticated: true });
+    expect(refreshedCookie).toMatch(/bw-auth=/);
+    expect(refreshedCookie).not.toBe(setCookie);
+    expect(refreshedCookie).toMatch(/Max-Age=1209600/);
+
+    // The original token would expire after 14 days from the first login.
+    // The refreshed token should keep the active session alive beyond that.
+    vi.setSystemTime(new Date("2026-09-05T12:00:00.000Z"));
+    const { status } = await req(app, "GET", "/api/protected", {
+      cookie: refreshedCookie!.split(";")[0],
+    });
+    expect(status).toBe(200);
+  });
+
+  it("refreshes the session cookie on an authenticated API request", async () => {
+    const { setCookie } = await req(app, "POST", "/api/auth/login", {
+      body: { password: STRONG_PASSWORD },
+    });
+    const { status, setCookie: refreshedCookie } = await req(app, "GET", "/api/protected", {
+      cookie: setCookie!.split(";")[0],
+    });
+
+    expect(status).toBe(200);
+    expect(refreshedCookie).toMatch(/bw-auth=/);
   });
 
   it("clears cookie on logout", async () => {

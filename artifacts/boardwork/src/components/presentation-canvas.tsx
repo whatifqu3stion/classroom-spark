@@ -29,7 +29,16 @@ export function PresentationCanvas({
   const includeTestIds = !exportLayout;
   const hasVisual = Boolean(activity.visualUrl);
   const showTimer = !exportLayout && timer?.visible;
-  const railMode = showTimer ? (hasVisual ? "split" : "timer-only") : hasVisual ? "image-only" : "empty";
+  const showTimerControls = !exportLayout && Boolean(timer && timerControls);
+  const railMode = showTimer
+    ? hasVisual
+      ? "split"
+      : "timer-only"
+    : hasVisual
+      ? "image-only"
+      : showTimerControls
+        ? "timer-only"
+        : "empty";
   const formatTimer = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
   return (
@@ -126,7 +135,7 @@ export function PresentationCanvas({
           </div>
           )}
          </div>
-         {(hasVisual || (showTimer && timer)) && (
+          {(hasVisual || showTimer || showTimerControls) && (
            <aside className={cn("presentation-rail", `presentation-rail--${railMode}`, timer?.mode === "expanded" && "presentation-rail--expanded")}>
              {hasVisual && (
                <figure className="presentation-visual">
@@ -142,6 +151,12 @@ export function PresentationCanvas({
                   {timerControls}
                </div>
              )}
+              {showTimerControls && !showTimer && (
+                <div className="presentation-timer-hidden-controls">
+                  <span className="presentation-timer-label">Timer hidden from students</span>
+                  {timerControls}
+                </div>
+              )}
            </aside>
           )}
       </main>

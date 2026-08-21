@@ -314,6 +314,15 @@
     padding-top: 0.45rem;
   }
 
+  .presentation-timer-hidden-controls {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .presentation-timer-hidden-controls .presentation-timer-controls {
+    margin-top: 0;
+  }
+
   .presentation-timer-actions {
     display: flex;
     align-items: center;

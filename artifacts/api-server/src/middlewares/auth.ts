@@ -13,8 +13,11 @@
  *   absent or too short the process exits immediately.
  * - No known fallback secret: there is no hard-coded default.
  * - Server-verified expiry: the signed payload contains an `exp` timestamp
- *   that is checked on every request.  maxAge only controls the browser
+ *   that is checked on every request. maxAge only controls the browser
  *   cookie lifetime; server-side expiry is the real enforcement boundary.
+ * - Sliding session: every valid authenticated request reissues the same
+ *   14-day session window, so active teachers are not interrupted by an
+ *   otherwise idle browser-cookie expiry.
  * - Constant-time comparisons for both password check and signature verify.
  */
 
@@ -77,6 +80,17 @@ function mintToken(): string {
   const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
   const sig = hmac(body, secret());
   return `${body}.${sig}`;
+}
+
+function setAuthCookie(res: Response, token: string): void {
+  const isProduction = process.env["NODE_ENV"] === "production";
+  res.cookie(COOKIE_NAME, token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: isProduction,
+    maxAge: TOKEN_TTL_MS,
+    path: "/",
+  });
 }
 
 /**
@@ -145,6 +159,10 @@ export function requireAuth(): RequestHandler {
       res.status(401).json({ error: "authentication_required" });
       return;
     }
+    // Rotate the signed token and refresh the browser expiry on every
+    // authenticated request. The old token remains valid until its original
+    // expiry, which keeps concurrent requests from racing each other out.
+    setAuthCookie(res, mintToken());
     next();
   };
 }
@@ -158,8 +176,12 @@ export function handleAuthStatus(req: Request, res: Response): void {
     return;
   }
   const raw = (req.cookies as Record<string, unknown>)?.[COOKIE_NAME];
-  const authenticated =
-    typeof raw === "string" && verifyToken(raw) !== null;
+  const authenticated = typeof raw === "string" && verifyToken(raw) !== null;
+  if (authenticated) {
+    // The status check is the first request made after a cold browser load,
+    // so it must also slide the session window.
+    setAuthCookie(res, mintToken());
+  }
   res.json({ passwordRequired: true, authenticated });
 }
 
@@ -196,15 +218,7 @@ export function handleLogin(req: Request, res: Response): void {
     return;
   }
 
-  const token = mintToken();
-  const isProduction = process.env["NODE_ENV"] === "production";
-  res.cookie(COOKIE_NAME, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: isProduction,
-    maxAge: TOKEN_TTL_MS,
-    path: "/",
-  });
+  setAuthCookie(res, mintToken());
   res.json({ ok: true });
 }
 
