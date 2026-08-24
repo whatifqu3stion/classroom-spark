@@ -25,7 +25,8 @@ describe("BoardEditor presentation visual disclosure", () => {
     expect(editor).toHaveAttribute("aria-hidden", "true");
     expect(editor.children).toHaveLength(1);
     expect(editor.firstElementChild).toHaveClass("space-y-3");
-    expect(screen.getByText("No image · Midnight · Mint accent")).toBeInTheDocument();
+    expect(screen.getByText("No image")).toBeInTheDocument();
+    expect(screen.queryByText("No image · Midnight · Mint accent")).not.toBeInTheDocument();
     expect(screen.getByText("Visual presentation colors")).toBeInTheDocument();
 
     fireEvent.click(toggle);
@@ -36,5 +37,8 @@ describe("BoardEditor presentation visual disclosure", () => {
     expect(editor.children).toHaveLength(1);
     expect(screen.getByText("Add image")).toBeInTheDocument();
     expect(screen.getByTestId("presentation-theme-picker")).toBeInTheDocument();
+    expect(
+      screen.queryByPlaceholderText("Arrival instructions (optional footer)..."),
+    ).not.toBeInTheDocument();
   });
 });

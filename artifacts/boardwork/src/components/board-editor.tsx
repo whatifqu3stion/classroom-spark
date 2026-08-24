@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 import { getSafeResourceUrl } from "@/lib/resource-url";
 import { PresentationThemePicker } from "@/components/presentation-theme-picker";
 import { FormulaPreview, FormulaText } from "@/components/formula-text";
-import { getThemeAccentName, getThemeLabel } from "@/lib/presentation-theme";
 
 interface BoardEditorProps {
   draft: ActivityDraft;
@@ -283,10 +282,7 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
                   Visual presentation
                 </span>
                 <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                  {draft.visualUrl ? "Image added" : "No image"} · {getThemeLabel(draft.presentationTheme)}
-                  {getThemeAccentName(draft.presentationTheme)
-                    ? ` · ${getThemeAccentName(draft.presentationTheme)} accent`
-                    : ""}
+                  {draft.visualUrl ? "Image added" : "No image"}
                 </span>
               </span>
               <ChevronDown
@@ -351,11 +347,6 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
               <PresentationThemePicker
                 value={draft.presentationTheme}
                 onChange={(presentationTheme) => onChange({ presentationTheme })}
-                preview={{
-                  title: draft.title,
-                  task: draft.task,
-                  prompt: draft.prompts[0],
-                }}
               />
               {draft.teacherNote != null && (
                 <div>
@@ -372,14 +363,6 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
                   <FormulaPreview>{draft.teacherNote}</FormulaPreview>
                 </div>
               )}
-              <EditableText
-                multiline
-                value={draft.arrivalInstructions || ""}
-                onChange={(val) => onChange({ arrivalInstructions: val })}
-                placeholder="Arrival instructions (optional footer)..."
-                className="text-muted-foreground text-sm block w-full"
-              />
-              <FormulaPreview>{draft.arrivalInstructions || ""}</FormulaPreview>
             </div>
             </div>
           </section>

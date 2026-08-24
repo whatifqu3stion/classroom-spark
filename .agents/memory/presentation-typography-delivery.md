@@ -16,3 +16,15 @@ improving the current teacher-facing choices.
 **How to apply:** When adding an exposed appearance, add its required local
 weights, license attribution, and export readiness request together. Keep
 fallback stacks explicit for multilingual and legacy content.
+
+The normal Boardwork application shell remains on its established `Inter`,
+`sans-serif` baseline; appearance-specific typography is scoped to presentation
+surfaces and should not silently change home, editor, dialog, or navigation copy.
+
+**Why:** Teachers noticed the broader multilingual fallback stack as an
+unintended application-wide visual change even though it was useful for
+presentation content.
+
+**How to apply:** Keep app-shell font tokens separate from presentation
+heading/body variables. Any future font-delivery change should verify both the
+normal UI baseline and the presentation/export fallback behavior independently.

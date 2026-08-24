@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @plugin "@tailwindcss/typography";
@@ -50,8 +51,7 @@
 }
 
 :root {
-  --app-font-sans: 'Inter', 'Noto Sans Arabic', 'Noto Sans Hebrew',
-    'Noto Sans Devanagari', 'Noto Sans JP', 'Noto Sans', system-ui, sans-serif;
+  --app-font-sans: 'Inter', sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: Menlo, monospace;
   --radius: 0.5rem;
@@ -258,13 +258,44 @@
     transition: background-color 150ms ease, color 150ms ease;
   }
 
+  .presentation-time--compact {
+    position: relative;
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    min-height: 2.25rem;
+    align-items: center;
+    gap: 0.35rem;
+    border-radius: 0.4rem;
+    padding: 0.35rem 0.5rem;
+    font-family: var(--font-mono);
+    font-size: clamp(0.95rem, 3.2vw, 1.2rem);
+    letter-spacing: 0.08em;
+    line-height: 1;
+    transition: background-color 150ms ease, color 150ms ease;
+  }
+
+  .presentation-time-reading {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.5rem;
+    color: var(--presentation-primary-text, #171717);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .presentation-time--compact:hover {
+    background: var(--presentation-accent-soft, rgb(23 23 23 / 6%));
+    color: var(--presentation-primary-text, #171717);
+  }
+
   .presentation-time-compact-controls {
     display: inline-flex;
     max-width: 100%;
     align-items: center;
   }
 
-  .presentation-time--hidden .presentation-timer-controls {
+  .presentation-time--hidden .presentation-timer-controls,
+  .presentation-time--compact .presentation-timer-controls {
     margin: 0;
     border-top: 0;
     padding-top: 0;
@@ -305,11 +336,13 @@
     display: none;
   }
 
-  .presentation-time--hidden .presentation-time-compact-controls {
+  .presentation-time--hidden .presentation-time-compact-controls,
+  .presentation-time--compact .presentation-time-compact-controls {
     display: block;
   }
 
-  .presentation-time--hidden .presentation-timer-controls {
+  .presentation-time--hidden .presentation-timer-controls,
+  .presentation-time--compact .presentation-timer-controls {
     position: absolute;
     top: calc(100% + 0.4rem);
     right: 0;

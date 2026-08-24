@@ -7,6 +7,23 @@ import { useCountdownTimer } from "@/components/countdown-timer";
 import { PresentationCanvas } from "@/components/presentation-canvas";
 import { getResolvedPresentationTheme } from "@/lib/presentation-theme";
 import {
+  ChevronDown,
+  ChevronLeft,
+  Download,
+  Eye,
+  Loader2,
+  Maximize,
+  Minimize,
+  Minus,
+  Pause,
+  Play,
+  Plus,
+  RotateCcw,
+  Settings2,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
+import {
   getPresentationExportOptions,
   waitForPresentationFonts,
 } from "@/lib/presentation-fonts";
@@ -37,6 +54,7 @@ export default function Present() {
   const [controlsOpen, setControlsOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [timerVisible, setTimerVisible] = useState(true);
+  const [timerMinimized, setTimerMinimized] = useState(false);
   const [alarmEnabled, setAlarmEnabled] = useState(true);
   const [timerOptionsOpen, setTimerOptionsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -127,8 +145,8 @@ export default function Present() {
     "--presentation-secondary-text": resolvedTheme.colors.secondaryText,
     "--presentation-accent": resolvedTheme.colors.accent,
     "--presentation-accent-soft": resolvedTheme.colors.accentSoft,
-    "--presentation-font-heading": resolvedTheme.typography.headingFamily,
-    "--presentation-font-body": resolvedTheme.typography.bodyFamily,
+    "--presentation-font-heading": resolvedTheme.typography.heading.family,
+    "--presentation-font-body": resolvedTheme.typography.body.family,
   } as CSSProperties;
 
   const controls = (
@@ -229,6 +247,19 @@ export default function Present() {
           <span>Adjust</span>
           <ChevronDown className={`h-3.5 w-3.5 transition-transform ${timerOptionsOpen ? "rotate-180" : ""}`} aria-hidden="true" />
         </button>
+        <button
+          type="button"
+          className="presentation-timer-options-trigger"
+          onClick={() => setTimerMinimized((value) => !value)}
+          aria-label={timerMinimized ? "Expand timer" : "Minimize timer"}
+        >
+          {timerMinimized ? (
+            <Maximize className="h-3.5 w-3.5" aria-hidden="true" />
+          ) : (
+            <Minimize className="h-3.5 w-3.5" aria-hidden="true" />
+          )}
+          <span>{timerMinimized ? "Expand" : "Minimize"}</span>
+        </button>
       </div>
       {timerOptionsOpen && (
         <div id="timer-options" className="presentation-timer-options">
@@ -273,7 +304,11 @@ export default function Present() {
         activity={activeDraft}
         controls={controls}
         timerControls={timerControls}
-        onShowTimer={() => setTimerVisible(true)}
+        onShowTimer={() => {
+          setTimerVisible(true);
+          setTimerMinimized(true);
+        }}
+        timerMinimized={timerMinimized}
         timer={{ visible: timerVisible, remainingSeconds, status: timerStatus, alarmActive }}
       />
       <div className="presentation-export-stage" aria-hidden="true">

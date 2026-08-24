@@ -38,9 +38,17 @@ describe("PresentationThemePicker", () => {
     expect(screen.queryByTestId("button-more-themes")).not.toBeInTheDocument();
     expect(screen.getByText("Background")).toBeInTheDocument();
     expect(screen.getByText("Accent")).toBeInTheDocument();
+    expect(screen.getByTestId("theme-option-boardwork")).toHaveClass(
+      "items-center",
+      "gap-2",
+    );
+    expect(screen.getByTestId("theme-swatch-color-boardwork")).toHaveClass(
+      "h-5",
+      "w-5",
+    );
   });
 
-  it("uses the selected surface mode for accent names and summaries", () => {
+  it("uses the selected surface mode for accent names without a summary pill", () => {
     render(
       <PresentationThemePicker
         onChange={vi.fn()}
@@ -50,10 +58,10 @@ describe("PresentationThemePicker", () => {
 
     expect(screen.getByRole("button", { name: "Use Mint accent" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Use Sage accent" })).not.toBeInTheDocument();
-    expect(screen.getByText("Midnight · Mint")).toBeInTheDocument();
+    expect(screen.queryByText("Midnight · Mint")).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Use Mint accent" }),
-    ).toHaveAttribute("title", "A soft mint signal for calm emphasis on a dark surface.");
+    ).toHaveAttribute("title", "A quiet natural signal for calm emphasis.");
   });
 
   it("selects a surface with its matched accent and allows a secondary accent choice", () => {
@@ -61,12 +69,8 @@ describe("PresentationThemePicker", () => {
     render(
       <PresentationThemePicker
         onChange={onChange}
-        preview={{ title: "Practice", task: "Compare two examples." }}
       />,
     );
-
-    const preview = screen.getByTestId("presentation-theme-preview");
-    expect(preview).toHaveStyle({ backgroundColor: "#FDFCF8" });
 
     fireEvent.click(screen.getByTestId("theme-option-midnight"));
 
@@ -75,8 +79,6 @@ describe("PresentationThemePicker", () => {
       themeId: "midnight",
       accentId: "blue",
     });
-    expect(preview).toHaveStyle({ backgroundColor: "#0F172A" });
-    expect(screen.getAllByText("Midnight · Sky blue")).toHaveLength(2);
   });
 
   it("keeps a saved custom theme readable without exposing manual controls", () => {
@@ -91,7 +93,7 @@ describe("PresentationThemePicker", () => {
       />,
     );
 
-    expect(screen.getAllByText("Custom").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Custom")).not.toBeInTheDocument();
     expect(screen.queryByTestId("button-customize-theme")).not.toBeInTheDocument();
     expect(screen.queryByTestId("presentation-accents")).not.toBeInTheDocument();
     expect(screen.queryByTestId("presentation-theme-preview")).not.toBeInTheDocument();
@@ -105,7 +107,7 @@ describe("PresentationThemePicker", () => {
       />,
     );
 
-    expect(screen.getByText("Ocean")).toBeInTheDocument();
+    expect(screen.queryByText("Ocean")).not.toBeInTheDocument();
     expect(screen.queryByTestId("presentation-accents")).not.toBeInTheDocument();
     expect(screen.getByTestId("legacy-theme-note")).toBeInTheDocument();
   });

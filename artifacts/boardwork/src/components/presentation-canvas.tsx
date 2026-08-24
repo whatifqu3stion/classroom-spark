@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode, Ref } from "react";
-import { ExternalLink, EyeOff } from "lucide-react";
+import { Clock, ExternalLink } from "lucide-react";
 import type { ActivityDraft } from "@/store/boardwork-context";
 import { getSafeResourceUrl } from "@/lib/resource-url";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,7 @@ interface PresentationCanvasProps {
   controls?: ReactNode;
   timerControls?: ReactNode;
   onShowTimer?: () => void;
+  timerMinimized?: boolean;
   exportLayout?: boolean;
   surfaceRef?: Ref<HTMLDivElement>;
   timer?: Pick<CountdownTimerState, "remainingSeconds" | "status"> & {
@@ -29,6 +30,7 @@ export function PresentationCanvas({
   controls,
   timerControls,
   onShowTimer,
+  timerMinimized = false,
   exportLayout = false,
   surfaceRef,
   timer,
@@ -40,18 +42,16 @@ export function PresentationCanvas({
   const includeTestIds = !exportLayout;
   const hasVisual = Boolean(activity.visualUrl);
   const showTimer = !exportLayout && timer?.visible;
-  const showTimerControls = !exportLayout && Boolean(timer?.visible && timerControls);
-  const showCompactTimerControls =
-    !exportLayout && Boolean(timer && !timer.visible && timerControls);
-  const railMode = showTimer
+  const showLargeTimer = Boolean(showTimer && !timerMinimized);
+  const showCompactTimer = !exportLayout && Boolean(timer?.visible && timerMinimized);
+  const showTimerControls = !exportLayout && Boolean(timerControls && (showLargeTimer || showCompactTimer));
+  const railMode = showLargeTimer
     ? hasVisual
       ? "split"
       : "timer-only"
     : hasVisual
       ? "image-only"
-      : showTimerControls
-        ? "timer-only"
-        : "empty";
+      : "empty";
   const formatTimer = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
   return (
@@ -70,16 +70,16 @@ export function PresentationCanvas({
         "--presentation-accent-soft": themeColors.accentSoft,
         "--presentation-accent-foreground":
           getPresentationThemeAccentForeground(themeColors.accent),
-        "--presentation-font-heading": themeTypography.headingFamily,
-        "--presentation-font-body": themeTypography.bodyFamily,
-        "--presentation-heading-weight": themeTypography.headingWeight,
-        "--presentation-body-weight": themeTypography.bodyWeight,
+        "--presentation-font-heading": themeTypography.heading.family,
+        "--presentation-font-body": themeTypography.body.family,
+        "--presentation-heading-weight": themeTypography.heading.weight,
+        "--presentation-body-weight": themeTypography.body.weight,
         "--presentation-heading-letter-spacing":
           themeTypography.headingLetterSpacing,
         backgroundColor: themeColors.background,
         color: themeColors.primaryText,
-        fontFamily: themeTypography.bodyFamily,
-        fontWeight: themeTypography.bodyWeight,
+        fontFamily: themeTypography.body.family,
+        fontWeight: themeTypography.body.weight,
       } as CSSProperties}
       {...testId(includeTestIds, "presentation-surface")}
     >
@@ -120,8 +120,12 @@ export function PresentationCanvas({
           className={cn(
             "presentation-time",
             timer &&
+              timer.visible &&
+              timerMinimized &&
+              "presentation-time--compact",
+            timer &&
               !timer.visible &&
-              (onShowTimer || showCompactTimerControls) &&
+              onShowTimer &&
               "presentation-time--hidden",
           )}
           {...testId(includeTestIds, "present-time")}
@@ -135,15 +139,16 @@ export function PresentationCanvas({
               title="Show timer to students"
               data-testid={includeTestIds ? "button-show-timer" : undefined}
             >
-              <span aria-hidden="true">
-                <EyeOff className="presentation-time-toggle-icon" />
-                {activity.durationMinutes} MIN
-              </span>
+              <Clock className="presentation-time-toggle-icon" aria-hidden="true" />
             </button>
+          ) : timer && timer.visible && timerMinimized ? (
+            <span className="presentation-time-reading" aria-live="polite" aria-atomic="true">
+              {formatTimer(timer.remainingSeconds)}
+            </span>
           ) : (
             `${activity.durationMinutes} MIN`
           )}
-          {showCompactTimerControls && (
+          {showCompactTimer && showTimerControls && (
             <div className="presentation-time-compact-controls">
               {timerControls}
             </div>
@@ -212,7 +217,7 @@ export function PresentationCanvas({
             </div>
           )}
         </div>
-        {(hasVisual || showTimer || showTimerControls) && (
+        {(hasVisual || showLargeTimer) && (
           <aside className={cn("presentation-rail", `presentation-rail--${railMode}`)}>
             {hasVisual && (
               <figure className="presentation-visual">
@@ -224,7 +229,7 @@ export function PresentationCanvas({
                 )}
               </figure>
             )}
-            {showTimer && timer && (
+            {showLargeTimer && timer && (
               <div
                 className={cn(
                   "presentation-timer",
@@ -242,7 +247,7 @@ export function PresentationCanvas({
                     Alarm active — dismiss when ready
                   </span>
                 )}
-                {timerControls}
+                {showTimerControls && timerControls}
               </div>
             )}
           </aside>

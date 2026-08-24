@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { Check, Moon, Sparkles, Sun } from "lucide-react";
 import {
   getCuratedPresentationTheme,
@@ -10,7 +9,6 @@ import {
 import {
   getThemeAccentId,
   getThemeId,
-  getThemeLabel,
   rememberPresentationTheme,
   type BoardworkPresentationTheme,
 } from "@/lib/presentation-theme";
@@ -40,7 +38,7 @@ function SurfaceSwatch({
       title={surface.description}
       onClick={onSelect}
       className={cn(
-        "group relative flex min-w-[6rem] flex-1 flex-col items-center gap-1 rounded-lg border p-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-w-0 sm:max-w-[8.75rem]",
+        "relative flex min-w-[5.5rem] flex-1 items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-w-0",
         selected
           ? "border-primary bg-primary/5 ring-1 ring-primary/30"
           : "border-border hover:bg-muted/50",
@@ -49,11 +47,11 @@ function SurfaceSwatch({
     >
       <span
         aria-hidden="true"
-        className="h-8 w-16 shrink-0 rounded-md border border-black/10 shadow-sm"
+        className="h-5 w-5 shrink-0 rounded-md border border-black/10 shadow-sm"
         style={{ backgroundColor }}
         data-testid={`theme-swatch-color-${surface.id}`}
       />
-      <span className="flex items-center gap-1 text-xs font-medium text-foreground">
+      <span className="flex min-w-0 items-center gap-1 text-xs font-medium text-foreground">
         {surface.name}
         {surface.mode === "dark" ? (
           <Moon className="h-3 w-3 text-muted-foreground" aria-label="Dark" />
@@ -62,10 +60,7 @@ function SurfaceSwatch({
         )}
       </span>
       {selected && (
-        <Check
-          className="absolute right-1.5 top-1.5 h-3.5 w-3.5 rounded-full bg-background text-primary"
-          aria-hidden="true"
-        />
+        <Check className="ml-auto h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
       )}
     </button>
   );
@@ -129,13 +124,6 @@ export function PresentationThemePicker({
   );
   const selectedAccentId =
     getThemeAccentId(value) ?? selectedSurface?.defaultAccentId ?? null;
-  const selectionLabel = useMemo(() => {
-    if (selectedSurface && selectedAccentId) {
-      return `${selectedSurface.name} · ${getPresentationAccentName(selectedAccentId, selectedSurface.mode)}`;
-    }
-    return getThemeLabel(value);
-  }, [selectedAccentId, selectedSurface, value]);
-
   const selectSelection = (selection: PresentationThemeSelection) => {
     rememberPresentationTheme(selection);
     onChange(selection);
@@ -143,19 +131,14 @@ export function PresentationThemePicker({
 
   return (
     <div className="space-y-3" data-testid="presentation-theme-picker">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-            Visual presentation colors
-          </div>
-          <p className="mt-1 max-w-xl text-xs text-muted-foreground">
-            Choose a calm background first. Accents add small signals without competing with the lesson.
-          </p>
+      <div>
+        <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+          Visual presentation colors
         </div>
-        <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium text-foreground">
-          {selectionLabel}
-        </span>
+        <p className="mt-1 max-w-xl text-xs text-muted-foreground">
+          Choose a calm background first. Accents add small signals without competing with the lesson.
+        </p>
       </div>
 
       <div className="space-y-2" data-testid="presentation-surfaces">

@@ -42,10 +42,10 @@ describe("PresentationCanvas timer visibility", () => {
 
     expect(screen.queryByText("5:00")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Show timer to students" })).toBeInTheDocument();
-    expect(screen.queryByText("Timer hidden from students")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Start timer" })).not.toBeInTheDocument();
   });
 
-  it("keeps hidden timer controls compact and restores the full rail on request", () => {
+  it("keeps the hidden timer clock-only and restores the compact timer on request", () => {
     const onShowTimer = vi.fn();
     render(
       <PresentationCanvas
@@ -59,10 +59,40 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.queryByText("Time remaining")).not.toBeInTheDocument();
     expect(screen.queryByText("Timer hidden from students")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Show timer to students" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Start timer" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Start timer" })).not.toBeInTheDocument();
 
     screen.getByRole("button", { name: "Show timer to students" }).click();
     expect(onShowTimer).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the timer large by default and moves it with its controls when minimized", () => {
+    const { rerender } = render(
+      <PresentationCanvas
+        activity={activity}
+        timer={timer}
+        timerControls={<button type="button">Minimize timer</button>}
+      />,
+    );
+
+    expect(screen.getByText("Time remaining")).toBeInTheDocument();
+    expect(screen.getByText("5:00").closest(".presentation-timer")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Minimize timer" })).toBeInTheDocument();
+
+    rerender(
+      <PresentationCanvas
+        activity={activity}
+        timer={timer}
+        timerMinimized
+        timerControls={<button type="button">Expand timer</button>}
+      />,
+    );
+
+    expect(screen.queryByText("Time remaining")).not.toBeInTheDocument();
+    expect(screen.getByTestId("present-time").querySelector(".presentation-time-reading")).toHaveTextContent(
+      "5:00",
+    );
+    expect(screen.getByRole("button", { name: "Expand timer" })).toBeInTheDocument();
+    expect(screen.getByTestId("present-time").querySelector(".presentation-time-compact-controls")).toBeInTheDocument();
   });
 
   it("shows an active alarm to the teacher but omits it from exports", () => {
