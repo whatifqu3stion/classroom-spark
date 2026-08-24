@@ -64,6 +64,14 @@ export type PresentationAccentTheme = {
   lightName: string;
   darkName: string;
   description: string;
+  displayNames: {
+    light: string;
+    dark: string;
+  };
+  displayDescriptions: {
+    light: string;
+    dark: string;
+  };
   colors: {
     light: string;
     dark: string;
@@ -91,6 +99,11 @@ export const presentationAccentThemes = [
     lightName: "Terracotta",
     darkName: "Coral",
     description: "A grounded, warm signal for emphasis and progress.",
+    displayNames: { light: "Terracotta", dark: "Coral" },
+    displayDescriptions: {
+      light: "A grounded, warm signal for emphasis and progress on a light surface.",
+      dark: "A soft coral signal that stays clear against a dark surface.",
+    },
     colors: { light: "#A94632", dark: "#E28A70" },
   },
   {
@@ -99,6 +112,11 @@ export const presentationAccentThemes = [
     lightName: "Dark blue",
     darkName: "Sky blue",
     description: "Boardwork's steady default signal for links and navigation.",
+    displayNames: { light: "Dark blue", dark: "Sky blue" },
+    displayDescriptions: {
+      light: "Boardwork's steady dark blue signal for links and navigation.",
+      dark: "A clear sky blue signal for links and navigation on a dark surface.",
+    },
     colors: { light: "#334155", dark: "#70B7DF" },
   },
   {
@@ -107,6 +125,11 @@ export const presentationAccentThemes = [
     lightName: "Sage",
     darkName: "Mint",
     description: "A quiet natural signal for calm emphasis.",
+    displayNames: { light: "Sage", dark: "Mint" },
+    displayDescriptions: {
+      light: "A quiet natural sage signal for calm emphasis on a light surface.",
+      dark: "A soft mint signal for calm emphasis on a dark surface.",
+    },
     colors: { light: "#47745A", dark: "#7BC49A" },
   },
   {
@@ -115,6 +138,11 @@ export const presentationAccentThemes = [
     lightName: "Plum",
     darkName: "Lilac",
     description: "A thoughtful muted signal for gentle distinction.",
+    displayNames: { light: "Plum", dark: "Lilac" },
+    displayDescriptions: {
+      light: "A thoughtful muted plum signal for gentle distinction on a light surface.",
+      dark: "A gentle lilac signal for distinction on a dark surface.",
+    },
     colors: { light: "#7B526F", dark: "#C18AC0" },
   },
 ] as const satisfies readonly PresentationAccentTheme[];
@@ -266,13 +294,20 @@ function getAccentColor(accentId: string, mode: PresentationThemeMode): string {
 }
 
 export function getPresentationAccentName(
-  accentId: string,
+  accentId: string | null | undefined,
   mode: PresentationThemeMode,
 ): string {
-  const accent = accentThemeById.get(accentId) ?? presentationAccentThemes[0];
-  return mode === "dark" ? accent.darkName : accent.lightName;
+  const accent = accentThemeById.get(accentId ?? "") ?? presentationAccentThemes[0];
+  return accent.displayNames[mode];
 }
 
+export function getPresentationAccentDescription(
+  accentId: string | null | undefined,
+  mode: PresentationThemeMode,
+): string {
+  const accent = accentThemeById.get(accentId ?? "") ?? presentationAccentThemes[0];
+  return accent.displayDescriptions[mode];
+}
 function composeSurfaceColors(
   surface: PresentationSurfaceTheme,
   accentId = surface.defaultAccentId,

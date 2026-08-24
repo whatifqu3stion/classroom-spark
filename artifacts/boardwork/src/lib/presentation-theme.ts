@@ -1,6 +1,7 @@
 import {
   DEFAULT_PRESENTATION_THEME_ID,
   getPresentationThemeAccentId,
+  getPresentationAccentName,
   getCuratedPresentationTheme,
   getPresentationThemeColors,
   getPresentationThemeTypography,
@@ -76,6 +77,19 @@ export function getThemeAccentId(
       kind: "curated" | "custom";
     },
   );
+}
+
+export function getThemeAccentName(
+  selection: BoardworkPresentationTheme | null | undefined,
+): string | null {
+  if (selection?.kind === "custom") return null;
+  const surface = presentationSurfaceThemes.find(
+    (theme) => theme.id === getThemeId(selection),
+  );
+  const accentId = getThemeAccentId(selection);
+  return surface && accentId
+    ? getPresentationAccentName(accentId, surface.mode)
+    : null;
 }
 
 export function getLastUsedPresentationTheme(): BoardworkPresentationTheme | null {

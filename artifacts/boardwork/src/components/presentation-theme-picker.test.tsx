@@ -40,26 +40,43 @@ describe("PresentationThemePicker", () => {
     expect(screen.getByText("Accent")).toBeInTheDocument();
   });
 
+  it("uses the selected surface mode for accent names and summaries", () => {
+    render(
+      <PresentationThemePicker
+        onChange={vi.fn()}
+        value={{ kind: "curated", themeId: "midnight", accentId: "sage" }}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Use Mint accent" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Use Sage accent" })).not.toBeInTheDocument();
+    expect(screen.getByText("Midnight · Mint")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Use Mint accent" }),
+    ).toHaveAttribute("title", "A soft mint signal for calm emphasis on a dark surface.");
+  });
+
   it("selects a surface with its matched accent and allows a secondary accent choice", () => {
     const onChange = vi.fn();
-    render(<PresentationThemePicker onChange={onChange} />);
+    render(
+      <PresentationThemePicker
+        onChange={onChange}
+        preview={{ title: "Practice", task: "Compare two examples." }}
+      />,
+    );
 
-    fireEvent.click(screen.getByTestId("theme-option-paper"));
+    const preview = screen.getByTestId("presentation-theme-preview");
+    expect(preview).toHaveStyle({ backgroundColor: "#FDFCF8" });
+
+    fireEvent.click(screen.getByTestId("theme-option-midnight"));
 
     expect(onChange).toHaveBeenLastCalledWith({
       kind: "curated",
-      themeId: "paper-v2",
-      accentId: "terracotta",
-    });
-
-    fireEvent.click(screen.getByTestId("accent-option-blue"));
-
-    expect(onChange).toHaveBeenLastCalledWith({
-      kind: "curated",
-      themeId: "boardwork",
+      themeId: "midnight",
       accentId: "blue",
     });
-    expect(screen.queryByTestId("theme-customize-panel")).not.toBeInTheDocument();
+    expect(preview).toHaveStyle({ backgroundColor: "#0F172A" });
+    expect(screen.getAllByText("Midnight · Sky blue")).toHaveLength(2);
   });
 
   it("keeps a saved custom theme readable without exposing manual controls", () => {

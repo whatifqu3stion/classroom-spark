@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode, Ref } from "react";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, EyeOff } from "lucide-react";
 import type { ActivityDraft } from "@/store/boardwork-context";
 import { getSafeResourceUrl } from "@/lib/resource-url";
 import { cn } from "@/lib/utils";
@@ -11,13 +11,14 @@ import type { CountdownTimerState } from "./countdown-timer";
 interface PresentationCanvasProps {
   activity: ActivityDraft;
   controls?: ReactNode;
+  timerControls?: ReactNode;
+  onShowTimer?: () => void;
   exportLayout?: boolean;
   surfaceRef?: Ref<HTMLDivElement>;
   timer?: Pick<CountdownTimerState, "remainingSeconds" | "status"> & {
     visible: boolean;
     alarmActive?: boolean;
   };
-  timerVisibilityControl?: ReactNode;
 }
 
 const testId = (enabled: boolean, value: string) =>
@@ -26,7 +27,8 @@ const testId = (enabled: boolean, value: string) =>
 export function PresentationCanvas({
   activity,
   controls,
-  timerVisibilityControl,
+  timerControls,
+  onShowTimer,
   exportLayout = false,
   surfaceRef,
   timer,
@@ -37,16 +39,20 @@ export function PresentationCanvas({
   const themeTypography = getThemeTypography(activity.presentationTheme);
   const includeTestIds = !exportLayout;
   const hasVisual = Boolean(activity.visualUrl);
-  const timerCue = !exportLayout ? timer : undefined;
+  const showTimer = !exportLayout && timer?.visible;
+  const showTimerControls = !exportLayout && Boolean(timer?.visible && timerControls);
+  const showCompactTimerControls =
+    !exportLayout && Boolean(timer && !timer.visible && timerControls);
+  const railMode = showTimer
+    ? hasVisual
+      ? "split"
+      : "timer-only"
+    : hasVisual
+      ? "image-only"
+      : showTimerControls
+        ? "timer-only"
+        : "empty";
   const formatTimer = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-  const timerStatusLabel =
-    timerCue?.status === "running"
-      ? "Timer running"
-      : timerCue?.status === "paused"
-        ? "Timer paused"
-        : timerCue?.status === "completed"
-          ? "Timer complete"
-          : "Timer ready";
 
   return (
     <div
@@ -64,16 +70,16 @@ export function PresentationCanvas({
         "--presentation-accent-soft": themeColors.accentSoft,
         "--presentation-accent-foreground":
           getPresentationThemeAccentForeground(themeColors.accent),
-        "--board-font-heading": themeTypography.heading.family,
-        "--board-font-body": themeTypography.body.family,
-        "--board-font-heading-weight": themeTypography.heading.weight,
-        "--board-font-body-weight": themeTypography.body.weight,
-        "--board-font-heading-letter-spacing":
+        "--presentation-font-heading": themeTypography.headingFamily,
+        "--presentation-font-body": themeTypography.bodyFamily,
+        "--presentation-heading-weight": themeTypography.headingWeight,
+        "--presentation-body-weight": themeTypography.bodyWeight,
+        "--presentation-heading-letter-spacing":
           themeTypography.headingLetterSpacing,
         backgroundColor: themeColors.background,
         color: themeColors.primaryText,
-        fontFamily: themeTypography.body.family,
-        fontWeight: themeTypography.body.weight,
+        fontFamily: themeTypography.bodyFamily,
+        fontWeight: themeTypography.bodyWeight,
       } as CSSProperties}
       {...testId(includeTestIds, "presentation-surface")}
     >
@@ -90,46 +96,62 @@ export function PresentationCanvas({
       </div>
 
       <header className="presentation-header">
-        {activity.title || activity.eyebrow ? (
-          <div
-            className={cn(
-              "presentation-eyebrow boardwork-user-content",
-              activity.title && "presentation-header-title",
-            )}
-            dir="auto"
-            {...testId(
-              includeTestIds,
-              activity.title ? "present-title" : "present-eyebrow",
-            )}
-          >
-            {activity.title || activity.eyebrow}
-          </div>
-        ) : (
-          <div aria-hidden="true" />
-        )}
-        {!exportLayout && timer && !timer.visible && timerVisibilityControl
-          ? timerVisibilityControl
-          : (
+        <div className="presentation-header-copy">
+          {activity.eyebrow && (
             <div
-              className={cn(
-                "presentation-time",
-                timerCue && "presentation-time--timer-aware",
-                timerCue && `presentation-time--timer-${timerCue.status}`,
-              )}
-              title={timerCue ? `${timerStatusLabel} — ${activity.durationMinutes} minutes` : undefined}
-              {...testId(includeTestIds, "present-time")}
+              className="presentation-eyebrow boardwork-user-content"
+              dir="auto"
+              {...testId(includeTestIds, "present-eyebrow")}
             >
-              {timerCue && (
-                <span className="presentation-time-indicator" aria-hidden="true">
-                  <span />
-                </span>
-              )}
-              {timerCue ? formatTimer(timerCue.remainingSeconds) : `${activity.durationMinutes} MIN`}
+              <FormulaText>{activity.eyebrow}</FormulaText>
             </div>
           )}
+          {activity.title && (
+            <h1
+              className="presentation-header-title boardwork-user-content"
+              dir="auto"
+              {...testId(includeTestIds, "present-title")}
+            >
+              <FormulaText>{activity.title}</FormulaText>
+            </h1>
+          )}
+        </div>
+        <div
+          className={cn(
+            "presentation-time",
+            timer &&
+              !timer.visible &&
+              (onShowTimer || showCompactTimerControls) &&
+              "presentation-time--hidden",
+          )}
+          {...testId(includeTestIds, "present-time")}
+        >
+          {timer && !timer.visible && onShowTimer ? (
+            <button
+              type="button"
+              className="presentation-time-toggle"
+              onClick={onShowTimer}
+              aria-label="Show timer to students"
+              title="Show timer to students"
+              data-testid={includeTestIds ? "button-show-timer" : undefined}
+            >
+              <span aria-hidden="true">
+                <EyeOff className="presentation-time-toggle-icon" />
+                {activity.durationMinutes} MIN
+              </span>
+            </button>
+          ) : (
+            `${activity.durationMinutes} MIN`
+          )}
+          {showCompactTimerControls && (
+            <div className="presentation-time-compact-controls">
+              {timerControls}
+            </div>
+          )}
+        </div>
       </header>
 
-      <main className={cn("presentation-main", !hasVisual && "presentation-main--content-only")}>
+      <main className="presentation-main">
         <div className="presentation-content">
           {activity.task && (
             <p
@@ -190,16 +212,39 @@ export function PresentationCanvas({
             </div>
           )}
         </div>
-        {hasVisual && (
-          <aside className="presentation-rail presentation-rail--image-only">
-            <figure className="presentation-visual">
-              <img src={activity.visualUrl ?? ""} alt={activity.visualDescription ?? ""} />
-              {activity.visualDescription && (
-                <figcaption className="boardwork-user-content" dir="auto">
-                  {activity.visualDescription}
-                </figcaption>
-              )}
-            </figure>
+        {(hasVisual || showTimer || showTimerControls) && (
+          <aside className={cn("presentation-rail", `presentation-rail--${railMode}`)}>
+            {hasVisual && (
+              <figure className="presentation-visual">
+                <img src={activity.visualUrl ?? ""} alt={activity.visualDescription ?? ""} />
+                {activity.visualDescription && (
+                  <figcaption className="boardwork-user-content" dir="auto">
+                    {activity.visualDescription}
+                  </figcaption>
+                )}
+              </figure>
+            )}
+            {showTimer && timer && (
+              <div
+                className={cn(
+                  "presentation-timer",
+                  timer.status === "completed" && "presentation-timer--complete",
+                  timer.alarmActive && "presentation-timer--alerting",
+                )}
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                <span className="presentation-timer-label">{timer.status === "completed" ? "Time is up" : "Time remaining"}</span>
+                <strong>{formatTimer(timer.remainingSeconds)}</strong>
+                <span className="presentation-timer-progress" aria-hidden="true"><span style={{ width: `${Math.max(0, Math.min(100, (timer.remainingSeconds / (activity.durationMinutes * 60)) * 100))}%` }} /></span>
+                {timer.alarmActive && (
+                  <span className="presentation-timer-alarm-status" role="status">
+                    Alarm active — dismiss when ready
+                  </span>
+                )}
+                {timerControls}
+              </div>
+            )}
           </aside>
         )}
       </main>

@@ -147,7 +147,7 @@ export function PresentationThemePicker({
         <div>
           <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-            Presentation colors
+            Visual presentation colors
           </div>
           <p className="mt-1 max-w-xl text-xs text-muted-foreground">
             Choose a calm background first. Accents add small signals without competing with the lesson.

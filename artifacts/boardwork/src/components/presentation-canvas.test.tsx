@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { ActivityDraft } from "@/store/boardwork-context";
 import { PresentationCanvas } from "./presentation-canvas";
 
@@ -24,18 +24,19 @@ describe("PresentationCanvas timer visibility", () => {
       <PresentationCanvas
         activity={activity}
         timer={timer}
-        timerVisibilityControl={<button type="button">Show timer to students</button>}
+        timerControls={<button type="button">Pause timer</button>}
       />,
     );
 
     expect(screen.getByText("5:00")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Show timer to students" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pause timer" })).toBeInTheDocument();
 
     rerender(
       <PresentationCanvas
         activity={activity}
+        onShowTimer={() => undefined}
         timer={{ ...timer, visible: false }}
-        timerVisibilityControl={<button type="button">Show timer to students</button>}
+        timerControls={<button type="button">Start timer</button>}
       />,
     );
 
@@ -44,33 +45,27 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.queryByText("Timer hidden from students")).not.toBeInTheDocument();
   });
 
-  it("connects the upper-right duration to the live timer without adding export UI", () => {
-    const { rerender } = render(
+  it("keeps hidden timer controls compact and restores the full rail on request", () => {
+    const onShowTimer = vi.fn();
+    render(
       <PresentationCanvas
         activity={activity}
-        timer={{ ...timer, status: "running" }}
+        onShowTimer={onShowTimer}
+        timer={{ ...timer, visible: false }}
+        timerControls={<button type="button">Start timer</button>}
       />,
     );
 
-    expect(screen.getByTestId("present-time")).toHaveClass(
-      "presentation-time--timer-aware",
-      "presentation-time--timer-running",
-    );
-    expect(screen.getByTestId("present-time").querySelector(".presentation-time-indicator")).toBeInTheDocument();
+    expect(screen.queryByText("Time remaining")).not.toBeInTheDocument();
+    expect(screen.queryByText("Timer hidden from students")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show timer to students" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start timer" })).toBeInTheDocument();
 
-    rerender(
-      <PresentationCanvas
-        activity={activity}
-        exportLayout
-        timer={{ ...timer, status: "running" }}
-      />,
-    );
-
-    expect(screen.getByText("5 MIN")).not.toHaveClass("presentation-time--timer-aware");
-    expect(screen.queryByText("5 MIN")?.querySelector(".presentation-time-indicator")).not.toBeInTheDocument();
+    screen.getByRole("button", { name: "Show timer to students" }).click();
+    expect(onShowTimer).toHaveBeenCalledOnce();
   });
 
-  it("keeps the live timer and alarm UI out of student and export surfaces", () => {
+  it("shows an active alarm to the teacher but omits it from exports", () => {
     const alarmTimer = {
       ...timer,
       remainingSeconds: 0,
@@ -81,23 +76,25 @@ describe("PresentationCanvas timer visibility", () => {
       <PresentationCanvas
         activity={activity}
         timer={alarmTimer}
+        timerControls={<button type="button">Dismiss alarm</button>}
       />,
     );
 
-    expect(screen.getByText("0:00")).toBeInTheDocument();
-    expect(screen.queryByText("Time is up")).not.toBeInTheDocument();
-    expect(screen.queryByText("Alarm active — dismiss when ready")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Dismiss alarm" })).not.toBeInTheDocument();
+    expect(screen.getByText("Alarm active — dismiss when ready")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Dismiss alarm" })).toBeInTheDocument();
+    expect(screen.getByText("Alarm active — dismiss when ready").closest(".presentation-timer")).toHaveClass(
+      "presentation-timer--alerting",
+    );
 
     rerender(
       <PresentationCanvas
         activity={activity}
         exportLayout
         timer={alarmTimer}
+        timerControls={<button type="button">Dismiss alarm</button>}
       />,
     );
 
-    expect(screen.getByText("5 MIN")).toBeInTheDocument();
     expect(screen.queryByText("Alarm active — dismiss when ready")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Dismiss alarm" })).not.toBeInTheDocument();
   });
@@ -149,7 +146,7 @@ describe("PresentationCanvas timer visibility", () => {
 
     const surface = screen.getByTestId("presentation-surface");
     const arrival = screen.getByTestId("present-arrival");
-    const header = surface.querySelector(".presentation-header");
+    const header = screen.getByTestId("presentation-surface").querySelector(".presentation-header");
     const title = screen.getByTestId("present-title");
 
     expect(Array.from(surface.children).indexOf(arrival)).toBe(0);
@@ -158,7 +155,41 @@ describe("PresentationCanvas timer visibility", () => {
     );
     expect(title.closest("header")).toBeInTheDocument();
     expect(title.closest("footer")).not.toBeInTheDocument();
+    expect(title.closest(".presentation-header-copy")).toBeInTheDocument();
+    expect(header?.children).toHaveLength(2);
     expect(title).toHaveTextContent("Independent practice");
+  });
+
+  it("keeps a no-eyebrow title in the left header stack", () => {
+    render(<PresentationCanvas activity={activity} />);
+
+    const header = screen.getByTestId("presentation-surface").querySelector(".presentation-header");
+    const title = screen.getByTestId("present-title");
+    const time = screen.getByTestId("present-time");
+
+    expect(screen.queryByTestId("present-eyebrow")).not.toBeInTheDocument();
+    expect(title.closest(".presentation-header-copy")).toBeInTheDocument();
+    expect(header?.children[0]).toContainElement(title);
+    expect(header?.children[1]).toContainElement(time);
+  });
+
+  it("renders a formula-bearing title as an h1 in the header stack", () => {
+    render(
+      <PresentationCanvas
+        activity={{
+          ...activity,
+          eyebrow: "Notice",
+          title: "Energy: \\(E = mc^2\\)",
+        }}
+      />,
+    );
+
+    const title = screen.getByTestId("present-title");
+
+    expect(title.tagName).toBe("H1");
+    expect(title.closest(".presentation-header-copy")).toBeInTheDocument();
+    expect(title.querySelector(".formula-rendered")).toBeInTheDocument();
+    expect(title).not.toHaveTextContent("\\(E = mc^2\\)");
   });
 
   it("renders formulas in the materials line", () => {
