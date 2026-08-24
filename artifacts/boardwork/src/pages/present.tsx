@@ -4,6 +4,7 @@ import { Maximize, Minimize, ChevronLeft, Download, Loader2, Play, Pause, Rotate
 import { Link, useRoute } from "wouter";
 import { toPng } from "html-to-image";
 import { useToast } from "@/hooks/use-toast";
+import { useCountdownTimer } from "@/components/countdown-timer";
 import { PresentationCanvas } from "@/components/presentation-canvas";
 import { getResolvedPresentationTheme } from "@/lib/presentation-theme";
 import {
@@ -36,86 +37,28 @@ export default function Present() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
-  type TimerStatus = "idle" | "running" | "paused" | "completed";
-  const [timerStatus, setTimerStatus] = useState<TimerStatus>("idle");
-  const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [timerMode, setTimerMode] = useState<"standard" | "expanded">("standard");
   const [timerVisible, setTimerVisible] = useState(true);
   const [alarmEnabled, setAlarmEnabled] = useState(true);
   const [timerOptionsOpen, setTimerOptionsOpen] = useState(false);
-  const endAtRef = useRef<number | null>(null);
-  const pausedSecondsRef = useRef(0);
-  const alarmPlayedRef = useRef(false);
   const controlsTimeoutRef = useRef<number | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const initial = (activeDraft?.durationMinutes ?? 7) * 60;
-    setRemainingSeconds(initial);
-    setTimerStatus("idle");
-    pausedSecondsRef.current = initial;
-    endAtRef.current = null;
-    alarmPlayedRef.current = false;
-  }, [activeDraft?.id, activeDraft?.durationMinutes]);
-
-  useEffect(() => {
-    if (timerStatus !== "running") return;
-    const tick = () => {
-      const next = Math.max(0, Math.ceil(((endAtRef.current ?? Date.now()) - Date.now()) / 1000));
-      setRemainingSeconds(next);
-      if (next <= 0) {
-        setTimerStatus("completed");
-        endAtRef.current = null;
-        if (alarmEnabled && !alarmPlayedRef.current) {
-          alarmPlayedRef.current = true;
-          const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-          if (AudioContextClass) {
-            const audio = new AudioContextClass();
-            const oscillator = audio.createOscillator();
-            const gain = audio.createGain();
-            oscillator.frequency.value = 660;
-            gain.gain.value = 0.08;
-            oscillator.connect(gain).connect(audio.destination);
-            oscillator.start();
-            oscillator.stop(audio.currentTime + 0.22);
-          }
-        }
-      }
-    };
-    tick();
-    const interval = window.setInterval(tick, 250);
-    return () => window.clearInterval(interval);
-  }, [timerStatus, alarmEnabled]);
-
-  const startTimer = () => {
-    if (remainingSeconds <= 0) return;
-    endAtRef.current = Date.now() + remainingSeconds * 1000;
-    alarmPlayedRef.current = false;
-    setTimerStatus("running");
-  };
-  const pauseTimer = () => {
-    if (endAtRef.current) pausedSecondsRef.current = Math.max(0, Math.ceil((endAtRef.current - Date.now()) / 1000));
-    endAtRef.current = null;
-    setRemainingSeconds(pausedSecondsRef.current);
-    setTimerStatus("paused");
-  };
-  const resetTimer = () => {
-    const initial = (activeDraft?.durationMinutes ?? 7) * 60;
-    endAtRef.current = null;
-    pausedSecondsRef.current = initial;
-    alarmPlayedRef.current = false;
-    setRemainingSeconds(initial);
-    setTimerStatus("idle");
-  };
-  const adjustTimer = (delta: number) => {
-    const current = endAtRef.current ? Math.max(0, Math.ceil((endAtRef.current - Date.now()) / 1000)) : remainingSeconds;
-    const next = Math.max(0, current + delta);
-    pausedSecondsRef.current = next;
-    setRemainingSeconds(next);
-    if (timerStatus === "running") endAtRef.current = Date.now() + next * 1000;
-    if (next > 0 && timerStatus === "completed") setTimerStatus("paused");
-  };
+  const {
+    status: timerStatus,
+    remainingSeconds,
+    alarmActive,
+    startTimer,
+    pauseTimer,
+    resetTimer,
+    adjustTimer,
+    dismissAlarm,
+  } = useCountdownTimer({
+    durationMinutes: activeDraft?.durationMinutes ?? 7,
+    resetKey: activeDraft?.id,
+    alarmEnabled,
+  });
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -266,6 +209,17 @@ export default function Present() {
           {timerStatus === "running" ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
           <span>{timerStatus === "running" ? "Pause" : timerStatus === "idle" ? "Start" : "Resume"}</span>
         </button>
+        {alarmActive && (
+          <button
+            type="button"
+            className="presentation-timer-action presentation-timer-action--dismiss"
+            onClick={dismissAlarm}
+            aria-label="Dismiss alarm"
+          >
+            <VolumeX className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>Dismiss</span>
+          </button>
+        )}
         <button
           type="button"
           className="presentation-timer-options-trigger"
@@ -323,7 +277,7 @@ export default function Present() {
       style={presentationPageStyle}
       onMouseEnter={() => setShowControls(true)}
     >
-      <PresentationCanvas activity={activeDraft} controls={controls} timerControls={timerControls} timer={{ visible: timerVisible, mode: timerMode, remainingSeconds, status: timerStatus }} />
+      <PresentationCanvas activity={activeDraft} controls={controls} timerControls={timerControls} timer={{ visible: timerVisible, mode: timerMode, remainingSeconds, status: timerStatus, alarmActive }} />
       <div className="presentation-export-stage" aria-hidden="true">
         <PresentationCanvas
           activity={activeDraft}

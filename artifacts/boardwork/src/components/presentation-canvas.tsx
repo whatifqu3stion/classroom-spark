@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { getThemeColors, getThemeTypography } from "@/lib/presentation-theme";
 import { getPresentationThemeAccentForeground } from "@workspace/api-zod";
 import { FormulaText } from "./formula-text";
+import type { CountdownTimerState } from "./countdown-timer";
 
 interface PresentationCanvasProps {
   activity: ActivityDraft;
@@ -13,7 +14,11 @@ interface PresentationCanvasProps {
   timerControls?: ReactNode;
   exportLayout?: boolean;
   surfaceRef?: Ref<HTMLDivElement>;
-  timer?: { visible: boolean; mode: "standard" | "expanded"; remainingSeconds: number; status: "idle" | "running" | "paused" | "completed" };
+  timer?: Pick<CountdownTimerState, "remainingSeconds" | "status"> & {
+    visible: boolean;
+    mode: "standard" | "expanded";
+    alarmActive?: boolean;
+  };
 }
 
 const testId = (enabled: boolean, value: string) =>
@@ -181,16 +186,34 @@ export function PresentationCanvas({
               </figure>
             )}
             {showTimer && timer && (
-              <div className={cn("presentation-timer", timer.status === "completed" && "presentation-timer--complete")} aria-live="polite">
+              <div
+                className={cn(
+                  "presentation-timer",
+                  timer.status === "completed" && "presentation-timer--complete",
+                  timer.alarmActive && "presentation-timer--alerting",
+                )}
+                aria-live="polite"
+                aria-atomic="true"
+              >
                 <span className="presentation-timer-label">{timer.status === "completed" ? "Time is up" : "Time remaining"}</span>
                 <strong>{formatTimer(timer.remainingSeconds)}</strong>
                 <span className="presentation-timer-progress" aria-hidden="true"><span style={{ width: `${Math.max(0, Math.min(100, (timer.remainingSeconds / (activity.durationMinutes * 60)) * 100))}%` }} /></span>
+                {timer.alarmActive && (
+                  <span className="presentation-timer-alarm-status" role="status">
+                    Alarm active — dismiss when ready
+                  </span>
+                )}
                 {timerControls}
               </div>
             )}
             {showTimerControls && !showTimer && (
               <div className="presentation-timer-hidden-controls">
                 <span className="presentation-timer-label">Timer hidden from students</span>
+                {timer?.alarmActive && (
+                  <span className="presentation-timer-alarm-status" role="status">
+                    Time is up — dismiss alarm
+                  </span>
+                )}
                 {timerControls}
               </div>
             )}

@@ -293,11 +293,43 @@
   }
 
   .presentation-timer--complete {
-    border-color: hsl(var(--destructive));
+    border-color: var(--presentation-accent, hsl(var(--primary)));
+    background: color-mix(in srgb, var(--presentation-accent-soft, transparent) 42%, transparent);
   }
 
   .presentation-timer--complete strong {
-    color: hsl(var(--destructive));
+    color: var(--presentation-primary-text, #171717);
+  }
+
+  .presentation-timer--alerting {
+    animation: presentation-timer-pulse 2.4s ease-in-out infinite;
+  }
+
+  .presentation-timer-alarm-status {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    border-radius: 999px;
+    background: var(--presentation-accent-soft, rgb(23 23 23 / 8%));
+    padding: 0.28rem 0.55rem;
+    color: var(--presentation-primary-text, #171717);
+    font-size: clamp(0.7rem, 1vw, 0.9rem);
+    font-weight: 700;
+  }
+
+  @keyframes presentation-timer-pulse {
+    0%, 100% {
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--presentation-accent, hsl(var(--primary))) 0%, transparent);
+    }
+    50% {
+      box-shadow: 0 0 0 0.55rem color-mix(in srgb, var(--presentation-accent, hsl(var(--primary))) 16%, transparent);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .presentation-timer--alerting {
+      animation: none;
+    }
   }
 
   .presentation-timer-progress {

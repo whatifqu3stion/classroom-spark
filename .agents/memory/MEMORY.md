@@ -5,3 +5,4 @@
 - [Presentation color compatibility](presentation-color-compatibility.md) — Surface-first colors must preserve retired curated palettes and keep custom appearances read-only.
 - [Development schema drift](development-schema-drift.md) — If a current schema query fails after migration, verify the actual columns; the migration ledger can be ahead of the dev table.
 - [Formula rendering safety](formula-rendering.md) — Prefer delimited formulas, allow only clear standalone fragments, and keep malformed notation literal.
+- [Countdown alarm behavior](countdown-alarm-behavior.md) — Base countdown completion on an absolute deadline and keep the live alarm state out of exported presentation surfaces.

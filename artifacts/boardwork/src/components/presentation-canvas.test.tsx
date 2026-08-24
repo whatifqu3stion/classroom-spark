@@ -45,6 +45,40 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.getByRole("button", { name: "Show timer to students" })).toBeInTheDocument();
   });
 
+  it("shows an active alarm to the teacher but omits it from exports", () => {
+    const alarmTimer = {
+      ...timer,
+      remainingSeconds: 0,
+      status: "completed" as const,
+      alarmActive: true,
+    };
+    const { rerender } = render(
+      <PresentationCanvas
+        activity={activity}
+        timer={alarmTimer}
+        timerControls={<button type="button">Dismiss alarm</button>}
+      />,
+    );
+
+    expect(screen.getByText("Alarm active — dismiss when ready")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Dismiss alarm" })).toBeInTheDocument();
+    expect(screen.getByText("Alarm active — dismiss when ready").closest(".presentation-timer")).toHaveClass(
+      "presentation-timer--alerting",
+    );
+
+    rerender(
+      <PresentationCanvas
+        activity={activity}
+        exportLayout
+        timer={alarmTimer}
+        timerControls={<button type="button">Dismiss alarm</button>}
+      />,
+    );
+
+    expect(screen.queryByText("Alarm active — dismiss when ready")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Dismiss alarm" })).not.toBeInTheDocument();
+  });
+
   it("applies a saved presentation theme to the canvas", () => {
     render(
       <PresentationCanvas
