@@ -1,0 +1,911 @@
+Implement a **presentation theme system for Boardwork** that gives teachers beautiful, engaging color choices while keeping **classroom readability and clarity as hard requirements**.
+
+This is an extension of the existing Boardwork experience, not a redesign.
+
+The surrounding application should remain visually quiet and restrained. The theme system primarily affects the **presented Boardwork activity**.
+
+## Product principle
+
+> **Boardwork gives teachers beautiful choices without asking them to become designers. Clarity is protected by the system; personality comes from the theme.**
+
+### Hard gates
+
+Every theme must first satisfy:
+
+1. Strong text readability
+2. Clear visual hierarchy
+3. Meaning that does not depend on color alone
+
+### Optimize within those gates
+
+Once the above are satisfied, optimize for:
+
+4. Visual cohesion
+5. Engagement
+6. Beauty / aesthetic character
+
+Never trade readability for visual novelty.
+
+---
+
+# 1. Inspect the existing implementation before editing
+
+Before making changes, inspect:
+
+* the current Boardwork editor and presentation components
+* where presentation styles currently live
+* activity, class, and user persistence models
+* current CSS/design-token conventions
+* export/render logic
+* existing testing conventions
+* any current theme or appearance state
+
+Integrate with the existing architecture.
+
+Do not rebuild working components or introduce a new styling framework unless genuinely necessary.
+
+Preserve all existing approved Boardwork workflows and visual design outside this feature.
+
+---
+
+# 2. Core concept
+
+A Boardwork theme is a **small semantic color system**, not simply three unrelated colors.
+
+Internally support roles equivalent to:
+
+```ts
+background
+surface
+primaryText
+secondaryText
+accent
+accentSoft
+```
+
+Adapt naming to existing project conventions if appropriate.
+
+A theme may be based on:
+
+* one hue with tonal variations
+* one hue plus neutrals
+* two coordinated hues
+* three colors when useful
+
+Do **not** force each semantic role to use a different hue.
+
+A strongly monochromatic or near-monochromatic theme can be an excellent theme.
+
+Examples:
+
+* cream background + charcoal text + muted terracotta accent
+* pale blue background + deep navy typography + related blue accent
+* dark navy background + soft off-white text + restrained cyan accent
+* pale sage + deep green-gray + muted moss
+* warm white + charcoal + stone gray
+
+---
+
+# 3. Teacher-facing MVP
+
+The primary interaction should remain extremely simple.
+
+Add a compact **Theme** control to the Boardwork editing/presentation experience.
+
+Initially show approximately 5–6 recommended themes as compact palette previews.
+
+For example:
+
+```text
+Theme
+
+[ ● ● ● ] [ ● ● ● ] [ ● ● ● ] [ ● ● ● ] [ ● ● ● ]
+
+More     Customize
+```
+
+Three visible swatches are only a preview of the underlying theme.
+
+They do not imply that the theme contains exactly three colors.
+
+The preview should make the **background/text relationship obvious**, especially for light versus dark themes. Do not rely on three identical-sized circles if that makes polarity unclear. A small miniature background/text/accent preview is acceptable if it communicates the theme more accurately while remaining visually compact.
+
+Selecting a theme must immediately update the actual Boardwork preview.
+
+There should be:
+
+* no Save button
+* no Apply button
+* no regeneration
+* no network call
+* no AI call
+
+The Boardwork itself is the preview.
+
+---
+
+# 4. Theme switching changes presentation color only
+
+Changing a theme must never:
+
+* regenerate activity content
+* alter wording
+* alter text hierarchy
+* change layout
+* resize text
+* move components
+* add or remove content
+
+Theme switching changes semantic color tokens only.
+
+This separation is important.
+
+---
+
+# 5. Curated themes are the primary MVP deliverable
+
+Create approximately **12–18 carefully designed theme families**.
+
+For MVP, prefer **hand-authored, curated themes with automated validation** over algorithmically generating the system theme library.
+
+A small set of excellent themes is more valuable than a sophisticated generator producing inconsistent results.
+
+Color derivation is primarily needed for:
+
+* custom teacher colors
+* derived semantic roles
+* future theme variation
+
+It is **not required** to generate the initial curated library.
+
+The initial set should include:
+
+* light neutral themes
+* dark themes
+* tonal / monochromatic themes
+* neutral + accent themes
+* two-hue themes
+* a small number of higher-energy themes with restrained accent usage
+
+Include memorable but unobtrusive names such as:
+
+* Paper
+* Ink
+* Ocean
+* Clay
+* Sage
+* Plum
+
+Do not use unsupported psychological labels such as:
+
+* Focus
+* Calm
+* Creativity
+* Energy
+
+The goal is:
+
+> **Every theme offered should already be a good choice.**
+
+Teachers should not need to search through bad combinations.
+
+---
+
+# 6. Default theme
+
+Define one excellent default Boardwork theme.
+
+It should be:
+
+* highly readable
+* restrained
+* visually polished
+* suitable for most classroom displays
+* neither overly colorful nor sterile
+
+Use this theme for:
+
+* first-time users
+* newly created activities when no last-used theme exists
+* old activities created before theme support was added
+
+Do not allow legacy activities to fail because they lack theme data.
+
+---
+
+# 7. More themes
+
+**More** should reveal the rest of the curated theme library using a compact popover, drawer, or equivalent pattern consistent with the existing app.
+
+Do not turn this into a design application.
+
+Avoid:
+
+* color-theory terminology
+* complementary / analogous / triadic controls
+* saturation sliders
+* hue wheels
+* large palette browsers
+* excessive configuration
+
+Teachers are choosing a finished presentation theme, not building a brand system.
+
+---
+
+# 8. Customize
+
+Provide a simple advanced **Customize** view.
+
+Expose only three teacher-controlled source colors:
+
+```text
+Background
+Text
+Accent
+```
+
+Each should support:
+
+* simple visual color selection
+* HEX input
+* live preview
+
+Example:
+
+```text
+Background   [■] #F5F1E8
+Text         [■] #243036
+Accent       [■] #C4543D
+```
+
+Do not expose independent controls for:
+
+* secondary text
+* surface
+* accent-soft
+* timer
+* title
+* border
+* individual content components
+
+Those values should be derived automatically.
+
+HEX should be available for teachers who want precision without becoming the primary interaction.
+
+---
+
+# 9. Custom theme behavior
+
+If a teacher customizes a curated theme, do **not mutate the original system theme**.
+
+Treat the result as a custom theme state or custom variant.
+
+The teacher must always be able to return to the original curated theme.
+
+Provide a simple option such as:
+
+```text
+Reset to theme
+```
+
+or equivalent.
+
+Customization should feel safe and reversible.
+
+---
+
+# 10. Custom colors are anchors
+
+Teacher-entered values for:
+
+```text
+Background
+Text
+Accent
+```
+
+are **anchors**.
+
+Preserve them exactly unless the teacher explicitly chooses a suggested safer replacement.
+
+Automatically derive:
+
+```text
+surface
+secondaryText
+accentSoft
+```
+
+from those anchors.
+
+Derived values may be adjusted automatically to maintain readability and cohesion.
+
+### Important rule
+
+**Never silently modify teacher-entered Background, Text, or Accent values.**
+
+If Background/Text contrast is unsafe:
+
+1. preserve the entered values
+2. keep the last valid preview if necessary while input is incomplete
+3. clearly flag the readability issue
+4. offer a one-click safer version
+
+Example:
+
+```text
+This text may be difficult to read on a classroom display.
+
+Use safer version
+```
+
+Do not silently substitute arbitrary black, white, or other fallback colors.
+
+If a HEX value is invalid or incomplete:
+
+* do not crash
+* do not destroy the existing theme
+* preserve the last valid rendered state
+* clearly indicate the invalid field
+
+---
+
+# 11. Color derivation
+
+Use a perceptually meaningful color space for derived colors.
+
+Prefer **OKLCH / OKLab** rather than naive RGB or HSL manipulation.
+
+Conceptually:
+
+```text
+HEX
+→ OKLCH
+→ derive semantic relatives
+→ validate
+→ repair derived values if needed
+→ render
+```
+
+Use:
+
+* lightness to establish hierarchy and contrast
+* chroma to control visual intensity
+* hue relationships conservatively
+
+Derived colors should feel like intentional members of the same visual family.
+
+Theme derivation should be deterministic where practical so the same inputs produce the same result.
+
+Do not use an AI model to generate or repair palettes.
+
+---
+
+# 12. Readability requirements
+
+Readability is non-negotiable.
+
+Use contrast validation for foreground/background combinations.
+
+Internal targets:
+
+* essential instructional text: aim for approximately **7:1**
+* large or clearly secondary text: at least approximately **4.5:1**
+* meaningful non-text elements where applicable: approximately **3:1**
+
+These are internal design targets.
+
+Do not prominently show contrast ratios to normal teachers.
+
+Curated themes should already meet these requirements.
+
+Custom themes should be validated as the teacher edits them.
+
+---
+
+# 13. Classroom display robustness
+
+Boardwork is frequently shown on classroom projectors and shared displays rather than high-quality personal screens.
+
+Do **not** turn projector simulation into a major engineering project.
+
+For MVP:
+
+* strong foreground/background contrast is the primary protection
+* clear hierarchy is the second protection
+* avoid themes that depend on subtle tonal or chroma distinctions
+
+Optionally implement a **lightweight secondary robustness heuristic** that roughly checks whether hierarchy survives reduced contrast or slightly washed-out color.
+
+This might approximate:
+
+* lifted dark values
+* reduced effective contrast
+* modestly reduced chroma
+
+Use this only as a secondary quality check.
+
+Do not claim formal projector certification.
+
+Do not delay the feature for sophisticated display simulation.
+
+---
+
+# 14. Saturation discipline
+
+Strong color should be treated as an attention resource.
+
+Large backgrounds and surfaces should generally use:
+
+* low to moderate chroma
+* restrained saturation
+* comfortable luminance
+
+More saturated colors should usually be reserved for accents.
+
+Strong accent treatment should normally represent only a small portion of the composition.
+
+Use approximately **5–10% accent emphasis** as a design guideline, not a literal pixel-measurement requirement.
+
+Avoid large fields of highly saturated color unless a carefully validated theme genuinely benefits from it.
+
+---
+
+# 15. Semantic color usage
+
+Map theme colors onto the semantic structure that already exists in Boardwork.
+
+Examples may include:
+
+```text
+title
+instruction
+supportingText
+timer
+constraint
+importantPhrase
+```
+
+Do **not** add new content-schema complexity simply to support color unless it meaningfully improves the existing presentation model.
+
+First use the semantic structure already present.
+
+Only introduce additional semantic roles where they clearly improve presentation consistency.
+
+The content-generation system should **not** output arbitrary HEX values or styling instructions.
+
+The presentation layer decides how existing content roles use the theme.
+
+For example:
+
+```text
+DO NOW
+→ restrained accent treatment
+
+Sketch three possible solutions.
+→ primary text
+
+7 minutes · Work independently
+→ secondary text
+```
+
+Color should reinforce hierarchy rather than invent it.
+
+---
+
+# 16. Accent rules
+
+Accent should be purposeful.
+
+Generally:
+
+* use accent for short high-value signals
+* avoid entire paragraphs in accent
+* avoid multiple competing strong colors
+* use accentSoft for subtle highlighted surfaces when useful
+* maintain understandable hierarchy even if accent color disappeared
+
+Possible accent uses include:
+
+* activity label
+* timer
+* key constraint
+* important phrase
+* small indicator
+* subtle highlight
+
+Do not decorate every section simply because an accent color exists.
+
+---
+
+# 17. Color cannot carry meaning alone
+
+Important meaning must remain understandable without color.
+
+For states such as:
+
+* correct
+* incorrect
+* important
+* selected
+* required
+* warning
+
+reinforce color using:
+
+* wording
+* typography
+* iconography
+* shape
+* position
+* another structural cue
+
+Color may reinforce meaning but cannot be required to understand it.
+
+---
+
+# 18. Semantic CSS architecture
+
+Presentation components should consume semantic theme variables.
+
+For example:
+
+```css
+--board-bg
+--board-surface
+--board-text
+--board-text-secondary
+--board-accent
+--board-accent-soft
+```
+
+Do not hardcode theme colors throughout individual components.
+
+Avoid theme-name-specific component logic such as:
+
+```ts
+if (theme === "ocean") { ... }
+```
+
+Switching themes should primarily mean switching token values.
+
+Follow the project's existing styling conventions where possible.
+
+---
+
+# 19. Suggested data model
+
+Adapt this concept to the existing architecture rather than forcing an unnecessary parallel system.
+
+```ts
+type ThemeColors = {
+  background: string;
+  surface: string;
+  primaryText: string;
+  secondaryText: string;
+  accent: string;
+  accentSoft: string;
+};
+
+type BoardworkTheme = {
+  id: string;
+  name: string;
+  colors: ThemeColors;
+  mode?: "light" | "dark";
+  source?: "system" | "custom";
+};
+```
+
+For custom themes, preserve anchors separately if useful:
+
+```ts
+type ThemeAnchors = {
+  background: string;
+  text: string;
+  accent: string;
+};
+```
+
+Use existing schema patterns where possible.
+
+---
+
+# 20. Persistence behavior
+
+### Must support now
+
+* saved Boardwork activities retain their selected theme
+* the teacher's most recently used theme is remembered for **new activities**
+* existing saved activities continue to load correctly
+
+### Important precedence rule
+
+When reopening an existing activity:
+
+```text
+saved activity theme
+wins over
+last-used theme
+```
+
+The last-used preference should influence newly created activities only.
+
+It must never overwrite the theme already saved with an existing activity.
+
+### Architect cleanly for later
+
+The data model should make it straightforward to eventually support:
+
+```text
+activity override
+→ class default
+→ user default
+→ Boardwork default
+```
+
+Also leave room for future:
+
+* favorite themes
+* saved custom themes
+* school colors
+* class-specific defaults
+* light/dark variants
+
+Do not build those management interfaces in this phase unless they already fit naturally into existing functionality.
+
+---
+
+# 21. Avoid theme flash on load
+
+When opening a saved activity, render its saved theme correctly from the first meaningful paint where practical.
+
+Avoid:
+
+```text
+default theme
+→ visible flash
+→ saved theme
+```
+
+Do not introduce unnecessary visual flicker during hydration or state restoration.
+
+Use the existing application architecture to resolve theme state as early as practical.
+
+---
+
+# 22. Live customization behavior
+
+Color changes should feel immediate.
+
+Do not make server calls while dragging a color picker.
+
+Use local state for live preview.
+
+If persistence writes occur during customization, debounce or defer them appropriately so dragging a picker does not create excessive writes.
+
+The visual response should remain smooth.
+
+---
+
+# 23. Light and dark theme families
+
+Architect a theme family so it can eventually support:
+
+```text
+Ocean
+  light
+  dark
+```
+
+rather than requiring completely unrelated theme definitions.
+
+Do not add a visible Light/Dark switch unless it integrates very cleanly into the current UI.
+
+This is **not required for MVP**.
+
+The important requirement is avoiding a data model that makes it difficult later.
+
+---
+
+# 24. Export
+
+If Boardwork currently exports the presented activity to PNG, JPEG, or another image format, the selected theme must be preserved in the export.
+
+Check the actual export/render path rather than assuming normal CSS state automatically carries through.
+
+Do not build new print functionality for this feature.
+
+If print support is added later, the architecture should allow a print-friendly light variant.
+
+---
+
+# 25. Preserve the existing Boardwork aesthetic
+
+Do not:
+
+* recolor the main application shell
+* redesign navigation
+* introduce excessive gradients
+* add decorative cards
+* add unnecessary shadows
+* create a generic AI visual style
+* turn the editor into slide-design software
+* expose advanced color controls by default
+
+The main application should remain restrained.
+
+The **presented Boardwork** is where the visual character lives.
+
+---
+
+# 26. Implementation sequence
+
+## Stage 1 — Architecture inspection
+
+Identify the existing styling, persistence, editor, presentation, and export boundaries.
+
+## Stage 2 — Curated theme foundation
+
+Build:
+
+* theme types/schema
+* semantic color tokens
+* default theme
+* approximately 12–18 curated themes
+* contrast validation
+* theme state/persistence
+
+Validate the curated set before building unnecessary generation complexity.
+
+## Stage 3 — Presentation integration
+
+Refactor presentation styling to consume semantic theme tokens.
+
+Verify that no content or layout behavior changes.
+
+## Stage 4 — Teacher interaction
+
+Add:
+
+* compact Theme selector
+* instant preview
+* More themes
+* Customize
+* color picker
+* HEX input
+* Reset to theme
+* readable validation
+* one-click safer-color suggestions
+
+## Stage 5 — Custom color derivation
+
+Add:
+
+* OKLCH/OKLab utilities
+* surface derivation
+* secondaryText derivation
+* accentSoft derivation
+* deterministic validation of derived values
+
+## Stage 6 — Persistence and export
+
+Verify:
+
+* activity themes save correctly
+* last-used theme affects new activities
+* saved activity themes always win on reopen
+* old activities remain compatible
+* export preserves the active theme
+* there is no obvious theme flash on load
+
+## Stage 7 — QA and polish
+
+Test the complete teacher workflow and remove unnecessary UI.
+
+---
+
+# 27. Edge cases to test
+
+Test at minimum:
+
+* every curated theme
+* same text/background color
+* nearly identical text/background colors
+* pure white background
+* very dark background
+* extremely saturated accent
+* very pale accent
+* invalid HEX input
+* partially typed HEX input
+* pasted shorthand HEX if supported
+* reset after customization
+* switching between custom and curated themes
+* switching themes repeatedly
+* saved/reloaded activities
+* old activities created before themes existed
+* last-used theme applied to a new activity
+* saved theme preserved on an existing activity
+* long Boardwork activities
+* short Boardwork activities
+* export rendering
+* keyboard interaction
+* responsive behavior
+* rapid color-picker movement
+
+Invalid input must never crash or destabilize the preview.
+
+---
+
+# 28. MVP acceptance criteria
+
+The feature is complete when:
+
+1. Teachers can change a Boardwork theme in one interaction.
+2. The actual Boardwork preview updates immediately.
+3. Theme changes do not regenerate or modify content.
+4. Theme changes do not affect layout.
+5. There is one polished default theme.
+6. There are approximately 12–18 polished curated themes.
+7. The set includes strong tonal and near-monochromatic themes, not only multi-hue palettes.
+8. Curated themes pass the defined readability checks.
+9. Customize exposes only Background, Text, and Accent.
+10. HEX input and color selection work reliably.
+11. Derived colors are generated automatically where needed.
+12. Unsafe custom foreground/background combinations are clearly detected.
+13. Teacher-entered anchor colors are never silently changed.
+14. A one-click safer alternative is available when appropriate.
+15. Teachers can reset customization back to the source theme.
+16. Invalid color input preserves the last valid preview.
+17. Theme rendering uses semantic design tokens rather than scattered hardcoded values.
+18. Accent usage remains restrained and semantic.
+19. Important meaning never relies solely on color.
+20. Saved activities retain their own theme.
+21. Last-used theme affects new activities without overwriting saved activity themes.
+22. Existing activities remain backward compatible.
+23. Current export functionality preserves the selected theme.
+24. No AI or server request is required to switch or derive themes.
+25. Live color editing does not cause excessive persistence writes.
+26. Saved activities do not visibly flash through an incorrect default theme on load where reasonably avoidable.
+27. The surrounding Boardwork UI remains visually restrained.
+28. The complete interaction feels significantly simpler than using a conventional color-palette or presentation-design tool.
+
+---
+
+# 29. Explicit non-goals for this phase
+
+Do **not** expand the MVP to include:
+
+* favorite-theme management
+* school palette management
+* class-level theme defaults
+* automatic day/night switching
+* sophisticated projector simulation
+* print theme management
+* typography customization
+* gradient builders
+* individual component color controls
+* AI-generated palettes
+* a general-purpose design editor
+
+The architecture may anticipate these where inexpensive, but they are not part of this build.
+
+---
+
+# 30. Final product review
+
+Before considering the feature complete, use it from the perspective of a teacher preparing a Boardwork activity immediately before class.
+
+Ask:
+
+* Can I make this look great almost instantly?
+* Is every default choice highly readable?
+* Can I understand the theme selector without knowing anything about color theory?
+* Can I use my own school or preferred colors if I care to?
+* Does the system protect readability without taking control away from me?
+* Can I experiment without fear because reset and validation are clear?
+* Does switching themes feel immediate and safe?
+* Did this feature add meaningful visual quality without adding meaningful workflow complexity?
+
+If a control, label, setting, or step does not clearly help those goals, remove it.
+
+The finished experience should feel **simple on the surface, carefully engineered underneath, and obviously built for teachers rather than designers.**

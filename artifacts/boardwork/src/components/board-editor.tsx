@@ -5,6 +5,7 @@ import { Plus, X, Monitor, Clock, FileText, Loader2, CheckCircle2, AlertCircle, 
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { getSafeResourceUrl } from "@/lib/resource-url";
+import { PresentationThemePicker } from "@/components/presentation-theme-picker";
 
 interface BoardEditorProps {
   draft: ActivityDraft;
@@ -301,6 +302,15 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
               )}
               <p className="text-xs text-muted-foreground">Local image only. It will be shown without cropping in Present and PNG export.</p>
             </div>
+            <PresentationThemePicker
+              value={draft.presentationTheme}
+              onChange={(presentationTheme) => onChange({ presentationTheme })}
+              preview={{
+                title: draft.title,
+                task: draft.task,
+                prompt: draft.prompts[0],
+              }}
+            />
             {draft.teacherNote != null && (
               <div>
                 <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">

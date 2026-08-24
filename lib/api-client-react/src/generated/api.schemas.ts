@@ -27,6 +27,9 @@ export const DeviceMode = {
  */
 export type Duration = number;
 
+/**
+ * Supported activity approaches. Auto is a client-side convenience and is sent as null to request generation without a preference.
+ */
 export type ActivityStyle = typeof ActivityStyle[keyof typeof ActivityStyle];
 
 
@@ -43,6 +46,30 @@ export const ActivityStyle = {
   Apply: 'Apply',
   Reflect: 'Reflect',
 } as const;
+
+export interface PresentationThemeAnchors {
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  background: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  text: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  accent: string;
+}
+
+export type PresentationThemeSelectionKind = typeof PresentationThemeSelectionKind[keyof typeof PresentationThemeSelectionKind];
+
+
+export const PresentationThemeSelectionKind = {
+  curated: 'curated',
+  custom: 'custom',
+} as const;
+
+export interface PresentationThemeSelection {
+  kind: PresentationThemeSelectionKind;
+  themeId?: string;
+  sourceThemeId?: string;
+  anchors?: PresentationThemeAnchors;
+}
 
 export interface ClassProfile {
   id: string;
@@ -166,6 +193,7 @@ export interface Activity {
   sourceChipIds?: string[];
   /** @nullable */
   style?: string | null;
+  presentationTheme?: PresentationThemeSelection | null;
   favorite: boolean;
   /** @nullable */
   duplicatedFrom?: string | null;
@@ -207,6 +235,7 @@ export interface ActivityInput {
   sourceChipIds?: string[];
   /** @nullable */
   style?: string | null;
+  presentationTheme?: PresentationThemeSelection | null;
   favorite?: boolean;
 }
 
@@ -238,6 +267,7 @@ export interface ActivityUpdate {
   sourceChipIds?: string[];
   /** @nullable */
   style?: string | null;
+  presentationTheme?: PresentationThemeSelection | null;
   favorite?: boolean;
 }
 
@@ -252,6 +282,7 @@ export interface GenerateActivityInput {
   deviceMode: DeviceMode;
   durationMinutes: Duration;
   activityStyle?: ActivityStyle | null;
+  presentationTheme?: PresentationThemeSelection | null;
   /**
      * @maxLength 2000
      * @nullable

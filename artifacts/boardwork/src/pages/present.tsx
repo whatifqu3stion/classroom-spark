@@ -5,6 +5,7 @@ import { Link, useRoute } from "wouter";
 import { toPng } from "html-to-image";
 import { useToast } from "@/hooks/use-toast";
 import { PresentationCanvas } from "@/components/presentation-canvas";
+import { getThemeColors } from "@/lib/presentation-theme";
 
 const EXPORT_WIDTH = 1920;
 const EXPORT_HEIGHT = 1080;
@@ -160,7 +161,7 @@ export default function Present() {
         canvasWidth: EXPORT_WIDTH,
         canvasHeight: EXPORT_HEIGHT,
         pixelRatio: 1,
-        backgroundColor: "#fafafa",
+        backgroundColor: getThemeColors(activeDraft?.presentationTheme).background,
         cacheBust: true,
         skipFonts: true,
       });

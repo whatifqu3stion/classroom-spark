@@ -27,6 +27,9 @@ export const getAppStateResponseClassesItemDefaultDurationMultipleOf = 1;
 export const getAppStateResponseActivitiesItemDurationMinutesMax = 120;
 export const getAppStateResponseActivitiesItemDurationMinutesMultipleOf = 1;
 
+export const getAppStateResponseActivitiesItemPresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getAppStateResponseActivitiesItemPresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getAppStateResponseActivitiesItemPresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const GetAppStateResponse = zod.object({
@@ -79,6 +82,16 @@ export const GetAppStateResponse = zod.object({
   "sourceGoal": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
   "style": zod.string().nullish(),
+  "presentationTheme": zod.union([zod.object({
+  "kind": zod.enum(['curated', 'custom']),
+  "themeId": zod.string().optional(),
+  "sourceThemeId": zod.string().optional(),
+  "anchors": zod.object({
+  "background": zod.string().regex(getAppStateResponseActivitiesItemPresentationThemeOneAnchorsBackgroundRegExp),
+  "text": zod.string().regex(getAppStateResponseActivitiesItemPresentationThemeOneAnchorsTextRegExp),
+  "accent": zod.string().regex(getAppStateResponseActivitiesItemPresentationThemeOneAnchorsAccentRegExp)
+}).optional()
+}),zod.null()]).optional(),
   "favorite": zod.boolean(),
   "duplicatedFrom": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
@@ -285,6 +298,9 @@ export const generateActivityBodyChipIdsMax = 20;
 export const generateActivityBodyDurationMinutesMax = 120;
 export const generateActivityBodyDurationMinutesMultipleOf = 1;
 
+export const generateActivityBodyPresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const generateActivityBodyPresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const generateActivityBodyPresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const generateActivityBodyTeacherProvidedUrlMax = 2000;
 
 export const generateActivityBodyTeacherProvidedResourceNoteMax = 1000;
@@ -298,7 +314,17 @@ export const GenerateActivityBody = zod.object({
   "chipIds": zod.array(zod.string()).max(generateActivityBodyChipIdsMax),
   "deviceMode": zod.enum(['off', 'on']),
   "durationMinutes": zod.number().min(1).max(generateActivityBodyDurationMinutesMax).multipleOf(generateActivityBodyDurationMinutesMultipleOf),
-  "activityStyle": zod.union([zod.enum(['Curiosity Hook', 'Retrieval Practice', 'Explain / Reason', 'Observe & Notice', 'Draw / Sketch', 'Predict', 'Compare / Contrast', 'Evaluate / Critique', 'Quick Write', 'Apply', 'Reflect']),zod.null()]).optional(),
+  "activityStyle": zod.union([zod.enum(['Curiosity Hook', 'Retrieval Practice', 'Explain / Reason', 'Observe & Notice', 'Draw / Sketch', 'Predict', 'Compare / Contrast', 'Evaluate / Critique', 'Quick Write', 'Apply', 'Reflect']).describe('Supported activity approaches. Auto is a client-side convenience and is sent as null to request generation without a preference.'),zod.null()]).optional(),
+  "presentationTheme": zod.union([zod.object({
+  "kind": zod.enum(['curated', 'custom']),
+  "themeId": zod.string().optional(),
+  "sourceThemeId": zod.string().optional(),
+  "anchors": zod.object({
+  "background": zod.string().regex(generateActivityBodyPresentationThemeOneAnchorsBackgroundRegExp),
+  "text": zod.string().regex(generateActivityBodyPresentationThemeOneAnchorsTextRegExp),
+  "accent": zod.string().regex(generateActivityBodyPresentationThemeOneAnchorsAccentRegExp)
+}).optional()
+}),zod.null()]).optional(),
   "teacherProvidedUrl": zod.string().max(generateActivityBodyTeacherProvidedUrlMax).nullish(),
   "teacherProvidedResourceNote": zod.string().max(generateActivityBodyTeacherProvidedResourceNoteMax).nullish(),
   "surprise": zod.boolean()
@@ -307,6 +333,9 @@ export const GenerateActivityBody = zod.object({
 export const generateActivityResponseDurationMinutesMax = 120;
 export const generateActivityResponseDurationMinutesMultipleOf = 1;
 
+export const generateActivityResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const generateActivityResponsePresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const generateActivityResponsePresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const GenerateActivityResponse = zod.object({
@@ -329,6 +358,16 @@ export const GenerateActivityResponse = zod.object({
   "sourceGoal": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
   "style": zod.string().nullish(),
+  "presentationTheme": zod.union([zod.object({
+  "kind": zod.enum(['curated', 'custom']),
+  "themeId": zod.string().optional(),
+  "sourceThemeId": zod.string().optional(),
+  "anchors": zod.object({
+  "background": zod.string().regex(generateActivityResponsePresentationThemeOneAnchorsBackgroundRegExp),
+  "text": zod.string().regex(generateActivityResponsePresentationThemeOneAnchorsTextRegExp),
+  "accent": zod.string().regex(generateActivityResponsePresentationThemeOneAnchorsAccentRegExp)
+}).optional()
+}),zod.null()]).optional(),
   "favorite": zod.boolean(),
   "duplicatedFrom": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
@@ -401,6 +440,9 @@ export const ListActivitiesQueryParams = zod.object({
 export const listActivitiesResponseDurationMinutesMax = 120;
 export const listActivitiesResponseDurationMinutesMultipleOf = 1;
 
+export const listActivitiesResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const listActivitiesResponsePresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const listActivitiesResponsePresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const ListActivitiesResponseItem = zod.object({
@@ -423,6 +465,16 @@ export const ListActivitiesResponseItem = zod.object({
   "sourceGoal": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
   "style": zod.string().nullish(),
+  "presentationTheme": zod.union([zod.object({
+  "kind": zod.enum(['curated', 'custom']),
+  "themeId": zod.string().optional(),
+  "sourceThemeId": zod.string().optional(),
+  "anchors": zod.object({
+  "background": zod.string().regex(listActivitiesResponsePresentationThemeOneAnchorsBackgroundRegExp),
+  "text": zod.string().regex(listActivitiesResponsePresentationThemeOneAnchorsTextRegExp),
+  "accent": zod.string().regex(listActivitiesResponsePresentationThemeOneAnchorsAccentRegExp)
+}).optional()
+}),zod.null()]).optional(),
   "favorite": zod.boolean(),
   "duplicatedFrom": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
@@ -437,6 +489,9 @@ export const ListActivitiesResponse = zod.array(ListActivitiesResponseItem)
 export const createActivityBodyDurationMinutesMax = 120;
 export const createActivityBodyDurationMinutesMultipleOf = 1;
 
+export const createActivityBodyPresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const createActivityBodyPresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const createActivityBodyPresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const CreateActivityBody = zod.object({
@@ -458,12 +513,25 @@ export const CreateActivityBody = zod.object({
   "sourceGoal": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
   "style": zod.string().nullish(),
+  "presentationTheme": zod.union([zod.object({
+  "kind": zod.enum(['curated', 'custom']),
+  "themeId": zod.string().optional(),
+  "sourceThemeId": zod.string().optional(),
+  "anchors": zod.object({
+  "background": zod.string().regex(createActivityBodyPresentationThemeOneAnchorsBackgroundRegExp),
+  "text": zod.string().regex(createActivityBodyPresentationThemeOneAnchorsTextRegExp),
+  "accent": zod.string().regex(createActivityBodyPresentationThemeOneAnchorsAccentRegExp)
+}).optional()
+}),zod.null()]).optional(),
   "favorite": zod.boolean().optional()
 })
 
 export const createActivityResponseDurationMinutesMax = 120;
 export const createActivityResponseDurationMinutesMultipleOf = 1;
 
+export const createActivityResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const createActivityResponsePresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const createActivityResponsePresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const CreateActivityResponse = zod.object({
@@ -486,6 +554,16 @@ export const CreateActivityResponse = zod.object({
   "sourceGoal": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
   "style": zod.string().nullish(),
+  "presentationTheme": zod.union([zod.object({
+  "kind": zod.enum(['curated', 'custom']),
+  "themeId": zod.string().optional(),
+  "sourceThemeId": zod.string().optional(),
+  "anchors": zod.object({
+  "background": zod.string().regex(createActivityResponsePresentationThemeOneAnchorsBackgroundRegExp),
+  "text": zod.string().regex(createActivityResponsePresentationThemeOneAnchorsTextRegExp),
+  "accent": zod.string().regex(createActivityResponsePresentationThemeOneAnchorsAccentRegExp)
+}).optional()
+}),zod.null()]).optional(),
   "favorite": zod.boolean(),
   "duplicatedFrom": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
@@ -503,6 +581,9 @@ export const GetActivityParams = zod.object({
 export const getActivityResponseDurationMinutesMax = 120;
 export const getActivityResponseDurationMinutesMultipleOf = 1;
 
+export const getActivityResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getActivityResponsePresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getActivityResponsePresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const GetActivityResponse = zod.object({
@@ -525,6 +606,16 @@ export const GetActivityResponse = zod.object({
   "sourceGoal": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
   "style": zod.string().nullish(),
+  "presentationTheme": zod.union([zod.object({
+  "kind": zod.enum(['curated', 'custom']),
+  "themeId": zod.string().optional(),
+  "sourceThemeId": zod.string().optional(),
+  "anchors": zod.object({
+  "background": zod.string().regex(getActivityResponsePresentationThemeOneAnchorsBackgroundRegExp),
+  "text": zod.string().regex(getActivityResponsePresentationThemeOneAnchorsTextRegExp),
+  "accent": zod.string().regex(getActivityResponsePresentationThemeOneAnchorsAccentRegExp)
+}).optional()
+}),zod.null()]).optional(),
   "favorite": zod.boolean(),
   "duplicatedFrom": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
@@ -543,6 +634,9 @@ export const UpdateActivityParams = zod.object({
 export const updateActivityBodyDurationMinutesMax = 120;
 export const updateActivityBodyDurationMinutesMultipleOf = 1;
 
+export const updateActivityBodyPresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const updateActivityBodyPresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const updateActivityBodyPresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const UpdateActivityBody = zod.object({
@@ -563,12 +657,25 @@ export const UpdateActivityBody = zod.object({
   "sourceGoal": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
   "style": zod.string().nullish(),
+  "presentationTheme": zod.union([zod.object({
+  "kind": zod.enum(['curated', 'custom']),
+  "themeId": zod.string().optional(),
+  "sourceThemeId": zod.string().optional(),
+  "anchors": zod.object({
+  "background": zod.string().regex(updateActivityBodyPresentationThemeOneAnchorsBackgroundRegExp),
+  "text": zod.string().regex(updateActivityBodyPresentationThemeOneAnchorsTextRegExp),
+  "accent": zod.string().regex(updateActivityBodyPresentationThemeOneAnchorsAccentRegExp)
+}).optional()
+}),zod.null()]).optional(),
   "favorite": zod.boolean().optional()
 })
 
 export const updateActivityResponseDurationMinutesMax = 120;
 export const updateActivityResponseDurationMinutesMultipleOf = 1;
 
+export const updateActivityResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const updateActivityResponsePresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const updateActivityResponsePresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const UpdateActivityResponse = zod.object({
@@ -591,6 +698,16 @@ export const UpdateActivityResponse = zod.object({
   "sourceGoal": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
   "style": zod.string().nullish(),
+  "presentationTheme": zod.union([zod.object({
+  "kind": zod.enum(['curated', 'custom']),
+  "themeId": zod.string().optional(),
+  "sourceThemeId": zod.string().optional(),
+  "anchors": zod.object({
+  "background": zod.string().regex(updateActivityResponsePresentationThemeOneAnchorsBackgroundRegExp),
+  "text": zod.string().regex(updateActivityResponsePresentationThemeOneAnchorsTextRegExp),
+  "accent": zod.string().regex(updateActivityResponsePresentationThemeOneAnchorsAccentRegExp)
+}).optional()
+}),zod.null()]).optional(),
   "favorite": zod.boolean(),
   "duplicatedFrom": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
@@ -628,6 +745,9 @@ export const DuplicateActivityParams = zod.object({
 export const duplicateActivityResponseDurationMinutesMax = 120;
 export const duplicateActivityResponseDurationMinutesMultipleOf = 1;
 
+export const duplicateActivityResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const duplicateActivityResponsePresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const duplicateActivityResponsePresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const DuplicateActivityResponse = zod.object({
@@ -650,6 +770,16 @@ export const DuplicateActivityResponse = zod.object({
   "sourceGoal": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
   "style": zod.string().nullish(),
+  "presentationTheme": zod.union([zod.object({
+  "kind": zod.enum(['curated', 'custom']),
+  "themeId": zod.string().optional(),
+  "sourceThemeId": zod.string().optional(),
+  "anchors": zod.object({
+  "background": zod.string().regex(duplicateActivityResponsePresentationThemeOneAnchorsBackgroundRegExp),
+  "text": zod.string().regex(duplicateActivityResponsePresentationThemeOneAnchorsTextRegExp),
+  "accent": zod.string().regex(duplicateActivityResponsePresentationThemeOneAnchorsAccentRegExp)
+}).optional()
+}),zod.null()]).optional(),
   "favorite": zod.boolean(),
   "duplicatedFrom": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
@@ -671,6 +801,9 @@ export const SetActivityFavoriteBody = zod.object({
 export const setActivityFavoriteResponseDurationMinutesMax = 120;
 export const setActivityFavoriteResponseDurationMinutesMultipleOf = 1;
 
+export const setActivityFavoriteResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const setActivityFavoriteResponsePresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const setActivityFavoriteResponsePresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const SetActivityFavoriteResponse = zod.object({
@@ -693,6 +826,16 @@ export const SetActivityFavoriteResponse = zod.object({
   "sourceGoal": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
   "style": zod.string().nullish(),
+  "presentationTheme": zod.union([zod.object({
+  "kind": zod.enum(['curated', 'custom']),
+  "themeId": zod.string().optional(),
+  "sourceThemeId": zod.string().optional(),
+  "anchors": zod.object({
+  "background": zod.string().regex(setActivityFavoriteResponsePresentationThemeOneAnchorsBackgroundRegExp),
+  "text": zod.string().regex(setActivityFavoriteResponsePresentationThemeOneAnchorsTextRegExp),
+  "accent": zod.string().regex(setActivityFavoriteResponsePresentationThemeOneAnchorsAccentRegExp)
+}).optional()
+}),zod.null()]).optional(),
   "favorite": zod.boolean(),
   "duplicatedFrom": zod.string().nullish(),
   "createdAt": zod.coerce.date(),

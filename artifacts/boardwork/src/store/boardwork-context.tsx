@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useMemo, ReactNode } from "react";
-import { useGetAppState, AppState } from "@workspace/api-client-react";
+import { useGetAppState, AppState, type PresentationThemeSelection } from "@workspace/api-client-react";
 import { Loader2 } from "lucide-react";
 
 export type DeviceMode = "off" | "on";
@@ -53,6 +53,7 @@ export interface ActivityDraft {
   sourceGoal?: string | null;
   sourceChipIds?: string[];
   style?: string | null;
+  presentationTheme?: PresentationThemeSelection | null;
   favorite?: boolean;
 }
 

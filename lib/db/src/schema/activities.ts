@@ -11,6 +11,13 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { classesTable } from "./classes";
 
+export type PresentationThemeSelection = {
+  kind: "curated" | "custom";
+  themeId?: string;
+  sourceThemeId?: string;
+  anchors?: { background: string; text: string; accent: string };
+};
+
 export const activitiesTable = pgTable("activities", {
   id: uuid("id").primaryKey().defaultRandom(),
   classId: uuid("class_id")
@@ -33,6 +40,8 @@ export const activitiesTable = pgTable("activities", {
   sourceGoal: text("source_goal"),
   sourceChipIds: jsonb("source_chip_ids").$type<string[]>().notNull().default([]),
   style: text("style"),
+  presentationTheme: jsonb("presentation_theme")
+    .$type<PresentationThemeSelection | null>(),
   favorite: boolean("favorite").notNull().default(false),
   duplicatedFrom: uuid("duplicated_from"),
   createdAt: timestamp("created_at", { withTimezone: true })

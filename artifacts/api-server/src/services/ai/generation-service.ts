@@ -268,6 +268,7 @@ export async function generateAndSaveActivity(
         context.today.activityStyle ??
         generated.activityStyle ??
         (input.surprise ? "Surprise Me" : null),
+      presentationTheme: input.presentationTheme ?? null,
     })
     .returning();
 

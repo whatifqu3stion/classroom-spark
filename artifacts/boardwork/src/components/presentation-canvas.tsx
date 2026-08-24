@@ -1,8 +1,10 @@
-import type { ReactNode, Ref } from "react";
+import type { CSSProperties, ReactNode, Ref } from "react";
 import { ExternalLink } from "lucide-react";
 import type { ActivityDraft } from "@/store/boardwork-context";
 import { getSafeResourceUrl } from "@/lib/resource-url";
 import { cn } from "@/lib/utils";
+import { getThemeColors } from "@/lib/presentation-theme";
+import { getPresentationThemeAccentForeground } from "@workspace/api-zod";
 
 interface PresentationCanvasProps {
   activity: ActivityDraft;
@@ -26,6 +28,7 @@ export function PresentationCanvas({
 }: PresentationCanvasProps) {
   const arrivalInstruction = activity.arrivalInstructions?.trim();
   const safeResourceUrl = getSafeResourceUrl(activity.resourceUrl);
+  const themeColors = getThemeColors(activity.presentationTheme);
   const includeTestIds = !exportLayout;
   const hasVisual = Boolean(activity.visualUrl);
   const showTimer = !exportLayout && timer?.visible;
@@ -48,6 +51,16 @@ export function PresentationCanvas({
         "presentation-surface",
         exportLayout && "presentation-surface--export",
       )}
+      style={{
+        "--presentation-bg": themeColors.background,
+        "--presentation-surface": themeColors.surface,
+        "--presentation-primary-text": themeColors.primaryText,
+        "--presentation-secondary-text": themeColors.secondaryText,
+        "--presentation-accent": themeColors.accent,
+        "--presentation-accent-soft": themeColors.accentSoft,
+        "--presentation-accent-foreground":
+          getPresentationThemeAccentForeground(themeColors.accent),
+      } as CSSProperties}
       {...testId(includeTestIds, "presentation-surface")}
     >
       <header className="presentation-header">

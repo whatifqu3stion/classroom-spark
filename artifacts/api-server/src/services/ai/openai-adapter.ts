@@ -1,4 +1,5 @@
 import type { BoardworkGenerationProvider } from "./types";
+import { getActivityStyleGuidance } from "@workspace/api-zod";
 import {
   generatedActivitySchema,
   generatedActivityStyles,
@@ -82,10 +83,17 @@ export function buildOpenAIInput(
   context: BoardworkGenerationContext,
   repairFeedback?: string,
 ): string {
+  const styleGuidance = getActivityStyleGuidance(
+    context.today.activityStyle,
+  );
+
   return [
     "Create one Boardwork activity from the normalized context below.",
     repairFeedback
       ? `A prior response failed validation. Correct it using this feedback: ${repairFeedback}`
+      : null,
+    styleGuidance
+      ? `Requested activity style guidance: ${styleGuidance}`
       : null,
     "<boardwork_context_json>",
     JSON.stringify(context),

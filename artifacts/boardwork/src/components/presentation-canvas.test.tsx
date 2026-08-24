@@ -44,4 +44,21 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.getByText("Timer hidden from students")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Show timer to students" })).toBeInTheDocument();
   });
+
+  it("applies a saved presentation theme to the canvas", () => {
+    render(
+      <PresentationCanvas
+        activity={{
+          ...activity,
+          presentationTheme: { kind: "curated", themeId: "midnight" },
+        }}
+      />,
+    );
+
+    expect(screen.getByTestId("presentation-surface")).toHaveStyle({
+      "--presentation-bg": "#0F172A",
+      "--presentation-primary-text": "#F8FAFC",
+      "--presentation-accent": "#38BDF8",
+    });
+  });
 });

@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
+/**
+ * Supported activity approaches. Auto is a client-side convenience and is sent as null to request generation without a preference.
+ */
 export type ActivityStyle = typeof ActivityStyle[keyof typeof ActivityStyle];
 
 

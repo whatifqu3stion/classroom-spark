@@ -587,6 +587,7 @@ components:
 
     ActivityStyle:
       type: string
+      description: Supported activity approaches. Auto is a client-side convenience and is sent as null to request generation without a preference.
       enum:
         - Curiosity Hook
         - Retrieval Practice
@@ -599,6 +600,38 @@ components:
         - Quick Write
         - Apply
         - Reflect
+
+    PresentationThemeAnchors:
+      type: object
+      required:
+        - background
+        - text
+        - accent
+      properties:
+        background:
+          type: string
+          pattern: "^#[0-9A-Fa-f]{6}$"
+        text:
+          type: string
+          pattern: "^#[0-9A-Fa-f]{6}$"
+        accent:
+          type: string
+          pattern: "^#[0-9A-Fa-f]{6}$"
+
+    PresentationThemeSelection:
+      type: object
+      required:
+        - kind
+      properties:
+        kind:
+          type: string
+          enum: [curated, custom]
+        themeId:
+          type: string
+        sourceThemeId:
+          type: string
+        anchors:
+          $ref: "#/components/schemas/PresentationThemeAnchors"
 
     ClassProfile:
       type: object
@@ -827,6 +860,10 @@ components:
             type: string
         style:
           type: ["string", "null"]
+        presentationTheme:
+          anyOf:
+            - $ref: "#/components/schemas/PresentationThemeSelection"
+            - type: "null"
         favorite:
           type: boolean
         duplicatedFrom:
@@ -898,6 +935,10 @@ components:
             type: string
         style:
           type: ["string", "null"]
+        presentationTheme:
+          anyOf:
+            - $ref: "#/components/schemas/PresentationThemeSelection"
+            - type: "null"
         favorite:
           type: boolean
 
@@ -944,6 +985,10 @@ components:
             type: string
         style:
           type: ["string", "null"]
+        presentationTheme:
+          anyOf:
+            - $ref: "#/components/schemas/PresentationThemeSelection"
+            - type: "null"
         favorite:
           type: boolean
 
@@ -976,6 +1021,10 @@ components:
         activityStyle:
           anyOf:
             - $ref: "#/components/schemas/ActivityStyle"
+            - type: "null"
+        presentationTheme:
+          anyOf:
+            - $ref: "#/components/schemas/PresentationThemeSelection"
             - type: "null"
         teacherProvidedUrl:
           type: ["string", "null"]

@@ -7,6 +7,7 @@
  */
 import type { DeviceMode } from './deviceMode';
 import type { Duration } from './duration';
+import type { PresentationThemeSelection } from './presentationThemeSelection';
 
 export interface Activity {
   id: string;
@@ -38,6 +39,7 @@ export interface Activity {
   sourceChipIds?: string[];
   /** @nullable */
   style?: string | null;
+  presentationTheme?: PresentationThemeSelection | null;
   favorite: boolean;
   /** @nullable */
   duplicatedFrom?: string | null;

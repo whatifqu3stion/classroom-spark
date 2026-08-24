@@ -28,3 +28,6 @@ export * from './healthStatus';
 export * from './instructionalContext';
 export * from './instructionalContextInput';
 export * from './listActivitiesParams';
+export * from './presentationThemeAnchors';
+export * from './presentationThemeSelection';
+export * from './presentationThemeSelectionKind';

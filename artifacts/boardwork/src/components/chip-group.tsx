@@ -85,7 +85,7 @@ export function ChipGroup({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-foreground">Focus</span>
+        <span className="text-sm font-medium text-foreground">Teaching focus</span>
         {selectedChipIds.length > 0 && (
           <button
             type="button"
@@ -96,6 +96,9 @@ export function ChipGroup({
           </button>
         )}
       </div>
+      <p className="text-xs leading-relaxed text-muted-foreground">
+        Optional reusable skill emphasis for this class. Select one or more to guide today&apos;s board.
+      </p>
       <div className="flex flex-wrap items-center gap-2">
         {chips.map((chip) => {
           if (editingChipId === chip.id) {

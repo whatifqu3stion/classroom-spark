@@ -168,8 +168,8 @@
     width: 100%;
     overflow-x: hidden;
     overflow-y: auto;
-    background: #fafafa;
-    color: #171717;
+    background: var(--presentation-bg, #fafafa);
+    color: var(--presentation-primary-text, #171717);
   }
 
   .presentation-page--fullscreen {
@@ -196,7 +196,7 @@
 
   .presentation-eyebrow,
   .presentation-time {
-    color: rgb(23 23 23 / 58%);
+    color: var(--presentation-secondary-text, rgb(23 23 23 / 58%));
     font-size: clamp(0.72rem, 2.8vw, 0.92rem);
     font-weight: 600;
     line-height: 1;
@@ -246,11 +246,11 @@
     max-height: min(48vh, 28rem);
     border-radius: 0.75rem;
     object-fit: contain;
-    background: rgb(23 23 23 / 4%);
+    background: var(--presentation-accent-soft, rgb(23 23 23 / 4%));
   }
 
   .presentation-visual figcaption {
-    color: rgb(23 23 23 / 58%);
+    color: var(--presentation-secondary-text, rgb(23 23 23 / 58%));
     font-size: clamp(0.75rem, 1vw, 1rem);
     line-height: 1.35;
   }
@@ -258,7 +258,7 @@
   .presentation-timer {
     display: grid;
     gap: 0.35rem;
-    border-left: 0.35rem solid hsl(var(--primary));
+    border-left: 0.35rem solid var(--presentation-accent, hsl(var(--primary)));
     padding: 0.8rem 1rem;
   }
 
@@ -270,7 +270,7 @@
   }
 
   .presentation-timer-label {
-    color: rgb(23 23 23 / 58%);
+    color: var(--presentation-secondary-text, rgb(23 23 23 / 58%));
     font-size: clamp(0.7rem, 1vw, 1rem);
     font-weight: 700;
     letter-spacing: 0.12em;
@@ -289,13 +289,13 @@
     height: 0.45rem;
     overflow: hidden;
     border-radius: 999px;
-    background: rgb(23 23 23 / 12%);
+    background: var(--presentation-accent-soft, rgb(23 23 23 / 12%));
   }
 
   .presentation-timer-progress span {
     display: block;
     height: 100%;
-    background: hsl(var(--primary));
+    background: var(--presentation-accent, hsl(var(--primary)));
   }
 
   .presentation-rail--timer-only .presentation-timer strong {
@@ -310,7 +310,7 @@
     display: grid;
     gap: 0.4rem;
     margin-top: 0.35rem;
-    border-top: 1px solid rgb(23 23 23 / 10%);
+    border-top: 1px solid color-mix(in srgb, var(--presentation-primary-text, #171717) 16%, transparent);
     padding-top: 0.45rem;
   }
 
@@ -340,7 +340,7 @@
     gap: 0.35rem;
     border-radius: 0.35rem;
     padding: 0.35rem 0.55rem;
-    color: rgb(23 23 23 / 62%);
+    color: var(--presentation-secondary-text, rgb(23 23 23 / 62%));
     font-size: 0.75rem;
     font-weight: 600;
     transition: background-color 150ms ease, color 150ms ease;
@@ -349,14 +349,14 @@
   .presentation-timer-action:hover,
   .presentation-timer-options-trigger:hover,
   .presentation-timer-option:hover {
-    background: rgb(23 23 23 / 6%);
-    color: #171717;
+    background: var(--presentation-accent-soft, rgb(23 23 23 / 6%));
+    color: var(--presentation-primary-text, #171717);
   }
 
   .presentation-timer-action:focus-visible,
   .presentation-timer-options-trigger:focus-visible,
   .presentation-timer-option:focus-visible {
-    outline: 2px solid hsl(var(--primary));
+    outline: 2px solid var(--presentation-accent, hsl(var(--primary)));
     outline-offset: 2px;
   }
 
@@ -366,15 +366,15 @@
   }
 
   .presentation-timer-action--primary {
-    background: rgb(23 23 23 / 7%);
-    color: rgb(23 23 23 / 78%);
+    background: var(--presentation-accent-soft, rgb(23 23 23 / 7%));
+    color: var(--presentation-primary-text, rgb(23 23 23 / 78%));
   }
 
   .presentation-timer-options {
     display: grid;
     gap: 0.25rem;
     border-radius: 0.35rem;
-    background: rgb(23 23 23 / 4%);
+    background: var(--presentation-accent-soft, rgb(23 23 23 / 4%));
     padding: 0.25rem;
   }
 
@@ -411,7 +411,7 @@
 
   .presentation-title {
     max-width: 15ch;
-    color: #171717;
+    color: var(--presentation-primary-text, #171717);
     font-size: clamp(2.7rem, 11vw, 5.8rem);
     font-weight: 700;
     letter-spacing: -0.045em;
@@ -421,7 +421,7 @@
 
   .presentation-task {
     max-width: 38ch;
-    color: rgb(23 23 23 / 88%);
+    color: var(--presentation-primary-text, rgb(23 23 23 / 88%));
     font-size: clamp(1.45rem, 6.5vw, 3rem);
     font-weight: 500;
     line-height: 1.26;
@@ -439,7 +439,7 @@
     align-items: flex-start;
     gap: clamp(0.8rem, 3vw, 1.4rem);
     max-width: 44ch;
-    color: rgb(23 23 23 / 76%);
+    color: var(--presentation-primary-text, rgb(23 23 23 / 76%));
     font-size: clamp(1.1rem, 4.6vw, 2rem);
     font-weight: 500;
     line-height: 1.28;
@@ -448,13 +448,13 @@
 
   .presentation-prompt-marker {
     flex: none;
-    color: hsl(var(--primary));
+    color: var(--presentation-accent, hsl(var(--primary)));
     font-weight: 700;
   }
 
   .presentation-materials {
     margin-top: 1.5rem;
-    color: hsl(var(--muted-foreground));
+    color: var(--presentation-secondary-text, hsl(var(--muted-foreground)));
     font-size: clamp(0.9rem, 1.4vw, 1.35rem);
     font-weight: 500;
   }
@@ -468,21 +468,21 @@
     align-items: center;
     gap: 0.5rem;
     border-radius: 0.5rem;
-    background: hsl(var(--primary));
+    background: var(--presentation-accent, hsl(var(--primary)));
     padding: 0.5rem 1rem;
-    color: hsl(var(--primary-foreground));
+    color: var(--presentation-accent-foreground, hsl(var(--primary-foreground)));
     font-size: clamp(0.9rem, 1.3vw, 1.2rem);
     font-weight: 600;
     box-shadow: var(--shadow-sm);
   }
 
   .presentation-resource-link:hover {
-    background: hsl(var(--primary) / 90%);
+    background: color-mix(in srgb, var(--presentation-accent, hsl(var(--primary))) 88%, var(--presentation-primary-text, #171717));
   }
 
   .presentation-resource-note {
     margin-top: 0.5rem;
-    color: hsl(var(--muted-foreground));
+    color: var(--presentation-secondary-text, hsl(var(--muted-foreground)));
     font-size: clamp(0.8rem, 1.1vw, 1rem);
   }
 
@@ -491,13 +491,13 @@
     grid-template-columns: minmax(0, 1fr);
     align-items: end;
     gap: 1rem;
-    border-top: 1px solid rgb(23 23 23 / 10%);
+    border-top: 1px solid color-mix(in srgb, var(--presentation-primary-text, #171717) 16%, transparent);
     padding-top: clamp(1rem, 4vw, 1.5rem);
   }
 
   .presentation-arrival {
     max-width: 52ch;
-    color: rgb(23 23 23 / 52%);
+    color: var(--presentation-secondary-text, rgb(23 23 23 / 52%));
     font-size: clamp(0.95rem, 3.8vw, 1.25rem);
     font-weight: 500;
     line-height: 1.4;
@@ -511,10 +511,10 @@
     align-items: center;
     gap: 0.375rem;
     border-radius: 0.5rem;
-    background: rgb(250 250 250 / 92%);
+    background: color-mix(in srgb, var(--presentation-surface, #fafafa) 94%, transparent);
     padding: 0.25rem;
-    box-shadow: 0 1px 3px rgb(23 23 23 / 6%);
-    outline: 1px solid rgb(23 23 23 / 10%);
+    box-shadow: 0 1px 3px color-mix(in srgb, var(--presentation-primary-text, #171717) 10%, transparent);
+    outline: 1px solid color-mix(in srgb, var(--presentation-primary-text, #171717) 16%, transparent);
     opacity: 1;
     transition: opacity 300ms ease;
   }
@@ -527,7 +527,7 @@
     gap: 0.375rem;
     border-radius: 0.375rem;
     padding-inline: 0.75rem;
-    color: rgb(23 23 23 / 65%);
+    color: var(--presentation-secondary-text, rgb(23 23 23 / 65%));
     font-size: 0.875rem;
     font-weight: 500;
     transition: background-color 150ms ease, color 150ms ease;
@@ -539,12 +539,12 @@
   }
 
   .presentation-control:hover {
-    background: rgb(23 23 23 / 6%);
-    color: #171717;
+    background: var(--presentation-accent-soft, rgb(23 23 23 / 6%));
+    color: var(--presentation-primary-text, #171717);
   }
 
   .presentation-control:focus-visible {
-    outline: 2px solid hsl(var(--primary));
+    outline: 2px solid var(--presentation-accent, hsl(var(--primary)));
     outline-offset: 2px;
   }
 
@@ -742,7 +742,7 @@
     grid-template-rows: auto minmax(min-content, 1fr) auto;
     align-content: stretch;
     padding: 54px 136px;
-    background: #fafafa;
+    background: var(--presentation-bg, #fafafa);
   }
 
   .presentation-surface--export .presentation-eyebrow {

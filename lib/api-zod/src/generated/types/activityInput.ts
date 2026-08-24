@@ -7,6 +7,7 @@
  */
 import type { DeviceMode } from './deviceMode';
 import type { Duration } from './duration';
+import type { PresentationThemeSelection } from './presentationThemeSelection';
 
 export interface ActivityInput {
   classId: string;
@@ -37,5 +38,6 @@ export interface ActivityInput {
   sourceChipIds?: string[];
   /** @nullable */
   style?: string | null;
+  presentationTheme?: PresentationThemeSelection | null;
   favorite?: boolean;
 }

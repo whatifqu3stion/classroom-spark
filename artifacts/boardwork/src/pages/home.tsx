@@ -5,10 +5,19 @@ import { useBoardwork, DeviceMode, Duration, ClassProfile, ActivityDraft } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ChipGroup } from "@/components/chip-group";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { BoardEditor } from "@/components/board-editor";
+import { getLastUsedPresentationTheme } from "@/lib/presentation-theme";
 import { ClassFormDialog } from "@/components/class-form-dialog";
 import { ClassColorDot } from "@/components/class-color-dot";
 import { Settings, Plus, Play, Shuffle, FilePlus, MonitorOff, MonitorSmartphone, Loader2, AlertCircle, ChevronDown } from "lucide-react";
@@ -33,6 +42,10 @@ import {
   GenerateActivityInput,
 } from "@workspace/api-client-react";
 import {
+  activityStyleCatalog,
+  type ActivityStyleValue,
+} from "@workspace/api-zod";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -46,20 +59,14 @@ import {
 const shouldShowSubject = (className: string, subject: string) =>
   !className.toLocaleLowerCase().includes(subject.toLocaleLowerCase());
 
-const activityStyles = [
-  "Auto",
-  "Curiosity Hook",
-  "Retrieval Practice",
-  "Explain / Reason",
-  "Observe & Notice",
-  "Draw / Sketch",
-  "Predict",
-  "Compare / Contrast",
-  "Evaluate / Critique",
-  "Quick Write",
-  "Apply",
-  "Reflect",
-] as const;
+const activityStyleCategories = Array.from(
+  new Set(activityStyleCatalog.map((style) => style.category)),
+).map((category) => ({
+  value: category,
+  label:
+    activityStyleCatalog.find((style) => style.category === category)
+      ?.categoryLabel ?? category,
+}));
 
 const PRESET_DURATIONS = [5, 7, 10] as const;
 
@@ -113,6 +120,7 @@ const activitySavePayload = (draft: ActivityDraft) => ({
   materials: draft.materials,
   teacherNote: draft.teacherNote,
   style: draft.style,
+  presentationTheme: draft.presentationTheme,
 });
 
 export default function Home() {
@@ -159,11 +167,14 @@ export default function Home() {
   const [customDurationInput, setCustomDurationInput] = useState("");
   const [resourceUrl, setResourceUrl] = useState("");
   const [resourceNote, setResourceNote] = useState("");
-  const [activityStyle, setActivityStyle] = useState<(typeof activityStyles)[number]>("Auto");
+  const [activityStyle, setActivityStyle] = useState<ActivityStyleValue>("Auto");
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [lastGenerationWasSurprise, setLastGenerationWasSurprise] = useState(false);
+  const selectedActivityStyle =
+    activityStyleCatalog.find((style) => style.value === activityStyle) ??
+    activityStyleCatalog[0];
 
   const isCustomDuration = !PRESET_DURATIONS.includes(duration as (typeof PRESET_DURATIONS)[number]);
   const customDurationError = isCustomDuration
@@ -515,6 +526,7 @@ export default function Home() {
         teacherProvidedResourceNote:
           deviceMode === "on" ? resourceNote.trim() || null : null,
         surprise,
+        presentationTheme: getLastUsedPresentationTheme(),
       };
 
       const newActivity = await generateActivityMut.mutateAsync({ data: payload });
@@ -552,6 +564,7 @@ export default function Home() {
       durationMinutes: activeClass.defaultDuration,
       deviceMode: activeClass.defaultDeviceMode,
       arrivalInstructions: activeClass.arrivalRoutine,
+      presentationTheme: getLastUsedPresentationTheme(),
     };
 
     setLocation("/");
@@ -679,8 +692,11 @@ export default function Home() {
                   data-testid="input-topic"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="goal">Practice goal <span className="font-normal text-muted-foreground">(optional)</span></Label>
+               <div className="space-y-2">
+                 <Label htmlFor="goal">Practice goal <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                 <p className="text-xs leading-relaxed text-muted-foreground">
+                   The student outcome you want from today&apos;s board.
+                 </p>
                 <Input
                   id="goal"
                   placeholder="e.g. explain the evidence"
@@ -757,7 +773,7 @@ export default function Home() {
                 <span className="min-w-0">
                   <span className="block text-sm font-semibold text-foreground">Add optional details</span>
                   <span className="mt-0.5 block text-xs text-muted-foreground">
-                    Focus, student resources, and activity style
+                     Teaching focus, student resources, and activity style
                   </span>
                 </span>
                 <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform ${customizeOpen ? "rotate-180" : ""}`} />
@@ -804,19 +820,48 @@ export default function Home() {
                     )}
 
                     <div className="space-y-2">
-                      <Label htmlFor="activityStyle">Activity style</Label>
-                      <Select value={activityStyle} onValueChange={(value) => setActivityStyle(value as (typeof activityStyles)[number])}>
-                        <SelectTrigger id="activityStyle" data-testid="select-activity-style">
-                          <SelectValue />
+                       <Label htmlFor="activityStyle">Activity style <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                       <p className="text-xs leading-relaxed text-muted-foreground">
+                         Choose how students will work. Auto is a good default.
+                       </p>
+                       <Select value={activityStyle} onValueChange={(value) => setActivityStyle(value as ActivityStyleValue)}>
+                         <SelectTrigger id="activityStyle" data-testid="select-activity-style">
+                           <SelectValue>{selectedActivityStyle.label}</SelectValue>
                         </SelectTrigger>
                         <SelectContent>
-                          {activityStyles.map((style) => (
-                            <SelectItem key={style} value={style}>
-                              {style}
-                            </SelectItem>
-                          ))}
+                           {activityStyleCategories.map((category, index) => (
+                             <React.Fragment key={category.value}>
+                               {index > 0 && <div className="my-1 h-px bg-muted" role="separator" />}
+                               <SelectGroup>
+                                 <SelectLabel>{category.label}</SelectLabel>
+                                 {activityStyleCatalog
+                                   .filter((style) => style.category === category.value)
+                                   .map((style) => (
+                                     <SelectItem
+                                       key={style.value}
+                                       value={style.value}
+                                       textValue={style.label}
+                                       className="items-start py-2"
+                                     >
+                                       <span className="flex flex-col items-start gap-0.5">
+                                         <span>{style.label}</span>
+                                         <span className="text-xs font-normal text-muted-foreground">
+                                           {style.description}
+                                         </span>
+                                       </span>
+                                     </SelectItem>
+                                   ))}
+                               </SelectGroup>
+                             </React.Fragment>
+                           ))}
                         </SelectContent>
                       </Select>
+                       <p
+                         className="text-xs leading-relaxed text-muted-foreground"
+                         data-testid="activity-style-description"
+                       >
+                         {selectedActivityStyle.description}
+                       </p>
                     </div>
                   </div>
                 </div>

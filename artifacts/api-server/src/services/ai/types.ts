@@ -1,18 +1,7 @@
 import { z } from "zod";
+import { generatedActivityStyleValues } from "@workspace/api-zod";
 
-export const generatedActivityStyles = [
-  "Curiosity Hook",
-  "Retrieval Practice",
-  "Explain / Reason",
-  "Observe & Notice",
-  "Draw / Sketch",
-  "Predict",
-  "Compare / Contrast",
-  "Evaluate / Critique",
-  "Quick Write",
-  "Apply",
-  "Reflect",
-] as const;
+export const generatedActivityStyles = generatedActivityStyleValues;
 
 export const generatedActivitySchema = z.object({
   eyebrow: z.string().trim().min(1).max(30).nullable(),

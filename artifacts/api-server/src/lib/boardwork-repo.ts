@@ -193,6 +193,7 @@ export async function duplicateActivity(
       sourceGoal: source.sourceGoal,
       sourceChipIds: source.sourceChipIds,
       style: source.style,
+      presentationTheme: source.presentationTheme,
       favorite: false,
       duplicatedFrom: source.id,
     })

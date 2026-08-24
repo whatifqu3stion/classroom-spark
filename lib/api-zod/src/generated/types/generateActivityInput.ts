@@ -8,6 +8,7 @@
 import type { ActivityStyle } from './activityStyle';
 import type { DeviceMode } from './deviceMode';
 import type { Duration } from './duration';
+import type { PresentationThemeSelection } from './presentationThemeSelection';
 
 export interface GenerateActivityInput {
   classId: string;
@@ -20,6 +21,7 @@ export interface GenerateActivityInput {
   deviceMode: DeviceMode;
   durationMinutes: Duration;
   activityStyle?: ActivityStyle | null;
+  presentationTheme?: PresentationThemeSelection | null;
   /**
      * @maxLength 2000
      * @nullable
