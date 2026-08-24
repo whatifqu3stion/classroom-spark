@@ -277,18 +277,12 @@ describe("Boardwork generation contract", () => {
     );
   });
 
-  it("keeps every curated presentation theme readable", () => {
+  it("keeps every curated presentation surface and accent readable", () => {
     expect(curatedPresentationThemes.map((theme) => theme.id)).toEqual([
       "boardwork",
       "paper-v2",
-      "ocean",
-      "ink",
-      "sage",
-      "clay",
-      "plum",
+      "charcoal-v2",
       "midnight",
-      "sunlit",
-      "teal",
     ]);
     expect(DEFAULT_PRESENTATION_THEME_ID).toBe("boardwork");
     expect(getPresentationThemeColors(null)).toEqual(
@@ -300,6 +294,13 @@ describe("Boardwork generation contract", () => {
     expect(getCuratedPresentationTheme("paper").id).toBe("boardwork");
     expect(getCuratedPresentationTheme("paper-v2").name).toBe("Paper");
     for (const [legacyId, background] of Object.entries({
+      ocean: "#EAF4F7",
+      ink: "#111827",
+      sage: "#EDF3EA",
+      clay: "#F6E9DE",
+      plum: "#F4EDF5",
+      sunlit: "#FFF5D9",
+      teal: "#E8F4F1",
       slate: "#E9EEF2",
       citrus: "#FFF5D9",
       indigo: "#EDEBFA",
@@ -310,6 +311,8 @@ describe("Boardwork generation contract", () => {
     })) {
       expect(getCuratedPresentationTheme(legacyId).colors.background).toBe(background);
     }
+    expect(getCuratedPresentationTheme("ink").typography.id).toBe("ink");
+    expect(getCuratedPresentationTheme("ocean").typography.id).toBe("ocean");
 
     for (const theme of curatedPresentationThemes) {
       expect(
@@ -328,6 +331,19 @@ describe("Boardwork generation contract", () => {
         contrastRatio(theme.colors.accent, getPresentationThemeAccentForeground(theme.colors.accent)),
         `${theme.name} accent foreground`,
       ).toBeGreaterThanOrEqual(4.5);
+    }
+    for (const surface of ["boardwork", "paper-v2", "charcoal-v2", "midnight"]) {
+      for (const accent of ["terracotta", "blue", "sage", "plum"]) {
+        const colors = getPresentationThemeColors({
+          kind: "curated",
+          themeId: surface,
+          accentId: accent,
+        });
+        expect(
+          contrastRatio(colors.accent, getPresentationThemeAccentForeground(colors.accent)),
+          `${surface} ${accent} accent foreground`,
+        ).toBeGreaterThanOrEqual(4.5);
+      }
     }
   });
 

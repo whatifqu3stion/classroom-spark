@@ -29,6 +29,7 @@ export type CustomPresentationThemeAnchors = {
 export type PresentationThemeChoice = {
   kind: "curated" | "custom";
   themeId?: string;
+  accentId?: string;
   sourceThemeId?: string;
   anchors?: CustomPresentationThemeAnchors;
 };
@@ -44,6 +45,25 @@ export type CuratedPresentationTheme = {
 
 export type AppearancePreset = CuratedPresentationTheme;
 
+export type PresentationSurfaceTheme = {
+  id: string;
+  name: string;
+  description: string;
+  mode: PresentationThemeMode;
+  defaultAccentId: string;
+  colors: Omit<PresentationThemeColors, "accent" | "accentSoft">;
+};
+
+export type PresentationAccentTheme = {
+  id: string;
+  name: string;
+  description: string;
+  colors: {
+    light: string;
+    dark: string;
+  };
+};
+
 const SCRIPT_FONT_FALLBACK =
   "'Noto Sans Arabic', 'Noto Sans Hebrew', 'Noto Sans Devanagari', 'Noto Sans JP', 'Noto Sans Symbols 2', 'Noto Sans', 'Noto Color Emoji', 'Segoe UI Symbol', 'Apple Color Emoji'";
 const sansFamily = (family: string) =>
@@ -53,151 +73,90 @@ const serifFamily = (family: string) =>
 const monoFamily = (family: string) =>
   `${family}, 'Noto Sans Mono', ${SCRIPT_FONT_FALLBACK}, ui-monospace, monospace`;
 
-// Color and typography are intentionally separate systems. Appearance presets
-// compose the two so a future catalog can reuse either system without coupling
-// palette decisions to type decisions.
-export const presentationColorThemes = [
+// Background surfaces are intentionally restrained. Accent colors are a
+// secondary semantic system: they mark links, progress, controls, and small
+// moments of emphasis rather than becoming full-page backgrounds.
+export const presentationAccentThemes = [
+  {
+    id: "terracotta",
+    name: "Terracotta",
+    description: "A grounded, warm signal for emphasis and progress.",
+    colors: { light: "#A94632", dark: "#E28A70" },
+  },
+  {
+    id: "blue",
+    name: "Blue",
+    description: "A clear, steady signal for links and navigation.",
+    colors: { light: "#2F6F9F", dark: "#70B7DF" },
+  },
+  {
+    id: "sage",
+    name: "Sage",
+    description: "A quiet natural signal for calm emphasis.",
+    colors: { light: "#47745A", dark: "#7BC49A" },
+  },
+  {
+    id: "plum",
+    name: "Plum",
+    description: "A thoughtful muted signal for gentle distinction.",
+    colors: { light: "#7B526F", dark: "#C18AC0" },
+  },
+] as const satisfies readonly PresentationAccentTheme[];
+
+export const presentationSurfaceThemes = [
   {
     id: "boardwork",
     name: "Boardwork",
-    description: "The familiar warm-neutral Boardwork canvas.",
+    description: "Gentle off-white with a familiar warm-neutral feel.",
     mode: "light",
+    defaultAccentId: "terracotta",
     colors: {
       background: "#F7F3EA",
       surface: "#FFFDF8",
       primaryText: "#202326",
       secondaryText: "#4D514F",
-      accent: "#A94632",
-      accentSoft: "#F0D9D0",
     },
   },
   {
     id: "paper-v2",
     name: "Paper",
-    description: "Warm paper, dark ink, and a grounded terracotta signal.",
+    description: "A warmer paper surface for a softer classroom feel.",
     mode: "light",
+    defaultAccentId: "terracotta",
     colors: {
       background: "#F3EEE4",
       surface: "#FFFCF5",
       primaryText: "#241F1A",
       secondaryText: "#5D554C",
-      accent: "#9A4B32",
-      accentSoft: "#E8D6C8",
     },
   },
   {
-    id: "ocean",
-    name: "Ocean",
-    description: "Pale blue, deep navy, and a clear blue accent.",
-    mode: "light",
-    colors: {
-      background: "#EAF4F7",
-      surface: "#F7FCFD",
-      primaryText: "#123047",
-      secondaryText: "#3A5B6D",
-      accent: "#146C94",
-      accentSoft: "#CBE5EE",
-    },
-  },
-  {
-    id: "ink",
-    name: "Ink",
-    description: "A dark, high-contrast canvas with a quiet cyan signal.",
+    id: "charcoal-v2",
+    name: "Charcoal",
+    description: "A softer warm dark surface with low-glare stone contrast.",
     mode: "dark",
+    defaultAccentId: "terracotta",
     colors: {
-      background: "#111827",
-      surface: "#1E293B",
-      primaryText: "#F8FAFC",
-      secondaryText: "#CBD5E1",
-      accent: "#67E8F9",
-      accentSoft: "#164E63",
-    },
-  },
-  {
-    id: "sage",
-    name: "Sage",
-    description: "Muted green-gray with a natural moss accent.",
-    mode: "light",
-    colors: {
-      background: "#EDF3EA",
-      surface: "#FAFCF8",
-      primaryText: "#1D3328",
-      secondaryText: "#476052",
-      accent: "#47745A",
-      accentSoft: "#D3E4D5",
-    },
-  },
-  {
-    id: "clay",
-    name: "Clay",
-    description: "A soft terracotta palette that keeps text grounded.",
-    mode: "light",
-    colors: {
-      background: "#F6E9DE",
-      surface: "#FFF8F2",
-      primaryText: "#33231D",
-      secondaryText: "#644D42",
-      accent: "#A94E2C",
-      accentSoft: "#EFD1C2",
-    },
-  },
-  {
-    id: "plum",
-    name: "Plum",
-    description: "A gentle lavender field with deep plum type.",
-    mode: "light",
-    colors: {
-      background: "#F4EDF5",
-      surface: "#FCF8FD",
-      primaryText: "#302136",
-      secondaryText: "#5A4961",
-      accent: "#854F8E",
-      accentSoft: "#E6D4E8",
+      background: "#232323",
+      surface: "#303030",
+      primaryText: "#FBF8F1",
+      secondaryText: "#D8D2C6",
     },
   },
   {
     id: "midnight",
     name: "Midnight",
-    description: "Deep navy with soft white text and a focused blue accent.",
+    description: "A deeper cool dark surface with crisp contrast.",
     mode: "dark",
+    defaultAccentId: "blue",
     colors: {
       background: "#0F172A",
       surface: "#1E293B",
       primaryText: "#F8FAFC",
       secondaryText: "#CBD5E1",
-      accent: "#38BDF8",
-      accentSoft: "#164E63",
     },
   },
-  {
-    id: "sunlit",
-    name: "Sunlit",
-    description: "A warm, sunny field with a restrained golden signal.",
-    mode: "light",
-    colors: {
-      background: "#FFF5D9",
-      surface: "#FFFCF0",
-      primaryText: "#342A13",
-      secondaryText: "#665B3A",
-      accent: "#9A5700",
-      accentSoft: "#F3D99B",
-    },
-  },
-  {
-    id: "teal",
-    name: "Teal",
-    description: "A clear, calm teal palette with deep readable type.",
-    mode: "light",
-    colors: {
-      background: "#E8F4F1",
-      surface: "#F9FCFB",
-      primaryText: "#153631",
-      secondaryText: "#3D5E58",
-      accent: "#0C786D",
-      accentSoft: "#C8E4DE",
-    },
-  },
-] as const;
+] as const satisfies readonly PresentationSurfaceTheme[];
 
 export const presentationTypographySystems = [
   {
@@ -283,33 +242,72 @@ export const presentationTypographySystems = [
 ] as const satisfies readonly PresentationTypography[];
 
 const appearancePresetDefinitions = [
-  ["boardwork", "boardwork", "boardwork"],
-  ["paper-v2", "paper-v2", "paper-v2"],
-  ["ocean", "ocean", "ocean"],
-  ["ink", "ink", "ink"],
-  ["sage", "sage", "sage"],
-  ["clay", "clay", "clay"],
-  ["plum", "plum", "plum"],
-  ["midnight", "midnight", "midnight"],
-  ["sunlit", "sunlit", "sunlit"],
-  ["teal", "teal", "teal"],
+  { surfaceId: "boardwork", typographyId: "boardwork" },
+  { surfaceId: "paper-v2", typographyId: "paper-v2" },
+  { surfaceId: "charcoal-v2", typographyId: "ink" },
+  { surfaceId: "midnight", typographyId: "midnight" },
 ] as const;
 
-const colorThemeById = new Map(
-  presentationColorThemes.map((theme) => [theme.id, theme]),
+const surfaceThemeById = new Map<string, PresentationSurfaceTheme>(
+  presentationSurfaceThemes.map((theme) => [theme.id, theme]),
 );
-const typographyById = new Map(
+const accentThemeById = new Map<string, PresentationAccentTheme>(
+  presentationAccentThemes.map((theme) => [theme.id, theme]),
+);
+const typographyById = new Map<string, PresentationTypography>(
   presentationTypographySystems.map((system) => [system.id, system]),
 );
 
+function getAccentColor(accentId: string, mode: PresentationThemeMode): string {
+  const accent = accentThemeById.get(accentId) ?? presentationAccentThemes[0];
+  return accent.colors[mode];
+}
+
+function composeSurfaceColors(
+  surface: PresentationSurfaceTheme,
+  accentId = surface.defaultAccentId,
+): PresentationThemeColors {
+  const accent = getAccentColor(accentId, surface.mode);
+  return {
+    ...surface.colors,
+    accent,
+    accentSoft: mixOklab(accent, surface.colors.background, 0.16),
+  };
+}
+
+export const presentationColorThemes = presentationSurfaceThemes.map((surface) => ({
+  ...surface,
+  colors: composeSurfaceColors(surface),
+})) as readonly (PresentationSurfaceTheme & {
+  colors: PresentationThemeColors;
+})[];
+
+const composeCuratedTheme = (
+  surface: PresentationSurfaceTheme,
+  typographyId: string,
+  accentId = surface.defaultAccentId,
+): CuratedPresentationTheme => {
+  const typography = typographyById.get(typographyId);
+  if (!typography) {
+    throw new Error(`Appearance preset ${surface.id} is missing a typography system`);
+  }
+  return {
+    id: surface.id,
+    name: surface.name,
+    description: surface.description,
+    mode: surface.mode,
+    colors: composeSurfaceColors(surface, accentId),
+    typography,
+  };
+};
+
 export const curatedPresentationThemes = appearancePresetDefinitions.map(
-  ([id, colorThemeId, typographyId]) => {
-    const colorTheme = colorThemeById.get(colorThemeId);
-    const typography = typographyById.get(typographyId);
-    if (!colorTheme || !typography) {
-      throw new Error(`Appearance preset ${id} is missing a theme system`);
+  ({ surfaceId, typographyId }) => {
+    const surface = surfaceThemeById.get(surfaceId);
+    if (!surface) {
+      throw new Error(`Appearance preset ${surfaceId} is missing a surface`);
     }
-    return { ...colorTheme, typography };
+    return composeCuratedTheme(surface, typographyId);
   },
 ) as readonly CuratedPresentationTheme[];
 
@@ -317,6 +315,104 @@ export const appearancePresets = curatedPresentationThemes;
 
 const boardworkTypography = typographyById.get("boardwork")!;
 const legacyPresentationThemes = [
+  {
+    id: "ink",
+    name: "Ink",
+    description: "A dark, high-contrast canvas with a quiet cyan signal.",
+    mode: "dark",
+    colors: {
+      background: "#111827",
+      surface: "#1E293B",
+      primaryText: "#F8FAFC",
+      secondaryText: "#CBD5E1",
+      accent: "#67E8F9",
+      accentSoft: "#164E63",
+    },
+  },
+  {
+    id: "ocean",
+    name: "Ocean",
+    description: "Pale blue, deep navy, and a clear blue accent.",
+    mode: "light",
+    colors: {
+      background: "#EAF4F7",
+      surface: "#F7FCFD",
+      primaryText: "#123047",
+      secondaryText: "#3A5B6D",
+      accent: "#146C94",
+      accentSoft: "#CBE5EE",
+    },
+  },
+  {
+    id: "sage",
+    name: "Sage",
+    description: "Muted green-gray with a natural moss accent.",
+    mode: "light",
+    colors: {
+      background: "#EDF3EA",
+      surface: "#FAFCF8",
+      primaryText: "#1D3328",
+      secondaryText: "#476052",
+      accent: "#47745A",
+      accentSoft: "#D3E4D5",
+    },
+  },
+  {
+    id: "clay",
+    name: "Clay",
+    description: "A soft terracotta palette that keeps text grounded.",
+    mode: "light",
+    colors: {
+      background: "#F6E9DE",
+      surface: "#FFF8F2",
+      primaryText: "#33231D",
+      secondaryText: "#644D42",
+      accent: "#A94E2C",
+      accentSoft: "#EFD1C2",
+    },
+  },
+  {
+    id: "plum",
+    name: "Plum",
+    description: "A gentle lavender field with deep plum type.",
+    mode: "light",
+    colors: {
+      background: "#F4EDF5",
+      surface: "#FCF8FD",
+      primaryText: "#302136",
+      secondaryText: "#5A4961",
+      accent: "#854F8E",
+      accentSoft: "#E6D4E8",
+    },
+  },
+  {
+    id: "sunlit",
+    name: "Sunlit",
+    description: "A warm, sunny field with a restrained golden signal.",
+    mode: "light",
+    colors: {
+      background: "#FFF5D9",
+      surface: "#FFFCF0",
+      primaryText: "#342A13",
+      secondaryText: "#665B3A",
+      accent: "#9A5700",
+      accentSoft: "#F3D99B",
+    },
+  },
+  {
+    id: "teal",
+    name: "Teal",
+    description: "A clear, calm teal palette with deep readable type.",
+    mode: "light",
+    colors: {
+      background: "#E8F4F1",
+      surface: "#F9FCFB",
+      primaryText: "#153631",
+      secondaryText: "#3D5E58",
+      accent: "#0C786D",
+      accentSoft: "#C8E4DE",
+    },
+  },
   {
     id: "slate",
     name: "Slate",
@@ -424,27 +520,49 @@ const LEGACY_THEME_ALIASES: Record<string, string> = {
 };
 
 export const DEFAULT_PRESENTATION_THEME_ID = "boardwork";
-export const RECOMMENDED_PRESENTATION_THEME_IDS = [
-  "boardwork",
-  "paper-v2",
-  "ocean",
-  "ink",
-  "sage",
-] as const;
+export const RECOMMENDED_PRESENTATION_THEME_IDS = presentationSurfaceThemes.map(
+  (theme) => theme.id,
+) as readonly string[];
+
+const legacyTypographyById: Record<string, string> = {
+  ink: "ink",
+  ocean: "ocean",
+  sage: "sage",
+  clay: "clay",
+  plum: "plum",
+  sunlit: "sunlit",
+  teal: "teal",
+};
 
 export function getCuratedPresentationTheme(
   themeId: string | null | undefined,
+  accentId?: string | null,
 ): CuratedPresentationTheme {
   const resolvedThemeId = themeId
     ? LEGACY_THEME_ALIASES[themeId] ?? themeId
     : DEFAULT_PRESENTATION_THEME_ID;
+  const surface = surfaceThemeById.get(resolvedThemeId);
+  if (surface) {
+    const definition = appearancePresetDefinitions.find(
+      ({ surfaceId }) => surfaceId === surface.id,
+    );
+    return composeCuratedTheme(
+      surface,
+      definition?.typographyId ?? "boardwork",
+      accentId ?? undefined,
+    );
+  }
   const legacyTheme = legacyPresentationThemes.find(
     (theme) => theme.id === themeId,
   );
   return (
-    curatedPresentationThemes.find((theme) => theme.id === resolvedThemeId) ??
     (legacyTheme
-      ? { ...legacyTheme, typography: boardworkTypography }
+      ? {
+          ...legacyTheme,
+          typography:
+            typographyById.get(legacyTypographyById[legacyTheme.id] ?? "boardwork") ??
+            boardworkTypography,
+        }
       : undefined) ??
     curatedPresentationThemes.find(
       (theme) => theme.id === DEFAULT_PRESENTATION_THEME_ID,
@@ -604,6 +722,20 @@ export function getPresentationThemeTypography(
   return getCuratedPresentationTheme(sourceThemeId).typography;
 }
 
+export function getPresentationThemeAccentId(
+  selection: PresentationThemeChoice | null | undefined,
+): string | null {
+  if (selection?.kind !== "curated") return null;
+  const resolvedThemeId = selection.themeId
+    ? LEGACY_THEME_ALIASES[selection.themeId] ?? selection.themeId
+    : DEFAULT_PRESENTATION_THEME_ID;
+  const surface = surfaceThemeById.get(resolvedThemeId);
+  if (!surface) return null;
+  return accentThemeById.has(selection.accentId ?? "")
+    ? selection.accentId!
+    : surface.defaultAccentId;
+}
+
 export function isPresentationThemeReadable(
   anchors: CustomPresentationThemeAnchors,
 ): boolean {
@@ -661,6 +793,7 @@ export function getPresentationThemeColors(
   }
   return getCuratedPresentationTheme(
     selection?.kind === "curated" ? selection.themeId : DEFAULT_PRESENTATION_THEME_ID,
+    selection?.kind === "curated" ? selection.accentId : undefined,
   ).colors;
 }
 

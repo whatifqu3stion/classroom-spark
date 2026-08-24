@@ -1,17 +1,15 @@
 import { useMemo, type CSSProperties } from "react";
-import { Check, ChevronDown, Moon, Sparkles, Sun } from "lucide-react";
+import { Check, Moon, Sparkles, Sun } from "lucide-react";
 import {
-  curatedPresentationThemes,
-  RECOMMENDED_PRESENTATION_THEME_IDS,
+  getCuratedPresentationTheme,
+  presentationAccentThemes,
+  presentationSurfaceThemes,
+  type CuratedPresentationTheme,
   type PresentationThemeSelection,
 } from "@workspace/api-zod";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "./ui/popover";
-import {
   getThemeColors,
+  getThemeAccentId,
   getThemeId,
   getThemeLabel,
   getThemeTypography,
@@ -31,22 +29,11 @@ interface PresentationThemePickerProps {
   };
 }
 
-const featuredThemes = RECOMMENDED_PRESENTATION_THEME_IDS.map((id) =>
-  curatedPresentationThemes.find((theme) => theme.id === id),
-).filter(
-  (theme): theme is (typeof curatedPresentationThemes)[number] =>
-    Boolean(theme),
-);
-
-const moreThemes = curatedPresentationThemes.filter(
-  (theme) => !RECOMMENDED_PRESENTATION_THEME_IDS.includes(theme.id as never),
-);
-
 function ThemePreview({
   theme,
   compact = false,
 }: {
-  theme: (typeof curatedPresentationThemes)[number];
+  theme: CuratedPresentationTheme;
   compact?: boolean;
 }) {
   return (
@@ -89,64 +76,87 @@ function ThemePreview({
   );
 }
 
-function ThemeSwatch({
+function SurfaceSwatch({
+  surface,
   theme,
   selected,
-  compact = false,
   onSelect,
 }: {
-  theme: (typeof curatedPresentationThemes)[number];
+  surface: (typeof presentationSurfaceThemes)[number];
+  theme: CuratedPresentationTheme;
   selected: boolean;
-  compact?: boolean;
   onSelect: () => void;
 }) {
   return (
     <button
       type="button"
-      aria-label={`Use ${theme.name} appearance preset`}
+      aria-label={`Use ${surface.name} background`}
       aria-pressed={selected}
-      title={theme.description}
+      title={surface.description}
       onClick={onSelect}
       className={cn(
-        "group text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        compact
-          ? "flex min-w-[4.7rem] flex-col items-center gap-1 rounded-lg border px-1.5 py-1.5"
-          : "flex w-full items-center gap-2 rounded-lg border p-2.5",
+        "group relative flex min-w-[7rem] flex-1 flex-col items-center gap-1.5 rounded-lg border p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-w-0",
         selected
           ? "border-primary bg-primary/5 ring-1 ring-primary/30"
           : "border-border hover:bg-muted/50",
       )}
-      data-testid={`theme-option-${theme.id === "paper-v2" ? "paper" : theme.id}`}
+      data-testid={`theme-option-${surface.id === "paper-v2" ? "paper" : surface.id.replace("-v2", "")}`}
     >
-      <ThemePreview theme={theme} compact={compact} />
-      {!compact && (
-        <span className="min-w-0 flex-1">
-          <span className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-            {theme.name}
-            {theme.mode === "dark" ? (
-              <Moon className="h-3 w-3 text-muted-foreground" aria-label="Dark" />
-            ) : (
-              <Sun className="h-3 w-3 text-muted-foreground" aria-label="Light" />
-            )}
-          </span>
-          <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">
-            {theme.description}
-          </span>
-        </span>
-      )}
-      {compact && (
-        <span className="max-w-[4.7rem] truncate text-[11px] font-medium text-foreground">
-          {theme.name}
-        </span>
-      )}
+      <ThemePreview theme={theme} compact />
+      <span className="flex items-center gap-1 text-xs font-medium text-foreground">
+        {surface.name}
+        {surface.mode === "dark" ? (
+          <Moon className="h-3 w-3 text-muted-foreground" aria-label="Dark" />
+        ) : (
+          <Sun className="h-3 w-3 text-muted-foreground" aria-label="Light" />
+        )}
+      </span>
       {selected && (
         <Check
-          className={cn(
-            "shrink-0 text-primary",
-            compact ? "absolute mt-[-2.2rem] ml-[3.6rem] h-3.5 w-3.5 rounded-full bg-background" : "h-4 w-4",
-          )}
+          className="absolute mt-[-2.2rem] ml-[5.8rem] h-3.5 w-3.5 rounded-full bg-background text-primary"
           aria-hidden="true"
         />
+      )}
+    </button>
+  );
+}
+
+function AccentSwatch({
+  accent,
+  color,
+  selected,
+  onSelect,
+}: {
+  accent: (typeof presentationAccentThemes)[number];
+  color: string;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={`Use ${accent.name} accent`}
+      aria-pressed={selected}
+      title={accent.description}
+      onClick={onSelect}
+      className={cn(
+        "relative flex min-w-[5.5rem] flex-1 items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-w-0",
+        selected
+          ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+          : "border-border hover:bg-muted/50",
+      )}
+      data-testid={`accent-option-${accent.id}`}
+    >
+      <span
+        className="h-4 w-4 shrink-0 rounded-full border border-black/10"
+        style={{ backgroundColor: color }}
+        aria-hidden="true"
+      />
+      <span className="truncate text-xs font-medium text-foreground">
+        {accent.name}
+      </span>
+      {selected && (
+        <Check className="ml-auto h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
       )}
     </button>
   );
@@ -174,11 +184,21 @@ export function PresentationThemePicker({
   preview,
 }: PresentationThemePickerProps) {
   const resolvedId = getThemeId(value);
+  const selectedSurfaceId =
+    value?.kind !== "custom" &&
+    presentationSurfaceThemes.some((surface) => surface.id === resolvedId)
+    ? resolvedId
+    : null;
+  const selectedSurface = presentationSurfaceThemes.find(
+    (surface) => surface.id === selectedSurfaceId,
+  );
+  const selectedAccentId =
+    getThemeAccentId(value) ?? selectedSurface?.defaultAccentId ?? null;
   const currentColors = getThemeColors(value);
   const currentTypography = getThemeTypography(value);
   const selectionLabel = useMemo(() => getThemeLabel(value), [value]);
 
-  const selectTheme = (selection: PresentationThemeSelection) => {
+  const selectSelection = (selection: PresentationThemeSelection) => {
     rememberPresentationTheme(selection);
     onChange(selection);
   };
@@ -189,10 +209,10 @@ export function PresentationThemePicker({
         <div>
           <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-            Appearance preset
+            Presentation colors
           </div>
           <p className="mt-1 max-w-xl text-xs text-muted-foreground">
-            One safe choice for the student view, Present mode, and PNG exports.
+            Choose a calm background first. Accents add small signals without competing with the lesson.
           </p>
         </div>
         <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium text-foreground">
@@ -200,54 +220,73 @@ export function PresentationThemePicker({
         </span>
       </div>
 
-      <div className="flex flex-wrap items-start gap-2">
-        {featuredThemes.map((theme) => (
-          <ThemeSwatch
-            key={theme.id}
-            theme={theme}
-            compact
-            selected={value?.kind !== "custom" && resolvedId === theme.id}
-            onSelect={() => selectTheme({ kind: "curated", themeId: theme.id })}
-          />
-        ))}
-        <Popover>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className="inline-flex h-10 items-center gap-1 rounded-lg border px-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label="More appearance presets"
-              data-testid="button-more-themes"
-            >
-              More
-              <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent
-            align="end"
-            side="top"
-            className="max-h-[min(76vh,34rem)] w-[min(24rem,calc(100vw-2rem))] overflow-y-auto p-3"
-          >
-            <div className="mb-3">
-              <p className="text-sm font-semibold text-foreground">
-                More appearance presets
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Coordinated color and type systems stay readable without manual design controls.
-              </p>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {moreThemes.map((theme) => (
-                <ThemeSwatch
-                  key={theme.id}
-                  theme={theme}
-                  selected={value?.kind === "curated" && resolvedId === theme.id}
-                  onSelect={() => selectTheme({ kind: "curated", themeId: theme.id })}
-                />
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
+      <div className="space-y-2" data-testid="presentation-surfaces">
+        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Background
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {presentationSurfaceThemes.map((surface) => {
+            const previewTheme = getCuratedPresentationTheme(
+              surface.id,
+              surface.id === selectedSurfaceId
+                ? selectedAccentId
+                : surface.defaultAccentId,
+            );
+            return (
+              <SurfaceSwatch
+                key={surface.id}
+                surface={surface}
+                theme={previewTheme}
+                selected={value?.kind !== "custom" && selectedSurfaceId === surface.id}
+                onSelect={() =>
+                  selectSelection({
+                    kind: "curated",
+                    themeId: surface.id,
+                    accentId: surface.defaultAccentId,
+                  })
+                }
+              />
+            );
+          })}
+        </div>
       </div>
+
+      {selectedSurface ? (
+        <div className="space-y-2" data-testid="presentation-accents">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Accent
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              A small signal for links, progress, and emphasis.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {presentationAccentThemes.map((accent) => (
+              <AccentSwatch
+                key={accent.id}
+                accent={accent}
+                color={getCuratedPresentationTheme(
+                  selectedSurface.id,
+                  accent.id,
+                ).colors.accent}
+                selected={selectedAccentId === accent.id}
+                onSelect={() =>
+                  selectSelection({
+                    kind: "curated",
+                    themeId: selectedSurface.id,
+                    accentId: accent.id,
+                  })
+                }
+              />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground" data-testid="legacy-theme-note">
+          This activity uses a saved appearance. Choose a new background to move it to the calmer color system.
+        </p>
+      )}
 
       {preview && (
         <div

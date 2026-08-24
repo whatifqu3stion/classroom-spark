@@ -58,7 +58,7 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.getByTestId("presentation-surface")).toHaveStyle({
       "--presentation-bg": "#0F172A",
       "--presentation-primary-text": "#F8FAFC",
-      "--presentation-accent": "#38BDF8",
+      "--presentation-accent": "#70B7DF",
     });
   });
 

@@ -1,9 +1,11 @@
 import {
   DEFAULT_PRESENTATION_THEME_ID,
+  getPresentationThemeAccentId,
   getCuratedPresentationTheme,
   getPresentationThemeColors,
   getPresentationThemeTypography,
   isHexColor,
+  presentationSurfaceThemes,
   type PresentationThemeColors,
   type PresentationTypography,
 } from "@workspace/api-zod";
@@ -66,6 +68,16 @@ export function getThemeId(
     : DEFAULT_PRESENTATION_THEME_ID;
 }
 
+export function getThemeAccentId(
+  selection: BoardworkPresentationTheme | null | undefined,
+): string | null {
+  return getPresentationThemeAccentId(
+    selection as BoardworkPresentationTheme & {
+      kind: "curated" | "custom";
+    },
+  );
+}
+
 export function getLastUsedPresentationTheme(): BoardworkPresentationTheme | null {
   if (typeof window === "undefined") return null;
   try {
@@ -80,9 +92,22 @@ export function getLastUsedPresentationTheme(): BoardworkPresentationTheme | nul
       "themeId" in parsed &&
       typeof parsed.themeId === "string"
     ) {
+      const themeId = getCuratedPresentationTheme(parsed.themeId).id;
+      if (!presentationSurfaceThemes.some((theme) => theme.id === themeId)) {
+        return null;
+      }
+      const accentId =
+        "accentId" in parsed && typeof parsed.accentId === "string"
+          ? getThemeAccentId({
+              kind: "curated",
+              themeId,
+              accentId: parsed.accentId,
+            })
+          : null;
       return {
         kind: "curated",
-        themeId: getCuratedPresentationTheme(parsed.themeId).id,
+        themeId,
+        ...(accentId ? { accentId } : {}),
       };
     }
     if (
@@ -118,8 +143,23 @@ export function rememberPresentationTheme(
   selection: BoardworkPresentationTheme,
 ): void {
   if (typeof window === "undefined") return;
+  if (
+    selection.kind !== "curated" ||
+    !presentationSurfaceThemes.some((theme) => theme.id === selection.themeId)
+  ) {
+    return;
+  }
   try {
-    window.localStorage.setItem(LAST_USED_THEME_KEY, JSON.stringify(selection));
+    window.localStorage.setItem(
+      LAST_USED_THEME_KEY,
+      JSON.stringify({
+        kind: "curated",
+        themeId: selection.themeId,
+        ...(getThemeAccentId(selection)
+          ? { accentId: getThemeAccentId(selection) }
+          : {}),
+      }),
+    );
   } catch {
     // Storage can be unavailable in private browsing; the activity still saves.
   }

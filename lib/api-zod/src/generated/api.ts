@@ -85,6 +85,7 @@ export const GetAppStateResponse = zod.object({
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
   "themeId": zod.string().optional(),
+  "accentId": zod.string().optional(),
   "sourceThemeId": zod.string().optional(),
   "anchors": zod.object({
   "background": zod.string().regex(getAppStateResponseActivitiesItemPresentationThemeOneAnchorsBackgroundRegExp),
@@ -318,6 +319,7 @@ export const GenerateActivityBody = zod.object({
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
   "themeId": zod.string().optional(),
+  "accentId": zod.string().optional(),
   "sourceThemeId": zod.string().optional(),
   "anchors": zod.object({
   "background": zod.string().regex(generateActivityBodyPresentationThemeOneAnchorsBackgroundRegExp),
@@ -361,6 +363,7 @@ export const GenerateActivityResponse = zod.object({
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
   "themeId": zod.string().optional(),
+  "accentId": zod.string().optional(),
   "sourceThemeId": zod.string().optional(),
   "anchors": zod.object({
   "background": zod.string().regex(generateActivityResponsePresentationThemeOneAnchorsBackgroundRegExp),
@@ -468,6 +471,7 @@ export const ListActivitiesResponseItem = zod.object({
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
   "themeId": zod.string().optional(),
+  "accentId": zod.string().optional(),
   "sourceThemeId": zod.string().optional(),
   "anchors": zod.object({
   "background": zod.string().regex(listActivitiesResponsePresentationThemeOneAnchorsBackgroundRegExp),
@@ -516,6 +520,7 @@ export const CreateActivityBody = zod.object({
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
   "themeId": zod.string().optional(),
+  "accentId": zod.string().optional(),
   "sourceThemeId": zod.string().optional(),
   "anchors": zod.object({
   "background": zod.string().regex(createActivityBodyPresentationThemeOneAnchorsBackgroundRegExp),
@@ -557,6 +562,7 @@ export const CreateActivityResponse = zod.object({
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
   "themeId": zod.string().optional(),
+  "accentId": zod.string().optional(),
   "sourceThemeId": zod.string().optional(),
   "anchors": zod.object({
   "background": zod.string().regex(createActivityResponsePresentationThemeOneAnchorsBackgroundRegExp),
@@ -609,6 +615,7 @@ export const GetActivityResponse = zod.object({
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
   "themeId": zod.string().optional(),
+  "accentId": zod.string().optional(),
   "sourceThemeId": zod.string().optional(),
   "anchors": zod.object({
   "background": zod.string().regex(getActivityResponsePresentationThemeOneAnchorsBackgroundRegExp),
@@ -660,6 +667,7 @@ export const UpdateActivityBody = zod.object({
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
   "themeId": zod.string().optional(),
+  "accentId": zod.string().optional(),
   "sourceThemeId": zod.string().optional(),
   "anchors": zod.object({
   "background": zod.string().regex(updateActivityBodyPresentationThemeOneAnchorsBackgroundRegExp),
@@ -701,6 +709,7 @@ export const UpdateActivityResponse = zod.object({
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
   "themeId": zod.string().optional(),
+  "accentId": zod.string().optional(),
   "sourceThemeId": zod.string().optional(),
   "anchors": zod.object({
   "background": zod.string().regex(updateActivityResponsePresentationThemeOneAnchorsBackgroundRegExp),
@@ -773,6 +782,7 @@ export const DuplicateActivityResponse = zod.object({
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
   "themeId": zod.string().optional(),
+  "accentId": zod.string().optional(),
   "sourceThemeId": zod.string().optional(),
   "anchors": zod.object({
   "background": zod.string().regex(duplicateActivityResponsePresentationThemeOneAnchorsBackgroundRegExp),
@@ -829,6 +839,7 @@ export const SetActivityFavoriteResponse = zod.object({
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
   "themeId": zod.string().optional(),
+  "accentId": zod.string().optional(),
   "sourceThemeId": zod.string().optional(),
   "anchors": zod.object({
   "background": zod.string().regex(setActivityFavoriteResponsePresentationThemeOneAnchorsBackgroundRegExp),

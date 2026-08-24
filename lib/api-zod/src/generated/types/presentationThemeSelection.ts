@@ -11,6 +11,7 @@ import type { PresentationThemeSelectionKind } from './presentationThemeSelectio
 export interface PresentationThemeSelection {
   kind: PresentationThemeSelectionKind;
   themeId?: string;
+  accentId?: string;
   sourceThemeId?: string;
   anchors?: PresentationThemeAnchors;
 }

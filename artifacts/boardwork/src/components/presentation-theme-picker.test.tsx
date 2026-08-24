@@ -16,32 +16,40 @@ describe("PresentationThemePicker", () => {
     );
   });
 
-  it("shows five featured presets and the remaining presets under More", () => {
+  it("shows the limited surface catalog and restrained accent catalog", () => {
     render(<PresentationThemePicker onChange={vi.fn()} />);
 
-    for (const themeId of ["boardwork", "paper", "ocean", "ink", "sage"]) {
+    for (const themeId of ["boardwork", "paper", "charcoal", "midnight"]) {
       expect(screen.getByTestId(`theme-option-${themeId}`)).toBeInTheDocument();
     }
 
-    expect(screen.queryByTestId("theme-option-clay")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId("button-more-themes"));
-
-    for (const themeId of ["clay", "plum", "midnight", "sunlit", "teal"]) {
-      expect(screen.getByTestId(`theme-option-${themeId}`)).toBeInTheDocument();
+    for (const accentId of ["terracotta", "blue", "sage", "plum"]) {
+      expect(screen.getByTestId(`accent-option-${accentId}`)).toBeInTheDocument();
     }
-    expect(screen.getByText("More appearance presets")).toBeInTheDocument();
-    expect(screen.queryByTestId("button-customize-theme")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("theme-option-ocean")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("button-more-themes")).not.toBeInTheDocument();
+    expect(screen.getByText("Background")).toBeInTheDocument();
+    expect(screen.getByText("Accent")).toBeInTheDocument();
   });
 
-  it("selects a curated preset without opening a customization flow", () => {
+  it("selects a surface with its matched accent and allows a secondary accent choice", () => {
     const onChange = vi.fn();
     render(<PresentationThemePicker onChange={onChange} />);
 
-    fireEvent.click(screen.getByTestId("theme-option-ocean"));
+    fireEvent.click(screen.getByTestId("theme-option-paper"));
 
     expect(onChange).toHaveBeenLastCalledWith({
       kind: "curated",
-      themeId: "ocean",
+      themeId: "paper-v2",
+      accentId: "terracotta",
+    });
+
+    fireEvent.click(screen.getByTestId("accent-option-blue"));
+
+    expect(onChange).toHaveBeenLastCalledWith({
+      kind: "curated",
+      themeId: "boardwork",
+      accentId: "blue",
     });
     expect(screen.queryByTestId("theme-customize-panel")).not.toBeInTheDocument();
   });
@@ -61,8 +69,22 @@ describe("PresentationThemePicker", () => {
 
     expect(screen.getAllByText("Custom").length).toBeGreaterThan(0);
     expect(screen.queryByTestId("button-customize-theme")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("presentation-accents")).not.toBeInTheDocument();
     expect(screen.getByTestId("presentation-theme-preview")).toHaveStyle({
       backgroundColor: "#000000",
     });
+  });
+
+  it("keeps legacy curated appearances intact without presenting them as new surfaces", () => {
+    render(
+      <PresentationThemePicker
+        onChange={vi.fn()}
+        value={{ kind: "curated", themeId: "ocean" }}
+      />,
+    );
+
+    expect(screen.getByText("Ocean")).toBeInTheDocument();
+    expect(screen.queryByTestId("presentation-accents")).not.toBeInTheDocument();
+    expect(screen.getByTestId("legacy-theme-note")).toBeInTheDocument();
   });
 });

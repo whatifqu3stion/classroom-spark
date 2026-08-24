@@ -628,6 +628,8 @@ components:
           enum: [curated, custom]
         themeId:
           type: string
+        accentId:
+          type: string
         sourceThemeId:
           type: string
         anchors:

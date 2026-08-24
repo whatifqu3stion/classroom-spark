@@ -67,6 +67,7 @@ export const PresentationThemeSelectionKind = {
 export interface PresentationThemeSelection {
   kind: PresentationThemeSelectionKind;
   themeId?: string;
+  accentId?: string;
   sourceThemeId?: string;
   anchors?: PresentationThemeAnchors;
 }
