@@ -6,9 +6,10 @@ import { toPng } from "html-to-image";
 import { useToast } from "@/hooks/use-toast";
 import { PresentationCanvas } from "@/components/presentation-canvas";
 import { getThemeColors } from "@/lib/presentation-theme";
-
-const EXPORT_WIDTH = 1920;
-const EXPORT_HEIGHT = 1080;
+import {
+  getPresentationExportOptions,
+  waitForPresentationFonts,
+} from "@/lib/presentation-fonts";
 
 const getExportFilename = (title: string) => {
   const slug = title
@@ -154,16 +155,11 @@ export default function Present() {
 
     setIsExporting(true);
     try {
-      await document.fonts?.ready;
+      await waitForPresentationFonts();
       const dataUrl = await toPng(exportRef.current, {
-        width: EXPORT_WIDTH,
-        height: EXPORT_HEIGHT,
-        canvasWidth: EXPORT_WIDTH,
-        canvasHeight: EXPORT_HEIGHT,
-        pixelRatio: 1,
-        backgroundColor: getThemeColors(activeDraft?.presentationTheme).background,
-        cacheBust: true,
-        skipFonts: true,
+        ...getPresentationExportOptions(
+          getThemeColors(activeDraft?.presentationTheme).background,
+        ),
       });
 
       const download = document.createElement("a");

@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import {
   GenerateActivityBody,
   GenerateActivityResponse,
+  sanitizeUnicodeValue,
 } from "@workspace/api-zod";
 import { generateAndSaveActivity } from "../services/ai/generation-service";
 import { createGenerationProvider } from "../services/ai/provider-factory";
@@ -31,7 +32,7 @@ function errorStatus(error: GenerationError): number {
 }
 
 router.post("/generate", async (req, res): Promise<void> => {
-  const parsed = GenerateActivityBody.safeParse(req.body);
+  const parsed = GenerateActivityBody.safeParse(sanitizeUnicodeValue(req.body));
   if (!parsed.success) {
     res.status(400).json({ error: "Check the generation details and try again." });
     return;

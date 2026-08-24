@@ -44,6 +44,8 @@ export function InstructionalContextPanel({ value, onChange }: InstructionalCont
             <Label htmlFor="current-unit-project">Unit or project</Label>
             <Input
               id="current-unit-project"
+              dir="auto"
+              className="boardwork-user-content"
               value={value.unitOrProject}
               onChange={(event) => onChange({ unitOrProject: event.target.value })}
               placeholder="e.g. Cells and transport"
@@ -54,10 +56,11 @@ export function InstructionalContextPanel({ value, onChange }: InstructionalCont
             <Label htmlFor="current-concepts">Concepts or topics</Label>
             <Textarea
               id="current-concepts"
+              dir="auto"
+              className="boardwork-user-content min-h-16 resize-y"
               value={value.conceptsTopics}
               onChange={(event) => onChange({ conceptsTopics: event.target.value })}
               placeholder="e.g. Osmosis, diffusion, concentration"
-              className="min-h-16 resize-y"
               data-testid="textarea-current-concepts"
             />
           </div>
@@ -65,6 +68,8 @@ export function InstructionalContextPanel({ value, onChange }: InstructionalCont
             <Label htmlFor="current-skills">Skills to reinforce</Label>
             <Input
               id="current-skills"
+              dir="auto"
+              className="boardwork-user-content"
               value={value.skills}
               onChange={(event) => onChange({ skills: event.target.value })}
               placeholder="e.g. Interpreting diagrams, explaining evidence"
@@ -75,10 +80,11 @@ export function InstructionalContextPanel({ value, onChange }: InstructionalCont
             <Label htmlFor="current-objectives">Objectives currently emphasized</Label>
             <Textarea
               id="current-objectives"
+              dir="auto"
+              className="boardwork-user-content min-h-16 resize-y"
               value={value.standardsObjectives}
               onChange={(event) => onChange({ standardsObjectives: event.target.value })}
               placeholder="Optional short notes—not a standards lookup"
-              className="min-h-16 resize-y"
               data-testid="textarea-current-objectives"
             />
           </div>

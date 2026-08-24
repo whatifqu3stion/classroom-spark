@@ -1,5 +1,8 @@
 import type { BoardworkGenerationProvider } from "./types";
-import { getActivityStyleGuidance } from "@workspace/api-zod";
+import {
+  getActivityStyleGuidance,
+  sanitizeUnicodeValue,
+} from "@workspace/api-zod";
 import {
   generatedActivitySchema,
   generatedActivityStyles,
@@ -29,6 +32,8 @@ Priorities, in order:
 Device Off is a hard constraint: require no computer, phone, browser, web search, digital resource, or QR code. Assume notebook or paper and pencil are available unless the context says otherwise.
 
 Device On may use ONLY the exact URL supplied by the teacher. Never invent a URL. Never claim to have opened, inspected, or read a URL. If a resource description is supplied, use only that description as context. If no URL is supplied, do not require a digital resource.
+
+Preserve the language, script, accents, combining marks, punctuation, and authored casing used in the teacher-provided context. Generate the student-facing activity in that same language when the context clearly uses one. Never transliterate or replace non-Latin text with ASCII.
 
 Do not create group work, partner talk, teacher-led directions, a multi-stage lesson, a worksheet, a long reading passage, homework, or special-material requirements unless the teacher explicitly supplied those materials. Supporting prompts, if used, must be complete concise questions or directives—not fill-in-the-blank lines, numbered worksheet fields, or decorative placeholders.
 
@@ -113,23 +118,8 @@ export function buildOpenAIInput(
     .join("\n");
 }
 
-function sanitizeText(value: unknown): unknown {
-  if (typeof value === "string") {
-    return value.normalize("NFKC").replace(/\p{Cf}/gu, "").trim();
-  }
-  if (Array.isArray(value)) {
-    return value.map(sanitizeText);
-  }
-  if (value && typeof value === "object") {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, item]) => [key, sanitizeText(item)]),
-    );
-  }
-  return value;
-}
-
 export function sanitizeGeneratedActivity(value: unknown): unknown {
-  return sanitizeText(value);
+  return sanitizeUnicodeValue(value);
 }
 
 function providerError(error: unknown): GenerationError {

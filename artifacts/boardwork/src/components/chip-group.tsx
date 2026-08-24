@@ -107,11 +107,12 @@ export function ChipGroup({
                 <input
                   ref={editInputRef}
                   type="text"
+                  dir="auto"
                   value={editLabel}
                   onChange={(e) => setEditLabel(e.target.value)}
                   onKeyDown={handleEditKeyDown}
                   onBlur={handleEditSubmit}
-                  className="w-24 bg-transparent text-sm font-medium outline-none text-foreground"
+                  className="boardwork-user-content w-24 bg-transparent text-sm font-medium outline-none text-foreground"
                   data-testid={`input-edit-chip-${chip.id}`}
                 />
               </div>
@@ -144,7 +145,7 @@ export function ChipGroup({
               }}
               data-testid={`chip-${chip.id}`}
             >
-              {chip.label}
+              <span className="boardwork-user-content" dir="auto">{chip.label}</span>
               <button
                 type="button"
                 className={cn(
@@ -168,11 +169,12 @@ export function ChipGroup({
             <input
               ref={inputRef}
               type="text"
+              dir="auto"
               value={newLabel}
               onChange={(e) => setNewLabel(e.target.value)}
               onKeyDown={handleAddKeyDown}
               onBlur={handleAddSubmit}
-              className="w-24 bg-transparent text-sm font-medium outline-none placeholder:text-muted-foreground placeholder:font-normal"
+              className="boardwork-user-content w-24 bg-transparent text-sm font-medium outline-none placeholder:text-muted-foreground placeholder:font-normal"
               placeholder="New chip..."
               data-testid="input-new-chip"
             />

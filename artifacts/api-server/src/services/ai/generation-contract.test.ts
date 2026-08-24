@@ -26,6 +26,7 @@ import {
   getActivityStyleGuidance,
   getPresentationThemeAccentForeground,
   isPresentationThemeReadable,
+  sanitizeUnicodeText,
 } from "@workspace/api-zod";
 
 afterEach(() => {
@@ -218,6 +219,45 @@ describe("Boardwork generation contract", () => {
     expect(input).toContain("Do not use unsupported commands");
   });
 
+  it("preserves teacher language, combining marks, and authored casing", () => {
+    const multilingualContext: BoardworkGenerationContext = {
+      ...context,
+      classProfile: {
+        ...context.classProfile,
+        name: "Sciences • الصف ٦",
+        generalContext: "Français : l’élève explique avec ses mots.",
+      },
+      instructionalContext: {
+        ...context.instructionalContext,
+        unitOrProject: "תאים • 細胞",
+        skills: "नमस्ते — evidence and explanation",
+      },
+      today: {
+        ...context.today,
+        topic: "e\u0301lan vital / الماء",
+        goal: "¿Qué cambia? 日本語で説明する",
+        focusChips: ["مقارنة", "根拠を説明"],
+      },
+    };
+    const input = buildOpenAIInput(multilingualContext);
+
+    expect(input).toContain(multilingualContext.classProfile.name);
+    expect(input).toContain(multilingualContext.today.topic);
+    expect(input).toContain(multilingualContext.today.goal);
+    expect(input).toContain(multilingualContext.today.focusChips[0]);
+
+    const generated = {
+      ...activity,
+      eyebrow: "Décrire",
+      title: "e\u0301lan del agua • الماء",
+      task: "اقرأ النص ثم اشرح: 日本語の観察。",
+      prompts: ["नमस्ते — اكتب دليلاً.", "¿Qué observas?"],
+      materials: ["cahier", "鉛筆"],
+      teacherNote: "保持原文 • תזכורת",
+    };
+    expect(generatedActivitySchema.parse(generated)).toEqual(generated);
+  });
+
   it("derives supported styles and generation guidance from the shared catalog", () => {
     const catalogGeneratedStyles = activityStyleCatalog
       .filter((style) => style.value !== "Auto")
@@ -281,6 +321,18 @@ describe("Boardwork generation contract", () => {
     expect(generatedActivitySchema.parse(sanitized).prompts).toEqual([
       "A clear prompt",
     ]);
+  });
+
+  it("removes unsafe controls without removing shaping joiners or visible text", () => {
+    const combining = "e\u0301";
+    const shaping = "م\u200dدرسة";
+    const source = `${combining} ${shaping} 日本語\u0000\u202E`;
+
+    expect(sanitizeGeneratedActivity({ title: source })).toEqual({
+      title: `${combining} ${shaping} 日本語`,
+    });
+    expect(sanitizeUnicodeText(source)).toContain(combining);
+    expect(sanitizeUnicodeText(source)).toContain(shaping);
   });
 
   it("repairs one malformed response without adding an evaluator pass", async () => {

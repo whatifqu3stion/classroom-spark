@@ -9,6 +9,7 @@ import {
   UpdateChipBody,
   UpdateChipResponse,
   DeleteChipParams,
+  sanitizeUnicodeValue,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -19,7 +20,7 @@ router.post("/classes/:classId/chips", async (req, res): Promise<void> => {
     res.status(400).json({ error: params.error.message });
     return;
   }
-  const parsed = CreateChipBody.safeParse(req.body);
+  const parsed = CreateChipBody.safeParse(sanitizeUnicodeValue(req.body));
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
@@ -48,7 +49,7 @@ router.patch("/chips/:chipId", async (req, res): Promise<void> => {
     res.status(400).json({ error: params.error.message });
     return;
   }
-  const parsed = UpdateChipBody.safeParse(req.body);
+  const parsed = UpdateChipBody.safeParse(sanitizeUnicodeValue(req.body));
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;

@@ -67,7 +67,8 @@ export function PresentationCanvas({
       <header className="presentation-header">
         {activity.eyebrow ? (
           <div
-            className="presentation-eyebrow"
+            className="presentation-eyebrow boardwork-user-content"
+            dir="auto"
             {...testId(includeTestIds, "present-eyebrow")}
           >
             {activity.eyebrow}
@@ -85,9 +86,10 @@ export function PresentationCanvas({
 
       <main className="presentation-main">
         <div className="presentation-content">
-           {activity.title && (
+          {activity.title && (
             <h1
-              className="presentation-title"
+              className="presentation-title boardwork-user-content"
+              dir="auto"
               {...testId(includeTestIds, "present-title")}
             >
               <FormulaText>{activity.title}</FormulaText>
@@ -96,7 +98,8 @@ export function PresentationCanvas({
 
           {activity.task && (
             <p
-              className="presentation-task"
+              className="presentation-task boardwork-user-content"
+              dir="auto"
               {...testId(includeTestIds, "present-task")}
             >
               <FormulaText>{activity.task}</FormulaText>
@@ -110,7 +113,9 @@ export function PresentationCanvas({
                   <span className="presentation-prompt-marker" aria-hidden="true">
                     •
                   </span>
-                   <FormulaText>{prompt}</FormulaText>
+                  <span className="boardwork-user-content" dir="auto">
+                    <FormulaText>{prompt}</FormulaText>
+                  </span>
                 </li>
               ))}
             </ul>
@@ -118,10 +123,11 @@ export function PresentationCanvas({
 
           {activity.materials && activity.materials.length > 0 && (
             <p
-              className="presentation-materials"
+              className="presentation-materials boardwork-user-content"
+              dir="auto"
               {...testId(includeTestIds, "present-materials")}
             >
-               <FormulaText>{`Materials: ${activity.materials.join(", ")}`}</FormulaText>
+              <FormulaText>{`Materials: ${activity.materials.join(", ")}`}</FormulaText>
             </p>
           )}
 
@@ -142,46 +148,51 @@ export function PresentationCanvas({
                 <ExternalLink className="h-[1em] w-[1em]" aria-hidden="true" />
               </a>
               {activity.resourceNote && (
-                <p className="presentation-resource-note">
+                <p className="presentation-resource-note boardwork-user-content" dir="auto">
                  <FormulaText>{activity.resourceNote}</FormulaText>
                 </p>
               )}
-          </div>
+            </div>
           )}
-         </div>
-          {(hasVisual || showTimer || showTimerControls) && (
-           <aside className={cn("presentation-rail", `presentation-rail--${railMode}`, timer?.mode === "expanded" && "presentation-rail--expanded")}>
-             {hasVisual && (
-               <figure className="presentation-visual">
-                 <img src={activity.visualUrl ?? ""} alt={activity.visualDescription ?? ""} />
-                 {activity.visualDescription && <figcaption>{activity.visualDescription}</figcaption>}
-               </figure>
-             )}
-             {showTimer && timer && (
-               <div className={cn("presentation-timer", timer.status === "completed" && "presentation-timer--complete")} aria-live="polite">
-                 <span className="presentation-timer-label">{timer.status === "completed" ? "Time is up" : "Time remaining"}</span>
-                 <strong>{formatTimer(timer.remainingSeconds)}</strong>
-                 <span className="presentation-timer-progress" aria-hidden="true"><span style={{ width: `${Math.max(0, Math.min(100, (timer.remainingSeconds / (activity.durationMinutes * 60)) * 100))}%` }} /></span>
-                  {timerControls}
-               </div>
-             )}
-              {showTimerControls && !showTimer && (
-                <div className="presentation-timer-hidden-controls">
-                  <span className="presentation-timer-label">Timer hidden from students</span>
-                  {timerControls}
-                </div>
-              )}
-           </aside>
-          )}
+        </div>
+        {(hasVisual || showTimer || showTimerControls) && (
+          <aside className={cn("presentation-rail", `presentation-rail--${railMode}`, timer?.mode === "expanded" && "presentation-rail--expanded")}>
+            {hasVisual && (
+              <figure className="presentation-visual">
+                <img src={activity.visualUrl ?? ""} alt={activity.visualDescription ?? ""} />
+                {activity.visualDescription && (
+                  <figcaption className="boardwork-user-content" dir="auto">
+                    {activity.visualDescription}
+                  </figcaption>
+                )}
+              </figure>
+            )}
+            {showTimer && timer && (
+              <div className={cn("presentation-timer", timer.status === "completed" && "presentation-timer--complete")} aria-live="polite">
+                <span className="presentation-timer-label">{timer.status === "completed" ? "Time is up" : "Time remaining"}</span>
+                <strong>{formatTimer(timer.remainingSeconds)}</strong>
+                <span className="presentation-timer-progress" aria-hidden="true"><span style={{ width: `${Math.max(0, Math.min(100, (timer.remainingSeconds / (activity.durationMinutes * 60)) * 100))}%` }} /></span>
+                {timerControls}
+              </div>
+            )}
+            {showTimerControls && !showTimer && (
+              <div className="presentation-timer-hidden-controls">
+                <span className="presentation-timer-label">Timer hidden from students</span>
+                {timerControls}
+              </div>
+            )}
+          </aside>
+        )}
       </main>
 
       <footer className="presentation-footer">
         {arrivalInstruction ? (
           <div
-            className="presentation-arrival"
+            className="presentation-arrival boardwork-user-content"
+            dir="auto"
             {...testId(includeTestIds, "present-arrival")}
           >
-             <FormulaText>{arrivalInstruction}</FormulaText>
+            <FormulaText>{arrivalInstruction}</FormulaText>
           </div>
         ) : (
           <div aria-hidden="true" />

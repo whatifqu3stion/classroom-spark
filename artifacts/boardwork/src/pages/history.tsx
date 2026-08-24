@@ -211,11 +211,11 @@ export default function History() {
                     
                     <Link href={`/activity/${activity.id}`} className="flex-1 min-w-0 block" data-testid={`link-open-${activity.id}`}>
                       <div className="flex items-baseline gap-2 mb-1">
-                        <span className="font-semibold text-foreground truncate block">
+                         <span className="font-semibold text-foreground truncate block boardwork-user-content" dir="auto">
                           {activity.title || "Untitled Activity"}
                         </span>
                         {activity.eyebrow && (
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground shrink-0 px-1.5 py-0.5 rounded-sm bg-muted/50">
+                           <span className="text-[10px] font-bold tracking-wider text-muted-foreground shrink-0 px-1.5 py-0.5 rounded-sm bg-muted/50 boardwork-user-content" dir="auto">
                             {activity.eyebrow}
                           </span>
                         )}
@@ -226,7 +226,7 @@ export default function History() {
                         {cls && (
                           <span className="flex items-center gap-1.5 shrink-0">
                             <ClassColorDot color={cls.color || undefined} />
-                            {cls.name}
+                             <span className="boardwork-user-content" dir="auto">{cls.name}</span>
                           </span>
                         )}
                         <span className="w-1 h-1 rounded-full bg-border shrink-0" />
@@ -254,7 +254,7 @@ export default function History() {
                                key={label}
                                className="rounded-full border border-primary/20 bg-primary/5 px-2 py-0.5 text-xs text-foreground"
                              >
-                               {label}
+                                <span className="boardwork-user-content" dir="auto">{label}</span>
                              </span>
                            ))}
                          </div>

@@ -8,6 +8,7 @@ import {
   instructionalContextsTable,
 } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { duplicateActivity } from "../../lib/boardwork-repo";
 import { generateAndSaveActivity } from "./generation-service";
 import {
   GenerationError,
@@ -39,27 +40,27 @@ describe.sequential("generation persistence", () => {
 
     await db.insert(classesTable).values({
       id: classId,
-      name: "Generation persistence test",
+      name: "Generation persistence • الصف ٥",
       grade: "5",
       subject: "Science",
       curriculumFramework: "NGSS",
       curriculumDetails: "Explain how structures support survival.",
-      generalContext: "Use accessible language.",
+      generalContext: "Use accessible language. Français : l’élève.",
       arrivalRoutine: "Open your notebook and begin silently.",
       defaultDeviceMode: "off",
       defaultDuration: 7,
     });
     await db.insert(instructionalContextsTable).values({
       classId,
-      unitOrProject: "Animal adaptations",
+      unitOrProject: "Animal adaptations • תאים",
       conceptsTopics: "structures and survival",
-      skills: "observation and evidence",
+      skills: "observation and evidence · नमस्ते",
       standardsObjectives: "Support a claim with evidence.",
     });
     await db.insert(chipsTable).values({
       id: chipId,
       classId,
-      label: "explain with evidence",
+      label: "explain with evidence • 根拠",
     });
 
     for (let index = 1; index <= 4; index += 1) {
@@ -107,16 +108,18 @@ describe.sequential("generation persistence", () => {
     );
 
     expect(capturedContext?.classProfile).toMatchObject({
+      name: "Generation persistence • الصف ٥",
       grade: "5",
       subject: "Science",
+      generalContext: "Use accessible language. Français : l’élève.",
       arrivalRoutine: "Open your notebook and begin silently.",
     });
     expect(capturedContext?.instructionalContext).toMatchObject({
-      unitOrProject: "Animal adaptations",
-      skills: "observation and evidence",
+      unitOrProject: "Animal adaptations • תאים",
+      skills: "observation and evidence · नमस्ते",
     });
     expect(capturedContext?.today.focusChips).toEqual([
-      "explain with evidence",
+      "explain with evidence • 根拠",
     ]);
     expect(capturedContext?.recentActivities.map((item) => item.title)).toEqual([
       "History 4",
@@ -168,6 +171,58 @@ describe.sequential("generation persistence", () => {
       .from(activitiesTable)
       .where(eq(activitiesTable.classId, classId));
     expect(rows).toHaveLength(4);
+  });
+
+  it("round-trips multilingual generated content through persistence and duplicate", async () => {
+    const multilingual: GeneratedActivity = {
+      ...validActivity,
+      eyebrow: "Décrire • الصف ٥",
+      title: "e\u0301lan del agua • الماء",
+      task: "اقرأ النص ثم اشرح: 日本語の観察。",
+      prompts: ["नमस्ते — اكتب دليلاً.", "¿Qué observas?"],
+      materials: ["cahier", "鉛筆"],
+      teacherNote: "保持原文 • תזכורת",
+    };
+
+    const created = await generateAndSaveActivity(
+      {
+        classId,
+        topic: "¿Cómo se mueve? e\u0301",
+        goal: "説明する • اشرح",
+        chipIds: [chipId],
+        deviceMode: "on",
+        durationMinutes: 7,
+        activityStyle: "Explain / Reason",
+        teacherProvidedUrl: "https://example.com/adaptations",
+        teacherProvidedResourceNote: "وصف المورد",
+        surprise: false,
+      },
+      {
+        async generate() {
+          return multilingual;
+        },
+      },
+    );
+    const copy = await duplicateActivity(created.id);
+
+    expect(created).toMatchObject({
+      title: multilingual.title,
+      task: multilingual.task,
+      prompts: multilingual.prompts,
+      materials: multilingual.materials,
+      teacherNote: multilingual.teacherNote,
+      sourceTopic: "¿Cómo se mueve? e\u0301",
+      sourceGoal: "説明する • اشرح",
+      resourceNote: "وصف المورد",
+    });
+    expect(copy).toMatchObject({
+      title: multilingual.title,
+      task: multilingual.task,
+      prompts: multilingual.prompts,
+      materials: multilingual.materials,
+      teacherNote: multilingual.teacherNote,
+      duplicatedFrom: created.id,
+    });
   });
 
   it("rejects a chip outside the class before calling the provider", async () => {

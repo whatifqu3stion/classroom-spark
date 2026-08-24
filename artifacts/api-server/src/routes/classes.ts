@@ -20,6 +20,7 @@ import {
   UpdateInstructionalContextParams,
   UpdateInstructionalContextBody,
   UpdateInstructionalContextResponse,
+  sanitizeUnicodeValue,
 } from "@workspace/api-zod";
 import {
   createClassWithContext,
@@ -35,7 +36,7 @@ router.get("/classes", async (_req, res): Promise<void> => {
 });
 
 router.post("/classes", async (req, res): Promise<void> => {
-  const parsed = CreateClassBody.safeParse(req.body);
+  const parsed = CreateClassBody.safeParse(sanitizeUnicodeValue(req.body));
   if (!parsed.success) {
     req.log.warn({ errors: parsed.error.message }, "Invalid class body");
     res.status(400).json({ error: parsed.error.message });
@@ -53,7 +54,7 @@ router.patch("/classes/:classId", async (req, res): Promise<void> => {
     res.status(400).json({ error: params.error.message });
     return;
   }
-  const parsed = UpdateClassBody.safeParse(req.body);
+  const parsed = UpdateClassBody.safeParse(sanitizeUnicodeValue(req.body));
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
@@ -140,7 +141,9 @@ router.put(
       res.status(400).json({ error: params.error.message });
       return;
     }
-    const parsed = UpdateInstructionalContextBody.safeParse(req.body);
+    const parsed = UpdateInstructionalContextBody.safeParse(
+      sanitizeUnicodeValue(req.body),
+    );
     if (!parsed.success) {
       res.status(400).json({ error: parsed.error.message });
       return;

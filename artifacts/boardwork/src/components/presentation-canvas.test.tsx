@@ -96,4 +96,24 @@ describe("PresentationCanvas timer visibility", () => {
     expect(materials).toHaveTextContent("Materials: H2O, α");
     expect(materials).not.toHaveTextContent("H_2O");
   });
+
+  it("keeps multilingual content intact and marks authored runs direction-aware", () => {
+    render(
+      <PresentationCanvas
+        activity={{
+          ...activity,
+          eyebrow: "Décrire • الصف ٦",
+          title: "e\u0301lan del agua • الماء",
+          task: "اقرأ النص ثم اشرح: 日本語の観察。",
+          prompts: ["नमस्ते — اكتب دليلاً."],
+        }}
+      />,
+    );
+
+    expect(screen.getByTestId("present-title")).toHaveAttribute("dir", "auto");
+    expect(screen.getByTestId("present-task")).toHaveAttribute("dir", "auto");
+    expect(screen.getByTestId("present-title")).toHaveTextContent("e\u0301lan del agua • الماء");
+    expect(screen.getByTestId("present-task")).toHaveTextContent("اقرأ النص ثم اشرح: 日本語の観察。");
+    expect(screen.getByText("नमस्ते — اكتب دليلاً.").closest("[dir='auto']")).toBeTruthy();
+  });
 });

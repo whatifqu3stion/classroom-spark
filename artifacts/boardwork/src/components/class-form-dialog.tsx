@@ -136,8 +136,10 @@ export function ClassFormDialog({
                   <FormItem className="sm:col-span-2">
                     <FormLabel>Class name</FormLabel>
                     <FormControl>
-                      <Input
+                        <Input
                         {...field}
+                          dir="auto"
+                          className="boardwork-user-content"
                         autoFocus
                         placeholder="e.g. Period 2 Science"
                         data-testid="input-class-name"
@@ -155,8 +157,10 @@ export function ClassFormDialog({
                   <FormItem>
                     <FormLabel>Grade / age level</FormLabel>
                     <FormControl>
-                      <Input
+                        <Input
                         {...field}
+                          dir="auto"
+                          className="boardwork-user-content"
                         list="boardwork-grade-options"
                         placeholder="Choose or type your own"
                         data-testid="input-class-grade"
@@ -177,8 +181,10 @@ export function ClassFormDialog({
                   <FormItem>
                     <FormLabel>Subject</FormLabel>
                     <FormControl>
-                      <Input
+                        <Input
                         {...field}
+                          dir="auto"
+                          className="boardwork-user-content"
                         list="boardwork-subject-options"
                         placeholder="Choose or type your own"
                         data-testid="input-class-subject"
@@ -259,8 +265,10 @@ export function ClassFormDialog({
                         <FormItem>
                           <FormLabel>Curriculum / Framework</FormLabel>
                           <FormControl>
-                            <Input
+                              <Input
                               {...field}
+                                dir="auto"
+                                className="boardwork-user-content"
                               list="boardwork-curriculum-options"
                               placeholder="Choose or type your own"
                               data-testid="input-class-curriculum"
@@ -282,6 +290,8 @@ export function ClassFormDialog({
                           <FormControl>
                             <Input
                               {...field}
+                              dir="auto"
+                              className="boardwork-user-content"
                               placeholder="e.g. IB MYP Design, Year 2"
                               data-testid="input-class-curriculum-details"
                             />
@@ -300,8 +310,9 @@ export function ClassFormDialog({
                         <FormControl>
                           <Textarea
                             {...field}
+                            dir="auto"
                             placeholder="Persistent information about the course, learners, or class—not the current unit."
-                            className="min-h-20 resize-y"
+                            className="boardwork-user-content min-h-20 resize-y"
                             data-testid="textarea-class-context"
                           />
                         </FormControl>
@@ -325,8 +336,9 @@ export function ClassFormDialog({
                         <FormControl>
                           <Textarea
                             {...field}
+                            dir="auto"
                             placeholder="e.g. Grab your notebook, take your seat, and begin silently."
-                            className="min-h-20 resize-y"
+                            className="boardwork-user-content min-h-20 resize-y"
                             data-testid="textarea-arrival-routine"
                           />
                         </FormControl>

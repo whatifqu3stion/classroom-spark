@@ -437,7 +437,7 @@ export function FormulaText({
 }) {
   const segments = parseFormulaText(children);
   return (
-    <span className={cn("formula-text", className)}>
+    <span className={cn("formula-text boardwork-user-content", className)} dir="auto">
       {segments.map((segment, index) => {
         if (segment.kind === "text") return <span key={index}>{segment.value}</span>;
         if (!segment.nodes) {

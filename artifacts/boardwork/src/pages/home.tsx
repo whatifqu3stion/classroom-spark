@@ -637,7 +637,7 @@ export default function Home() {
                 {activeClass ? (
                   <div className="flex min-w-0 items-center gap-2">
                     <ClassColorDot color={activeClass.color || undefined} />
-                    <span className="truncate">{activeClass.name}</span>
+                    <span className="truncate boardwork-user-content" dir="auto">{activeClass.name}</span>
                   </div>
                 ) : (
                   <SelectValue placeholder="Select a class" />
@@ -648,9 +648,9 @@ export default function Home() {
                   <SelectItem key={c.id} value={c.id}>
                     <span className="flex items-center gap-2">
                       <ClassColorDot color={c.color || undefined} />
-                      <span>{c.name}</span>
+                      <span className="boardwork-user-content" dir="auto">{c.name}</span>
                       {shouldShowSubject(c.name, c.subject) && (
-                        <span className="text-muted-foreground font-normal">{c.subject}</span>
+                        <span className="text-muted-foreground font-normal boardwork-user-content" dir="auto">{c.subject}</span>
                       )}
                     </span>
                   </SelectItem>
@@ -686,6 +686,8 @@ export default function Home() {
                 <Label htmlFor="topic">Topic or unit <span className="font-normal text-muted-foreground">(optional)</span></Label>
                 <Input
                   id="topic"
+                  dir="auto"
+                  className="boardwork-user-content"
                   placeholder="e.g. osmosis and diffusion"
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
@@ -699,6 +701,8 @@ export default function Home() {
                  </p>
                 <Input
                   id="goal"
+                  dir="auto"
+                  className="boardwork-user-content"
                   placeholder="e.g. explain the evidence"
                   value={goal}
                   onChange={(e) => setGoal(e.target.value)}
@@ -807,6 +811,8 @@ export default function Home() {
                           <Label htmlFor="resourceNote">Resource description (optional)</Label>
                           <Input
                             id="resourceNote"
+                            dir="auto"
+                            className="boardwork-user-content"
                             placeholder="e.g. A short article introducing biomimicry"
                             value={resourceNote}
                             onChange={(e) => setResourceNote(e.target.value)}

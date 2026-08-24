@@ -53,8 +53,9 @@ function EditableText({
       role="textbox"
       aria-label={placeholder}
       aria-multiline={multiline}
+      dir="auto"
       className={cn(
-        "outline-none cursor-text transition-colors empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/40 hover:bg-muted/40 focus:bg-muted/20 focus:ring-2 focus:ring-primary/20 rounded-md px-1.5 -mx-1.5 py-0.5 -my-0.5",
+        "boardwork-user-content outline-none cursor-text transition-colors empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/40 hover:bg-muted/40 focus:bg-muted/20 focus:ring-2 focus:ring-primary/20 rounded-md px-1.5 -mx-1.5 py-0.5 -my-0.5",
         className
       )}
       onKeyDown={(e) => {
@@ -148,7 +149,7 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
                 value={draft.eyebrow || ""}
                 onChange={(val) => onChange({ eyebrow: val })}
                 placeholder="EYEBROW (OPTIONAL)"
-                className="text-xs font-bold tracking-widest text-muted-foreground uppercase min-w-[200px] inline-block"
+                 className="text-xs font-bold tracking-widest text-muted-foreground min-w-[200px] inline-block"
               />
               
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground bg-muted/50 px-2 py-1 rounded-md">

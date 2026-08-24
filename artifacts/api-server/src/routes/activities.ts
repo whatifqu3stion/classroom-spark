@@ -18,6 +18,7 @@ import {
   SetActivityFavoriteBody,
   SetActivityFavoriteResponse,
   ClearNonFavoriteActivitiesResponse,
+  sanitizeUnicodeValue,
 } from "@workspace/api-zod";
 import {
   deleteNonFavoriteActivities,
@@ -49,7 +50,7 @@ router.get("/activities", async (req, res): Promise<void> => {
 });
 
 router.post("/activities", async (req, res): Promise<void> => {
-  const parsed = CreateActivityBody.safeParse(req.body);
+  const parsed = CreateActivityBody.safeParse(sanitizeUnicodeValue(req.body));
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
@@ -112,7 +113,7 @@ router.patch("/activities/:activityId", async (req, res): Promise<void> => {
     res.status(400).json({ error: params.error.message });
     return;
   }
-  const parsed = UpdateActivityBody.safeParse(req.body);
+  const parsed = UpdateActivityBody.safeParse(sanitizeUnicodeValue(req.body));
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
