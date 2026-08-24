@@ -884,7 +884,8 @@
     }
 
     .presentation-prompt {
-      font-size: clamp(1.1rem, 1.65vw, 1.35rem);
+      font-size: clamp(1.5rem, 2.1vw, 1.75rem);
+      line-height: 1.35;
     }
 
     .presentation-materials,
