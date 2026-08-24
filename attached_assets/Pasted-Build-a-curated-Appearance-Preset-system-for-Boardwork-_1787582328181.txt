@@ -1,0 +1,1262 @@
+Build a **curated Appearance Preset system for Boardwork**.
+
+This is an extension of the existing Boardwork presentation experience, not a redesign of the app.
+
+The surrounding Boardwork UI should remain visually quiet and restrained. Visual personality belongs primarily to the **presented Boardwork activity**.
+
+## Core product principle
+
+> **Boardwork gives teachers excellent visual choices without asking them to become designers. Clarity is protected by the system; personality comes from carefully curated Appearance Presets.**
+
+For this version, teachers should **not manually choose colors, fonts, or HEX values**.
+
+Instead, each Appearance Preset is a complete, intentionally designed combination of:
+
+* a coordinated semantic color system
+* a matched heading/body typography system
+
+The teacher simply chooses a look.
+
+No color theory.
+No font browser.
+No HEX controls.
+No typography pairing decisions.
+
+---
+
+# 1. Hard quality gates
+
+Every Appearance Preset must first satisfy:
+
+1. strong classroom readability
+2. clear visual hierarchy
+3. meaning that does not depend on color alone
+4. reliable rendering on classroom displays
+5. reliable saved/exported appearance
+
+Only after those requirements are met should the design optimize for:
+
+6. visual cohesion
+7. engagement
+8. personality
+9. beauty
+
+Never trade readability for novelty.
+
+---
+
+# 2. Inspect the current app before editing
+
+Before making changes, inspect:
+
+* the current Boardwork editor
+* the presented Boardwork component(s)
+* current presentation colors and typography
+* existing CSS/design tokens
+* activity persistence
+* user preference storage
+* hydration/loading behavior
+* export/render implementation
+* typography/font loading
+* existing tests
+
+Integrate with the current architecture.
+
+Do not:
+
+* rebuild functioning components unnecessarily
+* replace the styling framework
+* redesign navigation
+* recolor the surrounding app
+* introduce a general-purpose design-system UI
+
+Preserve the existing approved Boardwork experience outside this feature.
+
+---
+
+# 3. Preserve the current Boardwork look as the default
+
+The current Boardwork presentation appearance should become the named default Appearance Preset:
+
+```text
+Boardwork
+```
+
+Do not replace the familiar existing presentation simply because newly designed presets are more distinctive.
+
+First inspect the current Boardwork appearance and translate its established visual character into the new semantic appearance architecture.
+
+Preserve the current Boardwork typography **exactly** unless technical integration requires mapping it into semantic heading/body tokens.
+
+Do not aesthetically “upgrade,” replace, or reinterpret the current Boardwork type system as part of this work.
+
+Only make subtle changes where genuinely necessary to improve:
+
+* contrast
+* hierarchy
+* consistency
+* semantic token usage
+* display reliability
+
+The goal is for existing users to feel:
+
+> “Boardwork still looks like Boardwork, but now I have more great options.”
+
+Not:
+
+> “The app has suddenly been redesigned.”
+
+Legacy activities created before Appearance Presets existed should safely use:
+
+```text
+Boardwork
+```
+
+---
+
+# 4. Teacher-facing interaction
+
+The teacher-facing experience should be extremely small.
+
+Conceptually:
+
+```text
+Appearance
+
+[ Boardwork ] [ Paper ] [ Ocean ] [ Ink ] [ Sage ]
+
+More
+```
+
+Clicking an Appearance Preset should instantly update the actual Boardwork preview.
+
+The Boardwork itself is the preview.
+
+There should be:
+
+* no Save button
+* no Apply button
+* no appearance-generation step
+* no AI call
+* no network request required to switch appearance
+
+Switching Appearance Presets should feel immediate and safe.
+
+---
+
+# 5. Appearance Preset preview tiles
+
+Do not represent presets only as three equal color circles if that makes the actual relationship between background, text, and accent difficult to understand.
+
+Each compact preview should communicate:
+
+* background
+* primary text
+* accent
+* light versus dark polarity
+
+Prefer a miniature card-like preview, for example:
+
+```text
+┌──────────┐
+│  Aa      │
+│  ───  ●  │
+└──────────┘
+   Paper
+```
+
+The exact design should match the existing Boardwork visual language.
+
+Keep previews compact and unobtrusive.
+
+Their purpose is not to become miniature slide thumbnails. They should simply help teachers understand how each Appearance Preset feels at a glance.
+
+---
+
+# 6. Exactly 10 Appearance Presets
+
+Ship exactly **10 curated Appearance Presets** in this phase.
+
+Featured in the primary interface:
+
+1. Boardwork
+2. Paper
+3. Ocean
+4. Ink
+5. Sage
+
+Available under **More**:
+
+6. Clay
+7. Plum
+8. Midnight
+9. Sunlit
+10. Teal
+
+Do not add additional presets beyond these 10 in this phase.
+
+If one of the nine new presets performs poorly during visual QA:
+
+* refine it
+* or replace it with a stronger variation serving the same general visual need
+
+Do not ship a weak preset simply to preserve its current exact palette.
+
+Do not reduce the library below 10 merely because one needs refinement.
+
+The goal is a compact collection where **every option earns its place**.
+
+---
+
+# 7. Appearance Preset architecture
+
+Although color and typography are presented to the teacher as one Appearance Preset, keep them **separate internally**.
+
+Conceptually:
+
+```ts
+type AppearancePreset = {
+  id: string;
+  name: string;
+  colorThemeId: string;
+  typographyId: string;
+  featured?: boolean;
+};
+```
+
+Separately:
+
+```ts
+type ColorTheme = {
+  id: string;
+  colors: {
+    background: string;
+    surface: string;
+    primaryText: string;
+    secondaryText: string;
+    accent: string;
+    accentSoft: string;
+  };
+};
+```
+
+```ts
+type TypographySystem = {
+  id: string;
+  heading: {
+    family: string;
+    weight: number;
+  };
+  body: {
+    family: string;
+    weight: number;
+  };
+};
+```
+
+Adapt this to the existing architecture rather than duplicating an established pattern.
+
+This separation is intentional because future versions may expose independent color or typography customization.
+
+Do **not** expose that flexibility in this version.
+
+---
+
+# 8. Semantic presentation tokens
+
+Presentation components should consume semantic tokens rather than preset-specific hardcoded styles.
+
+Use equivalents of:
+
+```css
+--board-bg
+--board-surface
+--board-text
+--board-text-secondary
+--board-accent
+--board-accent-soft
+
+--board-font-heading
+--board-font-body
+--board-font-heading-weight
+--board-font-body-weight
+```
+
+Do not write logic such as:
+
+```ts
+if (appearance === "ocean") {
+  ...
+}
+```
+
+inside presentation components when semantic tokens can handle the same behavior.
+
+Switching Appearance Presets should primarily mean switching semantic token values.
+
+---
+
+# 9. Required curated color systems
+
+Use the following curated color systems as the starting point for the nine new Appearance Presets.
+
+For **Boardwork**, inspect and preserve the current production appearance rather than inventing replacement values.
+
+## Paper
+
+```ts
+{
+  background: "#F6F1E7",
+  surface: "#EDE5D7",
+  primaryText: "#1F2A2E",
+  secondaryText: "#596166",
+  accent: "#A33E2D",
+  accentSoft: "#F0D4CC"
+}
+```
+
+Typography: `editorial`
+
+---
+
+## Ocean
+
+```ts
+{
+  background: "#EEF5F7",
+  surface: "#DDE9ED",
+  primaryText: "#173447",
+  secondaryText: "#526874",
+  accent: "#17617A",
+  accentSoft: "#CDE4EB"
+}
+```
+
+Typography: `clear`
+
+---
+
+## Ink
+
+```ts
+{
+  background: "#182128",
+  surface: "#23303A",
+  primaryText: "#F4F1EA",
+  secondaryText: "#C5CED2",
+  accent: "#75C9D8",
+  accentSoft: "#294B53"
+}
+```
+
+Typography: `structured`
+
+---
+
+## Sage
+
+```ts
+{
+  background: "#EEF3EA",
+  surface: "#DDE7D8",
+  primaryText: "#24352C",
+  secondaryText: "#58665D",
+  accent: "#386C48",
+  accentSoft: "#D0E1D1"
+}
+```
+
+Typography: `story`
+
+---
+
+## Clay
+
+```ts
+{
+  background: "#F5E9DF",
+  surface: "#EBD8CA",
+  primaryText: "#372A28",
+  secondaryText: "#6A5954",
+  accent: "#91402E",
+  accentSoft: "#EAC9BE"
+}
+```
+
+Typography: `editorial`
+
+---
+
+## Plum
+
+```ts
+{
+  background: "#F3EEF4",
+  surface: "#E6DDE8",
+  primaryText: "#35263A",
+  secondaryText: "#68586C",
+  accent: "#724479",
+  accentSoft: "#DDC9E1"
+}
+```
+
+Typography: `classic`
+
+---
+
+## Midnight
+
+```ts
+{
+  background: "#151B2B",
+  surface: "#202A40",
+  primaryText: "#F5F6FA",
+  secondaryText: "#C9D0DC",
+  accent: "#E3B85B",
+  accentSoft: "#403A2A"
+}
+```
+
+Typography: `structured`
+
+---
+
+## Sunlit
+
+```ts
+{
+  background: "#FFF5D6",
+  surface: "#F3E8BE",
+  primaryText: "#302B20",
+  secondaryText: "#665C44",
+  accent: "#7A4816",
+  accentSoft: "#EED6A0"
+}
+```
+
+Typography: `playful`
+
+---
+
+## Teal
+
+```ts
+{
+  background: "#EAF4F2",
+  surface: "#D8E9E5",
+  primaryText: "#163B3A",
+  secondaryText: "#536765",
+  accent: "#006C65",
+  accentSoft: "#C4E0DB"
+}
+```
+
+Typography: `structured`
+
+These values are intentionally curated starting points.
+
+If real rendering or contrast QA reveals that a small adjustment materially improves classroom readability or visual coherence, make that adjustment while preserving the preset’s intended character.
+
+---
+
+# 10. Boardwork Appearance Preset
+
+The Boardwork Appearance Preset should reflect the **existing Boardwork presentation design**.
+
+Do not invent it before inspection.
+
+Translate the current presentation into:
+
+```text
+background
+surface
+primaryText
+secondaryText
+accent
+accentSoft
+```
+
+Preserve its existing typography and overall visual character.
+
+If the current presentation uses one font family throughout, it is acceptable for Boardwork to continue using that family for both semantic heading and body roles with its existing weights.
+
+Do not replace Boardwork typography with one of the new curated typography systems unless a technical requirement makes that unavoidable.
+
+Boardwork remains the default Appearance Preset.
+
+---
+
+# 11. Curated typography systems
+
+Use the following typography systems for the nine new Appearance Presets.
+
+Do not expose them as independent teacher choices in this version.
+
+## Clear
+
+Heading:
+
+```text
+Atkinson Hyperlegible Next
+700
+```
+
+Body:
+
+```text
+Atkinson Hyperlegible Next
+500
+```
+
+Character:
+
+* maximum clarity
+* neutral
+* highly legible
+
+---
+
+## Editorial
+
+Heading:
+
+```text
+DM Serif Display
+400
+```
+
+Body:
+
+```text
+DM Sans
+500
+```
+
+Character:
+
+* polished
+* warm
+* editorial
+* expressive without compromising body readability
+
+---
+
+## Classic
+
+Heading:
+
+```text
+Source Serif 4
+700
+```
+
+Body:
+
+```text
+Source Sans 3
+500
+```
+
+Character:
+
+* academic
+* composed
+* familiar
+* highly readable
+
+---
+
+## Structured
+
+Heading:
+
+```text
+IBM Plex Serif
+600
+```
+
+Body:
+
+```text
+IBM Plex Sans
+500
+```
+
+Character:
+
+* technical
+* contemporary
+* precise
+* structured
+
+---
+
+## Story
+
+Heading:
+
+```text
+Lora
+700
+```
+
+Body:
+
+```text
+Source Sans 3
+500
+```
+
+Character:
+
+* warm
+* human
+* slightly literary
+* approachable
+
+---
+
+## Playful
+
+Heading:
+
+```text
+Fredoka
+600
+```
+
+Body:
+
+```text
+Atkinson Hyperlegible Next
+500
+```
+
+Character:
+
+* energetic
+* approachable
+* expressive
+
+Fredoka must remain limited to short display/headline roles.
+
+---
+
+# 12. Typography usage rules
+
+Typography should reinforce semantic hierarchy.
+
+## Display/heading font may be used for inherently short elements such as:
+
+* `DO NOW`
+* short section labels
+* concise activity titles
+* short callouts
+* very short key phrases
+
+## Body font must be used for:
+
+* primary instructions
+* supporting instructions
+* constraints
+* timer/informational text
+* sustained reading
+* multi-line instructional copy
+* any content whose length is unpredictable
+
+### Critical rule
+
+> **Never use a decorative or expressive display face for sustained instructional reading.**
+
+Do not dynamically detect rendered line counts and swap fonts based on wrapping.
+
+Avoid viewport-dependent font switching.
+
+Instead, make the decision based on **semantic role and expected content length**.
+
+If an existing title field can contain arbitrary or potentially long text, use the readable body face for that title rather than trying to dynamically change fonts after layout.
+
+This behavior should remain predictable across:
+
+* preview
+* presentation mode
+* responsive widths
+* exports
+
+---
+
+# 13. Font coverage and glyph fallback
+
+Boardwork may contain multilingual classroom content.
+
+At minimum:
+
+* support common Latin diacritics
+* verify accented names and words render correctly
+* avoid missing-glyph boxes
+* ensure punctuation, numbers, symbols, and timers render reliably
+
+Every typography system should have an explicit safe fallback stack.
+
+If a selected display font lacks a glyph required by the content:
+
+1. fall back cleanly to the preset’s body font for that text where practical
+2. otherwise use the defined system fallback
+3. never display a missing-glyph box when a reasonable fallback exists
+
+Do not require every display face to support every possible language.
+
+Prioritize graceful fallback and readable output.
+
+---
+
+# 14. Font loading
+
+Prefer bundling/self-hosting the required font assets rather than depending on runtime requests to Google Fonts or another external font CDN.
+
+Only include the actual weights/styles required by these presets.
+
+Prefer optimized WOFF2 assets.
+
+Ensure:
+
+* fonts load reliably on restricted school networks
+* Boardwork does not depend on an external font service
+* exports use the intended fonts
+* there is no obvious font-swap flash where reasonably avoidable
+* appropriate open-font license notices remain in the project
+
+Do not expose or distribute raw font files to users.
+
+---
+
+# 15. Readability and color behavior
+
+The curated color systems should remain restrained and presentation-safe.
+
+Strong color is an attention resource.
+
+Large areas should generally use:
+
+* low to moderate chroma
+* restrained saturation
+* comfortable luminance
+
+More saturated color should usually appear in accents rather than dominate the screen.
+
+Validate every Appearance Preset using strong foreground/background contrast.
+
+Internal targets:
+
+```text
+essential instructional text: approximately 7:1
+secondary / sufficiently large text: approximately 4.5:1
+meaningful non-text elements: approximately 3:1
+```
+
+These are internal quality checks.
+
+Do not show contrast ratios in the normal teacher UI.
+
+---
+
+# 16. Classroom display reality
+
+Boardwork is frequently viewed through classroom projectors and shared displays rather than ideal personal screens.
+
+For MVP:
+
+* prioritize strong foreground/background contrast
+* avoid subtle text/background distinctions
+* avoid low-contrast secondary text
+* avoid overly delicate typography
+* avoid highly saturated full-screen backgrounds
+
+Do not build a sophisticated projector simulation.
+
+Real classroom display testing should remain the final visual authority.
+
+If a mathematically valid preset looks weak when projected, refine the preset.
+
+---
+
+# 17. Semantic styling
+
+Appearance should reinforce the activity’s existing semantic hierarchy.
+
+Use the semantic content structure already present in Boardwork.
+
+Potential existing roles may include:
+
+```text
+title
+instruction
+supportingText
+timer
+constraint
+importantPhrase
+```
+
+Do not add unnecessary content-schema complexity solely to support styling.
+
+The content-generation system must not output:
+
+* arbitrary HEX colors
+* font names
+* styling instructions
+* Appearance Preset decisions
+
+Appearance remains the responsibility of the presentation layer.
+
+---
+
+# 18. Accent discipline
+
+Accent should be purposeful and restrained.
+
+Good accent uses include:
+
+* activity label
+* timer
+* important constraint
+* short key phrase
+* small visual indicator
+* subtle highlighted surface
+
+Do not:
+
+* color full instructional paragraphs with accent
+* decorate every element
+* create multiple competing strong colors
+* use accent simply because a preset contains one
+
+The activity should remain understandable if its accent color disappeared.
+
+---
+
+# 19. Color cannot carry meaning alone
+
+Do not use color as the only indication of:
+
+* correct / incorrect
+* selected
+* required
+* important
+* warning
+* status
+
+Reinforce meaning through:
+
+* wording
+* typography
+* icon
+* position
+* shape
+* another structural cue
+
+---
+
+# 20. Appearance switching must not alter content
+
+Changing Appearance Presets must never:
+
+* regenerate the Boardwork
+* change wording
+* change semantic hierarchy
+* add or remove content
+* invoke AI
+* make a server request solely to determine styling
+
+Color changes should not intentionally alter layout.
+
+Typography may naturally change line wrapping slightly because font metrics differ, but do not intentionally redesign the layout based on Appearance Preset selection.
+
+All 10 presets must be tested against:
+
+* short activities
+* typical activities
+* long instructional content
+* long titles
+* presentation/full-screen layouts
+
+---
+
+# 21. Persistence
+
+Saved activities should retain:
+
+```text
+appearancePresetId
+```
+
+Behavior:
+
+## Existing activity
+
+Its saved Appearance Preset always wins.
+
+## New activity
+
+Use:
+
+1. teacher’s last-used Appearance Preset
+2. otherwise Boardwork
+
+## Legacy activity
+
+If no Appearance Preset exists:
+
+```text
+Boardwork
+```
+
+A saved activity’s Appearance Preset must never be overwritten by a later last-used preference.
+
+---
+
+# 22. Future architecture only: class defaults
+
+Do **not** build class-level Appearance Preset defaults in this phase.
+
+Keep persistence clean enough that a future version could support:
+
+```text
+activity appearance
+→ class default
+→ user default
+→ Boardwork
+```
+
+Do not build:
+
+* class appearance UI
+* settings infrastructure
+* migrations specifically for class defaults
+
+now.
+
+---
+
+# 23. Do not build favorites
+
+Do not implement:
+
+* favorite Appearance Presets
+* favorite management
+* appearance libraries
+
+Ten presets are small enough that favorites are unnecessary for MVP.
+
+---
+
+# 24. Avoid visual flash
+
+When loading a saved activity:
+
+* restore its saved Appearance Preset as early as practical
+* avoid visibly showing Boardwork first and then switching
+* avoid obvious fallback-font flashes where reasonably possible
+
+Use existing hydration/state patterns.
+
+Do not introduce disproportionate infrastructure solely to eliminate an extremely small transient.
+
+---
+
+# 25. Export behavior
+
+If Boardwork currently supports PNG, JPEG, screenshot, or another rendered export, the export must preserve:
+
+* selected color system
+* selected typography
+* semantic hierarchy
+
+Verify the actual export path.
+
+Do not assume the browser preview automatically means export will match.
+
+Do not add new print-management functionality in this phase.
+
+---
+
+# 26. Keep future customization possible
+
+Manual font and color controls are intentionally excluded from this release.
+
+However, preserve architecture that could later support:
+
+```text
+Customize Appearance
+  Color
+  Typography
+  Custom HEX
+  School colors
+```
+
+Do not build those controls now.
+
+Do not prematurely build custom-theme persistence.
+
+The only requirement now is that the internal separation of:
+
+```text
+Appearance Preset
+Color Theme
+Typography System
+```
+
+does not make future customization difficult.
+
+---
+
+# 27. Explicit non-goals
+
+Do not build in this phase:
+
+* manual font selection
+* manual font pairing
+* arbitrary font browser
+* font upload
+* manual color selection
+* HEX input
+* color picker
+* color wheel
+* saturation controls
+* gradients
+* AI-generated palettes
+* AI-generated font pairings
+* school branding workflow
+* favorites
+* class appearance defaults
+* automatic light/dark variants
+* sophisticated projector simulation
+* print themes
+* individual component styling
+* layout customization
+* typography sliders
+* letter-spacing controls
+* general-purpose design editor
+
+Keep this build intentionally focused.
+
+---
+
+# 28. Implementation sequence
+
+## Stage 1 — inspect
+
+Understand:
+
+* current Boardwork appearance
+* presentation structure
+* tokens
+* fonts
+* persistence
+* export behavior
+
+## Stage 2 — semantic foundation
+
+Implement:
+
+* semantic color tokens
+* semantic typography tokens
+* color-theme definitions
+* typography-system definitions
+* Appearance Preset definitions
+
+## Stage 3 — preserve Boardwork default
+
+Translate the existing production appearance into the semantic system.
+
+Confirm that the resulting Boardwork Appearance Preset feels visually equivalent to the current product.
+
+Do not redesign it.
+
+## Stage 4 — add the nine new Appearance Presets
+
+Implement:
+
+* Paper
+* Ocean
+* Ink
+* Sage
+* Clay
+* Plum
+* Midnight
+* Sunlit
+* Teal
+
+Validate each one.
+
+If one is weak during QA, refine or replace it rather than shipping a mediocre preset.
+
+Keep the total at exactly 10.
+
+## Stage 5 — fonts
+
+Bundle the required font assets and apply typography semantically.
+
+Test:
+
+* short display text
+* normal instructions
+* long instructions
+* arbitrary-length titles
+* accented text
+* glyph fallback
+* font-loading failure
+
+## Stage 6 — teacher UI
+
+Add:
+
+* five featured Appearance Preset previews
+* More
+* instant preview
+
+Keep the interface minimal.
+
+## Stage 7 — persistence/export
+
+Ensure:
+
+* saved activities retain Appearance Presets
+* last-used Appearance Preset affects new activities
+* legacy activities resolve safely
+* export matches presentation
+
+## Stage 8 — QA and polish
+
+Test all 10 complete Appearance Presets against representative Boardwork content.
+
+Remove unnecessary UI introduced during implementation.
+
+---
+
+# 29. QA requirements
+
+Test every Appearance Preset against:
+
+## Content density
+
+* very short activity
+* normal activity
+* long instructions
+* short title
+* long title
+* multi-line supporting text
+
+## Display
+
+* editor preview
+* presentation mode
+* full-screen mode if present
+* narrow viewport
+* standard classroom display dimensions
+
+## Typography
+
+* accented Latin characters
+* mixed-case text
+* numbers
+* punctuation
+* symbols
+* timers
+* font-loading failure
+* missing display-font glyph
+* body-font fallback
+
+## Persistence
+
+* new activity
+* saved activity
+* legacy activity
+* refresh
+* duplicate/remix flow if present
+
+## Export
+
+* light preset
+* dark preset
+* serif/sans preset
+* playful preset
+* Boardwork default
+
+## Real visual review
+
+Inspect the presets on an actual classroom projector or representative shared display before treating the visual system as final.
+
+If the mathematically valid palette performs poorly in the real classroom environment, adjust it.
+
+---
+
+# 30. MVP acceptance criteria
+
+The feature is complete when:
+
+1. The current Boardwork look is preserved as the named default Appearance Preset.
+2. Boardwork’s current typography remains visually unchanged unless semantic token mapping requires technical refactoring.
+3. Legacy activities safely use Boardwork.
+4. Exactly 10 Appearance Presets ship.
+5. Five are featured in the main picker.
+6. Five are available under More.
+7. Every new Appearance Preset contains intentionally matched color and typography.
+8. Every shipped preset earns its place after visual QA.
+9. Teachers do not manually choose fonts or colors.
+10. Preview tiles clearly communicate background, primary text, accent, and light/dark character.
+11. Selecting an Appearance Preset updates the actual Boardwork immediately.
+12. Switching Appearance Presets does not regenerate content.
+13. Appearance changes require no AI call.
+14. Appearance changes do not intentionally alter layout or semantic hierarchy.
+15. All shipped presets pass strong readability checks.
+16. Body/instruction text always uses a highly readable body font.
+17. Expressive display typography is limited to inherently short semantic roles.
+18. No viewport-dependent line-count font switching is used.
+19. Common Latin diacritics render reliably.
+20. Missing display-font glyphs fall back cleanly.
+21. Fonts have safe fallback stacks.
+22. Fonts do not depend on runtime external font services.
+23. Accent usage remains restrained.
+24. Color is never the sole carrier of meaning.
+25. Saved activities retain their Appearance Preset.
+26. Last-used Appearance Preset applies only to newly created activities.
+27. Export matches the visible Appearance Preset.
+28. The surrounding Boardwork app remains visually restrained.
+29. No manual color/font customization UI has been introduced.
+30. The underlying architecture cleanly separates Appearance Presets, Color Themes, and Typography Systems for future customization.
+31. A teacher can make Boardwork feel substantially different with one click and no design knowledge.
+
+---
+
+# 31. Final product test
+
+Before considering the feature finished, use it from the perspective of a teacher preparing class immediately before students arrive.
+
+The normal workflow should be:
+
+```text
+Generate Boardwork
+→ choose Appearance
+→ Present
+```
+
+That is all.
+
+A teacher should never need to think:
+
+* Which fonts pair well?
+* Is this contrast safe?
+* Should I make this accent lighter?
+* Which shade belongs on secondary text?
+* Is this palette visually coherent?
+* Will this decorative font still be readable?
+
+Those are Boardwork’s responsibilities.
+
+The teacher’s responsibility is simply:
+
+> **“Which of these excellent looks do I want today?”**
+
+If the feature feels like a miniature design tool, simplify it.
+
+The finished experience should feel **curated, immediate, readable, expressive, and effortless.**
