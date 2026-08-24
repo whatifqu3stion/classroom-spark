@@ -85,9 +85,9 @@ export const presentationAccentThemes = [
   },
   {
     id: "blue",
-    name: "Blue",
-    description: "A clear, steady signal for links and navigation.",
-    colors: { light: "#2F6F9F", dark: "#70B7DF" },
+    name: "Dark blue",
+    description: "Boardwork's steady default signal for links and navigation.",
+    colors: { light: "#334155", dark: "#70B7DF" },
   },
   {
     id: "sage",
@@ -107,14 +107,14 @@ export const presentationSurfaceThemes = [
   {
     id: "boardwork",
     name: "Boardwork",
-    description: "Gentle off-white with a familiar warm-neutral feel.",
+    description: "Off-white paper with Boardwork's dark blue default.",
     mode: "light",
-    defaultAccentId: "terracotta",
+    defaultAccentId: "blue",
     colors: {
-      background: "#F7F3EA",
-      surface: "#FFFDF8",
-      primaryText: "#202326",
-      secondaryText: "#4D514F",
+      background: "#F3EEE4",
+      surface: "#FFFCF5",
+      primaryText: "#334155",
+      secondaryText: "#52606D",
     },
   },
   {

@@ -14,6 +14,10 @@ describe("PresentationThemePicker", () => {
       "aria-pressed",
       "false",
     );
+    expect(screen.getByTestId("accent-option-blue")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
   });
 
   it("shows the limited surface catalog and restrained accent catalog", () => {

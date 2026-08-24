@@ -288,6 +288,9 @@ describe("Boardwork generation contract", () => {
     expect(getPresentationThemeColors(null)).toEqual(
       curatedPresentationThemes[0].colors,
     );
+    expect(curatedPresentationThemes[0].colors.background).toBe("#F3EEE4");
+    expect(curatedPresentationThemes[0].colors.primaryText).toBe("#334155");
+    expect(curatedPresentationThemes[0].colors.accent).toBe("#334155");
     expect(
       getPresentationThemeColors({ kind: "curated", themeId: "removed-theme" }),
     ).toEqual(curatedPresentationThemes[0].colors);
