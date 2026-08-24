@@ -18,6 +18,10 @@ describe("PresentationThemePicker", () => {
       "aria-pressed",
       "true",
     );
+    expect(screen.getByTestId("theme-swatch-color-boardwork")).toHaveStyle({
+      backgroundColor: "#FDFCF8",
+    });
+    expect(screen.queryByText("Aa")).not.toBeInTheDocument();
   });
 
   it("shows the limited surface catalog and restrained accent catalog", () => {

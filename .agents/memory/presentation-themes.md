@@ -9,8 +9,8 @@ Presentation themes are presentation-only activity data: a nullable curated them
 
 **How to apply:** Keep theme rendering semantic and inline at the presentation surface so the live view and fixed-size PNG export use the same resolved colors; never overload the generation `style` field.
 
-Boardwork’s default surface uses the Paper warm off-white background with the app’s default dark blue as its primary accent and text color.
+Boardwork’s default surface uses the original soft near-white background with the app’s default dark blue as its primary accent and text color. Paper remains the warmer alternative surface.
 
-**Why:** The user asked Boardwork to return to the original restrained look: off-white paper with the familiar dark blue default.
+**Why:** The user clarified that Boardwork should feel like the original white design without becoming glaring, while Paper can carry the warmer tone.
 
-**How to apply:** Keep this pairing as the default Boardwork surface; do not change the other curated surfaces when adjusting the Boardwork default.
+**How to apply:** Keep this pairing as the default Boardwork surface and leave Paper and the other curated surfaces independent.

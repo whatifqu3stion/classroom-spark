@@ -4,7 +4,6 @@ import {
   getCuratedPresentationTheme,
   presentationAccentThemes,
   presentationSurfaceThemes,
-  type CuratedPresentationTheme,
   type PresentationThemeSelection,
 } from "@workspace/api-zod";
 import {
@@ -29,61 +28,14 @@ interface PresentationThemePickerProps {
   };
 }
 
-function ThemePreview({
-  theme,
-  compact = false,
-}: {
-  theme: CuratedPresentationTheme;
-  compact?: boolean;
-}) {
-  return (
-    <span
-      aria-hidden="true"
-      className={cn(
-        "relative flex shrink-0 overflow-hidden rounded-md border border-black/10 shadow-sm",
-        compact ? "h-10 w-[4.5rem]" : "h-12 w-[4.75rem]",
-      )}
-      style={{
-        backgroundColor: theme.colors.background,
-        color: theme.colors.primaryText,
-        fontFamily: theme.typography.bodyFamily,
-      }}
-    >
-      <strong
-        className="absolute left-1.5 top-1 text-base leading-none"
-        style={{
-          color: theme.colors.primaryText,
-          fontFamily: theme.typography.headingFamily,
-          fontWeight: theme.typography.headingWeight,
-          letterSpacing: theme.typography.headingLetterSpacing,
-        }}
-      >
-        Aa
-      </strong>
-      <span
-        className="absolute bottom-2 left-1.5 right-1.5 h-1 rounded-full"
-        style={{ backgroundColor: theme.colors.accent }}
-      />
-      <span
-        className="absolute bottom-1 left-1.5 h-1 w-6 rounded-full opacity-60"
-        style={{ backgroundColor: theme.colors.primaryText }}
-      />
-      <span
-        className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full"
-        style={{ backgroundColor: theme.colors.accent }}
-      />
-    </span>
-  );
-}
-
 function SurfaceSwatch({
   surface,
-  theme,
+  backgroundColor,
   selected,
   onSelect,
 }: {
   surface: (typeof presentationSurfaceThemes)[number];
-  theme: CuratedPresentationTheme;
+  backgroundColor: string;
   selected: boolean;
   onSelect: () => void;
 }) {
@@ -102,7 +54,12 @@ function SurfaceSwatch({
       )}
       data-testid={`theme-option-${surface.id === "paper-v2" ? "paper" : surface.id.replace("-v2", "")}`}
     >
-      <ThemePreview theme={theme} compact />
+      <span
+        aria-hidden="true"
+        className="h-10 w-[4.5rem] shrink-0 rounded-md border border-black/10 shadow-sm"
+        style={{ backgroundColor }}
+        data-testid={`theme-swatch-color-${surface.id}`}
+      />
       <span className="flex items-center gap-1 text-xs font-medium text-foreground">
         {surface.name}
         {surface.mode === "dark" ? (
@@ -236,7 +193,7 @@ export function PresentationThemePicker({
               <SurfaceSwatch
                 key={surface.id}
                 surface={surface}
-                theme={previewTheme}
+                backgroundColor={previewTheme.colors.background}
                 selected={value?.kind !== "custom" && selectedSurfaceId === surface.id}
                 onSelect={() =>
                   selectSelection({

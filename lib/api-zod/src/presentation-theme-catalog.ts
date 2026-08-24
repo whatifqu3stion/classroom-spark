@@ -107,12 +107,12 @@ export const presentationSurfaceThemes = [
   {
     id: "boardwork",
     name: "Boardwork",
-    description: "Off-white paper with Boardwork's dark blue default.",
+    description: "Soft white with Boardwork's dark blue default.",
     mode: "light",
     defaultAccentId: "blue",
     colors: {
-      background: "#F3EEE4",
-      surface: "#FFFCF5",
+      background: "#FDFCF8",
+      surface: "#FFFFFF",
       primaryText: "#334155",
       secondaryText: "#52606D",
     },
