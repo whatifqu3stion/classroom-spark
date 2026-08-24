@@ -31,6 +31,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ClassColorDot } from "@/components/class-color-dot";
+import { FormulaText } from "@/components/formula-text";
 
 export default function History() {
   const { appState } = useBoardwork();
@@ -192,6 +193,7 @@ export default function History() {
           <div className="grid gap-3">
             {visibleActivities.map((activity) => {
               const cls = classes.find(c => c.id === activity.classId);
+              const activityTitle = activity.title || "Untitled Activity";
               const focusLabels = (activity.sourceChipIds ?? [])
                 .map((chipId) => chips.find((chip) => chip.id === chipId)?.label)
                 .filter((label): label is string => Boolean(label));
@@ -202,7 +204,7 @@ export default function History() {
                       onClick={() => handleFavorite(activity.id, !activity.favorite)}
                       className={`shrink-0 p-1 rounded-md transition-colors ${activity.favorite ? "text-amber-500 hover:text-amber-600" : "text-muted-foreground/30 hover:text-muted-foreground"}`}
                       title={activity.favorite ? "Unfavorite" : "Favorite"}
-                      aria-label={`${activity.favorite ? "Unfavorite" : "Favorite"} ${activity.title || "Untitled Activity"}`}
+                      aria-label={`${activity.favorite ? "Unfavorite" : "Favorite"} ${activityTitle}`}
                       disabled={favoriteMutation.isPending}
                       data-testid={`button-favorite-${activity.id}`}
                     >
@@ -212,7 +214,7 @@ export default function History() {
                     <Link href={`/activity/${activity.id}`} className="flex-1 min-w-0 block" data-testid={`link-open-${activity.id}`}>
                       <div className="flex items-baseline gap-2 mb-1">
                          <span className="font-semibold text-foreground truncate block boardwork-user-content" dir="auto">
-                          {activity.title || "Untitled Activity"}
+                            <FormulaText>{activityTitle}</FormulaText>
                         </span>
                         {activity.eyebrow && (
                            <span className="text-[10px] font-bold tracking-wider text-muted-foreground shrink-0 px-1.5 py-0.5 rounded-sm bg-muted/50 boardwork-user-content" dir="auto">
@@ -276,7 +278,7 @@ export default function History() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                            aria-label={`Actions for ${activity.title || "Untitled Activity"}`}
+                            aria-label={`Actions for ${activityTitle}`}
                             data-testid={`button-menu-${activity.id}`}
                           >
                           <MoreHorizontal className="w-4 h-4" />
