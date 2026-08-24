@@ -49,6 +49,7 @@ export default function History() {
 
   const activities = appState?.activities || [];
   const classes = appState?.classes || [];
+  const chips = appState?.chips || [];
 
   const sortedActivities = [...activities].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   const favoriteActivities = sortedActivities.filter((activity) => activity.favorite);
@@ -191,6 +192,9 @@ export default function History() {
           <div className="grid gap-3">
             {visibleActivities.map((activity) => {
               const cls = classes.find(c => c.id === activity.classId);
+              const focusLabels = (activity.sourceChipIds ?? [])
+                .map((chipId) => chips.find((chip) => chip.id === chipId)?.label)
+                .filter((label): label is string => Boolean(label));
               return (
                 <div key={activity.id} className="group flex items-center justify-between p-4 rounded-xl border bg-card hover:border-foreground/20 transition-colors shadow-sm" data-testid={`history-item-${activity.id}`}>
                   <div className="flex items-center gap-4 min-w-0 flex-1">
@@ -237,6 +241,24 @@ export default function History() {
                           </>
                         )}
                       </div>
+                       {focusLabels.length > 0 && (
+                         <div
+                           className="mt-2 flex flex-wrap items-center gap-1.5"
+                           data-testid={`activity-focus-${activity.id}`}
+                         >
+                           <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                             Teaching focus
+                           </span>
+                           {focusLabels.map((label) => (
+                             <span
+                               key={label}
+                               className="rounded-full border border-primary/20 bg-primary/5 px-2 py-0.5 text-xs text-foreground"
+                             >
+                               {label}
+                             </span>
+                           ))}
+                         </div>
+                       )}
                     </Link>
                   </div>
 
