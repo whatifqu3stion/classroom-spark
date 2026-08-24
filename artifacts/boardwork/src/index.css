@@ -188,14 +188,17 @@
 
   .presentation-surface {
     display: grid;
-    grid-template-rows: auto auto auto;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
     align-content: start;
     gap: 0;
     width: min(100%, 1920px);
     min-height: 100dvh;
     margin-inline: auto;
     padding: clamp(1.25rem, 5vw, 2rem);
-    font-family: var(--app-font-sans);
+    background: var(--presentation-bg, #fafafa);
+    color: var(--presentation-primary-text, #171717);
+    font-family: var(--presentation-font-body, var(--app-font-sans));
+    font-weight: var(--presentation-body-weight, 500);
   }
 
   .presentation-header {
@@ -215,6 +218,8 @@
 
   .presentation-eyebrow {
     letter-spacing: 0.2em;
+    font-family: var(--presentation-font-heading, var(--app-font-sans));
+    font-weight: var(--presentation-heading-weight, 700);
   }
 
   .presentation-time {
@@ -422,9 +427,10 @@
   .presentation-title {
     max-width: 15ch;
     color: var(--presentation-primary-text, #171717);
+    font-family: var(--presentation-font-heading, var(--app-font-sans));
     font-size: clamp(2.7rem, 11vw, 5.8rem);
-    font-weight: 700;
-    letter-spacing: -0.045em;
+    font-weight: var(--presentation-heading-weight, 700);
+    letter-spacing: var(--presentation-heading-letter-spacing, -0.045em);
     line-height: 1.02;
     overflow-wrap: anywhere;
   }
@@ -432,8 +438,9 @@
   .presentation-task {
     max-width: 38ch;
     color: var(--presentation-primary-text, rgb(23 23 23 / 88%));
+    font-family: var(--presentation-font-body, var(--app-font-sans));
     font-size: clamp(1.45rem, 6.5vw, 3rem);
-    font-weight: 500;
+    font-weight: var(--presentation-body-weight, 500);
     line-height: 1.26;
     overflow-wrap: anywhere;
   }
@@ -450,8 +457,9 @@
     gap: clamp(0.8rem, 3vw, 1.4rem);
     max-width: 44ch;
     color: var(--presentation-primary-text, rgb(23 23 23 / 76%));
+    font-family: var(--presentation-font-body, var(--app-font-sans));
     font-size: clamp(1.1rem, 4.6vw, 2rem);
-    font-weight: 500;
+    font-weight: var(--presentation-body-weight, 500);
     line-height: 1.28;
     overflow-wrap: anywhere;
   }
@@ -465,8 +473,9 @@
   .presentation-materials {
     margin-top: 1.5rem;
     color: var(--presentation-secondary-text, hsl(var(--muted-foreground)));
+    font-family: var(--presentation-font-body, var(--app-font-sans));
     font-size: clamp(0.9rem, 1.4vw, 1.35rem);
-    font-weight: 500;
+    font-weight: var(--presentation-body-weight, 500);
   }
 
   .presentation-resource {
@@ -481,8 +490,9 @@
     background: var(--presentation-accent, hsl(var(--primary)));
     padding: 0.5rem 1rem;
     color: var(--presentation-accent-foreground, hsl(var(--primary-foreground)));
+    font-family: var(--presentation-font-body, var(--app-font-sans));
     font-size: clamp(0.9rem, 1.3vw, 1.2rem);
-    font-weight: 600;
+    font-weight: var(--presentation-body-weight, 500);
     box-shadow: var(--shadow-sm);
   }
 
@@ -508,10 +518,39 @@
   .presentation-arrival {
     max-width: 52ch;
     color: var(--presentation-secondary-text, rgb(23 23 23 / 52%));
+    font-family: var(--presentation-font-body, var(--app-font-sans));
     font-size: clamp(0.95rem, 3.8vw, 1.25rem);
-    font-weight: 500;
+    font-weight: var(--presentation-body-weight, 500);
     line-height: 1.4;
     overflow-wrap: anywhere;
+  }
+
+  .presentation-arrival--top {
+    align-self: start;
+    max-width: 60ch;
+    margin-bottom: clamp(1rem, 3vw, 2rem);
+    border-bottom: 1px solid color-mix(in srgb, var(--presentation-primary-text, #171717) 16%, transparent);
+    padding-bottom: clamp(0.85rem, 2vw, 1.25rem);
+    color: var(--presentation-primary-text, #171717);
+    font-size: clamp(1.15rem, 4.8vw, 2.25rem);
+    line-height: 1.25;
+  }
+
+  .presentation-arrival--empty {
+    visibility: hidden;
+    min-height: 0;
+    margin: 0;
+    border: 0;
+    padding: 0;
+  }
+
+  .presentation-footer-title {
+    max-width: 42ch;
+    color: var(--presentation-secondary-text, rgb(23 23 23 / 70%));
+    font-size: clamp(0.95rem, 1.6vw, 1.35rem);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
   }
 
   .formula-text {
@@ -655,6 +694,7 @@
     border-radius: 0.5rem;
     background: color-mix(in srgb, var(--presentation-surface, #fafafa) 94%, transparent);
     padding: 0.25rem;
+    font-family: var(--presentation-font-body, var(--app-font-sans));
     box-shadow: 0 1px 3px color-mix(in srgb, var(--presentation-primary-text, #171717) 10%, transparent);
     outline: 1px solid color-mix(in srgb, var(--presentation-primary-text, #171717) 16%, transparent);
     opacity: 1;
@@ -714,7 +754,7 @@
 
   @media (min-aspect-ratio: 4 / 3) and (min-width: 700px) {
     .presentation-surface {
-      grid-template-rows: auto minmax(min-content, 1fr) auto;
+      grid-template-rows: auto auto minmax(min-content, 1fr) auto;
       align-content: stretch;
       padding: clamp(2.25rem, 5vh, 4.5rem) clamp(3rem, 7vw, 8.5rem);
     }
@@ -763,6 +803,14 @@
 
     .presentation-arrival {
       font-size: clamp(0.95rem, 1.35vw, 1.35rem);
+    }
+
+    .presentation-arrival--top {
+      font-size: clamp(1.2rem, 2.1vw, 2rem);
+    }
+
+    .presentation-footer-title {
+      font-size: clamp(0.95rem, 1.25vw, 1.2rem);
     }
 
     .presentation-controls {
@@ -829,6 +877,14 @@
     .presentation-arrival {
       font-size: 1rem;
     }
+
+    .presentation-arrival--top {
+      font-size: 1.15rem;
+    }
+
+    .presentation-footer-title {
+      font-size: 0.95rem;
+    }
   }
 
   @media (orientation: landscape) and (max-height: 600px) {
@@ -881,7 +937,7 @@
     width: 1920px;
     height: 1080px;
     min-height: 1080px;
-    grid-template-rows: auto minmax(min-content, 1fr) auto;
+    grid-template-rows: auto auto minmax(min-content, 1fr) auto;
     align-content: stretch;
     padding: 54px 136px;
     background: var(--presentation-bg, #fafafa);
@@ -921,6 +977,11 @@
     font-size: 92.8px;
   }
 
+  .presentation-surface--export .presentation-footer-title {
+    font-size: 21.6px;
+    line-height: 1.2;
+  }
+
   .presentation-surface--export .presentation-task {
     font-size: 48px;
   }
@@ -956,6 +1017,10 @@
 
   .presentation-surface--export .presentation-arrival {
     font-size: 21.6px;
+  }
+
+  .presentation-surface--export .presentation-arrival--top {
+    font-size: 32px;
   }
 
   @media (prefers-reduced-motion: reduce) {

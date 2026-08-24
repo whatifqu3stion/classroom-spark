@@ -1,18 +1,8 @@
-import { useMemo, useState } from "react";
-import {
-  Check,
-  ChevronDown,
-  RotateCcw,
-  Sparkles,
-  TriangleAlert,
-} from "lucide-react";
+import { useMemo, type CSSProperties } from "react";
+import { Check, ChevronDown, Moon, Sparkles, Sun } from "lucide-react";
 import {
   curatedPresentationThemes,
-  isHexColor,
-  isPresentationThemeReadable,
-  normalizeHexColor,
   RECOMMENDED_PRESENTATION_THEME_IDS,
-  type CustomPresentationThemeAnchors,
   type PresentationThemeSelection,
 } from "@workspace/api-zod";
 import {
@@ -24,6 +14,7 @@ import {
   getThemeColors,
   getThemeId,
   getThemeLabel,
+  getThemeTypography,
   rememberPresentationTheme,
   type BoardworkPresentationTheme,
 } from "@/lib/presentation-theme";
@@ -40,9 +31,63 @@ interface PresentationThemePickerProps {
   };
 }
 
-const recommendedThemes = RECOMMENDED_PRESENTATION_THEME_IDS.map((id) =>
+const featuredThemes = RECOMMENDED_PRESENTATION_THEME_IDS.map((id) =>
   curatedPresentationThemes.find((theme) => theme.id === id),
-).filter((theme): theme is (typeof curatedPresentationThemes)[number] => Boolean(theme));
+).filter(
+  (theme): theme is (typeof curatedPresentationThemes)[number] =>
+    Boolean(theme),
+);
+
+const moreThemes = curatedPresentationThemes.filter(
+  (theme) => !RECOMMENDED_PRESENTATION_THEME_IDS.includes(theme.id as never),
+);
+
+function ThemePreview({
+  theme,
+  compact = false,
+}: {
+  theme: (typeof curatedPresentationThemes)[number];
+  compact?: boolean;
+}) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "relative flex shrink-0 overflow-hidden rounded-md border border-black/10 shadow-sm",
+        compact ? "h-10 w-[4.5rem]" : "h-12 w-[4.75rem]",
+      )}
+      style={{
+        backgroundColor: theme.colors.background,
+        color: theme.colors.primaryText,
+        fontFamily: theme.typography.bodyFamily,
+      }}
+    >
+      <strong
+        className="absolute left-1.5 top-1 text-base leading-none"
+        style={{
+          color: theme.colors.primaryText,
+          fontFamily: theme.typography.headingFamily,
+          fontWeight: theme.typography.headingWeight,
+          letterSpacing: theme.typography.headingLetterSpacing,
+        }}
+      >
+        Aa
+      </strong>
+      <span
+        className="absolute bottom-2 left-1.5 right-1.5 h-1 rounded-full"
+        style={{ backgroundColor: theme.colors.accent }}
+      />
+      <span
+        className="absolute bottom-1 left-1.5 h-1 w-6 rounded-full opacity-60"
+        style={{ backgroundColor: theme.colors.primaryText }}
+      />
+      <span
+        className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full"
+        style={{ backgroundColor: theme.colors.accent }}
+      />
+    </span>
+  );
+}
 
 function ThemeSwatch({
   theme,
@@ -58,49 +103,69 @@ function ThemeSwatch({
   return (
     <button
       type="button"
-      aria-label={`Use ${theme.name} presentation theme`}
+      aria-label={`Use ${theme.name} appearance preset`}
       aria-pressed={selected}
       title={theme.description}
       onClick={onSelect}
       className={cn(
-        "group flex items-center gap-2 rounded-lg border text-left transition-colors",
-        compact ? "h-9 px-2" : "w-full p-2.5",
+        "group text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        compact
+          ? "flex min-w-[4.7rem] flex-col items-center gap-1 rounded-lg border px-1.5 py-1.5"
+          : "flex w-full items-center gap-2 rounded-lg border p-2.5",
         selected
           ? "border-primary bg-primary/5 ring-1 ring-primary/30"
           : "border-border hover:bg-muted/50",
       )}
-      data-testid={`theme-option-${theme.id}`}
+      data-testid={`theme-option-${theme.id === "paper-v2" ? "paper" : theme.id}`}
     >
-      <span
-        aria-hidden="true"
-        className={cn(
-          "relative flex shrink-0 overflow-hidden rounded-md border border-black/10 shadow-sm",
-          compact ? "h-5 w-7" : "h-9 w-12",
-        )}
-        style={{ backgroundColor: theme.colors.background }}
-      >
-        <span
-          className="absolute inset-x-0 bottom-0 h-1/2"
-          style={{ backgroundColor: theme.colors.accent }}
-        />
-        <span
-          className="absolute left-1 top-1 h-1.5 w-1.5 rounded-full"
-          style={{ backgroundColor: theme.colors.primaryText }}
-        />
-      </span>
+      <ThemePreview theme={theme} compact={compact} />
       {!compact && (
         <span className="min-w-0 flex-1">
-          <span className="block text-sm font-medium text-foreground">
+          <span className="flex items-center gap-1.5 text-sm font-medium text-foreground">
             {theme.name}
+            {theme.mode === "dark" ? (
+              <Moon className="h-3 w-3 text-muted-foreground" aria-label="Dark" />
+            ) : (
+              <Sun className="h-3 w-3 text-muted-foreground" aria-label="Light" />
+            )}
           </span>
           <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">
             {theme.description}
           </span>
         </span>
       )}
-      {selected && <Check className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />}
+      {compact && (
+        <span className="max-w-[4.7rem] truncate text-[11px] font-medium text-foreground">
+          {theme.name}
+        </span>
+      )}
+      {selected && (
+        <Check
+          className={cn(
+            "shrink-0 text-primary",
+            compact ? "absolute mt-[-2.2rem] ml-[3.6rem] h-3.5 w-3.5 rounded-full bg-background" : "h-4 w-4",
+          )}
+          aria-hidden="true"
+        />
+      )}
     </button>
   );
+}
+
+function getPreviewStyle(
+  colors: ReturnType<typeof getThemeColors>,
+  typography: ReturnType<typeof getThemeTypography>,
+): CSSProperties {
+  return {
+    "--presentation-bg": colors.background,
+    "--presentation-surface": colors.surface,
+    "--presentation-primary-text": colors.primaryText,
+    "--presentation-secondary-text": colors.secondaryText,
+    "--presentation-accent": colors.accent,
+    "--presentation-accent-soft": colors.accentSoft,
+    "--presentation-font-heading": typography.headingFamily,
+    "--presentation-font-body": typography.bodyFamily,
+  } as CSSProperties;
 }
 
 export function PresentationThemePicker({
@@ -108,55 +173,14 @@ export function PresentationThemePicker({
   onChange,
   preview,
 }: PresentationThemePickerProps) {
-  const [customizing, setCustomizing] = useState(value?.kind === "custom");
-  const [open, setOpen] = useState(false);
   const resolvedId = getThemeId(value);
   const currentColors = getThemeColors(value);
-  const customAnchors: CustomPresentationThemeAnchors =
-    value?.kind === "custom" && value.anchors
-      ? value.anchors
-      : {
-          background: currentColors.background,
-          text: currentColors.primaryText,
-          accent: currentColors.accent,
-        };
-  const readable = isPresentationThemeReadable(customAnchors);
-
+  const currentTypography = getThemeTypography(value);
   const selectionLabel = useMemo(() => getThemeLabel(value), [value]);
 
   const selectTheme = (selection: PresentationThemeSelection) => {
-    setCustomizing(false);
     rememberPresentationTheme(selection);
     onChange(selection);
-  };
-
-  const updateCustomAnchor = (
-    key: "background" | "text" | "accent",
-    nextValue: string,
-  ) => {
-    const normalized = normalizeHexColor(nextValue);
-    if (!normalized) return;
-    const next: PresentationThemeSelection = {
-      kind: "custom",
-      sourceThemeId:
-        value?.kind === "curated"
-          ? value.themeId
-          : value?.kind === "custom"
-            ? value.sourceThemeId
-            : undefined,
-      anchors: { ...customAnchors, [key]: normalized },
-    };
-    rememberPresentationTheme(next);
-    onChange(next);
-  };
-
-  const resetCustom = () => {
-    selectTheme({
-      kind: "curated",
-      themeId: value?.kind === "custom" && value.sourceThemeId
-        ? value.sourceThemeId
-        : "paper",
-    });
   };
 
   return (
@@ -165,10 +189,10 @@ export function PresentationThemePicker({
         <div>
           <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-            Presentation theme
+            Appearance preset
           </div>
           <p className="mt-1 max-w-xl text-xs text-muted-foreground">
-            Changes the activity students see in Present and in PNG exports.
+            One safe choice for the student view, Present mode, and PNG exports.
           </p>
         </div>
         <span className="rounded-full bg-muted px-2 py-1 text-xs font-medium text-foreground">
@@ -176,8 +200,8 @@ export function PresentationThemePicker({
         </span>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        {recommendedThemes.slice(0, 4).map((theme) => (
+      <div className="flex flex-wrap items-start gap-2">
+        {featuredThemes.map((theme) => (
           <ThemeSwatch
             key={theme.id}
             theme={theme}
@@ -186,12 +210,12 @@ export function PresentationThemePicker({
             onSelect={() => selectTheme({ kind: "curated", themeId: theme.id })}
           />
         ))}
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover>
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="inline-flex h-9 items-center gap-1 rounded-lg border px-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label="More presentation themes"
+              className="inline-flex h-10 items-center gap-1 rounded-lg border px-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label="More appearance presets"
               data-testid="button-more-themes"
             >
               More
@@ -201,134 +225,38 @@ export function PresentationThemePicker({
           <PopoverContent
             align="end"
             side="top"
-            className="max-h-[min(76vh,34rem)] w-[min(22rem,calc(100vw-2rem))] overflow-y-auto p-3"
+            className="max-h-[min(76vh,34rem)] w-[min(24rem,calc(100vw-2rem))] overflow-y-auto p-3"
           >
             <div className="mb-3">
-              <p className="text-sm font-semibold text-foreground">Choose a theme</p>
+              <p className="text-sm font-semibold text-foreground">
+                More appearance presets
+              </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Curated palettes keep type, hierarchy, and meaning readable.
+                Coordinated color and type systems stay readable without manual design controls.
               </p>
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
-              {curatedPresentationThemes.map((theme) => (
+              {moreThemes.map((theme) => (
                 <ThemeSwatch
                   key={theme.id}
                   theme={theme}
                   selected={value?.kind === "curated" && resolvedId === theme.id}
-                  onSelect={() => {
-                    selectTheme({ kind: "curated", themeId: theme.id });
-                    setOpen(false);
-                  }}
+                  onSelect={() => selectTheme({ kind: "curated", themeId: theme.id })}
                 />
               ))}
-            </div>
-            <div className="mt-3 border-t pt-3">
-              <button
-                type="button"
-                onClick={() => setCustomizing((current) => !current)}
-                className={cn(
-                  "flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left text-sm font-medium transition-colors hover:bg-muted/50",
-                  customizing && "border-primary bg-primary/5",
-                )}
-                aria-expanded={customizing}
-                data-testid="button-customize-theme"
-              >
-                <span>
-                  <span className="block">Customize</span>
-                  <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
-                    Set your own background, text, and accent
-                  </span>
-                </span>
-                <ChevronDown
-                  className={cn("h-4 w-4 transition-transform", customizing && "rotate-180")}
-                  aria-hidden="true"
-                />
-              </button>
-              {customizing && (
-                <div className="mt-3 space-y-3" data-testid="theme-customize-panel">
-                  {(["background", "text", "accent"] as const).map((key) => {
-                    const label = key === "text" ? "Text" : key[0].toUpperCase() + key.slice(1);
-                    const valueForInput = customAnchors[key];
-                    return (
-                      <label key={key} className="grid grid-cols-[1fr_auto] items-center gap-2 text-sm">
-                        <span className="font-medium text-foreground">{label}</span>
-                        <span className="flex items-center gap-2">
-                          <input
-                            type="color"
-                            aria-label={`${label} color`}
-                            value={valueForInput}
-                            onChange={(event) => updateCustomAnchor(key, event.target.value)}
-                            className="h-8 w-9 cursor-pointer rounded border bg-background p-0.5"
-                          />
-                          <input
-                            type="text"
-                            aria-label={`${label} HEX`}
-                            value={valueForInput}
-                            onChange={(event) => {
-                              const next = event.target.value;
-                              if (isHexColor(next)) updateCustomAnchor(key, next);
-                            }}
-                            className="h-8 w-[5.5rem] rounded-md border bg-background px-2 font-mono text-xs uppercase outline-none focus:ring-2 focus:ring-ring"
-                            inputMode="text"
-                            maxLength={7}
-                          />
-                        </span>
-                      </label>
-                    );
-                  })}
-                  {!readable && (
-                    <div
-                      className="rounded-md border border-amber-500/40 bg-amber-50 px-2.5 py-2 text-xs text-amber-950 dark:bg-amber-950/30 dark:text-amber-100"
-                      role="alert"
-                      data-testid="theme-contrast-warning"
-                    >
-                      <div className="flex gap-2">
-                        <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                        <span>
-                          Text may be hard to read on this background. Try Paper, Ink, or another curated theme.
-                        </span>
-                      </div>
-                      <div className="mt-2 flex flex-wrap items-center gap-1.5 pl-6">
-                        <span className="text-[11px] font-medium text-amber-900/70 dark:text-amber-100/70">
-                          Safer alternatives:
-                        </span>
-                        {(["paper", "ink"] as const).map((themeId) => (
-                          <button
-                            key={themeId}
-                            type="button"
-                            className="rounded border border-amber-700/30 px-1.5 py-0.5 text-[11px] font-medium text-amber-950 hover:bg-amber-100 dark:text-amber-100 dark:hover:bg-amber-900/50"
-                            onClick={() => selectTheme({ kind: "curated", themeId })}
-                          >
-                            {themeId === "paper" ? "Paper" : "Ink"}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between gap-2">
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
-                      onClick={resetCustom}
-                      data-testid="button-reset-theme"
-                    >
-                      <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-                      Reset
-                    </button>
-                    <span className="text-[11px] text-muted-foreground">Preview updates instantly</span>
-                  </div>
-                </div>
-              )}
             </div>
           </PopoverContent>
         </Popover>
       </div>
+
       {preview && (
         <div
           className="overflow-hidden rounded-lg border shadow-sm"
           style={{
+            ...getPreviewStyle(currentColors, currentTypography),
             backgroundColor: currentColors.background,
             color: currentColors.primaryText,
+            fontFamily: currentTypography.bodyFamily,
           }}
           data-testid="presentation-theme-preview"
         >
@@ -343,15 +271,33 @@ export function PresentationThemePicker({
             <span>{selectionLabel}</span>
           </div>
           <div className="grid gap-1.5 px-3 py-3">
-            <strong className="text-base leading-tight">
+            <strong
+              className="text-base leading-tight"
+              style={{
+                color: currentColors.primaryText,
+                fontFamily: currentTypography.headingFamily,
+                fontWeight: currentTypography.headingWeight,
+                letterSpacing: currentTypography.headingLetterSpacing,
+              }}
+            >
               <FormulaText>{preview.title || "Your activity title"}</FormulaText>
             </strong>
-            <span className="text-sm leading-snug" style={{ color: currentColors.primaryText }}>
-              <FormulaText>{preview.task || "The student outcome will appear here."}</FormulaText>
+            <span
+              className="text-sm leading-snug"
+              style={{ color: currentColors.primaryText }}
+            >
+              <FormulaText>
+                {preview.task || "The student outcome will appear here."}
+              </FormulaText>
             </span>
             {preview.prompt && (
-              <span className="flex gap-1.5 text-xs" style={{ color: currentColors.secondaryText }}>
-                <span style={{ color: currentColors.accent }} aria-hidden="true">•</span>
+              <span
+                className="flex gap-1.5 text-xs"
+                style={{ color: currentColors.secondaryText }}
+              >
+                <span style={{ color: currentColors.accent }} aria-hidden="true">
+                  •
+                </span>
                 <FormulaText>{preview.prompt}</FormulaText>
               </span>
             )}

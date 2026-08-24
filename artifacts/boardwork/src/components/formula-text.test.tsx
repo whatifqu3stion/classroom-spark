@@ -30,6 +30,15 @@ describe("FormulaText", () => {
     expect(screen.queryByText("$$")).not.toBeInTheDocument();
   });
 
+  it("keeps Unicode math symbols and supplementary-plane characters intact", () => {
+    render(<FormulaText>{"$$∀x ∈ ℝ, x ≥ 0 → ✅$$"}</FormulaText>);
+
+    expect(document.querySelector(".formula-fallback")).not.toBeInTheDocument();
+    expect(document.querySelector(".formula-rendered")).toHaveTextContent(
+      "∀x∈ℝ,x≥0→✅",
+    );
+  });
+
   it("recognizes clear standalone science fragments without rewriting ordinary prose", () => {
     render(<FormulaText>{"Label H_2O, \\alpha, and x^2 in plain text."}</FormulaText>);
 

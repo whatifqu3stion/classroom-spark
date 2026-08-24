@@ -85,7 +85,12 @@ const escapedSymbols: Record<string, string> = {
 };
 
 function isAllowedPlainCharacter(character: string) {
-  return /[\p{L}\p{N}=+\-*/.,:;!?()[\]|<>·°]/u.test(character);
+  return /[\p{L}\p{M}\p{N}\p{P}\p{S}]/u.test(character);
+}
+
+function characterAt(source: string, index: number) {
+  const codePoint = source.codePointAt(index);
+  return codePoint === undefined ? "" : String.fromCodePoint(codePoint);
 }
 
 function parseGroup(source: string, start: number): ParseResult | null {
@@ -123,12 +128,13 @@ function parseCommand(source: string, start: number): ParseResult | null {
 
   if (command === "left" || command === "right") {
     while (index < source.length && /\s/.test(source[index])) index += 1;
-    if (index >= source.length || !isAllowedPlainCharacter(source[index])) {
+    const character = characterAt(source, index);
+    if (!character || !isAllowedPlainCharacter(character)) {
       return null;
     }
     return {
-      nodes: [{ kind: "text", value: source[index] }],
-      index: index + 1,
+      nodes: [{ kind: "text", value: character }],
+      index: index + character.length,
     };
   }
 
@@ -186,14 +192,14 @@ function parseCommand(source: string, start: number): ParseResult | null {
 }
 
 function parseAtom(source: string, start: number): ParseResult | null {
-  const character = source[start];
+  const character = characterAt(source, start);
   if (!character) return null;
   if (character === "{") return parseGroup(source, start);
   if (character === "\\") return parseCommand(source, start);
   if (isAllowedPlainCharacter(character)) {
     return {
       nodes: [{ kind: "text", value: character }],
-      index: start + 1,
+      index: start + character.length,
     };
   }
   return null;
@@ -236,7 +242,7 @@ function parseSequence(
   let index = start;
 
   while (index < source.length) {
-    const character = source[index];
+    const character = characterAt(source, index);
     if (stopAtClosingBrace && character === "}") break;
     if (/\s/.test(character)) {
       index += 1;

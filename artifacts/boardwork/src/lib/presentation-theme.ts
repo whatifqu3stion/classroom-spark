@@ -2,14 +2,21 @@ import {
   DEFAULT_PRESENTATION_THEME_ID,
   getCuratedPresentationTheme,
   getPresentationThemeColors,
+  getPresentationThemeTypography,
   isHexColor,
   type PresentationThemeColors,
+  type PresentationTypography,
 } from "@workspace/api-zod";
 import type { PresentationThemeSelection } from "@workspace/api-client-react";
 
 export type BoardworkPresentationTheme = PresentationThemeSelection;
 
 const LAST_USED_THEME_KEY = "boardwork:last-presentation-theme";
+
+export type ResolvedPresentationTheme = {
+  colors: PresentationThemeColors;
+  typography: PresentationTypography;
+};
 
 export function getThemeColors(
   selection: BoardworkPresentationTheme | null | undefined,
@@ -19,6 +26,25 @@ export function getThemeColors(
       kind: "curated" | "custom";
     },
   );
+}
+
+export function getThemeTypography(
+  selection: BoardworkPresentationTheme | null | undefined,
+): PresentationTypography {
+  return getPresentationThemeTypography(
+    selection as BoardworkPresentationTheme & {
+      kind: "curated" | "custom";
+    },
+  );
+}
+
+export function getResolvedPresentationTheme(
+  selection: BoardworkPresentationTheme | null | undefined,
+): ResolvedPresentationTheme {
+  return {
+    colors: getThemeColors(selection),
+    typography: getThemeTypography(selection),
+  };
 }
 
 export function getThemeLabel(
@@ -77,18 +103,10 @@ export function getLastUsedPresentationTheme(): BoardworkPresentationTheme | nul
       isHexColor(parsed.anchors.text) &&
       isHexColor(parsed.anchors.accent)
     ) {
-      return {
-        kind: "custom",
-        sourceThemeId:
-          "sourceThemeId" in parsed && typeof parsed.sourceThemeId === "string"
-            ? parsed.sourceThemeId
-            : undefined,
-        anchors: {
-          background: parsed.anchors.background,
-          text: parsed.anchors.text,
-          accent: parsed.anchors.accent,
-        },
-      };
+      // Custom themes remain readable on activities that already saved them,
+      // but they are not a valid last-used preset for new activities now that
+      // manual palette editing is no longer part of the teacher UI.
+      return null;
     }
   } catch {
     // A malformed local preference should never prevent the workspace loading.

@@ -80,6 +80,29 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.queryByText(/\\frac|\\sqrt/)).not.toBeInTheDocument();
   });
 
+  it("puts arrival instructions first and the activity name in the footer", () => {
+    render(
+      <PresentationCanvas
+        activity={{
+          ...activity,
+          arrivalInstructions: "Start here: read this first.",
+        }}
+      />,
+    );
+
+    const surface = screen.getByTestId("presentation-surface");
+    const arrival = screen.getByTestId("present-arrival");
+    const header = surface.querySelector(".presentation-header");
+    const title = screen.getByTestId("present-title");
+
+    expect(Array.from(surface.children).indexOf(arrival)).toBe(0);
+    expect(Array.from(surface.children).indexOf(arrival)).toBeLessThan(
+      Array.from(surface.children).indexOf(header as Element),
+    );
+    expect(title.closest("footer")).toBeInTheDocument();
+    expect(title).toHaveTextContent("Independent practice");
+  });
+
   it("renders formulas in the materials line", () => {
     render(
       <PresentationCanvas

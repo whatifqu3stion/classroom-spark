@@ -3,7 +3,7 @@ import { ExternalLink } from "lucide-react";
 import type { ActivityDraft } from "@/store/boardwork-context";
 import { getSafeResourceUrl } from "@/lib/resource-url";
 import { cn } from "@/lib/utils";
-import { getThemeColors } from "@/lib/presentation-theme";
+import { getThemeColors, getThemeTypography } from "@/lib/presentation-theme";
 import { getPresentationThemeAccentForeground } from "@workspace/api-zod";
 import { FormulaText } from "./formula-text";
 
@@ -30,6 +30,7 @@ export function PresentationCanvas({
   const arrivalInstruction = activity.arrivalInstructions?.trim();
   const safeResourceUrl = getSafeResourceUrl(activity.resourceUrl);
   const themeColors = getThemeColors(activity.presentationTheme);
+  const themeTypography = getThemeTypography(activity.presentationTheme);
   const includeTestIds = !exportLayout;
   const hasVisual = Boolean(activity.visualUrl);
   const showTimer = !exportLayout && timer?.visible;
@@ -61,9 +62,31 @@ export function PresentationCanvas({
         "--presentation-accent-soft": themeColors.accentSoft,
         "--presentation-accent-foreground":
           getPresentationThemeAccentForeground(themeColors.accent),
+        "--presentation-font-heading": themeTypography.headingFamily,
+        "--presentation-font-body": themeTypography.bodyFamily,
+        "--presentation-heading-weight": themeTypography.headingWeight,
+        "--presentation-body-weight": themeTypography.bodyWeight,
+        "--presentation-heading-letter-spacing":
+          themeTypography.headingLetterSpacing,
+        backgroundColor: themeColors.background,
+        color: themeColors.primaryText,
+        fontFamily: themeTypography.bodyFamily,
+        fontWeight: themeTypography.bodyWeight,
       } as CSSProperties}
       {...testId(includeTestIds, "presentation-surface")}
     >
+      <div
+        className={cn(
+          "presentation-arrival presentation-arrival--top boardwork-user-content",
+          !arrivalInstruction && "presentation-arrival--empty",
+        )}
+        dir="auto"
+        aria-hidden={!arrivalInstruction}
+        {...(arrivalInstruction ? testId(includeTestIds, "present-arrival") : {})}
+      >
+        {arrivalInstruction && <FormulaText>{arrivalInstruction}</FormulaText>}
+      </div>
+
       <header className="presentation-header">
         {activity.eyebrow ? (
           <div
@@ -86,16 +109,6 @@ export function PresentationCanvas({
 
       <main className="presentation-main">
         <div className="presentation-content">
-          {activity.title && (
-            <h1
-              className="presentation-title boardwork-user-content"
-              dir="auto"
-              {...testId(includeTestIds, "present-title")}
-            >
-              <FormulaText>{activity.title}</FormulaText>
-            </h1>
-          )}
-
           {activity.task && (
             <p
               className="presentation-task boardwork-user-content"
@@ -186,14 +199,14 @@ export function PresentationCanvas({
       </main>
 
       <footer className="presentation-footer">
-        {arrivalInstruction ? (
-          <div
-            className="presentation-arrival boardwork-user-content"
+        {activity.title ? (
+          <h1
+            className="presentation-title presentation-footer-title boardwork-user-content"
             dir="auto"
-            {...testId(includeTestIds, "present-arrival")}
+            {...testId(includeTestIds, "present-title")}
           >
-            <FormulaText>{arrivalInstruction}</FormulaText>
-          </div>
+            <FormulaText>{activity.title}</FormulaText>
+          </h1>
         ) : (
           <div aria-hidden="true" />
         )}

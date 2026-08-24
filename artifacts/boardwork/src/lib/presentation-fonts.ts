@@ -5,10 +5,21 @@
  */
 export const PRESENTATION_FONT_FAMILIES = [
   "Inter",
+  "Atkinson Hyperlegible",
+  "DM Sans",
+  "DM Serif Display",
+  "Fraunces",
+  "IBM Plex Mono",
+  "IBM Plex Sans",
+  "Lora",
   "Noto Sans Arabic",
   "Noto Sans Hebrew",
   "Noto Sans Devanagari",
   "Noto Sans JP",
+  "Playfair Display",
+  "Plus Jakarta Sans",
+  "Source Sans 3",
+  "Space Grotesk",
 ] as const;
 
 export const PRESENTATION_EXPORT_SIZE = {

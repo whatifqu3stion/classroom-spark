@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, type CSSProperties } from "react";
 import { useBoardwork } from "@/store/boardwork-context";
 import { Maximize, Minimize, ChevronLeft, Download, Loader2, Play, Pause, RotateCcw, Plus, Minus, Volume2, VolumeX, Eye, EyeOff, Settings2, ChevronDown } from "lucide-react";
 import { Link, useRoute } from "wouter";
 import { toPng } from "html-to-image";
 import { useToast } from "@/hooks/use-toast";
 import { PresentationCanvas } from "@/components/presentation-canvas";
-import { getThemeColors } from "@/lib/presentation-theme";
+import { getResolvedPresentationTheme } from "@/lib/presentation-theme";
 import {
   getPresentationExportOptions,
   waitForPresentationFonts,
@@ -158,7 +158,7 @@ export default function Present() {
       await waitForPresentationFonts();
       const dataUrl = await toPng(exportRef.current, {
         ...getPresentationExportOptions(
-          getThemeColors(activeDraft?.presentationTheme).background,
+          resolvedTheme.colors.background,
         ),
       });
 
@@ -193,6 +193,18 @@ export default function Present() {
       </div>
     );
   }
+
+  const resolvedTheme = getResolvedPresentationTheme(activeDraft.presentationTheme);
+  const presentationPageStyle = {
+    "--presentation-bg": resolvedTheme.colors.background,
+    "--presentation-surface": resolvedTheme.colors.surface,
+    "--presentation-primary-text": resolvedTheme.colors.primaryText,
+    "--presentation-secondary-text": resolvedTheme.colors.secondaryText,
+    "--presentation-accent": resolvedTheme.colors.accent,
+    "--presentation-accent-soft": resolvedTheme.colors.accentSoft,
+    "--presentation-font-heading": resolvedTheme.typography.headingFamily,
+    "--presentation-font-body": resolvedTheme.typography.bodyFamily,
+  } as CSSProperties;
 
   const controls = (
     <nav
@@ -308,6 +320,7 @@ export default function Present() {
     <div
       ref={containerRef}
       className={`presentation-page ${isFullscreen ? "presentation-page--fullscreen" : ""}`}
+      style={presentationPageStyle}
       onMouseEnter={() => setShowControls(true)}
     >
       <PresentationCanvas activity={activeDraft} controls={controls} timerControls={timerControls} timer={{ visible: timerVisible, mode: timerMode, remainingSeconds, status: timerStatus }} />

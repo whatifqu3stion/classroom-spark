@@ -22,8 +22,11 @@ import {
   activityStyleCatalog,
   contrastRatio,
   curatedPresentationThemes,
+  DEFAULT_PRESENTATION_THEME_ID,
   derivePresentationThemeColors,
   getActivityStyleGuidance,
+  getPresentationThemeColors,
+  getCuratedPresentationTheme,
   getPresentationThemeAccentForeground,
   isPresentationThemeReadable,
   sanitizeUnicodeText,
@@ -275,6 +278,39 @@ describe("Boardwork generation contract", () => {
   });
 
   it("keeps every curated presentation theme readable", () => {
+    expect(curatedPresentationThemes.map((theme) => theme.id)).toEqual([
+      "boardwork",
+      "paper-v2",
+      "ocean",
+      "ink",
+      "sage",
+      "clay",
+      "plum",
+      "midnight",
+      "sunlit",
+      "teal",
+    ]);
+    expect(DEFAULT_PRESENTATION_THEME_ID).toBe("boardwork");
+    expect(getPresentationThemeColors(null)).toEqual(
+      curatedPresentationThemes[0].colors,
+    );
+    expect(
+      getPresentationThemeColors({ kind: "curated", themeId: "removed-theme" }),
+    ).toEqual(curatedPresentationThemes[0].colors);
+    expect(getCuratedPresentationTheme("paper").id).toBe("boardwork");
+    expect(getCuratedPresentationTheme("paper-v2").name).toBe("Paper");
+    for (const [legacyId, background] of Object.entries({
+      slate: "#E9EEF2",
+      citrus: "#FFF5D9",
+      indigo: "#EDEBFA",
+      moss: "#E7EFE5",
+      rose: "#F8EBEE",
+      forest: "#12211D",
+      charcoal: "#232323",
+    })) {
+      expect(getCuratedPresentationTheme(legacyId).colors.background).toBe(background);
+    }
+
     for (const theme of curatedPresentationThemes) {
       expect(
         contrastRatio(theme.colors.background, theme.colors.primaryText),
@@ -311,6 +347,21 @@ describe("Boardwork generation contract", () => {
     expect(
       isPresentationThemeReadable({ ...boundaryAnchors, text: "#777777" }),
     ).toBe(false);
+  });
+
+  it("sanitizes unsafe legacy custom primary text without rewriting saved anchors", () => {
+    const colors = getPresentationThemeColors({
+      kind: "custom",
+      anchors: {
+        background: "#111827",
+        text: "#111827",
+        accent: "#67E8F9",
+      },
+    });
+
+    expect(contrastRatio(colors.background, colors.primaryText)).toBeGreaterThanOrEqual(4.5);
+    expect(colors.background).toBe("#111827");
+    expect(colors.accent).toBe("#67E8F9");
   });
 
   it("removes invisible Unicode formatting characters from model text", () => {

@@ -9,6 +9,15 @@ export type PresentationThemeColors = {
   accentSoft: string;
 };
 
+export type PresentationTypography = {
+  id: string;
+  headingFamily: string;
+  bodyFamily: string;
+  headingWeight: number;
+  bodyWeight: number;
+  headingLetterSpacing: string;
+};
+
 export type CustomPresentationThemeAnchors = {
   background: string;
   text: string;
@@ -30,13 +39,28 @@ export type CuratedPresentationTheme = {
   description: string;
   mode: PresentationThemeMode;
   colors: PresentationThemeColors;
+  typography: PresentationTypography;
 };
 
-export const curatedPresentationThemes = [
+export type AppearancePreset = CuratedPresentationTheme;
+
+const SCRIPT_FONT_FALLBACK =
+  "'Noto Sans Arabic', 'Noto Sans Hebrew', 'Noto Sans Devanagari', 'Noto Sans JP', 'Noto Sans Symbols 2', 'Noto Sans', 'Noto Color Emoji', 'Segoe UI Symbol', 'Apple Color Emoji'";
+const sansFamily = (family: string) =>
+  `${family}, ${SCRIPT_FONT_FALLBACK}, system-ui, sans-serif`;
+const serifFamily = (family: string) =>
+  `${family}, Georgia, 'Noto Serif', ${SCRIPT_FONT_FALLBACK}, serif`;
+const monoFamily = (family: string) =>
+  `${family}, 'Noto Sans Mono', ${SCRIPT_FONT_FALLBACK}, ui-monospace, monospace`;
+
+// Color and typography are intentionally separate systems. Appearance presets
+// compose the two so a future catalog can reuse either system without coupling
+// palette decisions to type decisions.
+export const presentationColorThemes = [
   {
-    id: "paper",
-    name: "Paper",
-    description: "Warm white with a familiar ink-and-clay accent.",
+    id: "boardwork",
+    name: "Boardwork",
+    description: "The familiar warm-neutral Boardwork canvas.",
     mode: "light",
     colors: {
       background: "#F7F3EA",
@@ -48,17 +72,17 @@ export const curatedPresentationThemes = [
     },
   },
   {
-    id: "ink",
-    name: "Ink",
-    description: "A dark, high-contrast canvas with a quiet cyan signal.",
-    mode: "dark",
+    id: "paper-v2",
+    name: "Paper",
+    description: "Warm paper, dark ink, and a grounded terracotta signal.",
+    mode: "light",
     colors: {
-      background: "#111827",
-      surface: "#1E293B",
-      primaryText: "#F8FAFC",
-      secondaryText: "#CBD5E1",
-      accent: "#67E8F9",
-      accentSoft: "#164E63",
+      background: "#F3EEE4",
+      surface: "#FFFCF5",
+      primaryText: "#241F1A",
+      secondaryText: "#5D554C",
+      accent: "#9A4B32",
+      accentSoft: "#E8D6C8",
     },
   },
   {
@@ -76,17 +100,17 @@ export const curatedPresentationThemes = [
     },
   },
   {
-    id: "clay",
-    name: "Clay",
-    description: "A soft terracotta palette that keeps text grounded.",
-    mode: "light",
+    id: "ink",
+    name: "Ink",
+    description: "A dark, high-contrast canvas with a quiet cyan signal.",
+    mode: "dark",
     colors: {
-      background: "#F6E9DE",
-      surface: "#FFF8F2",
-      primaryText: "#33231D",
-      secondaryText: "#644D42",
-      accent: "#A94E2C",
-      accentSoft: "#EFD1C2",
+      background: "#111827",
+      surface: "#1E293B",
+      primaryText: "#F8FAFC",
+      secondaryText: "#CBD5E1",
+      accent: "#67E8F9",
+      accentSoft: "#164E63",
     },
   },
   {
@@ -104,6 +128,20 @@ export const curatedPresentationThemes = [
     },
   },
   {
+    id: "clay",
+    name: "Clay",
+    description: "A soft terracotta palette that keeps text grounded.",
+    mode: "light",
+    colors: {
+      background: "#F6E9DE",
+      surface: "#FFF8F2",
+      primaryText: "#33231D",
+      secondaryText: "#644D42",
+      accent: "#A94E2C",
+      accentSoft: "#EFD1C2",
+    },
+  },
+  {
     id: "plum",
     name: "Plum",
     description: "A gentle lavender field with deep plum type.",
@@ -117,6 +155,168 @@ export const curatedPresentationThemes = [
       accentSoft: "#E6D4E8",
     },
   },
+  {
+    id: "midnight",
+    name: "Midnight",
+    description: "Deep navy with soft white text and a focused blue accent.",
+    mode: "dark",
+    colors: {
+      background: "#0F172A",
+      surface: "#1E293B",
+      primaryText: "#F8FAFC",
+      secondaryText: "#CBD5E1",
+      accent: "#38BDF8",
+      accentSoft: "#164E63",
+    },
+  },
+  {
+    id: "sunlit",
+    name: "Sunlit",
+    description: "A warm, sunny field with a restrained golden signal.",
+    mode: "light",
+    colors: {
+      background: "#FFF5D9",
+      surface: "#FFFCF0",
+      primaryText: "#342A13",
+      secondaryText: "#665B3A",
+      accent: "#9A5700",
+      accentSoft: "#F3D99B",
+    },
+  },
+  {
+    id: "teal",
+    name: "Teal",
+    description: "A clear, calm teal palette with deep readable type.",
+    mode: "light",
+    colors: {
+      background: "#E8F4F1",
+      surface: "#F9FCFB",
+      primaryText: "#153631",
+      secondaryText: "#3D5E58",
+      accent: "#0C786D",
+      accentSoft: "#C8E4DE",
+    },
+  },
+] as const;
+
+export const presentationTypographySystems = [
+  {
+    id: "boardwork",
+    headingFamily: sansFamily("'Inter'"),
+    bodyFamily: sansFamily("'Inter'"),
+    headingWeight: 700,
+    bodyWeight: 500,
+    headingLetterSpacing: "-0.045em",
+  },
+  {
+    id: "paper-v2",
+    headingFamily: serifFamily("'DM Serif Display'"),
+    bodyFamily: sansFamily("'Atkinson Hyperlegible'"),
+    headingWeight: 700,
+    bodyWeight: 500,
+    headingLetterSpacing: "-0.025em",
+  },
+  {
+    id: "ocean",
+    headingFamily: sansFamily("'Space Grotesk'"),
+    bodyFamily: sansFamily("'Inter'"),
+    headingWeight: 700,
+    bodyWeight: 500,
+    headingLetterSpacing: "-0.04em",
+  },
+  {
+    id: "ink",
+    headingFamily: monoFamily("'IBM Plex Mono'"),
+    bodyFamily: sansFamily("'IBM Plex Sans'"),
+    headingWeight: 600,
+    bodyWeight: 500,
+    headingLetterSpacing: "-0.035em",
+  },
+  {
+    id: "sage",
+    headingFamily: serifFamily("'Fraunces'"),
+    bodyFamily: sansFamily("'Atkinson Hyperlegible'"),
+    headingWeight: 700,
+    bodyWeight: 500,
+    headingLetterSpacing: "-0.03em",
+  },
+  {
+    id: "clay",
+    headingFamily: sansFamily("'DM Sans'"),
+    bodyFamily: sansFamily("'DM Sans'"),
+    headingWeight: 700,
+    bodyWeight: 500,
+    headingLetterSpacing: "-0.045em",
+  },
+  {
+    id: "plum",
+    headingFamily: serifFamily("'Playfair Display'"),
+    bodyFamily: sansFamily("'Source Sans 3'"),
+    headingWeight: 700,
+    bodyWeight: 500,
+    headingLetterSpacing: "-0.035em",
+  },
+  {
+    id: "midnight",
+    headingFamily: sansFamily("'Space Grotesk'"),
+    bodyFamily: sansFamily("'IBM Plex Sans'"),
+    headingWeight: 700,
+    bodyWeight: 500,
+    headingLetterSpacing: "-0.04em",
+  },
+  {
+    id: "sunlit",
+    headingFamily: serifFamily("'Lora'"),
+    bodyFamily: sansFamily("'Atkinson Hyperlegible'"),
+    headingWeight: 700,
+    bodyWeight: 500,
+    headingLetterSpacing: "-0.025em",
+  },
+  {
+    id: "teal",
+    headingFamily: sansFamily("'Plus Jakarta Sans'"),
+    bodyFamily: sansFamily("'Plus Jakarta Sans'"),
+    headingWeight: 700,
+    bodyWeight: 500,
+    headingLetterSpacing: "-0.04em",
+  },
+] as const satisfies readonly PresentationTypography[];
+
+const appearancePresetDefinitions = [
+  ["boardwork", "boardwork", "boardwork"],
+  ["paper-v2", "paper-v2", "paper-v2"],
+  ["ocean", "ocean", "ocean"],
+  ["ink", "ink", "ink"],
+  ["sage", "sage", "sage"],
+  ["clay", "clay", "clay"],
+  ["plum", "plum", "plum"],
+  ["midnight", "midnight", "midnight"],
+  ["sunlit", "sunlit", "sunlit"],
+  ["teal", "teal", "teal"],
+] as const;
+
+const colorThemeById = new Map(
+  presentationColorThemes.map((theme) => [theme.id, theme]),
+);
+const typographyById = new Map(
+  presentationTypographySystems.map((system) => [system.id, system]),
+);
+
+export const curatedPresentationThemes = appearancePresetDefinitions.map(
+  ([id, colorThemeId, typographyId]) => {
+    const colorTheme = colorThemeById.get(colorThemeId);
+    const typography = typographyById.get(typographyId);
+    if (!colorTheme || !typography) {
+      throw new Error(`Appearance preset ${id} is missing a theme system`);
+    }
+    return { ...colorTheme, typography };
+  },
+) as readonly CuratedPresentationTheme[];
+
+export const appearancePresets = curatedPresentationThemes;
+
+const boardworkTypography = typographyById.get("boardwork")!;
+const legacyPresentationThemes = [
   {
     id: "slate",
     name: "Slate",
@@ -188,20 +388,6 @@ export const curatedPresentationThemes = [
     },
   },
   {
-    id: "midnight",
-    name: "Midnight",
-    description: "Deep navy with soft white text and a focused blue accent.",
-    mode: "dark",
-    colors: {
-      background: "#0F172A",
-      surface: "#1E293B",
-      primaryText: "#F8FAFC",
-      secondaryText: "#CBD5E1",
-      accent: "#38BDF8",
-      accentSoft: "#164E63",
-    },
-  },
-  {
     id: "forest",
     name: "Forest",
     description: "Dark green-gray with a soft mint signal.",
@@ -229,23 +415,37 @@ export const curatedPresentationThemes = [
       accentSoft: "#594632",
     },
   },
-] as const satisfies readonly CuratedPresentationTheme[];
+] as const;
 
-export const DEFAULT_PRESENTATION_THEME_ID = "paper";
+const LEGACY_THEME_ALIASES: Record<string, string> = {
+  // The old Paper palette was the warm-neutral default. Boardwork now carries
+  // that palette so existing saved activities keep their appearance.
+  paper: "boardwork",
+};
+
+export const DEFAULT_PRESENTATION_THEME_ID = "boardwork";
 export const RECOMMENDED_PRESENTATION_THEME_IDS = [
-  "paper",
-  "ink",
+  "boardwork",
+  "paper-v2",
   "ocean",
-  "clay",
+  "ink",
   "sage",
-  "midnight",
 ] as const;
 
 export function getCuratedPresentationTheme(
   themeId: string | null | undefined,
 ): CuratedPresentationTheme {
+  const resolvedThemeId = themeId
+    ? LEGACY_THEME_ALIASES[themeId] ?? themeId
+    : DEFAULT_PRESENTATION_THEME_ID;
+  const legacyTheme = legacyPresentationThemes.find(
+    (theme) => theme.id === themeId,
+  );
   return (
-    curatedPresentationThemes.find((theme) => theme.id === themeId) ??
+    curatedPresentationThemes.find((theme) => theme.id === resolvedThemeId) ??
+    (legacyTheme
+      ? { ...legacyTheme, typography: boardworkTypography }
+      : undefined) ??
     curatedPresentationThemes.find(
       (theme) => theme.id === DEFAULT_PRESENTATION_THEME_ID,
     )!
@@ -392,12 +592,24 @@ export function getPresentationThemeAccentForeground(accent: string): string {
   return contrastRatio(accent, "#FFFFFF") >= 4.5 ? "#FFFFFF" : "#171717";
 }
 
+export function getPresentationThemeTypography(
+  selection: PresentationThemeChoice | null | undefined,
+): PresentationTypography {
+  const sourceThemeId =
+    selection?.kind === "custom"
+      ? selection.sourceThemeId
+      : selection?.kind === "curated"
+        ? selection.themeId
+        : DEFAULT_PRESENTATION_THEME_ID;
+  return getCuratedPresentationTheme(sourceThemeId).typography;
+}
+
 export function isPresentationThemeReadable(
   anchors: CustomPresentationThemeAnchors,
 ): boolean {
   const colors = derivePresentationThemeColors(anchors);
   return (
-    contrastRatio(anchors.background, colors.primaryText) >= 4.5 &&
+    contrastRatio(anchors.background, anchors.text) >= 4.5 &&
     contrastRatio(anchors.background, colors.secondaryText) >= 4.5 &&
     contrastRatio(colors.surface, colors.secondaryText) >= 4.5 &&
     contrastRatio(colors.accent, getPresentationThemeAccentForeground(colors.accent)) >= 4.5
@@ -414,6 +626,10 @@ export function derivePresentationThemeColors(
     backgroundIsLight ? "#FFFFFF" : "#000000",
     0.9,
   );
+  const primaryText = ensureReadableTextColorOnSurfaces(
+    anchors.text,
+    [anchors.background, surface],
+  );
   const secondaryText = ensureReadableTextColor(
     mixOklab(anchors.text, anchors.background, 0.78),
     anchors.background,
@@ -421,7 +637,7 @@ export function derivePresentationThemeColors(
   return {
     background: anchors.background,
     surface,
-    primaryText: anchors.text,
+    primaryText,
     secondaryText: ensureReadableTextColorOnSurfaces(
       secondaryText,
       [anchors.background, surface],
@@ -434,7 +650,13 @@ export function derivePresentationThemeColors(
 export function getPresentationThemeColors(
   selection: PresentationThemeChoice | null | undefined,
 ): PresentationThemeColors {
-  if (selection?.kind === "custom" && selection.anchors) {
+  if (
+    selection?.kind === "custom" &&
+    selection.anchors &&
+    isHexColor(selection.anchors.background) &&
+    isHexColor(selection.anchors.text) &&
+    isHexColor(selection.anchors.accent)
+  ) {
     return derivePresentationThemeColors(selection.anchors);
   }
   return getCuratedPresentationTheme(
