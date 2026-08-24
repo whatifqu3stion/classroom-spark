@@ -504,6 +504,138 @@
     overflow-wrap: anywhere;
   }
 
+  .formula-text {
+    font-family: "Cambria Math", "STIX Two Math", "Times New Roman", serif;
+  }
+
+  .formula-rendered {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.04em;
+    max-width: 100%;
+    color: inherit;
+    font-family: "Cambria Math", "STIX Two Math", "Times New Roman", serif;
+    font-style: normal;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    line-height: 1.2;
+    vertical-align: baseline;
+  }
+
+  .formula-rendered--block {
+    display: flex;
+    width: fit-content;
+    max-width: 100%;
+    align-items: center;
+    margin-block: 0.18em;
+    font-size: 1.08em;
+  }
+
+  .formula-fallback {
+    overflow-wrap: anywhere;
+  }
+
+  .formula-fraction {
+    display: inline-flex;
+    min-width: 1.2em;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    margin-inline: 0.08em;
+    font-size: 0.9em;
+    line-height: 1.05;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .formula-fraction-part {
+    display: block;
+    padding-inline: 0.16em;
+  }
+
+  .formula-fraction-line {
+    display: block;
+    height: 0.07em;
+    min-height: 1px;
+    margin-block: 0.08em;
+    background: currentColor;
+  }
+
+  .formula-root {
+    display: inline-flex;
+    align-items: flex-start;
+    margin-inline: 0.04em;
+    vertical-align: middle;
+  }
+
+  .formula-root-sign {
+    font-family: "Times New Roman", serif;
+    font-size: 1.35em;
+    line-height: 0.85;
+  }
+
+  .formula-root-content {
+    border-top: 0.07em solid currentColor;
+    padding: 0.08em 0.12em 0 0.08em;
+  }
+
+  .formula-root-index {
+    margin-right: -0.08em;
+    padding-top: 0.05em;
+    font-size: 0.58em;
+    line-height: 1;
+  }
+
+  .formula-script {
+    display: inline-flex;
+    align-items: flex-start;
+    white-space: nowrap;
+  }
+
+  .formula-script-base {
+    display: inline-flex;
+  }
+
+  .formula-script > sup,
+  .formula-script > sub {
+    position: relative;
+    font-size: 0.63em;
+    line-height: 1;
+  }
+
+  .formula-script > sup {
+    top: -0.18em;
+  }
+
+  .formula-script > sub {
+    top: 0.28em;
+    margin-left: -0.02em;
+  }
+
+  .formula-editor-preview {
+    display: flex;
+    max-width: 100%;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem;
+    margin-top: 0.4rem;
+    border-left: 2px solid hsl(var(--primary) / 0.35);
+    padding: 0.4rem 0.65rem;
+    color: hsl(var(--foreground) / 0.85);
+    background: hsl(var(--muted) / 0.35);
+    font-size: 0.95em;
+  }
+
+  .formula-editor-preview-label {
+    flex: none;
+    color: hsl(var(--muted-foreground));
+    font-family: var(--app-font-sans);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
   .presentation-controls {
     display: flex;
     width: fit-content;

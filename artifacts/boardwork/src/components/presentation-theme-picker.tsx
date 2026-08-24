@@ -28,6 +28,7 @@ import {
   type BoardworkPresentationTheme,
 } from "@/lib/presentation-theme";
 import { cn } from "@/lib/utils";
+import { FormulaText } from "@/components/formula-text";
 
 interface PresentationThemePickerProps {
   value?: BoardworkPresentationTheme | null;
@@ -343,15 +344,15 @@ export function PresentationThemePicker({
           </div>
           <div className="grid gap-1.5 px-3 py-3">
             <strong className="text-base leading-tight">
-              {preview.title || "Your activity title"}
+              <FormulaText>{preview.title || "Your activity title"}</FormulaText>
             </strong>
             <span className="text-sm leading-snug" style={{ color: currentColors.primaryText }}>
-              {preview.task || "The student outcome will appear here."}
+              <FormulaText>{preview.task || "The student outcome will appear here."}</FormulaText>
             </span>
             {preview.prompt && (
               <span className="flex gap-1.5 text-xs" style={{ color: currentColors.secondaryText }}>
                 <span style={{ color: currentColors.accent }} aria-hidden="true">•</span>
-                {preview.prompt}
+                <FormulaText>{preview.prompt}</FormulaText>
               </span>
             )}
             <span

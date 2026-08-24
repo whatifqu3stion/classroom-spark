@@ -208,6 +208,16 @@ describe("Boardwork generation contract", () => {
     expect(input).toContain("</boardwork_context_json>");
   });
 
+  it("documents the supported formula notation for generated activities", () => {
+    const input = buildOpenAIInput(context);
+
+    expect(input).toContain("\\frac{numerator}{denominator}");
+    expect(input).toContain("\\sqrt{radicand}");
+    expect(input).toContain("H_2O");
+    expect(input).toContain("Keep ordinary prose as plain text");
+    expect(input).toContain("Do not use unsupported commands");
+  });
+
   it("derives supported styles and generation guidance from the shared catalog", () => {
     const catalogGeneratedStyles = activityStyleCatalog
       .filter((style) => style.value !== "Auto")

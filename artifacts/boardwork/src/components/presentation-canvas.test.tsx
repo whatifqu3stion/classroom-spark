@@ -61,4 +61,39 @@ describe("PresentationCanvas timer visibility", () => {
       "--presentation-accent": "#38BDF8",
     });
   });
+
+  it("renders formulas in the student canvas", () => {
+    render(
+      <PresentationCanvas
+        activity={{
+          ...activity,
+          task: "Compare \\(\\frac{1}{2} and \\sqrt{4}\\).",
+          prompts: ["Label \\(H_2O and \\alpha\\)."],
+        }}
+      />,
+    );
+
+    expect(screen.getByTestId("present-task").querySelector(".formula-fraction")).toBeInTheDocument();
+    expect(screen.getByTestId("present-task").querySelector(".formula-root")).toBeInTheDocument();
+    expect(screen.getByText("H")).toBeInTheDocument();
+    expect(screen.getByText("α")).toBeInTheDocument();
+    expect(screen.queryByText(/\\frac|\\sqrt/)).not.toBeInTheDocument();
+  });
+
+  it("renders formulas in the materials line", () => {
+    render(
+      <PresentationCanvas
+        activity={{
+          ...activity,
+          materials: ["H_2O", "\\alpha"],
+        }}
+      />,
+    );
+
+    const materials = screen.getByTestId("present-materials");
+    expect(materials.querySelector(".formula-script > sub")).toBeInTheDocument();
+    expect(materials.querySelector(".formula-rendered")).toBeInTheDocument();
+    expect(materials).toHaveTextContent("Materials: H2O, α");
+    expect(materials).not.toHaveTextContent("H_2O");
+  });
 });

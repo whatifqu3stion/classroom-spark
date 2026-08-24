@@ -5,6 +5,7 @@ import { getSafeResourceUrl } from "@/lib/resource-url";
 import { cn } from "@/lib/utils";
 import { getThemeColors } from "@/lib/presentation-theme";
 import { getPresentationThemeAccentForeground } from "@workspace/api-zod";
+import { FormulaText } from "./formula-text";
 
 interface PresentationCanvasProps {
   activity: ActivityDraft;
@@ -89,7 +90,7 @@ export function PresentationCanvas({
               className="presentation-title"
               {...testId(includeTestIds, "present-title")}
             >
-              {activity.title}
+              <FormulaText>{activity.title}</FormulaText>
             </h1>
           )}
 
@@ -98,7 +99,7 @@ export function PresentationCanvas({
               className="presentation-task"
               {...testId(includeTestIds, "present-task")}
             >
-              {activity.task}
+              <FormulaText>{activity.task}</FormulaText>
             </p>
           )}
 
@@ -109,7 +110,7 @@ export function PresentationCanvas({
                   <span className="presentation-prompt-marker" aria-hidden="true">
                     •
                   </span>
-                  <span>{prompt}</span>
+                   <FormulaText>{prompt}</FormulaText>
                 </li>
               ))}
             </ul>
@@ -120,7 +121,7 @@ export function PresentationCanvas({
               className="presentation-materials"
               {...testId(includeTestIds, "present-materials")}
             >
-              Materials: {activity.materials.join(", ")}
+               <FormulaText>{`Materials: ${activity.materials.join(", ")}`}</FormulaText>
             </p>
           )}
 
@@ -142,7 +143,7 @@ export function PresentationCanvas({
               </a>
               {activity.resourceNote && (
                 <p className="presentation-resource-note">
-                  {activity.resourceNote}
+                 <FormulaText>{activity.resourceNote}</FormulaText>
                 </p>
               )}
           </div>
@@ -180,7 +181,7 @@ export function PresentationCanvas({
             className="presentation-arrival"
             {...testId(includeTestIds, "present-arrival")}
           >
-            {arrivalInstruction}
+             <FormulaText>{arrivalInstruction}</FormulaText>
           </div>
         ) : (
           <div aria-hidden="true" />

@@ -6,6 +6,7 @@ import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { getSafeResourceUrl } from "@/lib/resource-url";
 import { PresentationThemePicker } from "@/components/presentation-theme-picker";
+import { FormulaPreview, FormulaText } from "@/components/formula-text";
 
 interface BoardEditorProps {
   draft: ActivityDraft;
@@ -171,6 +172,7 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
               placeholder="Enter a short title..."
               className="text-3xl md:text-4xl font-bold tracking-tight text-foreground block w-full"
             />
+            <FormulaPreview>{draft.title}</FormulaPreview>
           </div>
 
           <EditableText
@@ -180,19 +182,23 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
             placeholder="Describe the main task for students..."
             className="text-lg md:text-xl leading-relaxed text-foreground block w-full"
           />
+          <FormulaPreview>{draft.task}</FormulaPreview>
 
           {draft.prompts.length > 0 && (
             <ul className="space-y-3 list-none p-0 m-0">
               {draft.prompts.map((prompt, idx) => (
                 <li key={idx} className="flex gap-3 group relative text-lg md:text-xl text-foreground">
                   <span className="text-primary mt-1 flex-shrink-0">•</span>
-                  <EditableText
-                    multiline
-                    value={prompt}
-                    onChange={(val) => updatePrompt(idx, val)}
-                    placeholder="Enter prompt..."
-                    className="flex-1 leading-relaxed"
-                  />
+                  <div className="flex-1 min-w-0">
+                    <EditableText
+                      multiline
+                      value={prompt}
+                      onChange={(val) => updatePrompt(idx, val)}
+                      placeholder="Enter prompt..."
+                      className="leading-relaxed"
+                    />
+                    <FormulaPreview>{prompt}</FormulaPreview>
+                  </div>
                   <button
                     type="button"
                     onClick={() => removePrompt(idx)}
@@ -233,7 +239,7 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
               </a>
               {draft.resourceNote && (
                 <p className="mt-2 text-sm text-muted-foreground">
-                  {draft.resourceNote}
+                  <FormulaText>{draft.resourceNote}</FormulaText>
                 </p>
               )}
             </div>
@@ -257,6 +263,7 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
               placeholder="Optional materials, separated by commas..."
               className="block w-full text-sm text-foreground"
             />
+            <FormulaPreview>{(draft.materials ?? []).join(", ")}</FormulaPreview>
           </div>
 
           <div className="space-y-5 pt-8 mt-8 border-t">
@@ -323,6 +330,7 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
                   placeholder="Optional note for the teacher..."
                   className="text-muted-foreground text-sm block w-full"
                 />
+                <FormulaPreview>{draft.teacherNote}</FormulaPreview>
               </div>
             )}
             <EditableText
@@ -332,6 +340,7 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
               placeholder="Arrival instructions (optional footer)..."
               className="text-muted-foreground text-sm block w-full"
             />
+            <FormulaPreview>{draft.arrivalInstructions || ""}</FormulaPreview>
           </div>
           
         </div>

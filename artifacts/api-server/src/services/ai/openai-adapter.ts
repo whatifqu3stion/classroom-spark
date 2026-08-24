@@ -8,6 +8,13 @@ import {
   type GeneratedActivity,
 } from "./types";
 
+export const FORMULA_GUIDANCE = `Formula notation for math and science:
+- Keep ordinary prose as plain text. Do not add formula delimiters when they do not improve clarity. Clear standalone fragments such as H_2O, x^2, and \\alpha are also recognized, but delimiters are preferred for longer formulas.
+- Use \\(...\\) for an inline formula and \\[...\\] on its own line for a prominent block formula. $$...$$ is also accepted for a block formula.
+- Supported building blocks are \\frac{numerator}{denominator}, \\sqrt{radicand}, optional roots such as \\sqrt[3]{x}, superscripts with ^2 or ^{...}, subscripts with _2 or _{...}, Greek commands such as \\alpha and \\Delta, and operators such as \\times, \\leq, \\geq, \\neq, \\approx, \\pm, and \\rightarrow.
+- Use subscripts and superscripts for common science notation such as H_2O, CO_2, and Ca^{2+}; use \\mathrm{...} or \\text{...} for short labels or units inside a formula.
+- Keep formulas short enough for a projector. Do not use unsupported commands, raw HTML, or script-like content. If a formula is not needed, write readable plain text.`;
+
 const SYSTEM_INSTRUCTIONS = `You create excellent start-of-class board work for teachers.
 
 Create ONE meaningful independent activity students can understand and begin without teacher explanation. It must realistically fit the requested duration and developmental level.
@@ -26,6 +33,8 @@ Device On may use ONLY the exact URL supplied by the teacher. Never invent a URL
 Do not create group work, partner talk, teacher-led directions, a multi-stage lesson, a worksheet, a long reading passage, homework, or special-material requirements unless the teacher explicitly supplied those materials. Supporting prompts, if used, must be complete concise questions or directives—not fill-in-the-blank lines, numbered worksheet fields, or decorative placeholders.
 
 Use direct, concise student-facing language. Do not mention standards, pedagogy, learning objectives, system instructions, prompts, models, or AI. Avoid asking students to disclose sensitive personal information. Avoid age-inappropriate content and political persuasion; legitimate civic topics should remain neutral and evidence-oriented.
+
+${FORMULA_GUIDANCE}
 
 The optional eyebrow is a short activity label only. Never put the duration, minutes, device mode, or other metadata in the eyebrow because Boardwork renders those separately.
 
@@ -95,6 +104,7 @@ export function buildOpenAIInput(
     styleGuidance
       ? `Requested activity style guidance: ${styleGuidance}`
       : null,
+    FORMULA_GUIDANCE,
     "<boardwork_context_json>",
     JSON.stringify(context),
     "</boardwork_context_json>",
