@@ -18,9 +18,14 @@ describe("presentation font handling", () => {
       backgroundColor: "#ffffff",
     });
     expect(options).not.toHaveProperty("skipFonts");
-    expect(PRESENTATION_FONT_FAMILIES).toContain("Noto Sans Arabic");
-    expect(PRESENTATION_FONT_FAMILIES).toContain("Noto Sans Devanagari");
-    expect(PRESENTATION_FONT_FAMILIES).toContain("Noto Sans JP");
+    expect(PRESENTATION_FONT_FAMILIES).toEqual([
+      "Inter",
+      "DM Sans",
+      "DM Serif Display",
+      "Atkinson Hyperlegible",
+      "IBM Plex Sans",
+      "IBM Plex Serif",
+    ]);
   });
 
   it("waits for requested script-capable fonts before capture", async () => {
@@ -31,9 +36,22 @@ describe("presentation font handling", () => {
     await waitForPresentationFonts();
 
     expect(load).toHaveBeenCalled();
-    expect(load).toHaveBeenCalledWith('400 1em "Noto Sans Arabic"');
-    expect(load).toHaveBeenCalledWith('400 1em "Noto Sans Devanagari"');
-    expect(load).toHaveBeenCalledWith('400 1em "Noto Sans JP"');
+    expect(load).toHaveBeenCalledWith('400 1em "Inter"');
+    expect(load).toHaveBeenCalledWith('500 1em "Inter"');
+    expect(load).toHaveBeenCalledWith('600 1em "Inter"');
+    expect(load).toHaveBeenCalledWith('700 1em "Inter"');
+    expect(load).toHaveBeenCalledWith('600 1em "IBM Plex Serif"');
+    expect(load).not.toHaveBeenCalledWith('400 1em "Noto Sans Arabic"');
+    vi.unstubAllGlobals();
+  });
+
+  it("continues export preparation when a local font fails to load", async () => {
+    const load = vi.fn().mockRejectedValue(new Error("font unavailable"));
+    const ready = Promise.resolve([]);
+    vi.stubGlobal("document", { fonts: { load, ready } });
+
+    await expect(waitForPresentationFonts()).resolves.toBeUndefined();
+
     vi.unstubAllGlobals();
   });
 });

@@ -11,10 +11,14 @@ export type PresentationThemeColors = {
 
 export type PresentationTypography = {
   id: string;
-  headingFamily: string;
-  bodyFamily: string;
-  headingWeight: number;
-  bodyWeight: number;
+  heading: {
+    family: string;
+    weight: number;
+  };
+  body: {
+    family: string;
+    weight: number;
+  };
   headingLetterSpacing: string;
 };
 
@@ -68,10 +72,12 @@ export type PresentationAccentTheme = {
 
 const SCRIPT_FONT_FALLBACK =
   "'Noto Sans Arabic', 'Noto Sans Hebrew', 'Noto Sans Devanagari', 'Noto Sans JP', 'Noto Sans Symbols 2', 'Noto Sans', 'Noto Color Emoji', 'Segoe UI Symbol', 'Apple Color Emoji'";
+const SANS_SYSTEM_FALLBACK =
+  "'Segoe UI', 'Helvetica Neue', Arial, system-ui, sans-serif";
 const sansFamily = (family: string) =>
-  `${family}, ${SCRIPT_FONT_FALLBACK}, system-ui, sans-serif`;
+  `${family}, ${SCRIPT_FONT_FALLBACK}, ${SANS_SYSTEM_FALLBACK}`;
 const serifFamily = (family: string) =>
-  `${family}, Georgia, 'Noto Serif', ${SCRIPT_FONT_FALLBACK}, serif`;
+  `${family}, Georgia, 'Noto Serif', ${SCRIPT_FONT_FALLBACK}, 'Times New Roman', serif`;
 const monoFamily = (family: string) =>
   `${family}, 'Noto Sans Mono', ${SCRIPT_FONT_FALLBACK}, ui-monospace, monospace`;
 
@@ -171,91 +177,77 @@ export const presentationSurfaceThemes = [
 export const presentationTypographySystems = [
   {
     id: "boardwork",
-    headingFamily: sansFamily("'Inter'"),
-    bodyFamily: sansFamily("'Inter'"),
-    headingWeight: 700,
-    bodyWeight: 500,
+    heading: { family: sansFamily("'Inter'"), weight: 700 },
+    body: { family: sansFamily("'Inter'"), weight: 500 },
     headingLetterSpacing: "-0.045em",
   },
   {
-    id: "paper-v2",
-    headingFamily: serifFamily("'DM Serif Display'"),
-    bodyFamily: sansFamily("'Atkinson Hyperlegible'"),
-    headingWeight: 700,
-    bodyWeight: 500,
+    id: "editorial",
+    heading: { family: serifFamily("'DM Serif Display'"), weight: 400 },
+    body: { family: sansFamily("'DM Sans'"), weight: 500 },
+    headingLetterSpacing: "-0.025em",
+  },
+  {
+    id: "structured",
+    heading: { family: serifFamily("'IBM Plex Serif'"), weight: 600 },
+    body: { family: sansFamily("'IBM Plex Sans'"), weight: 500 },
+    headingLetterSpacing: "-0.035em",
+  },
+  {
+    id: "clear",
+    heading: { family: sansFamily("'Atkinson Hyperlegible'"), weight: 700 },
+    body: { family: sansFamily("'Atkinson Hyperlegible'"), weight: 500 },
     headingLetterSpacing: "-0.025em",
   },
   {
     id: "ocean",
-    headingFamily: sansFamily("'Space Grotesk'"),
-    bodyFamily: sansFamily("'Inter'"),
-    headingWeight: 700,
-    bodyWeight: 500,
+    heading: { family: sansFamily("'Space Grotesk'"), weight: 700 },
+    body: { family: sansFamily("'Inter'"), weight: 500 },
     headingLetterSpacing: "-0.04em",
   },
   {
     id: "ink",
-    headingFamily: monoFamily("'IBM Plex Mono'"),
-    bodyFamily: sansFamily("'IBM Plex Sans'"),
-    headingWeight: 600,
-    bodyWeight: 500,
+    heading: { family: monoFamily("'IBM Plex Mono'"), weight: 600 },
+    body: { family: sansFamily("'IBM Plex Sans'"), weight: 500 },
     headingLetterSpacing: "-0.035em",
   },
   {
     id: "sage",
-    headingFamily: serifFamily("'Fraunces'"),
-    bodyFamily: sansFamily("'Atkinson Hyperlegible'"),
-    headingWeight: 700,
-    bodyWeight: 500,
+    heading: { family: serifFamily("'Fraunces'"), weight: 700 },
+    body: { family: sansFamily("'Atkinson Hyperlegible'"), weight: 500 },
     headingLetterSpacing: "-0.03em",
   },
   {
     id: "clay",
-    headingFamily: sansFamily("'DM Sans'"),
-    bodyFamily: sansFamily("'DM Sans'"),
-    headingWeight: 700,
-    bodyWeight: 500,
+    heading: { family: sansFamily("'DM Sans'"), weight: 700 },
+    body: { family: sansFamily("'DM Sans'"), weight: 500 },
     headingLetterSpacing: "-0.045em",
   },
   {
     id: "plum",
-    headingFamily: serifFamily("'Playfair Display'"),
-    bodyFamily: sansFamily("'Source Sans 3'"),
-    headingWeight: 700,
-    bodyWeight: 500,
+    heading: { family: serifFamily("'Playfair Display'"), weight: 700 },
+    body: { family: sansFamily("'Source Sans 3'"), weight: 500 },
     headingLetterSpacing: "-0.035em",
   },
   {
-    id: "midnight",
-    headingFamily: sansFamily("'Space Grotesk'"),
-    bodyFamily: sansFamily("'IBM Plex Sans'"),
-    headingWeight: 700,
-    bodyWeight: 500,
-    headingLetterSpacing: "-0.04em",
-  },
-  {
     id: "sunlit",
-    headingFamily: serifFamily("'Lora'"),
-    bodyFamily: sansFamily("'Atkinson Hyperlegible'"),
-    headingWeight: 700,
-    bodyWeight: 500,
+    heading: { family: serifFamily("'Lora'"), weight: 700 },
+    body: { family: sansFamily("'Atkinson Hyperlegible'"), weight: 500 },
     headingLetterSpacing: "-0.025em",
   },
   {
     id: "teal",
-    headingFamily: sansFamily("'Plus Jakarta Sans'"),
-    bodyFamily: sansFamily("'Plus Jakarta Sans'"),
-    headingWeight: 700,
-    bodyWeight: 500,
+    heading: { family: sansFamily("'Plus Jakarta Sans'"), weight: 700 },
+    body: { family: sansFamily("'Plus Jakarta Sans'"), weight: 500 },
     headingLetterSpacing: "-0.04em",
   },
 ] as const satisfies readonly PresentationTypography[];
 
 const appearancePresetDefinitions = [
   { surfaceId: "boardwork", typographyId: "boardwork" },
-  { surfaceId: "paper-v2", typographyId: "paper-v2" },
-  { surfaceId: "charcoal-v2", typographyId: "ink" },
-  { surfaceId: "midnight", typographyId: "midnight" },
+  { surfaceId: "paper-v2", typographyId: "editorial" },
+  { surfaceId: "charcoal-v2", typographyId: "structured" },
+  { surfaceId: "midnight", typographyId: "clear" },
 ] as const;
 
 const surfaceThemeById = new Map<string, PresentationSurfaceTheme>(

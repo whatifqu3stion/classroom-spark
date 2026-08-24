@@ -4,6 +4,89 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Local presentation fonts keep classroom views and PNG exports independent
+   from external font services. Script-capable system fallbacks remain in the
+   semantic font stacks for authored multilingual content. */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/inter-400.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/inter-500.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/inter-600.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/inter-700.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "DM Sans";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/dm-sans-500.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "DM Serif Display";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/dm-serif-display-400.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/atkinson-hyperlegible-500.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/atkinson-hyperlegible-700.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-sans-500.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "IBM Plex Serif";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-serif-600.ttf") format("truetype");
+}
+
 @theme inline {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -197,8 +280,8 @@
     padding: clamp(1.25rem, 5vw, 2rem);
     background: var(--presentation-bg, #fafafa);
     color: var(--presentation-primary-text, #171717);
-    font-family: var(--presentation-font-body, var(--app-font-sans));
-    font-weight: var(--presentation-body-weight, 500);
+    font-family: var(--board-font-body, var(--app-font-sans));
+    font-weight: var(--board-font-body-weight, 500);
   }
 
   .presentation-header {
@@ -218,8 +301,8 @@
 
   .presentation-eyebrow {
     letter-spacing: 0.2em;
-    font-family: var(--presentation-font-heading, var(--app-font-sans));
-    font-weight: var(--presentation-heading-weight, 700);
+    font-family: var(--board-font-heading, var(--app-font-sans));
+    font-weight: var(--board-font-heading-weight, 700);
   }
 
   .presentation-header-title {
@@ -229,7 +312,64 @@
 
   .presentation-time {
     letter-spacing: 0.16em;
+    font-variant-numeric: tabular-nums;
     white-space: nowrap;
+  }
+
+  .presentation-time--timer-aware {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--presentation-accent-soft, transparent) 52%, transparent);
+    padding: 0.35rem 0.6rem;
+    outline: 1px solid color-mix(in srgb, var(--presentation-accent, currentColor) 18%, transparent);
+  }
+
+  .presentation-time-indicator {
+    display: inline-flex;
+    width: 0.45rem;
+    height: 0.45rem;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: var(--presentation-accent, currentColor);
+    opacity: 0.72;
+  }
+
+  .presentation-time-indicator > span {
+    display: block;
+    width: 0.2rem;
+    height: 0.2rem;
+    border-radius: inherit;
+    background: var(--presentation-surface, #fafafa);
+  }
+
+  .presentation-time--timer-running .presentation-time-indicator {
+    opacity: 1;
+    animation: presentation-time-pulse 2.4s ease-in-out infinite;
+  }
+
+  .presentation-time--timer-paused .presentation-time-indicator {
+    opacity: 0.5;
+  }
+
+  .presentation-time--timer-completed {
+    background: color-mix(in srgb, var(--presentation-accent-soft, transparent) 76%, transparent);
+  }
+
+  @keyframes presentation-time-pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--presentation-accent, currentColor) 0%, transparent);
+      transform: scale(0.9);
+    }
+
+    50% {
+      box-shadow: 0 0 0 0.28rem color-mix(in srgb, var(--presentation-accent, currentColor) 22%, transparent);
+      transform: scale(1);
+    }
   }
 
   .presentation-time--collapsed {
@@ -241,6 +381,11 @@
     border-radius: 0.4rem;
     padding-inline: 0.55rem;
     transition: background-color 150ms ease, color 150ms ease;
+  }
+
+  .presentation-time--timer-hidden {
+    width: 2.25rem;
+    padding-inline: 0;
   }
 
   .presentation-time--collapsed:hover,
@@ -260,6 +405,10 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(14rem, 30%);
     gap: clamp(1.5rem, 5vw, 5rem);
+  }
+
+  .presentation-main--content-only {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .presentation-content {
@@ -388,6 +537,28 @@
     padding-top: 0.45rem;
   }
 
+  .presentation-controls-timer {
+    min-width: 13.5rem;
+    flex: 1 1 100%;
+    border-top: 1px solid color-mix(in srgb, var(--presentation-primary-text, #171717) 16%, transparent);
+    padding-top: 0.45rem;
+  }
+
+  .presentation-controls-section-label {
+    margin-bottom: 0.25rem;
+    color: var(--presentation-secondary-text, rgb(23 23 23 / 58%));
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .presentation-controls-timer .presentation-timer-controls {
+    margin-top: 0;
+    border-top: 0;
+    padding-top: 0;
+  }
+
   .presentation-timer-actions {
     display: flex;
     align-items: center;
@@ -477,9 +648,9 @@
   .presentation-task {
     max-width: 38ch;
     color: var(--presentation-primary-text, rgb(23 23 23 / 88%));
-    font-family: var(--presentation-font-body, var(--app-font-sans));
+    font-family: var(--board-font-body, var(--app-font-sans));
     font-size: clamp(1.45rem, 6.5vw, 3rem);
-    font-weight: var(--presentation-body-weight, 500);
+    font-weight: var(--board-font-body-weight, 500);
     line-height: 1.26;
     overflow-wrap: anywhere;
   }
@@ -496,9 +667,9 @@
     gap: clamp(0.8rem, 3vw, 1.4rem);
     max-width: 44ch;
     color: var(--presentation-primary-text, rgb(23 23 23 / 76%));
-    font-family: var(--presentation-font-body, var(--app-font-sans));
+    font-family: var(--board-font-body, var(--app-font-sans));
     font-size: clamp(1.1rem, 4.6vw, 2rem);
-    font-weight: var(--presentation-body-weight, 500);
+    font-weight: var(--board-font-body-weight, 500);
     line-height: 1.28;
     overflow-wrap: anywhere;
   }
@@ -512,9 +683,9 @@
   .presentation-materials {
     margin-top: 1.5rem;
     color: var(--presentation-secondary-text, hsl(var(--muted-foreground)));
-    font-family: var(--presentation-font-body, var(--app-font-sans));
+    font-family: var(--board-font-body, var(--app-font-sans));
     font-size: clamp(0.9rem, 1.4vw, 1.35rem);
-    font-weight: var(--presentation-body-weight, 500);
+    font-weight: var(--board-font-body-weight, 500);
   }
 
   .presentation-resource {
@@ -529,9 +700,9 @@
     background: var(--presentation-accent, hsl(var(--primary)));
     padding: 0.5rem 1rem;
     color: var(--presentation-accent-foreground, hsl(var(--primary-foreground)));
-    font-family: var(--presentation-font-body, var(--app-font-sans));
+    font-family: var(--board-font-body, var(--app-font-sans));
     font-size: clamp(0.9rem, 1.3vw, 1.2rem);
-    font-weight: var(--presentation-body-weight, 500);
+    font-weight: var(--board-font-body-weight, 500);
     box-shadow: var(--shadow-sm);
   }
 
@@ -558,9 +729,9 @@
   .presentation-arrival {
     max-width: 52ch;
     color: var(--presentation-secondary-text, rgb(23 23 23 / 52%));
-    font-family: var(--presentation-font-body, var(--app-font-sans));
+    font-family: var(--board-font-body, var(--app-font-sans));
     font-size: clamp(0.95rem, 3.8vw, 1.25rem);
-    font-weight: var(--presentation-body-weight, 500);
+    font-weight: var(--board-font-body-weight, 500);
     line-height: 1.4;
     overflow-wrap: anywhere;
   }
@@ -717,19 +888,23 @@
   }
 
   .presentation-controls-dock {
-    position: relative;
+    position: fixed;
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: max(1rem, env(safe-area-inset-bottom));
     z-index: 5;
     display: grid;
     justify-items: end;
+    width: max-content;
+    max-width: calc(100vw - 2rem);
   }
 
   .presentation-controls-toggle {
     display: inline-flex;
-    min-height: 2.75rem;
-    min-width: 2.75rem;
+    min-height: 2.5rem;
+    min-width: 2.5rem;
     align-items: center;
     justify-content: center;
-    border-radius: 0.5rem;
+    border-radius: 0.45rem;
     background: color-mix(in srgb, var(--presentation-surface, #fafafa) 94%, transparent);
     color: var(--presentation-secondary-text, rgb(23 23 23 / 70%));
     box-shadow: 0 1px 3px color-mix(in srgb, var(--presentation-primary-text, #171717) 10%, transparent);
@@ -755,13 +930,15 @@
     bottom: calc(100% + 0.5rem);
     display: flex;
     width: fit-content;
-    max-width: 100%;
+    max-width: calc(100vw - 2rem);
     align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
     gap: 0.375rem;
     border-radius: 0.5rem;
     background: color-mix(in srgb, var(--presentation-surface, #fafafa) 94%, transparent);
     padding: 0.25rem;
-    font-family: var(--presentation-font-body, var(--app-font-sans));
+    font-family: var(--board-font-body, var(--app-font-sans));
     box-shadow: 0 1px 3px color-mix(in srgb, var(--presentation-primary-text, #171717) 10%, transparent);
     outline: 1px solid color-mix(in srgb, var(--presentation-primary-text, #171717) 16%, transparent);
     opacity: 0;
@@ -781,6 +958,7 @@
 
   .presentation-control {
     display: inline-flex;
+    min-width: 0;
     min-height: 2.75rem;
     align-items: center;
     justify-content: center;
@@ -791,6 +969,18 @@
     font-size: 0.875rem;
     font-weight: 500;
     transition: background-color 150ms ease, color 150ms ease;
+  }
+
+  @media (max-width: 560px) {
+    .presentation-controls {
+      width: calc(100vw - 2rem);
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .presentation-control {
+      justify-content: flex-start;
+    }
   }
 
   .presentation-control:disabled {
@@ -1065,8 +1255,10 @@
   @media (prefers-reduced-motion: reduce) {
     .presentation-controls,
     .presentation-controls-toggle,
-    .presentation-time--collapsed {
+    .presentation-time--collapsed,
+    .presentation-time--timer-running .presentation-time-indicator {
       transition: none;
+      animation: none;
     }
   }
 }

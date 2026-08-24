@@ -40,7 +40,7 @@ function SurfaceSwatch({
       title={surface.description}
       onClick={onSelect}
       className={cn(
-        "group relative flex min-w-[7rem] flex-1 flex-col items-center gap-1.5 rounded-lg border p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-w-0",
+        "group relative flex min-w-[6rem] flex-1 flex-col items-center gap-1 rounded-lg border p-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-w-0 sm:max-w-[8.75rem]",
         selected
           ? "border-primary bg-primary/5 ring-1 ring-primary/30"
           : "border-border hover:bg-muted/50",
@@ -49,7 +49,7 @@ function SurfaceSwatch({
     >
       <span
         aria-hidden="true"
-        className="h-10 w-[4.5rem] shrink-0 rounded-md border border-black/10 shadow-sm"
+        className="h-8 w-16 shrink-0 rounded-md border border-black/10 shadow-sm"
         style={{ backgroundColor }}
         data-testid={`theme-swatch-color-${surface.id}`}
       />
@@ -63,7 +63,7 @@ function SurfaceSwatch({
       </span>
       {selected && (
         <Check
-          className="absolute mt-[-2.2rem] ml-[5.8rem] h-3.5 w-3.5 rounded-full bg-background text-primary"
+          className="absolute right-1.5 top-1.5 h-3.5 w-3.5 rounded-full bg-background text-primary"
           aria-hidden="true"
         />
       )}

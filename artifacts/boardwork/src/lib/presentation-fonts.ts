@@ -1,26 +1,20 @@
 /**
- * Fonts requested by index.html for authored classroom content. The final
- * system sans-serif fallback is intentionally not listed: it is synchronous
- * browser-provided coverage when a web font is unavailable.
+ * Only fonts used by the currently exposed appearance presets are bundled.
+ * Legacy appearance families intentionally fall through to the explicit
+ * system/script stacks in the theme catalog.
  */
-export const PRESENTATION_FONT_FAMILIES = [
-  "Inter",
-  "Atkinson Hyperlegible",
-  "DM Sans",
-  "DM Serif Display",
-  "Fraunces",
-  "IBM Plex Mono",
-  "IBM Plex Sans",
-  "Lora",
-  "Noto Sans Arabic",
-  "Noto Sans Hebrew",
-  "Noto Sans Devanagari",
-  "Noto Sans JP",
-  "Playfair Display",
-  "Plus Jakarta Sans",
-  "Source Sans 3",
-  "Space Grotesk",
+export const PRESENTATION_FONT_REQUESTS = [
+  { family: "Inter", weights: [400, 500, 600, 700] },
+  { family: "DM Sans", weights: [500] },
+  { family: "DM Serif Display", weights: [400] },
+  { family: "Atkinson Hyperlegible", weights: [500, 700] },
+  { family: "IBM Plex Sans", weights: [500] },
+  { family: "IBM Plex Serif", weights: [600] },
 ] as const;
+
+export const PRESENTATION_FONT_FAMILIES = PRESENTATION_FONT_REQUESTS.map(
+  ({ family }) => family,
+);
 
 export const PRESENTATION_EXPORT_SIZE = {
   width: 1920,
@@ -43,8 +37,8 @@ export async function waitForPresentationFonts(): Promise<void> {
 
   await Promise.all([
     document.fonts.ready,
-    ...PRESENTATION_FONT_FAMILIES.flatMap((family) =>
-      [400, 500, 600, 700].map((weight) =>
+    ...PRESENTATION_FONT_REQUESTS.flatMap(({ family, weights }) =>
+      weights.map((weight) =>
         document.fonts.load(`${weight} 1em "${family}"`).catch(() => []),
       ),
     ),

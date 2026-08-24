@@ -43,7 +43,6 @@ const classProfileSchema = z.object({
   curriculumFramework: z.string(),
   curriculumDetails: z.string(),
   generalContext: z.string(),
-  arrivalRoutine: z.string(),
   defaultDeviceMode: z.enum(["off", "on"]),
   defaultDuration: z.number().int().min(1, "Enter at least 1 minute.").max(120, "Enter 120 minutes or less."),
   color: z.string(),
@@ -68,7 +67,6 @@ const getDefaultValues = (initialData?: ClassProfile | null): ClassProfileFormVa
   curriculumFramework: initialData?.curriculumFramework ?? "",
   curriculumDetails: initialData?.curriculumDetails ?? "",
   generalContext: initialData?.generalContext ?? "",
-  arrivalRoutine: initialData?.arrivalRoutine ?? "",
   defaultDeviceMode: initialData?.defaultDeviceMode ?? "off",
   defaultDuration: initialData?.defaultDuration ?? 7,
   color: initialData?.color ?? "",
@@ -106,7 +104,6 @@ export function ClassFormDialog({
       curriculumFramework: optionalValue(values.curriculumFramework),
       curriculumDetails: optionalValue(values.curriculumDetails),
       generalContext: optionalValue(values.generalContext),
-      arrivalRoutine: optionalValue(values.arrivalRoutine),
       defaultDeviceMode: values.defaultDeviceMode,
       defaultDuration: values.defaultDuration,
       color: optionalValue(values.color),
@@ -249,7 +246,7 @@ export function ClassFormDialog({
                 <span>
                   <span className="block text-sm font-medium">More about this class</span>
                   <span className="block text-xs text-muted-foreground">
-                     Curriculum, class context, arrival routine, and defaults
+                     Curriculum, class context, and defaults
                   </span>
                 </span>
                 <ChevronDown className={`size-4 text-muted-foreground transition-transform ${moreOpen ? "rotate-180" : ""}`} />
@@ -326,25 +323,6 @@ export function ClassFormDialog({
                       onChange={onInstructionalContextChange}
                     />
                   )}
-
-                  <FormField
-                    control={form.control}
-                    name="arrivalRoutine"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Arrival routine</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            {...field}
-                            dir="auto"
-                            placeholder="e.g. Grab your notebook, take your seat, and begin silently."
-                            className="boardwork-user-content min-h-20 resize-y"
-                            data-testid="textarea-arrival-routine"
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <FormField

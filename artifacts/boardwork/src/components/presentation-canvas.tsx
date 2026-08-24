@@ -11,7 +11,6 @@ import type { CountdownTimerState } from "./countdown-timer";
 interface PresentationCanvasProps {
   activity: ActivityDraft;
   controls?: ReactNode;
-  timerControls?: ReactNode;
   exportLayout?: boolean;
   surfaceRef?: Ref<HTMLDivElement>;
   timer?: Pick<CountdownTimerState, "remainingSeconds" | "status"> & {
@@ -27,7 +26,6 @@ const testId = (enabled: boolean, value: string) =>
 export function PresentationCanvas({
   activity,
   controls,
-  timerControls,
   timerVisibilityControl,
   exportLayout = false,
   surfaceRef,
@@ -39,18 +37,16 @@ export function PresentationCanvas({
   const themeTypography = getThemeTypography(activity.presentationTheme);
   const includeTestIds = !exportLayout;
   const hasVisual = Boolean(activity.visualUrl);
-  const showTimer = !exportLayout && timer?.visible;
-  const showTimerControls = !exportLayout && Boolean(timer?.visible && timerControls);
-  const railMode = showTimer
-    ? hasVisual
-      ? "split"
-      : "timer-only"
-    : hasVisual
-      ? "image-only"
-      : showTimerControls
-        ? "timer-only"
-        : "empty";
+  const timerCue = !exportLayout ? timer : undefined;
   const formatTimer = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+  const timerStatusLabel =
+    timerCue?.status === "running"
+      ? "Timer running"
+      : timerCue?.status === "paused"
+        ? "Timer paused"
+        : timerCue?.status === "completed"
+          ? "Timer complete"
+          : "Timer ready";
 
   return (
     <div
@@ -68,16 +64,16 @@ export function PresentationCanvas({
         "--presentation-accent-soft": themeColors.accentSoft,
         "--presentation-accent-foreground":
           getPresentationThemeAccentForeground(themeColors.accent),
-        "--presentation-font-heading": themeTypography.headingFamily,
-        "--presentation-font-body": themeTypography.bodyFamily,
-        "--presentation-heading-weight": themeTypography.headingWeight,
-        "--presentation-body-weight": themeTypography.bodyWeight,
-        "--presentation-heading-letter-spacing":
+        "--board-font-heading": themeTypography.heading.family,
+        "--board-font-body": themeTypography.body.family,
+        "--board-font-heading-weight": themeTypography.heading.weight,
+        "--board-font-body-weight": themeTypography.body.weight,
+        "--board-font-heading-letter-spacing":
           themeTypography.headingLetterSpacing,
         backgroundColor: themeColors.background,
         color: themeColors.primaryText,
-        fontFamily: themeTypography.bodyFamily,
-        fontWeight: themeTypography.bodyWeight,
+        fontFamily: themeTypography.body.family,
+        fontWeight: themeTypography.body.weight,
       } as CSSProperties}
       {...testId(includeTestIds, "presentation-surface")}
     >
@@ -115,15 +111,25 @@ export function PresentationCanvas({
           ? timerVisibilityControl
           : (
             <div
-              className="presentation-time"
+              className={cn(
+                "presentation-time",
+                timerCue && "presentation-time--timer-aware",
+                timerCue && `presentation-time--timer-${timerCue.status}`,
+              )}
+              title={timerCue ? `${timerStatusLabel} — ${activity.durationMinutes} minutes` : undefined}
               {...testId(includeTestIds, "present-time")}
             >
-              {activity.durationMinutes} MIN
+              {timerCue && (
+                <span className="presentation-time-indicator" aria-hidden="true">
+                  <span />
+                </span>
+              )}
+              {timerCue ? formatTimer(timerCue.remainingSeconds) : `${activity.durationMinutes} MIN`}
             </div>
           )}
       </header>
 
-      <main className="presentation-main">
+      <main className={cn("presentation-main", !hasVisual && "presentation-main--content-only")}>
         <div className="presentation-content">
           {activity.task && (
             <p
@@ -184,39 +190,16 @@ export function PresentationCanvas({
             </div>
           )}
         </div>
-        {(hasVisual || showTimer || showTimerControls) && (
-          <aside className={cn("presentation-rail", `presentation-rail--${railMode}`)}>
-            {hasVisual && (
-              <figure className="presentation-visual">
-                <img src={activity.visualUrl ?? ""} alt={activity.visualDescription ?? ""} />
-                {activity.visualDescription && (
-                  <figcaption className="boardwork-user-content" dir="auto">
-                    {activity.visualDescription}
-                  </figcaption>
-                )}
-              </figure>
-            )}
-            {showTimer && timer && (
-              <div
-                className={cn(
-                  "presentation-timer",
-                  timer.status === "completed" && "presentation-timer--complete",
-                  timer.alarmActive && "presentation-timer--alerting",
-                )}
-                aria-live="polite"
-                aria-atomic="true"
-              >
-                <span className="presentation-timer-label">{timer.status === "completed" ? "Time is up" : "Time remaining"}</span>
-                <strong>{formatTimer(timer.remainingSeconds)}</strong>
-                <span className="presentation-timer-progress" aria-hidden="true"><span style={{ width: `${Math.max(0, Math.min(100, (timer.remainingSeconds / (activity.durationMinutes * 60)) * 100))}%` }} /></span>
-                {timer.alarmActive && (
-                  <span className="presentation-timer-alarm-status" role="status">
-                    Alarm active — dismiss when ready
-                  </span>
-                )}
-                {timerControls}
-              </div>
-            )}
+        {hasVisual && (
+          <aside className="presentation-rail presentation-rail--image-only">
+            <figure className="presentation-visual">
+              <img src={activity.visualUrl ?? ""} alt={activity.visualDescription ?? ""} />
+              {activity.visualDescription && (
+                <figcaption className="boardwork-user-content" dir="auto">
+                  {activity.visualDescription}
+                </figcaption>
+              )}
+            </figure>
           </aside>
         )}
       </main>

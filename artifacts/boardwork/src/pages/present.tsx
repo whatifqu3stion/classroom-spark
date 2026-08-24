@@ -128,86 +128,14 @@ export default function Present() {
     "--presentation-secondary-text": resolvedTheme.colors.secondaryText,
     "--presentation-accent": resolvedTheme.colors.accent,
     "--presentation-accent-soft": resolvedTheme.colors.accentSoft,
-    "--presentation-font-heading": resolvedTheme.typography.headingFamily,
-    "--presentation-font-body": resolvedTheme.typography.bodyFamily,
+    "--board-font-heading": resolvedTheme.typography.heading.family,
+    "--board-font-body": resolvedTheme.typography.body.family,
+    "--board-font-heading-weight": resolvedTheme.typography.heading.weight,
+    "--board-font-body-weight": resolvedTheme.typography.body.weight,
+    "--board-font-heading-letter-spacing":
+      resolvedTheme.typography.headingLetterSpacing,
   } as CSSProperties;
 
-  const controls = (
-    <div
-      className={`presentation-controls-dock ${controlsOpen ? "presentation-controls-dock--open" : ""}`}
-      onFocusCapture={() => setControlsOpen(true)}
-    >
-      <button
-        type="button"
-        className="presentation-controls-toggle"
-        onClick={() => setControlsOpen((value) => !value)}
-        aria-expanded={controlsOpen}
-        aria-controls="presentation-controls-panel"
-        title={controlsOpen ? "Hide teacher controls" : "Show teacher controls"}
-        data-testid="button-teacher-controls"
-      >
-        <Settings2 className="h-4 w-4" aria-hidden="true" />
-        <span className="sr-only">Teacher controls</span>
-      </button>
-      <nav
-        id="presentation-controls-panel"
-        className="presentation-controls"
-        aria-label="Presentation controls"
-      >
-        <Link
-          href={activityId ? `/activity/${activityId}` : "/"}
-          className="presentation-control"
-          title="Back to Workspace"
-          data-testid="button-exit-present"
-        >
-          <ChevronLeft className="w-4 h-4" aria-hidden="true" />
-          <span>Back</span>
-        </Link>
-        <button
-          type="button"
-          onClick={() => void exportPng()}
-          disabled={isExporting}
-          className="presentation-control"
-          title="Export board as PNG"
-          data-testid="button-export-png"
-        >
-          {isExporting ? (
-            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <Download className="w-4 h-4" aria-hidden="true" />
-          )}
-          <span>{isExporting ? "Exporting…" : "Export PNG"}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => void toggleFullscreen()}
-          className="presentation-control"
-          title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-          data-testid="button-fullscreen"
-        >
-          {isFullscreen ? (
-            <Minimize className="w-4 h-4" aria-hidden="true" />
-          ) : (
-            <Maximize className="w-4 h-4" aria-hidden="true" />
-          )}
-          <span>{isFullscreen ? "Exit" : "Full screen"}</span>
-        </button>
-      </nav>
-    </div>
-  );
-  const timerVisibilityControl = (
-    <button
-      type="button"
-      className="presentation-time presentation-time--collapsed"
-      onClick={() => setTimerVisible(true)}
-      title="Show timer to students"
-      aria-label="Show timer to students"
-      data-testid="button-show-timer"
-    >
-      <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-      <span>{activeDraft.durationMinutes} MIN</span>
-    </button>
-  );
   const timerControls = (
     <div className="presentation-timer-controls" aria-label="Timer controls">
       <div className="presentation-timer-actions">
@@ -275,6 +203,87 @@ export default function Present() {
     </div>
   );
 
+  const controls = (
+    <div
+      className={`presentation-controls-dock ${controlsOpen ? "presentation-controls-dock--open" : ""}`}
+      onFocusCapture={() => setControlsOpen(true)}
+    >
+      <button
+        type="button"
+        className="presentation-controls-toggle"
+        onClick={() => setControlsOpen((value) => !value)}
+        aria-expanded={controlsOpen}
+        aria-controls="presentation-controls-panel"
+        title={controlsOpen ? "Hide teacher controls" : "Show teacher controls"}
+        data-testid="button-teacher-controls"
+      >
+        <Settings2 className="h-4 w-4" aria-hidden="true" />
+        <span className="sr-only">Teacher controls</span>
+      </button>
+      <nav
+        id="presentation-controls-panel"
+        className="presentation-controls"
+        aria-label="Presentation controls"
+      >
+        <Link
+          href={activityId ? `/activity/${activityId}` : "/"}
+          className="presentation-control"
+          title="Back to Workspace"
+          data-testid="button-exit-present"
+        >
+          <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+          <span>Back</span>
+        </Link>
+        <button
+          type="button"
+          onClick={() => void exportPng()}
+          disabled={isExporting}
+          className="presentation-control"
+          title="Export board as PNG"
+          data-testid="button-export-png"
+        >
+          {isExporting ? (
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Download className="w-4 h-4" aria-hidden="true" />
+          )}
+          <span>{isExporting ? "Exporting…" : "Export PNG"}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => void toggleFullscreen()}
+          className="presentation-control"
+          title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+          data-testid="button-fullscreen"
+        >
+          {isFullscreen ? (
+            <Minimize className="w-4 h-4" aria-hidden="true" />
+          ) : (
+            <Maximize className="w-4 h-4" aria-hidden="true" />
+          )}
+          <span>{isFullscreen ? "Exit" : "Full screen"}</span>
+        </button>
+        <div className="presentation-controls-timer">
+          <div className="presentation-controls-section-label">Timer</div>
+          {timerControls}
+        </div>
+      </nav>
+    </div>
+  );
+  const timerVisibilityControl = (
+    <button
+      type="button"
+      className={`presentation-time presentation-time--collapsed presentation-time--timer-hidden presentation-time--timer-${timerStatus}`}
+      onClick={() => setTimerVisible(true)}
+      title="Show timer to students"
+      aria-label="Show timer to students"
+      data-timer-status={timerStatus}
+      data-testid="button-show-timer"
+    >
+      <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+    </button>
+  );
+
   return (
     <div
       ref={containerRef}
@@ -284,7 +293,6 @@ export default function Present() {
       <PresentationCanvas
         activity={activeDraft}
         controls={controls}
-        timerControls={timerControls}
         timerVisibilityControl={timerVisibilityControl}
         timer={{ visible: timerVisible, remainingSeconds, status: timerStatus, alarmActive }}
       />

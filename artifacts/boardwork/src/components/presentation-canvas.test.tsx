@@ -24,19 +24,17 @@ describe("PresentationCanvas timer visibility", () => {
       <PresentationCanvas
         activity={activity}
         timer={timer}
-        timerControls={<button type="button">Show timer to students</button>}
         timerVisibilityControl={<button type="button">Show timer to students</button>}
       />,
     );
 
     expect(screen.getByText("5:00")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Show timer to students" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Show timer to students" })).not.toBeInTheDocument();
 
     rerender(
       <PresentationCanvas
         activity={activity}
         timer={{ ...timer, visible: false }}
-        timerControls={<button type="button">Show timer to students</button>}
         timerVisibilityControl={<button type="button">Show timer to students</button>}
       />,
     );
@@ -46,7 +44,33 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.queryByText("Timer hidden from students")).not.toBeInTheDocument();
   });
 
-  it("shows an active alarm to the teacher but omits it from exports", () => {
+  it("connects the upper-right duration to the live timer without adding export UI", () => {
+    const { rerender } = render(
+      <PresentationCanvas
+        activity={activity}
+        timer={{ ...timer, status: "running" }}
+      />,
+    );
+
+    expect(screen.getByTestId("present-time")).toHaveClass(
+      "presentation-time--timer-aware",
+      "presentation-time--timer-running",
+    );
+    expect(screen.getByTestId("present-time").querySelector(".presentation-time-indicator")).toBeInTheDocument();
+
+    rerender(
+      <PresentationCanvas
+        activity={activity}
+        exportLayout
+        timer={{ ...timer, status: "running" }}
+      />,
+    );
+
+    expect(screen.getByText("5 MIN")).not.toHaveClass("presentation-time--timer-aware");
+    expect(screen.queryByText("5 MIN")?.querySelector(".presentation-time-indicator")).not.toBeInTheDocument();
+  });
+
+  it("keeps the live timer and alarm UI out of student and export surfaces", () => {
     const alarmTimer = {
       ...timer,
       remainingSeconds: 0,
@@ -57,25 +81,23 @@ describe("PresentationCanvas timer visibility", () => {
       <PresentationCanvas
         activity={activity}
         timer={alarmTimer}
-        timerControls={<button type="button">Dismiss alarm</button>}
       />,
     );
 
-    expect(screen.getByText("Alarm active — dismiss when ready")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Dismiss alarm" })).toBeInTheDocument();
-    expect(screen.getByText("Alarm active — dismiss when ready").closest(".presentation-timer")).toHaveClass(
-      "presentation-timer--alerting",
-    );
+    expect(screen.getByText("0:00")).toBeInTheDocument();
+    expect(screen.queryByText("Time is up")).not.toBeInTheDocument();
+    expect(screen.queryByText("Alarm active — dismiss when ready")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Dismiss alarm" })).not.toBeInTheDocument();
 
     rerender(
       <PresentationCanvas
         activity={activity}
         exportLayout
         timer={alarmTimer}
-        timerControls={<button type="button">Dismiss alarm</button>}
       />,
     );
 
+    expect(screen.getByText("5 MIN")).toBeInTheDocument();
     expect(screen.queryByText("Alarm active — dismiss when ready")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Dismiss alarm" })).not.toBeInTheDocument();
   });
