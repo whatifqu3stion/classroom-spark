@@ -16,9 +16,9 @@ interface PresentationCanvasProps {
   surfaceRef?: Ref<HTMLDivElement>;
   timer?: Pick<CountdownTimerState, "remainingSeconds" | "status"> & {
     visible: boolean;
-    mode: "standard" | "expanded";
     alarmActive?: boolean;
   };
+  timerVisibilityControl?: ReactNode;
 }
 
 const testId = (enabled: boolean, value: string) =>
@@ -28,6 +28,7 @@ export function PresentationCanvas({
   activity,
   controls,
   timerControls,
+  timerVisibilityControl,
   exportLayout = false,
   surfaceRef,
   timer,
@@ -39,7 +40,7 @@ export function PresentationCanvas({
   const includeTestIds = !exportLayout;
   const hasVisual = Boolean(activity.visualUrl);
   const showTimer = !exportLayout && timer?.visible;
-  const showTimerControls = !exportLayout && Boolean(timer && timerControls);
+  const showTimerControls = !exportLayout && Boolean(timer?.visible && timerControls);
   const railMode = showTimer
     ? hasVisual
       ? "split"
@@ -93,23 +94,33 @@ export function PresentationCanvas({
       </div>
 
       <header className="presentation-header">
-        {activity.eyebrow ? (
+        {activity.title || activity.eyebrow ? (
           <div
-            className="presentation-eyebrow boardwork-user-content"
+            className={cn(
+              "presentation-eyebrow boardwork-user-content",
+              activity.title && "presentation-header-title",
+            )}
             dir="auto"
-            {...testId(includeTestIds, "present-eyebrow")}
+            {...testId(
+              includeTestIds,
+              activity.title ? "present-title" : "present-eyebrow",
+            )}
           >
-            {activity.eyebrow}
+            {activity.title || activity.eyebrow}
           </div>
         ) : (
           <div aria-hidden="true" />
         )}
-        <div
-          className="presentation-time"
-          {...testId(includeTestIds, "present-time")}
-        >
-          {activity.durationMinutes} MIN
-        </div>
+        {!exportLayout && timer && !timer.visible && timerVisibilityControl
+          ? timerVisibilityControl
+          : (
+            <div
+              className="presentation-time"
+              {...testId(includeTestIds, "present-time")}
+            >
+              {activity.durationMinutes} MIN
+            </div>
+          )}
       </header>
 
       <main className="presentation-main">
@@ -174,7 +185,7 @@ export function PresentationCanvas({
           )}
         </div>
         {(hasVisual || showTimer || showTimerControls) && (
-          <aside className={cn("presentation-rail", `presentation-rail--${railMode}`, timer?.mode === "expanded" && "presentation-rail--expanded")}>
+          <aside className={cn("presentation-rail", `presentation-rail--${railMode}`)}>
             {hasVisual && (
               <figure className="presentation-visual">
                 <img src={activity.visualUrl ?? ""} alt={activity.visualDescription ?? ""} />
@@ -206,34 +217,12 @@ export function PresentationCanvas({
                 {timerControls}
               </div>
             )}
-            {showTimerControls && !showTimer && (
-              <div className="presentation-timer-hidden-controls">
-                <span className="presentation-timer-label">Timer hidden from students</span>
-                {timer?.alarmActive && (
-                  <span className="presentation-timer-alarm-status" role="status">
-                    Time is up — dismiss alarm
-                  </span>
-                )}
-                {timerControls}
-              </div>
-            )}
           </aside>
         )}
       </main>
 
       <footer className="presentation-footer">
-        {activity.title ? (
-          <h1
-            className="presentation-title presentation-footer-title boardwork-user-content"
-            dir="auto"
-            {...testId(includeTestIds, "present-title")}
-          >
-            <FormulaText>{activity.title}</FormulaText>
-          </h1>
-        ) : (
-          <div aria-hidden="true" />
-        )}
-        {controls ?? <div aria-hidden="true" />}
+        {controls}
       </footer>
     </div>
   );

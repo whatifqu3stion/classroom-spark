@@ -57,6 +57,8 @@ export type PresentationSurfaceTheme = {
 export type PresentationAccentTheme = {
   id: string;
   name: string;
+  lightName: string;
+  darkName: string;
   description: string;
   colors: {
     light: string;
@@ -80,24 +82,32 @@ export const presentationAccentThemes = [
   {
     id: "terracotta",
     name: "Terracotta",
+    lightName: "Terracotta",
+    darkName: "Coral",
     description: "A grounded, warm signal for emphasis and progress.",
     colors: { light: "#A94632", dark: "#E28A70" },
   },
   {
     id: "blue",
     name: "Dark blue",
+    lightName: "Dark blue",
+    darkName: "Sky blue",
     description: "Boardwork's steady default signal for links and navigation.",
     colors: { light: "#334155", dark: "#70B7DF" },
   },
   {
     id: "sage",
     name: "Sage",
+    lightName: "Sage",
+    darkName: "Mint",
     description: "A quiet natural signal for calm emphasis.",
     colors: { light: "#47745A", dark: "#7BC49A" },
   },
   {
     id: "plum",
     name: "Plum",
+    lightName: "Plum",
+    darkName: "Lilac",
     description: "A thoughtful muted signal for gentle distinction.",
     colors: { light: "#7B526F", dark: "#C18AC0" },
   },
@@ -261,6 +271,14 @@ const typographyById = new Map<string, PresentationTypography>(
 function getAccentColor(accentId: string, mode: PresentationThemeMode): string {
   const accent = accentThemeById.get(accentId) ?? presentationAccentThemes[0];
   return accent.colors[mode];
+}
+
+export function getPresentationAccentName(
+  accentId: string,
+  mode: PresentationThemeMode,
+): string {
+  const accent = accentThemeById.get(accentId) ?? presentationAccentThemes[0];
+  return mode === "dark" ? accent.darkName : accent.lightName;
 }
 
 function composeSurfaceColors(

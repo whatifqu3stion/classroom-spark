@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, type CSSProperties } from "react";
 import { useBoardwork } from "@/store/boardwork-context";
-import { Maximize, Minimize, ChevronLeft, Download, Loader2, Play, Pause, RotateCcw, Plus, Minus, Volume2, VolumeX, Eye, EyeOff, Settings2, ChevronDown } from "lucide-react";
+import { Maximize, Minimize, ChevronLeft, Download, Loader2, Play, Pause, RotateCcw, Plus, Minus, Volume2, VolumeX, Eye, EyeOff, Settings2, ChevronDown, Clock } from "lucide-react";
 import { Link, useRoute } from "wouter";
 import { toPng } from "html-to-image";
 import { useToast } from "@/hooks/use-toast";
@@ -35,13 +35,11 @@ export default function Present() {
   }, [appState, activityId]);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showControls, setShowControls] = useState(true);
+  const [controlsOpen, setControlsOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [timerMode, setTimerMode] = useState<"standard" | "expanded">("standard");
   const [timerVisible, setTimerVisible] = useState(true);
   const [alarmEnabled, setAlarmEnabled] = useState(true);
   const [timerOptionsOpen, setTimerOptionsOpen] = useState(false);
-  const controlsTimeoutRef = useRef<number | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
 
@@ -66,21 +64,6 @@ export default function Present() {
     };
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
-  }, []);
-
-  useEffect(() => {
-    const handleMouseMove = () => {
-      setShowControls(true);
-      if (controlsTimeoutRef.current) window.clearTimeout(controlsTimeoutRef.current);
-      controlsTimeoutRef.current = window.setTimeout(() => {
-        setShowControls(false);
-      }, 2500);
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      if (controlsTimeoutRef.current) window.clearTimeout(controlsTimeoutRef.current);
-    };
   }, []);
 
   const toggleFullscreen = async () => {
@@ -150,51 +133,80 @@ export default function Present() {
   } as CSSProperties;
 
   const controls = (
-    <nav
-      className={`presentation-controls ${showControls ? "presentation-controls--visible" : ""}`}
-      aria-label="Presentation controls"
-      onMouseEnter={() => setShowControls(true)}
-      onFocusCapture={() => setShowControls(true)}
+    <div
+      className={`presentation-controls-dock ${controlsOpen ? "presentation-controls-dock--open" : ""}`}
+      onFocusCapture={() => setControlsOpen(true)}
     >
-      <Link
-        href={activityId ? `/activity/${activityId}` : "/"}
-        className="presentation-control"
-        title="Back to Workspace"
-        data-testid="button-exit-present"
-      >
-        <ChevronLeft className="w-4 h-4" aria-hidden="true" />
-        <span>Back</span>
-      </Link>
       <button
         type="button"
-        onClick={() => void exportPng()}
-        disabled={isExporting}
-        className="presentation-control"
-        title="Export board as PNG"
-        data-testid="button-export-png"
+        className="presentation-controls-toggle"
+        onClick={() => setControlsOpen((value) => !value)}
+        aria-expanded={controlsOpen}
+        aria-controls="presentation-controls-panel"
+        title={controlsOpen ? "Hide teacher controls" : "Show teacher controls"}
+        data-testid="button-teacher-controls"
       >
-        {isExporting ? (
-          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-        ) : (
-          <Download className="w-4 h-4" aria-hidden="true" />
-        )}
-        <span>{isExporting ? "Exporting…" : "Export PNG"}</span>
+        <Settings2 className="h-4 w-4" aria-hidden="true" />
+        <span className="sr-only">Teacher controls</span>
       </button>
-      <button
-        type="button"
-        onClick={() => void toggleFullscreen()}
-        className="presentation-control"
-        title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-        data-testid="button-fullscreen"
+      <nav
+        id="presentation-controls-panel"
+        className="presentation-controls"
+        aria-label="Presentation controls"
       >
-        {isFullscreen ? (
-          <Minimize className="w-4 h-4" aria-hidden="true" />
-        ) : (
-          <Maximize className="w-4 h-4" aria-hidden="true" />
-        )}
-        <span>{isFullscreen ? "Exit" : "Full screen"}</span>
-      </button>
-    </nav>
+        <Link
+          href={activityId ? `/activity/${activityId}` : "/"}
+          className="presentation-control"
+          title="Back to Workspace"
+          data-testid="button-exit-present"
+        >
+          <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+          <span>Back</span>
+        </Link>
+        <button
+          type="button"
+          onClick={() => void exportPng()}
+          disabled={isExporting}
+          className="presentation-control"
+          title="Export board as PNG"
+          data-testid="button-export-png"
+        >
+          {isExporting ? (
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Download className="w-4 h-4" aria-hidden="true" />
+          )}
+          <span>{isExporting ? "Exporting…" : "Export PNG"}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => void toggleFullscreen()}
+          className="presentation-control"
+          title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+          data-testid="button-fullscreen"
+        >
+          {isFullscreen ? (
+            <Minimize className="w-4 h-4" aria-hidden="true" />
+          ) : (
+            <Maximize className="w-4 h-4" aria-hidden="true" />
+          )}
+          <span>{isFullscreen ? "Exit" : "Full screen"}</span>
+        </button>
+      </nav>
+    </div>
+  );
+  const timerVisibilityControl = (
+    <button
+      type="button"
+      className="presentation-time presentation-time--collapsed"
+      onClick={() => setTimerVisible(true)}
+      title="Show timer to students"
+      aria-label="Show timer to students"
+      data-testid="button-show-timer"
+    >
+      <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+      <span>{activeDraft.durationMinutes} MIN</span>
+    </button>
   );
   const timerControls = (
     <div className="presentation-timer-controls" aria-label="Timer controls">
@@ -253,13 +265,6 @@ export default function Present() {
               {timerVisible ? <Eye className="h-3.5 w-3.5" aria-hidden="true" /> : <EyeOff className="h-3.5 w-3.5" aria-hidden="true" />}
               <span>{timerVisible ? "Visible" : "Hidden"}</span>
             </button>
-            <label className="presentation-timer-option">
-              <span className="sr-only">Timer display mode</span>
-              <select value={timerMode} onChange={(event) => setTimerMode(event.target.value as "standard" | "expanded")} aria-label="Timer display mode">
-                <option value="standard">Standard</option>
-                <option value="expanded">Expanded</option>
-              </select>
-            </label>
             <button type="button" className="presentation-timer-option" onClick={() => setAlarmEnabled((value) => !value)} aria-pressed={alarmEnabled} aria-label={alarmEnabled ? "Mute done alarm" : "Enable done alarm"}>
               {alarmEnabled ? <Volume2 className="h-3.5 w-3.5" aria-hidden="true" /> : <VolumeX className="h-3.5 w-3.5" aria-hidden="true" />}
               <span>{alarmEnabled ? "Alarm" : "Muted"}</span>
@@ -275,9 +280,14 @@ export default function Present() {
       ref={containerRef}
       className={`presentation-page ${isFullscreen ? "presentation-page--fullscreen" : ""}`}
       style={presentationPageStyle}
-      onMouseEnter={() => setShowControls(true)}
     >
-      <PresentationCanvas activity={activeDraft} controls={controls} timerControls={timerControls} timer={{ visible: timerVisible, mode: timerMode, remainingSeconds, status: timerStatus, alarmActive }} />
+      <PresentationCanvas
+        activity={activeDraft}
+        controls={controls}
+        timerControls={timerControls}
+        timerVisibilityControl={timerVisibilityControl}
+        timer={{ visible: timerVisible, remainingSeconds, status: timerStatus, alarmActive }}
+      />
       <div className="presentation-export-stage" aria-hidden="true">
         <PresentationCanvas
           activity={activeDraft}

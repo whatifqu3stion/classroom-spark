@@ -1,31 +1,24 @@
-import { useMemo, type CSSProperties } from "react";
+import { useMemo } from "react";
 import { Check, Moon, Sparkles, Sun } from "lucide-react";
 import {
   getCuratedPresentationTheme,
+  getPresentationAccentName,
   presentationAccentThemes,
   presentationSurfaceThemes,
   type PresentationThemeSelection,
 } from "@workspace/api-zod";
 import {
-  getThemeColors,
   getThemeAccentId,
   getThemeId,
   getThemeLabel,
-  getThemeTypography,
   rememberPresentationTheme,
   type BoardworkPresentationTheme,
 } from "@/lib/presentation-theme";
 import { cn } from "@/lib/utils";
-import { FormulaText } from "@/components/formula-text";
 
 interface PresentationThemePickerProps {
   value?: BoardworkPresentationTheme | null;
   onChange: (value: PresentationThemeSelection) => void;
-  preview?: {
-    title: string;
-    task: string;
-    prompt?: string;
-  };
 }
 
 function SurfaceSwatch({
@@ -80,11 +73,13 @@ function SurfaceSwatch({
 
 function AccentSwatch({
   accent,
+  name,
   color,
   selected,
   onSelect,
 }: {
   accent: (typeof presentationAccentThemes)[number];
+  name: string;
   color: string;
   selected: boolean;
   onSelect: () => void;
@@ -92,7 +87,7 @@ function AccentSwatch({
   return (
     <button
       type="button"
-      aria-label={`Use ${accent.name} accent`}
+      aria-label={`Use ${name} accent`}
       aria-pressed={selected}
       title={accent.description}
       onClick={onSelect}
@@ -110,7 +105,7 @@ function AccentSwatch({
         aria-hidden="true"
       />
       <span className="truncate text-xs font-medium text-foreground">
-        {accent.name}
+        {name}
       </span>
       {selected && (
         <Check className="ml-auto h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
@@ -119,26 +114,9 @@ function AccentSwatch({
   );
 }
 
-function getPreviewStyle(
-  colors: ReturnType<typeof getThemeColors>,
-  typography: ReturnType<typeof getThemeTypography>,
-): CSSProperties {
-  return {
-    "--presentation-bg": colors.background,
-    "--presentation-surface": colors.surface,
-    "--presentation-primary-text": colors.primaryText,
-    "--presentation-secondary-text": colors.secondaryText,
-    "--presentation-accent": colors.accent,
-    "--presentation-accent-soft": colors.accentSoft,
-    "--presentation-font-heading": typography.headingFamily,
-    "--presentation-font-body": typography.bodyFamily,
-  } as CSSProperties;
-}
-
 export function PresentationThemePicker({
   value,
   onChange,
-  preview,
 }: PresentationThemePickerProps) {
   const resolvedId = getThemeId(value);
   const selectedSurfaceId =
@@ -151,9 +129,12 @@ export function PresentationThemePicker({
   );
   const selectedAccentId =
     getThemeAccentId(value) ?? selectedSurface?.defaultAccentId ?? null;
-  const currentColors = getThemeColors(value);
-  const currentTypography = getThemeTypography(value);
-  const selectionLabel = useMemo(() => getThemeLabel(value), [value]);
+  const selectionLabel = useMemo(() => {
+    if (selectedSurface && selectedAccentId) {
+      return `${selectedSurface.name} · ${getPresentationAccentName(selectedAccentId, selectedSurface.mode)}`;
+    }
+    return getThemeLabel(value);
+  }, [selectedAccentId, selectedSurface, value]);
 
   const selectSelection = (selection: PresentationThemeSelection) => {
     rememberPresentationTheme(selection);
@@ -223,6 +204,7 @@ export function PresentationThemePicker({
               <AccentSwatch
                 key={accent.id}
                 accent={accent}
+                name={getPresentationAccentName(accent.id, selectedSurface.mode)}
                 color={getCuratedPresentationTheme(
                   selectedSurface.id,
                   accent.id,
@@ -245,66 +227,6 @@ export function PresentationThemePicker({
         </p>
       )}
 
-      {preview && (
-        <div
-          className="overflow-hidden rounded-lg border shadow-sm"
-          style={{
-            ...getPreviewStyle(currentColors, currentTypography),
-            backgroundColor: currentColors.background,
-            color: currentColors.primaryText,
-            fontFamily: currentTypography.bodyFamily,
-          }}
-          data-testid="presentation-theme-preview"
-        >
-          <div
-            className="flex items-center justify-between border-b px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em]"
-            style={{
-              borderColor: `${currentColors.primaryText}25`,
-              color: currentColors.secondaryText,
-            }}
-          >
-            <span>Student view preview</span>
-            <span>{selectionLabel}</span>
-          </div>
-          <div className="grid gap-1.5 px-3 py-3">
-            <strong
-              className="text-base leading-tight"
-              style={{
-                color: currentColors.primaryText,
-                fontFamily: currentTypography.headingFamily,
-                fontWeight: currentTypography.headingWeight,
-                letterSpacing: currentTypography.headingLetterSpacing,
-              }}
-            >
-              <FormulaText>{preview.title || "Your activity title"}</FormulaText>
-            </strong>
-            <span
-              className="text-sm leading-snug"
-              style={{ color: currentColors.primaryText }}
-            >
-              <FormulaText>
-                {preview.task || "The student outcome will appear here."}
-              </FormulaText>
-            </span>
-            {preview.prompt && (
-              <span
-                className="flex gap-1.5 text-xs"
-                style={{ color: currentColors.secondaryText }}
-              >
-                <span style={{ color: currentColors.accent }} aria-hidden="true">
-                  •
-                </span>
-                <FormulaText>{preview.prompt}</FormulaText>
-              </span>
-            )}
-            <span
-              className="mt-1 h-1 w-16 rounded-full"
-              style={{ backgroundColor: currentColors.accent }}
-              aria-hidden="true"
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

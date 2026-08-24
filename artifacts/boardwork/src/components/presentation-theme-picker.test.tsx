@@ -71,16 +71,13 @@ describe("PresentationThemePicker", () => {
           sourceThemeId: "paper",
           anchors: { background: "#000000", text: "#FFFFFF", accent: "#67E8F9" },
         }}
-        preview={{ title: "Saved activity", task: "Keep this appearance readable." }}
       />,
     );
 
     expect(screen.getAllByText("Custom").length).toBeGreaterThan(0);
     expect(screen.queryByTestId("button-customize-theme")).not.toBeInTheDocument();
     expect(screen.queryByTestId("presentation-accents")).not.toBeInTheDocument();
-    expect(screen.getByTestId("presentation-theme-preview")).toHaveStyle({
-      backgroundColor: "#000000",
-    });
+    expect(screen.queryByTestId("presentation-theme-preview")).not.toBeInTheDocument();
   });
 
   it("keeps legacy curated appearances intact without presenting them as new surfaces", () => {

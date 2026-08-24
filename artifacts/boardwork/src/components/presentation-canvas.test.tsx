@@ -14,7 +14,6 @@ const activity: ActivityDraft = {
 
 const timer = {
   visible: true,
-  mode: "standard" as const,
   remainingSeconds: 300,
   status: "idle" as const,
 };
@@ -26,6 +25,7 @@ describe("PresentationCanvas timer visibility", () => {
         activity={activity}
         timer={timer}
         timerControls={<button type="button">Show timer to students</button>}
+        timerVisibilityControl={<button type="button">Show timer to students</button>}
       />,
     );
 
@@ -37,12 +37,13 @@ describe("PresentationCanvas timer visibility", () => {
         activity={activity}
         timer={{ ...timer, visible: false }}
         timerControls={<button type="button">Show timer to students</button>}
+        timerVisibilityControl={<button type="button">Show timer to students</button>}
       />,
     );
 
     expect(screen.queryByText("5:00")).not.toBeInTheDocument();
-    expect(screen.getByText("Timer hidden from students")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Show timer to students" })).toBeInTheDocument();
+    expect(screen.queryByText("Timer hidden from students")).not.toBeInTheDocument();
   });
 
   it("shows an active alarm to the teacher but omits it from exports", () => {
@@ -114,7 +115,7 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.queryByText(/\\frac|\\sqrt/)).not.toBeInTheDocument();
   });
 
-  it("puts arrival instructions first and the activity name in the footer", () => {
+  it("puts arrival instructions first and the activity name in the header", () => {
     render(
       <PresentationCanvas
         activity={{
@@ -133,7 +134,8 @@ describe("PresentationCanvas timer visibility", () => {
     expect(Array.from(surface.children).indexOf(arrival)).toBeLessThan(
       Array.from(surface.children).indexOf(header as Element),
     );
-    expect(title.closest("footer")).toBeInTheDocument();
+    expect(title.closest("header")).toBeInTheDocument();
+    expect(title.closest("footer")).not.toBeInTheDocument();
     expect(title).toHaveTextContent("Independent practice");
   });
 

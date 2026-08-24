@@ -1,7 +1,7 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { ActivityDraft, Duration } from "@/store/boardwork-context";
 import { Button } from "./ui/button";
-import { Plus, X, Monitor, Clock, FileText, Loader2, CheckCircle2, AlertCircle, ExternalLink, ImagePlus } from "lucide-react";
+import { Plus, X, Monitor, Clock, FileText, Loader2, CheckCircle2, AlertCircle, ExternalLink, ImagePlus, ChevronDown } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { getSafeResourceUrl } from "@/lib/resource-url";
@@ -68,6 +68,7 @@ function EditableText({
 }
 
 export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", isMeaningful = true }: BoardEditorProps) {
+  const [presentationVisualOpen, setPresentationVisualOpen] = useState(false);
   const safeResourceUrl = getSafeResourceUrl(draft.resourceUrl);
   const addPrompt = () => {
     if (draft.prompts.length < 3) {
@@ -267,11 +268,40 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
             <FormulaPreview>{(draft.materials ?? []).join(", ")}</FormulaPreview>
           </div>
 
-          <div className="space-y-5 pt-8 mt-8 border-t">
-            <div className="space-y-3">
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Presentation visual
-              </div>
+          <div className="space-y-3 pt-8 mt-8 border-t">
+            <button
+              type="button"
+              className="flex w-full items-center justify-between gap-4 rounded-lg border px-3 py-2.5 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-expanded={presentationVisualOpen}
+              aria-controls="presentation-visual-settings"
+              onClick={() => setPresentationVisualOpen((value) => !value)}
+              data-testid="toggle-presentation-visual"
+            >
+              <span>
+                <span className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Presentation appearance
+                </span>
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  {draft.visualUrl
+                    ? "Image added · changes appear on the live board"
+                    : "Changes appear on the live board"}
+                </span>
+              </span>
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+                  presentationVisualOpen && "rotate-180",
+                )}
+                aria-hidden="true"
+              />
+            </button>
+            <div
+              id="presentation-visual-settings"
+              className="space-y-5 pt-2"
+              hidden={!presentationVisualOpen}
+              data-testid="presentation-visual-settings"
+            >
+              <div className="space-y-3">
               <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-medium hover:bg-muted/50 focus-within:ring-2 focus-within:ring-ring">
                 <ImagePlus className="h-4 w-4" aria-hidden="true" />
                 {draft.visualUrl ? "Replace image" : "Add image"}
@@ -309,39 +339,35 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
                 </>
               )}
               <p className="text-xs text-muted-foreground">Local image only. It will be shown without cropping in Present and PNG export.</p>
-            </div>
-            <PresentationThemePicker
-              value={draft.presentationTheme}
-              onChange={(presentationTheme) => onChange({ presentationTheme })}
-              preview={{
-                title: draft.title,
-                task: draft.task,
-                prompt: draft.prompts[0],
-              }}
-            />
-            {draft.teacherNote != null && (
-              <div>
-                <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Teacher note
-                </div>
-                <EditableText
-                  multiline
-                  value={draft.teacherNote}
-                  onChange={(val) => onChange({ teacherNote: val || null })}
-                  placeholder="Optional note for the teacher..."
-                  className="text-muted-foreground text-sm block w-full"
-                />
-                <FormulaPreview>{draft.teacherNote}</FormulaPreview>
               </div>
-            )}
-            <EditableText
-              multiline
-              value={draft.arrivalInstructions || ""}
-              onChange={(val) => onChange({ arrivalInstructions: val })}
-              placeholder="Arrival instructions (optional footer)..."
-              className="text-muted-foreground text-sm block w-full"
-            />
-            <FormulaPreview>{draft.arrivalInstructions || ""}</FormulaPreview>
+              <PresentationThemePicker
+                value={draft.presentationTheme}
+                onChange={(presentationTheme) => onChange({ presentationTheme })}
+              />
+              {draft.teacherNote != null && (
+                <div>
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Teacher note
+                  </div>
+                  <EditableText
+                    multiline
+                    value={draft.teacherNote}
+                    onChange={(val) => onChange({ teacherNote: val || null })}
+                    placeholder="Optional note for the teacher..."
+                    className="text-muted-foreground text-sm block w-full"
+                  />
+                  <FormulaPreview>{draft.teacherNote}</FormulaPreview>
+                </div>
+              )}
+              <EditableText
+                multiline
+                value={draft.arrivalInstructions || ""}
+                onChange={(val) => onChange({ arrivalInstructions: val })}
+                placeholder="Arrival instructions (optional footer)..."
+                className="text-muted-foreground text-sm block w-full"
+              />
+              <FormulaPreview>{draft.arrivalInstructions || ""}</FormulaPreview>
+            </div>
           </div>
           
         </div>

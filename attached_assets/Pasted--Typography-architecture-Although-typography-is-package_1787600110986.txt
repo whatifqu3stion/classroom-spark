@@ -1,0 +1,365 @@
+## Typography architecture
+
+Although typography is packaged inside each teacher-facing Appearance Preset, keep typography as a **separate internal system**.
+
+Conceptually:
+
+```ts
+type TypographySystem = {
+  id: string;
+  heading: {
+    family: string;
+    weight: number;
+  };
+  body: {
+    family: string;
+    weight: number;
+  };
+};
+```
+
+This separation is intentional so future versions can expose independent typography customization without restructuring the presentation system.
+
+Do **not** expose manual font selection in this version.
+
+---
+
+## Semantic typography tokens
+
+Presentation components should consume semantic typography tokens rather than preset-specific font logic.
+
+Use equivalents of:
+
+```css
+--board-font-heading;
+--board-font-body;
+--board-font-heading-weight;
+--board-font-body-weight;
+```
+
+Avoid scattered conditionals such as:
+
+```ts
+if (typography === "story") {
+  ...
+}
+```
+
+when semantic tokens can handle the same behavior.
+
+---
+
+## Preserve current Boardwork typography
+
+The default `Boardwork` Appearance Preset should preserve the **current production typography exactly** unless technical integration requires mapping it into semantic heading/body tokens.
+
+Do not aesthetically “upgrade,” replace, or reinterpret the current Boardwork type system as part of this work.
+
+If the current presentation uses one font family throughout, it is acceptable for Boardwork to continue using that family for both semantic heading and body roles with its existing weights.
+
+---
+
+## Curated typography systems
+
+Use the following typography systems for the new Appearance Presets.
+
+### Clear
+
+Heading:
+
+```text
+Atkinson Hyperlegible Next
+700
+```
+
+Body:
+
+```text
+Atkinson Hyperlegible Next
+500
+```
+
+Character:
+
+* maximum clarity
+* neutral
+* highly legible
+
+---
+
+### Editorial
+
+Heading:
+
+```text
+DM Serif Display
+400
+```
+
+Body:
+
+```text
+DM Sans
+500
+```
+
+Character:
+
+* polished
+* warm
+* editorial
+* expressive without compromising body readability
+
+---
+
+### Classic
+
+Heading:
+
+```text
+Source Serif 4
+700
+```
+
+Body:
+
+```text
+Source Sans 3
+500
+```
+
+Character:
+
+* academic
+* composed
+* familiar
+* highly readable
+
+---
+
+### Structured
+
+Heading:
+
+```text
+IBM Plex Serif
+600
+```
+
+Body:
+
+```text
+IBM Plex Sans
+500
+```
+
+Character:
+
+* technical
+* contemporary
+* precise
+* structured
+
+---
+
+### Story
+
+Heading:
+
+```text
+Lora
+700
+```
+
+Body:
+
+```text
+Source Sans 3
+500
+```
+
+Character:
+
+* warm
+* human
+* slightly literary
+* approachable
+
+---
+
+### Playful
+
+Heading:
+
+```text
+Fredoka
+600
+```
+
+Body:
+
+```text
+Atkinson Hyperlegible Next
+500
+```
+
+Character:
+
+* energetic
+* approachable
+* expressive
+
+Fredoka must remain limited to short display/headline roles.
+
+---
+
+## Typography usage rules
+
+Typography should reinforce semantic hierarchy.
+
+### Display/heading font may be used for inherently short elements such as:
+
+* `DO NOW`
+* short section labels
+* concise activity titles
+* short callouts
+* very short key phrases
+
+### Body font must be used for:
+
+* primary instructions
+* supporting instructions
+* constraints
+* timer/informational text
+* sustained reading
+* multi-line instructional copy
+* any content whose length is unpredictable
+
+### Critical rule
+
+> **Never use a decorative or expressive display face for sustained instructional reading.**
+
+Do not dynamically detect rendered line counts and swap fonts based on wrapping.
+
+Avoid viewport-dependent font switching.
+
+Instead, choose heading versus body typography based on **semantic role and expected content length**.
+
+If an existing title field can contain arbitrary or potentially long text, use the readable body face for that title rather than dynamically changing fonts after layout.
+
+This behavior should remain predictable across:
+
+* preview
+* presentation mode
+* responsive widths
+* exports
+
+---
+
+## Font coverage and glyph fallback
+
+Boardwork may contain multilingual classroom content.
+
+At minimum:
+
+* support common Latin diacritics
+* verify accented names and words render correctly
+* ensure numbers, punctuation, symbols, and timers render reliably
+* avoid missing-glyph boxes
+
+Every typography system should have an explicit safe fallback stack.
+
+If a selected display font lacks a required glyph:
+
+1. fall back cleanly to the preset’s body font for that text where practical
+2. otherwise use the defined system fallback
+3. never display a missing-glyph box when a reasonable fallback exists
+
+Do not require every display face to support every possible language.
+
+Prioritize graceful fallback and readable output.
+
+---
+
+## Font loading
+
+Prefer bundling/self-hosting the required font assets rather than depending on runtime requests to Google Fonts or another external font CDN.
+
+Only include the weights/styles actually required by the presets.
+
+Prefer optimized WOFF2 assets.
+
+Ensure:
+
+* fonts load reliably on restricted school networks
+* Boardwork does not depend on an external font service
+* exports use the intended fonts
+* there is no obvious font-swap flash where reasonably avoidable
+* appropriate open-font license notices remain in the project
+
+Do not expose or distribute raw font files to users.
+
+---
+
+## Typography and layout behavior
+
+Changing Appearance Presets may naturally alter line wrapping slightly because font metrics differ, but typography should **not intentionally redesign the activity layout**.
+
+Do not:
+
+* dynamically shrink text simply to preserve identical wrapping
+* change information hierarchy based on font selection
+* create viewport-dependent heading/body font swaps
+* use expressive fonts for long instructional content
+
+Test every typography system against:
+
+* very short activities
+* typical activities
+* long instructions
+* short titles
+* long titles
+* narrow viewports
+* presentation/full-screen views
+
+---
+
+## Typography QA
+
+Test at minimum:
+
+* every typography system
+* short display text
+* long instructional text
+* arbitrary-length titles
+* accented Latin characters
+* mixed-case text
+* numbers
+* punctuation
+* symbols
+* timers
+* font-loading failure
+* missing display-font glyph
+* body-font fallback
+* preview rendering
+* presentation rendering
+* export rendering
+
+---
+
+## Typography acceptance criteria
+
+Typography work is complete when:
+
+1. Boardwork’s existing default typography remains visually unchanged.
+2. New Appearance Presets use the defined matched typography systems.
+3. Body/instruction text always uses a highly readable body face.
+4. Expressive display typography is limited to inherently short semantic roles.
+5. No viewport-dependent line-count font switching is used.
+6. Common Latin diacritics render reliably.
+7. Missing display-font glyphs fall back cleanly.
+8. Every typography system has a safe fallback stack.
+9. Fonts do not depend on runtime external font services.
+10. Exported Boardwork uses the intended typography.
+11. Typography remains readable across short, normal, and long Boardwork content.
+12. The internal architecture remains ready for possible future manual typography customization without exposing it now.
