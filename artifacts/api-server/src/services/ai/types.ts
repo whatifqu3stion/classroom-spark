@@ -34,11 +34,24 @@ export interface BoardworkGenerationContext {
     skills: string;
     standardsObjectives: string;
   };
+  selectedUnit?: {
+    id: string;
+    name: string;
+    conceptsTopics: string;
+    skills: string;
+    standardsObjectives: string;
+  } | null;
   today: {
+    unitId?: string | null;
     topic: string | null;
     goal: string | null;
+    studentOutput?: string | null;
+    workMode?: "quiet" | "think_together" | "discussion" | "teacher_check" | null;
+    materialsAvailable?: string | null;
+    completionSignal?: string | null;
     focusChips: string[];
     deviceMode: "off" | "on";
+    technologyMode?: "no_computer" | "computer_available" | "computer_required";
     durationMinutes: number;
     activityStyle: (typeof generatedActivityStyles)[number] | null;
     teacherProvidedUrl: string | null;

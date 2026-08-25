@@ -38,7 +38,10 @@ import type {
   HealthStatus,
   InstructionalContext,
   InstructionalContextInput,
-  ListActivitiesParams
+  ListActivitiesParams,
+  Unit,
+  UnitInput,
+  UnitUpdate
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -736,6 +739,297 @@ export const useUpdateInstructionalContext = <TError = ErrorType<Error>,
         TContext
       > => {
       return useMutation(getUpdateInstructionalContextMutationOptions(options));
+    }
+
+export const getListUnitsUrl = () => {
+
+
+
+
+  return `/api/units`
+}
+
+/**
+ * @summary List reusable units
+ */
+export const listUnits = async ( options?: Parameters<typeof customFetch>[1]): Promise<Unit[]> => {
+
+  return customFetch<Unit[]>(getListUnitsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListUnitsQueryKey = () => {
+    return [
+    `/api/units`
+    ] as const;
+    }
+
+
+export const getListUnitsQueryOptions = <TData = Awaited<ReturnType<typeof listUnits>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listUnits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListUnitsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listUnits>>> = ({ signal }) => listUnits({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listUnits>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListUnitsQueryResult = NonNullable<Awaited<ReturnType<typeof listUnits>>>
+export type ListUnitsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List reusable units
+ */
+
+export function useListUnits<TData = Awaited<ReturnType<typeof listUnits>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listUnits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListUnitsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateUnitUrl = () => {
+
+
+
+
+  return `/api/units`
+}
+
+/**
+ * @summary Create a reusable unit
+ */
+export const createUnit = async (unitInput: UnitInput, options?: Parameters<typeof customFetch>[1]): Promise<Unit> => {
+
+  return customFetch<Unit>(getCreateUnitUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(unitInput)
+  }
+);}
+
+
+
+
+
+export const getCreateUnitMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createUnit>>, TError,{data: BodyType<UnitInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createUnit>>, TError,{data: BodyType<UnitInput>}, TContext> => {
+
+const mutationKey = ['createUnit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createUnit>>, {data: BodyType<UnitInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createUnit(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateUnitMutationResult = NonNullable<Awaited<ReturnType<typeof createUnit>>>
+    export type CreateUnitMutationBody = BodyType<UnitInput>
+    export type CreateUnitMutationError = ErrorType<Error>
+
+    /**
+ * @summary Create a reusable unit
+ */
+export const useCreateUnit = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createUnit>>, TError,{data: BodyType<UnitInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createUnit>>,
+        TError,
+        {data: BodyType<UnitInput>},
+        TContext
+      > => {
+      return useMutation(getCreateUnitMutationOptions(options));
+    }
+
+export const getUpdateUnitUrl = (unitId: string,) => {
+
+
+
+
+  return `/api/units/${unitId}`
+}
+
+/**
+ * @summary Update a reusable unit
+ */
+export const updateUnit = async (unitId: string,
+    unitUpdate: UnitUpdate, options?: Parameters<typeof customFetch>[1]): Promise<Unit> => {
+
+  return customFetch<Unit>(getUpdateUnitUrl(unitId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(unitUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateUnitMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateUnit>>, TError,{unitId: string;data: BodyType<UnitUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateUnit>>, TError,{unitId: string;data: BodyType<UnitUpdate>}, TContext> => {
+
+const mutationKey = ['updateUnit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateUnit>>, {unitId: string;data: BodyType<UnitUpdate>}> = (props) => {
+          const {unitId,data} = props ?? {};
+
+          return  updateUnit(unitId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateUnitMutationResult = NonNullable<Awaited<ReturnType<typeof updateUnit>>>
+    export type UpdateUnitMutationBody = BodyType<UnitUpdate>
+    export type UpdateUnitMutationError = ErrorType<Error>
+
+    /**
+ * @summary Update a reusable unit
+ */
+export const useUpdateUnit = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateUnit>>, TError,{unitId: string;data: BodyType<UnitUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateUnit>>,
+        TError,
+        {unitId: string;data: BodyType<UnitUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateUnitMutationOptions(options));
+    }
+
+export const getDeleteUnitUrl = (unitId: string,) => {
+
+
+
+
+  return `/api/units/${unitId}`
+}
+
+/**
+ * @summary Remove a reusable unit
+ */
+export const deleteUnit = async (unitId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteUnitUrl(unitId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteUnitMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteUnit>>, TError,{unitId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteUnit>>, TError,{unitId: string}, TContext> => {
+
+const mutationKey = ['deleteUnit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteUnit>>, {unitId: string}> = (props) => {
+          const {unitId} = props ?? {};
+
+          return  deleteUnit(unitId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteUnitMutationResult = NonNullable<Awaited<ReturnType<typeof deleteUnit>>>
+
+    export type DeleteUnitMutationError = ErrorType<Error>
+
+    /**
+ * @summary Remove a reusable unit
+ */
+export const useDeleteUnit = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteUnit>>, TError,{unitId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteUnit>>,
+        TError,
+        {unitId: string},
+        TContext
+      > => {
+      return useMutation(getDeleteUnitMutationOptions(options));
     }
 
 export const getGenerateActivityUrl = () => {

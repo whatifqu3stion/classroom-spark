@@ -10,6 +10,7 @@ import {
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { classesTable } from "./classes";
+import { unitsTable } from "./units";
 
 export type PresentationThemeSelection = {
   kind: "curated" | "custom";
@@ -31,6 +32,7 @@ export const activitiesTable = pgTable("activities", {
   prompts: jsonb("prompts").$type<string[]>().notNull().default([]),
   durationMinutes: integer("duration_minutes").notNull(),
   deviceMode: text("device_mode").notNull(),
+  technologyMode: text("technology_mode").notNull().default("no_computer"),
   arrivalInstructions: text("arrival_instructions"),
   resourceUrl: text("resource_url"),
   resourceNote: text("resource_note"),
@@ -40,6 +42,10 @@ export const activitiesTable = pgTable("activities", {
   teacherNote: text("teacher_note"),
   sourceTopic: text("source_topic"),
   sourceGoal: text("source_goal"),
+  sourceUnitId: uuid("source_unit_id").references(() => unitsTable.id, {
+    onDelete: "set null",
+  }),
+  sourceUnitName: text("source_unit_name"),
   sourceChipIds: jsonb("source_chip_ids").$type<string[]>().notNull().default([]),
   style: text("style"),
   presentationTheme: jsonb("presentation_theme")

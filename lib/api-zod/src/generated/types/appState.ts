@@ -9,10 +9,12 @@ import type { Activity } from './activity';
 import type { Chip } from './chip';
 import type { ClassProfile } from './classProfile';
 import type { InstructionalContext } from './instructionalContext';
+import type { Unit } from './unit';
 
 export interface AppState {
   classes: ClassProfile[];
   instructionalContexts: InstructionalContext[];
+  units: Unit[];
   chips: Chip[];
   activities: Activity[];
   /** @nullable */

@@ -5,12 +5,17 @@ import {
   classesTable,
   db,
   instructionalContextsTable,
+  unitsTable,
 } from "@workspace/db";
 import type { GenerateActivityInput } from "@workspace/api-zod";
 import {
   ActivityResourceValidationError,
   normalizeActivityResourceUrl,
 } from "../../lib/activity-resource";
+import {
+  ActivityTechnologyValidationError,
+  normalizeActivityTechnology,
+} from "../../lib/activity-technology";
 import {
   generatedActivitySchema,
   generatedActivityStyles,
@@ -69,14 +74,34 @@ async function buildGenerationContext(
   context: BoardworkGenerationContext;
   chipIds: string[];
   teacherProvidedUrl: string | null;
+  selectedUnit: {
+    id: string;
+    name: string;
+    conceptsTopics: string;
+    skills: string;
+    standardsObjectives: string;
+  } | null;
 }> {
   const chipIds = [...new Set(input.chipIds)];
+  let effectiveDeviceMode: "off" | "on";
+  let technologyMode: "no_computer" | "computer_available" | "computer_required";
+  try {
+    ({ deviceMode: effectiveDeviceMode, technologyMode } =
+      normalizeActivityTechnology(input.deviceMode, input.technologyMode));
+  } catch (error) {
+    if (error instanceof ActivityTechnologyValidationError) {
+      throw new GenerationError("invalid_request", error.message, {
+        cause: error,
+      });
+    }
+    throw error;
+  }
   const teacherProvidedUrl = validateTeacherUrl(
     input.teacherProvidedUrl,
-    input.deviceMode,
+    effectiveDeviceMode,
   );
 
-  const [classProfile, instructionalContext, selectedChips, recentActivities] =
+  const [classProfile, instructionalContext, selectedUnit, selectedChips, recentActivities] =
     await Promise.all([
       db
         .select()
@@ -88,6 +113,13 @@ async function buildGenerationContext(
         .from(instructionalContextsTable)
         .where(eq(instructionalContextsTable.classId, input.classId))
         .then((rows) => rows[0]),
+      input.unitId
+        ? db
+            .select()
+            .from(unitsTable)
+            .where(eq(unitsTable.id, input.unitId))
+            .then((rows) => rows[0])
+        : Promise.resolve(undefined),
       chipIds.length
         ? db
             .select()
@@ -119,10 +151,22 @@ async function buildGenerationContext(
       "One or more selected Focus chips no longer exist for this class.",
     );
   }
+  if (input.unitId && !selectedUnit) {
+    throw new GenerationError("not_found", "Selected unit not found.");
+  }
 
   return {
     chipIds,
     teacherProvidedUrl,
+    selectedUnit: selectedUnit
+      ? {
+          id: selectedUnit.id,
+          name: selectedUnit.name,
+          conceptsTopics: selectedUnit.conceptsTopics,
+          skills: selectedUnit.skills,
+          standardsObjectives: selectedUnit.standardsObjectives,
+        }
+      : null,
     context: {
       classProfile: {
         name: classProfile.name,
@@ -133,17 +177,39 @@ async function buildGenerationContext(
         generalContext: classProfile.generalContext,
         arrivalRoutine: classProfile.arrivalRoutine,
       },
-      instructionalContext: {
-        unitOrProject: instructionalContext?.unitOrProject ?? "",
-        conceptsTopics: instructionalContext?.conceptsTopics ?? "",
-        skills: instructionalContext?.skills ?? "",
-        standardsObjectives: instructionalContext?.standardsObjectives ?? "",
-      },
+      instructionalContext: selectedUnit
+        ? {
+            unitOrProject: selectedUnit.name,
+            conceptsTopics: selectedUnit.conceptsTopics,
+            skills: selectedUnit.skills,
+            standardsObjectives: selectedUnit.standardsObjectives,
+          }
+        : {
+            unitOrProject: instructionalContext?.unitOrProject ?? "",
+            conceptsTopics: instructionalContext?.conceptsTopics ?? "",
+            skills: instructionalContext?.skills ?? "",
+            standardsObjectives: instructionalContext?.standardsObjectives ?? "",
+          },
+      selectedUnit: selectedUnit
+        ? {
+            id: selectedUnit.id,
+            name: selectedUnit.name,
+            conceptsTopics: selectedUnit.conceptsTopics,
+            skills: selectedUnit.skills,
+            standardsObjectives: selectedUnit.standardsObjectives,
+          }
+        : null,
       today: {
+        unitId: input.unitId ?? null,
         topic: optionalText(input.topic),
         goal: optionalText(input.goal),
+        studentOutput: optionalText(input.studentOutput),
+        workMode: input.workMode ?? null,
+        materialsAvailable: optionalText(input.materialsAvailable),
+        completionSignal: optionalText(input.completionSignal),
         focusChips: selectedChips.map((chip) => chip.label),
-        deviceMode: input.deviceMode,
+        deviceMode: effectiveDeviceMode,
+        technologyMode,
         durationMinutes: input.durationMinutes,
         activityStyle: normalizeActivityStyle(input.activityStyle),
         teacherProvidedUrl,
@@ -242,7 +308,7 @@ export async function generateAndSaveActivity(
   input: GenerateActivityInput,
   provider: BoardworkGenerationProvider,
 ) {
-  const { context, chipIds, teacherProvidedUrl } =
+  const { context, chipIds, teacherProvidedUrl, selectedUnit } =
     await buildGenerationContext(input);
   const generated = await generateWithRepair(provider, context);
 
@@ -256,6 +322,7 @@ export async function generateAndSaveActivity(
       prompts: generated.prompts,
       durationMinutes: generated.durationMinutes,
       deviceMode: generated.deviceMode,
+      technologyMode: context.today.technologyMode,
       arrivalInstructions: context.classProfile.arrivalRoutine,
       resourceUrl: teacherProvidedUrl,
       resourceNote: context.today.teacherProvidedResourceNote,
@@ -263,6 +330,8 @@ export async function generateAndSaveActivity(
       teacherNote: generated.teacherNote,
       sourceTopic: context.today.topic,
       sourceGoal: context.today.goal,
+      sourceUnitId: selectedUnit?.id ?? null,
+      sourceUnitName: selectedUnit?.name ?? null,
       sourceChipIds: chipIds,
       style:
         context.today.activityStyle ??

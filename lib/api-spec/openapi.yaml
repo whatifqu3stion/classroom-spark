@@ -16,6 +16,8 @@ tags:
     description: Class profile operations
   - name: instructional-context
     description: Per-class instructional context operations
+  - name: units
+    description: Reusable teacher unit operations
   - name: chips
     description: Class chip operations
   - name: activities
@@ -180,6 +182,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+
     put:
       operationId: updateInstructionalContext
       tags: [instructional-context]
@@ -213,6 +216,91 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /units:
+    get:
+      operationId: listUnits
+      tags: [units]
+      summary: List reusable units
+      responses:
+        "200":
+          description: Reusable units
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Unit"
+    post:
+      operationId: createUnit
+      tags: [units]
+      summary: Create a reusable unit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnitInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unit"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /units/{unitId}:
+    patch:
+      operationId: updateUnit
+      tags: [units]
+      summary: Update a reusable unit
+      parameters:
+        - $ref: "#/components/parameters/UnitIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnitUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unit"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteUnit
+      tags: [units]
+      summary: Remove a reusable unit
+      parameters:
+        - $ref: "#/components/parameters/UnitIdParam"
+      responses:
+        "204":
+          description: Removed
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /generate:
     post:
       operationId: generateActivity
@@ -558,6 +646,12 @@ components:
       required: true
       schema:
         type: string
+    UnitIdParam:
+      name: unitId
+      in: path
+      required: true
+      schema:
+        type: string
   schemas:
     HealthStatus:
       type: object
@@ -578,6 +672,10 @@ components:
     DeviceMode:
       type: string
       enum: [off, on]
+    TechnologyMode:
+      type: string
+      enum: [no_computer, computer_available, computer_required]
+      description: Three-state creation setting; legacy deviceMode remains available for saved compatibility.
 
     Duration:
       type: number
@@ -770,6 +868,70 @@ components:
         standardsObjectives:
           type: string
 
+    Unit:
+      type: object
+      required:
+        - id
+        - name
+        - conceptsTopics
+        - skills
+        - standardsObjectives
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        conceptsTopics:
+          type: string
+        skills:
+          type: string
+        standardsObjectives:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UnitInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        conceptsTopics:
+          type: string
+          maxLength: 2000
+        skills:
+          type: string
+          maxLength: 2000
+        standardsObjectives:
+          type: string
+          maxLength: 2000
+
+    UnitUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        conceptsTopics:
+          type: string
+          maxLength: 2000
+        skills:
+          type: string
+          maxLength: 2000
+        standardsObjectives:
+          type: string
+          maxLength: 2000
+
     Chip:
       type: object
       required:
@@ -838,6 +1000,8 @@ components:
           $ref: "#/components/schemas/Duration"
         deviceMode:
           $ref: "#/components/schemas/DeviceMode"
+        technologyMode:
+          $ref: "#/components/schemas/TechnologyMode"
         arrivalInstructions:
           type: ["string", "null"]
         resourceUrl:
@@ -857,6 +1021,10 @@ components:
         sourceTopic:
           type: ["string", "null"]
         sourceGoal:
+          type: ["string", "null"]
+        sourceUnitId:
+          type: ["string", "null"]
+        sourceUnitName:
           type: ["string", "null"]
         sourceChipIds:
           type: array
@@ -913,6 +1081,8 @@ components:
           $ref: "#/components/schemas/Duration"
         deviceMode:
           $ref: "#/components/schemas/DeviceMode"
+        technologyMode:
+          $ref: "#/components/schemas/TechnologyMode"
         arrivalInstructions:
           type: ["string", "null"]
         resourceUrl:
@@ -932,6 +1102,10 @@ components:
         sourceTopic:
           type: ["string", "null"]
         sourceGoal:
+          type: ["string", "null"]
+        sourceUnitId:
+          type: ["string", "null"]
+        sourceUnitName:
           type: ["string", "null"]
         sourceChipIds:
           type: array
@@ -963,6 +1137,8 @@ components:
           $ref: "#/components/schemas/Duration"
         deviceMode:
           $ref: "#/components/schemas/DeviceMode"
+        technologyMode:
+          $ref: "#/components/schemas/TechnologyMode"
         arrivalInstructions:
           type: ["string", "null"]
         resourceUrl:
@@ -982,6 +1158,10 @@ components:
         sourceTopic:
           type: ["string", "null"]
         sourceGoal:
+          type: ["string", "null"]
+        sourceUnitId:
+          type: ["string", "null"]
+        sourceUnitName:
           type: ["string", "null"]
         sourceChipIds:
           type: array
@@ -1007,6 +1187,21 @@ components:
       properties:
         classId:
           type: string
+        unitId:
+          type: string
+        studentOutput:
+          type: string
+          maxLength: 300
+          description: Optional observable thing students should produce or leave behind.
+        workMode:
+          type: string
+          enum: [quiet, think_together, discussion, teacher_check]
+        materialsAvailable:
+          type: string
+          maxLength: 500
+        completionSignal:
+          type: string
+          maxLength: 300
         topic:
           type: string
           maxLength: 1000
@@ -1020,6 +1215,8 @@ components:
             type: string
         deviceMode:
           $ref: "#/components/schemas/DeviceMode"
+        technologyMode:
+          $ref: "#/components/schemas/TechnologyMode"
         durationMinutes:
           $ref: "#/components/schemas/Duration"
         activityStyle:
@@ -1060,6 +1257,7 @@ components:
       required:
         - classes
         - instructionalContexts
+        - units
         - chips
         - activities
         - activeClassId
@@ -1072,6 +1270,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/InstructionalContext"
+        units:
+          type: array
+          items:
+            $ref: "#/components/schemas/Unit"
         chips:
           type: array
           items:

@@ -1,0 +1,1 @@
+ALTER TABLE "app_state" ADD COLUMN "legacy_units_migrated_at" timestamp with time zone;

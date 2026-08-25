@@ -11,6 +11,8 @@ import {
   type Chip,
   type Activity,
   type InsertClass,
+  unitsTable,
+  type Unit,
 } from "@workspace/db";
 
 const APP_STATE_KEY = "singleton";
@@ -87,18 +89,79 @@ export async function createClassWithContext(
 export async function loadAppState(): Promise<{
   classes: Class[];
   instructionalContexts: InstructionalContext[];
+  units: Unit[];
   chips: Chip[];
   activities: Activity[];
   activeClassId: string | null;
 }> {
   const activeClassId = await getActiveClassId();
-  const [classes, instructionalContexts, chips, activities] = await Promise.all([
+  await ensureLegacyUnits();
+  const [classes, instructionalContexts, units, chips, activities] = await Promise.all([
     db.select().from(classesTable).orderBy(classesTable.name),
     db.select().from(instructionalContextsTable),
+    db.select().from(unitsTable).orderBy(unitsTable.name),
     db.select().from(chipsTable).orderBy(chipsTable.createdAt),
     db.select().from(activitiesTable).orderBy(activitiesTable.createdAt),
   ]);
-  return { classes, instructionalContexts, chips, activities, activeClassId };
+  return { classes, instructionalContexts, units, chips, activities, activeClassId };
+}
+
+/**
+ * Older versions stored the current unit and its notes on a class-scoped
+ * instructional context. Copy non-empty legacy records into the reusable unit
+ * library once, while leaving the old columns in place for compatibility.
+ */
+async function ensureLegacyUnits(): Promise<void> {
+  await db.transaction(async (tx) => {
+    const [state] = await tx
+      .insert(appStateTable)
+      .values({ singletonKey: APP_STATE_KEY })
+      .onConflictDoUpdate({
+        target: appStateTable.singletonKey,
+        set: { singletonKey: APP_STATE_KEY },
+      })
+      .returning({
+        id: appStateTable.id,
+        legacyUnitsMigratedAt: appStateTable.legacyUnitsMigratedAt,
+      });
+
+    if (state.legacyUnitsMigratedAt) return;
+
+    const [legacyContexts, existingUnits] = await Promise.all([
+      tx.select().from(instructionalContextsTable),
+      tx.select().from(unitsTable),
+    ]);
+    const existingKeys = new Set(
+      existingUnits.map((unit) =>
+        [unit.name, unit.conceptsTopics, unit.skills, unit.standardsObjectives].join("\u0000"),
+      ),
+    );
+
+    for (const context of legacyContexts) {
+      const name = context.unitOrProject.trim();
+      if (!name) continue;
+      const values = {
+        name,
+        conceptsTopics: context.conceptsTopics,
+        skills: context.skills,
+        standardsObjectives: context.standardsObjectives,
+      };
+      const key = [
+        values.name,
+        values.conceptsTopics,
+        values.skills,
+        values.standardsObjectives,
+      ].join("\u0000");
+      if (existingKeys.has(key)) continue;
+      await tx.insert(unitsTable).values(values);
+      existingKeys.add(key);
+    }
+
+    await tx
+      .update(appStateTable)
+      .set({ legacyUnitsMigratedAt: new Date() })
+      .where(eq(appStateTable.id, state.id));
+  });
 }
 
 /**
@@ -182,6 +245,7 @@ export async function duplicateActivity(
       prompts: source.prompts,
       durationMinutes: source.durationMinutes,
       deviceMode: source.deviceMode,
+      technologyMode: source.technologyMode,
       arrivalInstructions: source.arrivalInstructions,
       resourceUrl: source.resourceUrl,
       resourceNote: source.resourceNote,
@@ -191,6 +255,8 @@ export async function duplicateActivity(
       teacherNote: source.teacherNote,
       sourceTopic: source.sourceTopic,
       sourceGoal: source.sourceGoal,
+      sourceUnitId: source.sourceUnitId,
+      sourceUnitName: source.sourceUnitName,
       sourceChipIds: source.sourceChipIds,
       style: source.style,
       presentationTheme: source.presentationTheme,

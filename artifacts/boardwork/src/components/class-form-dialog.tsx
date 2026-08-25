@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronDown, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { ClassProfile, CurrentInstructionalContext } from "@/store/boardwork-context";
+import { ClassProfile } from "@/store/boardwork-context";
 import {
   CLASS_COLOR_OPTIONS,
   CURRICULUM_OPTIONS,
@@ -31,7 +31,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { InstructionalContextPanel } from "@/components/instructional-context-panel";
 
 const PRESET_DURATIONS = [5, 7, 10] as const;
 const CUSTOM_DURATION_DEFAULT = 15;
@@ -56,8 +55,6 @@ interface ClassFormDialogProps {
   onSubmit: (data: Omit<ClassProfile, "id">) => void;
   onDelete?: () => void;
   initialData?: ClassProfile | null;
-  instructionalContext?: CurrentInstructionalContext | null;
-  onInstructionalContextChange?: (updates: Partial<CurrentInstructionalContext>) => void;
 }
 
 const getDefaultValues = (initialData?: ClassProfile | null): ClassProfileFormValues => ({
@@ -80,8 +77,6 @@ export function ClassFormDialog({
   onSubmit,
   onDelete,
   initialData,
-  instructionalContext,
-  onInstructionalContextChange,
 }: ClassFormDialogProps) {
   const [moreOpen, setMoreOpen] = useState(false);
   const form = useForm<ClassProfileFormValues>({
@@ -316,13 +311,6 @@ export function ClassFormDialog({
                       </FormItem>
                     )}
                   />
-
-                  {initialData && instructionalContext && onInstructionalContextChange && (
-                    <InstructionalContextPanel
-                      value={instructionalContext}
-                      onChange={onInstructionalContextChange}
-                    />
-                  )}
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <FormField

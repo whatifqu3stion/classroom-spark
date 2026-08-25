@@ -8,10 +8,23 @@
 import type { ActivityStyle } from './activityStyle';
 import type { DeviceMode } from './deviceMode';
 import type { Duration } from './duration';
+import type { GenerateActivityInputWorkMode } from './generateActivityInputWorkMode';
 import type { PresentationThemeSelection } from './presentationThemeSelection';
+import type { TechnologyMode } from './technologyMode';
 
 export interface GenerateActivityInput {
   classId: string;
+  unitId?: string;
+  /**
+     * Optional observable thing students should produce or leave behind.
+     * @maxLength 300
+     */
+  studentOutput?: string;
+  workMode?: GenerateActivityInputWorkMode;
+  /** @maxLength 500 */
+  materialsAvailable?: string;
+  /** @maxLength 300 */
+  completionSignal?: string;
   /** @maxLength 1000 */
   topic?: string;
   /** @maxLength 1000 */
@@ -19,6 +32,7 @@ export interface GenerateActivityInput {
   /** @maxItems 20 */
   chipIds: string[];
   deviceMode: DeviceMode;
+  technologyMode?: TechnologyMode;
   durationMinutes: Duration;
   activityStyle?: ActivityStyle | null;
   presentationTheme?: PresentationThemeSelection | null;

@@ -28,6 +28,7 @@ import {
   ActivityResourceValidationError,
   normalizeActivityResourceUrl,
 } from "../lib/activity-resource";
+import { normalizeActivityTechnology } from "../lib/activity-technology";
 
 const router: IRouter = Router();
 
@@ -65,11 +66,23 @@ router.post("/activities", async (req, res): Promise<void> => {
     return;
   }
 
+  let deviceMode: "off" | "on";
+  let technologyMode: "no_computer" | "computer_available" | "computer_required";
+  try {
+    ({ deviceMode, technologyMode } = normalizeActivityTechnology(
+      parsed.data.deviceMode,
+      parsed.data.technologyMode,
+    ));
+  } catch (error) {
+    res.status(400).json({ error: (error as Error).message });
+    return;
+  }
+
   let resourceUrl: string | null;
   try {
     resourceUrl = normalizeActivityResourceUrl(
       parsed.data.resourceUrl,
-      parsed.data.deviceMode,
+      deviceMode,
     );
   } catch (error) {
     if (error instanceof ActivityResourceValidationError) {
@@ -81,7 +94,12 @@ router.post("/activities", async (req, res): Promise<void> => {
 
   const [created] = await db
     .insert(activitiesTable)
-    .values({ ...parsed.data, resourceUrl })
+    .values({
+      ...parsed.data,
+      deviceMode,
+      resourceUrl,
+      technologyMode,
+    })
     .returning();
 
   res.status(201).json(CreateActivityResponse.parse(created));
@@ -134,6 +152,16 @@ router.patch("/activities/:activityId", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Activity has an invalid device mode." });
     return;
   }
+  let technologyMode: "no_computer" | "computer_available" | "computer_required";
+  try {
+    ({ technologyMode } = normalizeActivityTechnology(
+      deviceMode,
+      parsed.data.technologyMode,
+    ));
+  } catch (error) {
+    res.status(400).json({ error: (error as Error).message });
+    return;
+  }
 
   let resourceUrl: string | null;
   try {
@@ -153,7 +181,7 @@ router.patch("/activities/:activityId", async (req, res): Promise<void> => {
 
   const [updated] = await db
     .update(activitiesTable)
-    .set({ ...parsed.data, resourceUrl })
+    .set({ ...parsed.data, technologyMode, resourceUrl })
     .where(eq(activitiesTable.id, params.data.activityId))
     .returning();
 

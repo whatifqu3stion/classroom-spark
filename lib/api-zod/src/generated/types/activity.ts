@@ -8,6 +8,7 @@
 import type { DeviceMode } from './deviceMode';
 import type { Duration } from './duration';
 import type { PresentationThemeSelection } from './presentationThemeSelection';
+import type { TechnologyMode } from './technologyMode';
 
 export interface Activity {
   id: string;
@@ -19,6 +20,7 @@ export interface Activity {
   prompts: string[];
   durationMinutes: Duration;
   deviceMode: DeviceMode;
+  technologyMode?: TechnologyMode;
   /** @nullable */
   arrivalInstructions?: string | null;
   /** @nullable */
@@ -36,6 +38,10 @@ export interface Activity {
   sourceTopic?: string | null;
   /** @nullable */
   sourceGoal?: string | null;
+  /** @nullable */
+  sourceUnitId?: string | null;
+  /** @nullable */
+  sourceUnitName?: string | null;
   sourceChipIds?: string[];
   /** @nullable */
   style?: string | null;

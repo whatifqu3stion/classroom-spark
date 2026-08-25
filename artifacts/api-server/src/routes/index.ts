@@ -6,6 +6,7 @@ import chipsRouter from "./chips";
 import activitiesRouter from "./activities";
 import generationRouter from "./generation";
 import authRouter from "./auth";
+import unitsRouter from "./units";
 
 const router: IRouter = Router();
 
@@ -15,6 +16,7 @@ router.use(authRouter);
 router.use(healthRouter);
 router.use(appStateRouter);
 router.use(classesRouter);
+router.use(unitsRouter);
 router.use(chipsRouter);
 router.use(activitiesRouter);
 router.use(generationRouter);

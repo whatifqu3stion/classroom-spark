@@ -1,16 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useLocation, useRoute } from "wouter";
 import { Shell } from "@/components/layout/shell";
-import { useBoardwork, DeviceMode, Duration, ClassProfile, ActivityDraft } from "@/store/boardwork-context";
+import { useBoardwork, DeviceMode, Duration, TechnologyMode, ClassProfile, ActivityDraft } from "@/store/boardwork-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -19,6 +17,7 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { BoardEditor } from "@/components/board-editor";
 import { getLastUsedPresentationTheme } from "@/lib/presentation-theme";
 import { ClassFormDialog } from "@/components/class-form-dialog";
+import { UnitFormDialog, UnitFormValues } from "@/components/unit-form-dialog";
 import { ClassColorDot } from "@/components/class-color-dot";
 import { Settings, Plus, Play, Shuffle, FilePlus, MonitorOff, MonitorSmartphone, Loader2, AlertCircle, ChevronDown } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -30,13 +29,15 @@ import {
   useUpdateClass,
   useDeleteClass,
   useSelectClass,
-  useUpdateInstructionalContext,
   useCreateChip,
   useUpdateChip,
   useDeleteChip,
   useCreateActivity,
   useGenerateActivity,
   useUpdateActivity,
+  useCreateUnit,
+  useUpdateUnit,
+  useDeleteUnit,
   getGetAppStateQueryKey,
   ActivityInput,
   GenerateActivityInput,
@@ -59,16 +60,15 @@ import {
 const shouldShowSubject = (className: string, subject: string) =>
   !className.toLocaleLowerCase().includes(subject.toLocaleLowerCase());
 
-const activityStyleCategories = Array.from(
-  new Set(activityStyleCatalog.map((style) => style.category)),
-).map((category) => ({
-  value: category,
-  label:
-    activityStyleCatalog.find((style) => style.category === category)
-      ?.categoryLabel ?? category,
-}));
-
-const PRESET_DURATIONS = [5, 7, 10] as const;
+const FAST_ACTIVITY_STYLES = [
+  "Auto",
+  "Retrieval Practice",
+  "Observe & Notice",
+  "Quick Write",
+  "Apply",
+] as const;
+const PRESET_DURATIONS = [3, 5, 7, 10] as const;
+type WorkMode = "quiet" | "think_together" | "discussion" | "teacher_check";
 
 const getGenerationErrorMessage = (error: unknown) => {
   if (
@@ -113,6 +113,7 @@ const activitySavePayload = (draft: ActivityDraft) => ({
   arrivalInstructions: draft.arrivalInstructions,
   durationMinutes: draft.durationMinutes,
   deviceMode: draft.deviceMode,
+  technologyMode: draft.technologyMode,
   resourceUrl: draft.resourceUrl,
   resourceNote: draft.resourceNote,
   visualUrl: draft.visualUrl,
@@ -139,6 +140,7 @@ export default function Home() {
   } = useBoardwork();
 
   const classes = appState?.classes || [];
+  const units = appState?.units || [];
   const chips = appState?.chips || [];
   const instructionalContexts = appState?.instructionalContexts || [];
   const activities = appState?.activities || [];
@@ -149,8 +151,6 @@ export default function Home() {
   const deleteClassMut = useDeleteClass();
   const selectClassMut = useSelectClass();
 
-  const updateContextMut = useUpdateInstructionalContext();
-
   const createChipMut = useCreateChip();
   const updateChipMut = useUpdateChip();
   const deleteChipMut = useDeleteChip();
@@ -158,11 +158,20 @@ export default function Home() {
   const createActivityMut = useCreateActivity();
   const generateActivityMut = useGenerateActivity();
   const updateActivityMut = useUpdateActivity();
+  const createUnitMut = useCreateUnit();
+  const updateUnitMut = useUpdateUnit();
+  const deleteUnitMut = useDeleteUnit();
 
   // Local UI State
   const [topic, setTopic] = useState("");
   const [goal, setGoal] = useState("");
+  const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
+  const [studentOutput, setStudentOutput] = useState("");
+  const [workMode, setWorkMode] = useState<WorkMode | "">("");
+  const [materialsAvailable, setMaterialsAvailable] = useState("");
+  const [completionSignal, setCompletionSignal] = useState("");
   const [deviceMode, setDeviceMode] = useState<DeviceMode>("off");
+  const [technologyMode, setTechnologyMode] = useState<TechnologyMode>("no_computer");
   const [duration, setDuration] = useState<Duration>(7);
   const [customDurationInput, setCustomDurationInput] = useState("");
   const [resourceUrl, setResourceUrl] = useState("");
@@ -192,6 +201,9 @@ export default function Home() {
   const [classDialogOpen, setClassDialogOpen] = useState(false);
   const [editingClassId, setEditingClassId] = useState<string | null>(null);
   const [deleteClassAlertOpen, setDeleteClassAlertOpen] = useState(false);
+  const [unitDialogOpen, setUnitDialogOpen] = useState(false);
+  const [editingUnitId, setEditingUnitId] = useState<string | null>(null);
+  const [deleteUnitAlertOpen, setDeleteUnitAlertOpen] = useState(false);
 
   // Editor State
   const serverActivity = React.useMemo(() => activities.find(a => a.id === activityId), [activities, activityId]);
@@ -208,44 +220,35 @@ export default function Home() {
 
   const activeClass = classes.find((c) => c.id === activeClassId);
   const activeChips = chips.filter((c) => c.classId === activeClassId);
-  const activeInstructionalContext = activeClassId
-    ? instructionalContexts.find((context) => context.classId === activeClassId) ?? {
-        classId: activeClassId,
-        unitOrProject: "",
-        conceptsTopics: "",
-        skills: "",
-        standardsObjectives: "",
-      }
-    : null;
-
-  const [localContext, setLocalContext] = useState(activeInstructionalContext);
+  const selectedUnit = units.find((unit) => unit.id === selectedUnitId) ?? null;
+  const unitClassRef = useRef<string | null>(null);
   useEffect(() => {
-    if (activeInstructionalContext && activeInstructionalContext.classId === activeClassId) {
-      setLocalContext(activeInstructionalContext);
+    if (unitClassRef.current !== activeClassId) {
+      unitClassRef.current = activeClassId;
+      const legacyContext = instructionalContexts.find(
+        (context) => context.classId === activeClassId,
+      );
+      const legacyUnitName = legacyContext?.unitOrProject.trim();
+      const legacyUnit = legacyUnitName
+        ? units.find((unit) => unit.name === legacyUnitName)
+        : undefined;
+      setSelectedUnitId(legacyUnit?.id ?? null);
+      return;
     }
-  }, [activeInstructionalContext, activeClassId]);
-
-  const debouncedContext = useDebounce(localContext, 600);
-  useEffect(() => {
-    if (debouncedContext && activeClassId && debouncedContext.classId === activeClassId) {
-      const isChanged =
-        debouncedContext.unitOrProject !== activeInstructionalContext?.unitOrProject ||
-        debouncedContext.conceptsTopics !== activeInstructionalContext?.conceptsTopics ||
-        debouncedContext.skills !== activeInstructionalContext?.skills ||
-        debouncedContext.standardsObjectives !== activeInstructionalContext?.standardsObjectives;
-
-      if (isChanged) {
-        updateContextMut.mutate({ classId: activeClassId, data: debouncedContext }, {
-          onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() })
-        });
-      }
+    if (selectedUnitId && !selectedUnit) {
+      setSelectedUnitId(null);
     }
-  }, [debouncedContext, activeClassId]);
+  }, [activeClassId, instructionalContexts, selectedUnit, selectedUnitId, units]);
 
   // Init Generator
   useEffect(() => {
     if (activeClass && !activityId && !localDraft) {
       setDeviceMode(activeClass.defaultDeviceMode);
+      setTechnologyMode(
+        activeClass.defaultDeviceMode === "off"
+          ? "no_computer"
+          : "computer_available",
+      );
       setDuration(activeClass.defaultDuration);
     }
   }, [activeClassId, activeClass, activityId, localDraft]);
@@ -506,6 +509,59 @@ export default function Home() {
     }
   };
 
+  const editingUnit = units.find((unit) => unit.id === editingUnitId) ?? null;
+  const openNewUnit = () => {
+    setEditingUnitId(null);
+    setUnitDialogOpen(true);
+  };
+
+  const handleUnitSubmit = (data: UnitFormValues) => {
+    if (editingUnitId) {
+      updateUnitMut.mutate(
+        { unitId: editingUnitId, data },
+        {
+          onSuccess: (updatedUnit) => {
+            setSelectedUnitId(updatedUnit.id);
+            setUnitDialogOpen(false);
+            queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
+          },
+        },
+      );
+      return;
+    }
+
+    createUnitMut.mutate(
+      { data },
+      {
+        onSuccess: (createdUnit) => {
+          setSelectedUnitId(createdUnit.id);
+          setUnitDialogOpen(false);
+          queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
+        },
+      },
+    );
+  };
+
+  const handleDeleteUnit = () => {
+    setUnitDialogOpen(false);
+    setDeleteUnitAlertOpen(true);
+  };
+
+  const confirmDeleteUnit = () => {
+    if (!editingUnitId) return;
+    deleteUnitMut.mutate(
+      { unitId: editingUnitId },
+      {
+        onSuccess: () => {
+          if (selectedUnitId === editingUnitId) setSelectedUnitId(null);
+          setEditingUnitId(null);
+          setDeleteUnitAlertOpen(false);
+          queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
+        },
+      },
+    );
+  };
+
   const handleGenerate = async (surprise: boolean = false) => {
     if (isGenerating || !activeClassId || !activeClass || customDurationError) return;
     setLastGenerationWasSurprise(surprise);
@@ -514,10 +570,16 @@ export default function Home() {
     try {
       const payload: GenerateActivityInput = {
         classId: activeClassId,
+        unitId: selectedUnitId || undefined,
         topic: topic.trim() || undefined,
         goal: goal.trim() || undefined,
+        studentOutput: studentOutput.trim() || undefined,
+        workMode: workMode || undefined,
+        materialsAvailable: materialsAvailable.trim() || undefined,
+        completionSignal: completionSignal.trim() || undefined,
         chipIds: selectedChipIds,
         deviceMode,
+        technologyMode,
         durationMinutes: duration,
         activityStyle:
           !surprise && activityStyle !== "Auto" ? activityStyle : null,
@@ -677,33 +739,77 @@ export default function Home() {
             <div className="space-y-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Create today&apos;s board</p>
-                <h1 className="mt-1 text-xl font-semibold tracking-tight text-foreground">What should students practice?</h1>
+                <h1 className="mt-1 text-xl font-semibold tracking-tight text-foreground">What should students practice today?</h1>
                 <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                  Add a topic or goal. You can fine-tune the board before presenting it.
+                  Start with one clear idea. You can fine-tune the board before presenting it.
                 </p>
               </div>
+              <div className="space-y-2 rounded-xl border bg-card/50 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <Label htmlFor="unit-select">Current unit <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                      Reuse planning context without tying it to one class.
+                    </p>
+                  </div>
+                  <Button type="button" variant="ghost" size="sm" className="shrink-0 gap-1" onClick={openNewUnit} data-testid="button-add-unit">
+                    <Plus className="size-4" />
+                    Add unit
+                  </Button>
+                </div>
+                <div className="flex gap-2">
+                  <Select value={selectedUnitId ?? "none"} onValueChange={(value) => setSelectedUnitId(value === "none" ? null : value)}>
+                    <SelectTrigger id="unit-select" className="min-w-0 flex-1" data-testid="select-unit">
+                      <SelectValue placeholder="No unit selected">
+                        {selectedUnit?.name ?? "No unit selected"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No unit selected</SelectItem>
+                      {units.map((unit) => (
+                        <SelectItem key={unit.id} value={unit.id}>
+                          <span className="boardwork-user-content" dir="auto">{unit.name}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedUnit && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      aria-label="Edit selected unit"
+                      title="Edit selected unit"
+                      onClick={() => { setEditingUnitId(selectedUnit.id); setUnitDialogOpen(true); }}
+                      data-testid="button-edit-unit"
+                    >
+                      <Settings className="size-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
               <div className="space-y-2">
-                <Label htmlFor="topic">Topic or unit <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                <Label htmlFor="topic">Today&apos;s starting point <span className="font-normal text-muted-foreground">(optional)</span></Label>
                 <Input
                   id="topic"
                   dir="auto"
                   className="boardwork-user-content"
-                  placeholder="e.g. osmosis and diffusion"
+                   placeholder="e.g. a diagram of osmosis"
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
                   data-testid="input-topic"
                 />
               </div>
                <div className="space-y-2">
-                 <Label htmlFor="goal">Practice goal <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                  <Label htmlFor="goal">What should students be able to do? <span className="font-normal text-muted-foreground">(optional)</span></Label>
                  <p className="text-xs leading-relaxed text-muted-foreground">
-                   The student outcome you want from today&apos;s board.
+                    A quick refinement for the board, not a full lesson plan.
                  </p>
                 <Input
                   id="goal"
                   dir="auto"
                   className="boardwork-user-content"
-                  placeholder="e.g. explain the evidence"
+                   placeholder="e.g. explain the evidence in one sentence"
                   value={goal}
                   onChange={(e) => setGoal(e.target.value)}
                   data-testid="input-goal"
@@ -716,19 +822,24 @@ export default function Home() {
                 <h2 className="text-sm font-semibold text-foreground">How will this board run?</h2>
                 <p className="mt-0.5 text-xs text-muted-foreground">Starts with your class defaults. Adjust for this board when needed.</p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Device mode</Label>
-                  <SegmentedControl<DeviceMode>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                 <div className="space-y-2 sm:col-span-2">
+                 <Label>Technology</Label>
+                   <SegmentedControl<TechnologyMode>
                     options={[
-                      { label: "Off", value: "off", icon: <MonitorOff className="w-4 h-4" /> },
-                      { label: "On", value: "on", icon: <MonitorSmartphone className="w-4 h-4" /> },
+                       { label: "No computer", value: "no_computer", icon: <MonitorOff className="w-4 h-4" /> },
+                       { label: "Available", value: "computer_available", icon: <MonitorSmartphone className="w-4 h-4" /> },
+                       { label: "Required", value: "computer_required", icon: <MonitorSmartphone className="w-4 h-4" /> },
                     ]}
-                    value={deviceMode}
-                    onChange={setDeviceMode}
+                     value={technologyMode}
+                     onChange={(value) => {
+                       setTechnologyMode(value);
+                       setDeviceMode(value === "no_computer" ? "off" : "on");
+                     }}
+                     className="grid-cols-3"
                   />
                 </div>
-                <div className="space-y-2">
+                 <div className="space-y-2 sm:max-w-[360px]">
                   <Label>Duration (min)</Label>
                         <div className="flex items-center gap-2">
                           <SegmentedControl<Duration>
@@ -767,11 +878,11 @@ export default function Home() {
                         )}
                 </div>
               </div>
-               {deviceMode === "on" && (
+               {technologyMode !== "no_computer" && (
                  <div className="col-span-2 space-y-4 border-t pt-3">
                    <div className="space-y-2">
                      <Label htmlFor="resourceUrl">
-                       Student resource URL{" "}
+                        Teacher-provided resource URL{" "}
                        <span className="font-normal text-muted-foreground">(optional)</span>
                      </Label>
                      <p className="text-xs leading-relaxed text-muted-foreground">
@@ -814,7 +925,7 @@ export default function Home() {
                 <span className="min-w-0">
                   <span className="block text-sm font-semibold text-foreground">Add optional details</span>
                   <span className="mt-0.5 block text-xs text-muted-foreground">
-                      Teaching focus and activity style
+                       Student action, classroom logistics, and teaching focus
                   </span>
                 </span>
                 <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform ${customizeOpen ? "rotate-180" : ""}`} />
@@ -831,52 +942,86 @@ export default function Home() {
                     onClearSelection={clearChipSelection}
                   />
 
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                       <Label htmlFor="activityStyle">Activity style <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                   <div className="grid gap-4 sm:grid-cols-2">
+                     <div className="space-y-2 sm:col-span-2">
+                       <Label htmlFor="student-output">What will students leave behind? <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                       <Input
+                         id="student-output"
+                         dir="auto"
+                         className="boardwork-user-content"
+                         placeholder="e.g. one annotated diagram or a claim with evidence"
+                         value={studentOutput}
+                         onChange={(event) => setStudentOutput(event.target.value)}
+                         data-testid="input-student-output"
+                       />
+                     </div>
+                     <div className="space-y-2">
+                       <Label htmlFor="work-mode">Work mode <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                       <Select value={workMode || "none"} onValueChange={(value) => setWorkMode(value === "none" ? "" : value as WorkMode)}>
+                         <SelectTrigger id="work-mode" data-testid="select-work-mode">
+                           <SelectValue placeholder="Choose if useful" />
+                         </SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="none">No preference</SelectItem>
+                           <SelectItem value="quiet">Quiet start</SelectItem>
+                           <SelectItem value="think_together">Think, then compare</SelectItem>
+                           <SelectItem value="discussion">Brief discussion</SelectItem>
+                           <SelectItem value="teacher_check">Quick teacher check</SelectItem>
+                         </SelectContent>
+                       </Select>
+                     </div>
+                     <div className="space-y-2">
+                       <Label htmlFor="materials-available">Materials already available <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                       <Input
+                         id="materials-available"
+                         dir="auto"
+                         className="boardwork-user-content"
+                         placeholder="e.g. notebook, textbook page 42"
+                         value={materialsAvailable}
+                         onChange={(event) => setMaterialsAvailable(event.target.value)}
+                         data-testid="input-materials-available"
+                       />
+                     </div>
+                     <div className="space-y-2 sm:col-span-2">
+                       <Label htmlFor="completion-signal">How should students signal done or stuck? <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                       <Input
+                         id="completion-signal"
+                         dir="auto"
+                         className="boardwork-user-content"
+                         placeholder="e.g. circle the part they are unsure about"
+                         value={completionSignal}
+                         onChange={(event) => setCompletionSignal(event.target.value)}
+                         data-testid="input-completion-signal"
+                       />
+                     </div>
+                     <div className="space-y-2 sm:col-span-2">
+                       <Label htmlFor="activityStyle">Activity approach <span className="font-normal text-muted-foreground">(optional)</span></Label>
                        <p className="text-xs leading-relaxed text-muted-foreground">
-                         Choose how students will work. Auto is a good default.
+                         Choose a familiar starting move, or leave it on Auto.
                        </p>
                        <Select value={activityStyle} onValueChange={(value) => setActivityStyle(value as ActivityStyleValue)}>
                          <SelectTrigger id="activityStyle" data-testid="select-activity-style">
                            <SelectValue>{selectedActivityStyle.label}</SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                           {activityStyleCategories.map((category, index) => (
-                             <React.Fragment key={category.value}>
-                               {index > 0 && <div className="my-1 h-px bg-muted" role="separator" />}
-                               <SelectGroup>
-                                 <SelectLabel>{category.label}</SelectLabel>
-                                 {activityStyleCatalog
-                                   .filter((style) => style.category === category.value)
-                                   .map((style) => (
-                                     <SelectItem
-                                       key={style.value}
-                                       value={style.value}
-                                       textValue={style.label}
-                                       className="items-start py-2"
-                                     >
-                                       <span className="flex flex-col items-start gap-0.5">
-                                         <span>{style.label}</span>
-                                         <span className="text-xs font-normal text-muted-foreground">
-                                           {style.description}
-                                         </span>
-                                       </span>
-                                     </SelectItem>
-                                   ))}
-                               </SelectGroup>
-                             </React.Fragment>
-                           ))}
-                        </SelectContent>
-                      </Select>
-                       <p
-                         className="text-xs leading-relaxed text-muted-foreground"
-                         data-testid="activity-style-description"
-                       >
+                         </SelectTrigger>
+                         <SelectContent>
+                           {FAST_ACTIVITY_STYLES.map((styleValue) => {
+                             const style = activityStyleCatalog.find((item) => item.value === styleValue);
+                             return style ? (
+                               <SelectItem key={style.value} value={style.value} textValue={style.label} className="items-start py-2">
+                                 <span className="flex flex-col items-start gap-0.5">
+                                   <span>{style.label}</span>
+                                   <span className="text-xs font-normal text-muted-foreground">{style.description}</span>
+                                 </span>
+                               </SelectItem>
+                             ) : null;
+                           })}
+                         </SelectContent>
+                       </Select>
+                       <p className="text-xs leading-relaxed text-muted-foreground" data-testid="activity-style-description">
                          {selectedActivityStyle.description}
                        </p>
-                    </div>
-                  </div>
+                     </div>
+                   </div>
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -986,8 +1131,14 @@ export default function Home() {
         onSubmit={handleClassSubmit}
         onDelete={handleDeleteClass}
         initialData={editingClassId ? activeClass : null}
-        instructionalContext={editingClassId ? localContext : null}
-        onInstructionalContextChange={(updates) => setLocalContext((previous) => previous ? { ...previous, ...updates } : previous)}
+      />
+
+      <UnitFormDialog
+        open={unitDialogOpen}
+        onOpenChange={setUnitDialogOpen}
+        onSubmit={handleUnitSubmit}
+        onDelete={editingUnit ? handleDeleteUnit : undefined}
+        initialUnit={editingUnit}
       />
 
       <AlertDialog open={deleteClassAlertOpen} onOpenChange={setDeleteClassAlertOpen}>
@@ -1006,6 +1157,27 @@ export default function Home() {
               data-testid="button-confirm-delete-class"
             >
               Delete Class
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteUnitAlertOpen} onOpenChange={setDeleteUnitAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove this unit?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes the reusable unit from your library. Activities already created keep the unit name and source context they used.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete-unit">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteUnit}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete-unit"
+            >
+              Remove unit
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -56,6 +56,15 @@ export const GetAppStateResponse = zod.object({
   "standardsObjectives": zod.string(),
   "updatedAt": zod.coerce.date()
 })),
+  "units": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "conceptsTopics": zod.string(),
+  "skills": zod.string(),
+  "standardsObjectives": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
   "chips": zod.array(zod.object({
   "id": zod.string(),
   "classId": zod.string(),
@@ -71,6 +80,7 @@ export const GetAppStateResponse = zod.object({
   "prompts": zod.array(zod.string()),
   "durationMinutes": zod.number().min(1).max(getAppStateResponseActivitiesItemDurationMinutesMax).multipleOf(getAppStateResponseActivitiesItemDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
+  "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
   "resourceNote": zod.string().nullish(),
@@ -80,6 +90,8 @@ export const GetAppStateResponse = zod.object({
   "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
   "sourceGoal": zod.string().nullish(),
+  "sourceUnitId": zod.string().nullish(),
+  "sourceUnitName": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
@@ -288,9 +300,106 @@ export const UpdateInstructionalContextResponse = zod.object({
 
 
 /**
+ * @summary List reusable units
+ */
+export const ListUnitsResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "conceptsTopics": zod.string(),
+  "skills": zod.string(),
+  "standardsObjectives": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListUnitsResponse = zod.array(ListUnitsResponseItem)
+
+
+/**
+ * @summary Create a reusable unit
+ */
+export const createUnitBodyNameMax = 200;
+
+export const createUnitBodyConceptsTopicsMax = 2000;
+
+export const createUnitBodySkillsMax = 2000;
+
+export const createUnitBodyStandardsObjectivesMax = 2000;
+
+
+
+export const CreateUnitBody = zod.object({
+  "name": zod.string().min(1).max(createUnitBodyNameMax),
+  "conceptsTopics": zod.string().max(createUnitBodyConceptsTopicsMax).optional(),
+  "skills": zod.string().max(createUnitBodySkillsMax).optional(),
+  "standardsObjectives": zod.string().max(createUnitBodyStandardsObjectivesMax).optional()
+})
+
+export const CreateUnitResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "conceptsTopics": zod.string(),
+  "skills": zod.string(),
+  "standardsObjectives": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a reusable unit
+ */
+export const UpdateUnitParams = zod.object({
+  "unitId": zod.coerce.string()
+})
+
+export const updateUnitBodyNameMax = 200;
+
+export const updateUnitBodyConceptsTopicsMax = 2000;
+
+export const updateUnitBodySkillsMax = 2000;
+
+export const updateUnitBodyStandardsObjectivesMax = 2000;
+
+
+
+export const UpdateUnitBody = zod.object({
+  "name": zod.string().min(1).max(updateUnitBodyNameMax).optional(),
+  "conceptsTopics": zod.string().max(updateUnitBodyConceptsTopicsMax).optional(),
+  "skills": zod.string().max(updateUnitBodySkillsMax).optional(),
+  "standardsObjectives": zod.string().max(updateUnitBodyStandardsObjectivesMax).optional()
+})
+
+export const UpdateUnitResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "conceptsTopics": zod.string(),
+  "skills": zod.string(),
+  "standardsObjectives": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Remove a reusable unit
+ */
+export const DeleteUnitParams = zod.object({
+  "unitId": zod.coerce.string()
+})
+
+export const DeleteUnitResponse = zod.void()
+
+
+/**
  * Builds canonical generation context server-side, generates one validated activity, saves it, and returns the persisted activity.
  * @summary Generate and save a Boardwork activity
  */
+export const generateActivityBodyStudentOutputMax = 300;
+
+export const generateActivityBodyMaterialsAvailableMax = 500;
+
+export const generateActivityBodyCompletionSignalMax = 300;
+
 export const generateActivityBodyTopicMax = 1000;
 
 export const generateActivityBodyGoalMax = 1000;
@@ -311,10 +420,16 @@ export const generateActivityBodyTeacherProvidedResourceNoteMax = 1000;
 
 export const GenerateActivityBody = zod.object({
   "classId": zod.string(),
+  "unitId": zod.string().optional(),
+  "studentOutput": zod.string().max(generateActivityBodyStudentOutputMax).optional().describe('Optional observable thing students should produce or leave behind.'),
+  "workMode": zod.enum(['quiet', 'think_together', 'discussion', 'teacher_check']).optional(),
+  "materialsAvailable": zod.string().max(generateActivityBodyMaterialsAvailableMax).optional(),
+  "completionSignal": zod.string().max(generateActivityBodyCompletionSignalMax).optional(),
   "topic": zod.string().max(generateActivityBodyTopicMax).optional(),
   "goal": zod.string().max(generateActivityBodyGoalMax).optional(),
   "chipIds": zod.array(zod.string()).max(generateActivityBodyChipIdsMax),
   "deviceMode": zod.enum(['off', 'on']),
+  "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
   "durationMinutes": zod.number().min(1).max(generateActivityBodyDurationMinutesMax).multipleOf(generateActivityBodyDurationMinutesMultipleOf),
   "activityStyle": zod.union([zod.enum(['Curiosity Hook', 'Retrieval Practice', 'Explain / Reason', 'Observe & Notice', 'Draw / Sketch', 'Predict', 'Compare / Contrast', 'Evaluate / Critique', 'Quick Write', 'Apply', 'Reflect']).describe('Supported activity approaches. Auto is a client-side convenience and is sent as null to request generation without a preference.'),zod.null()]).optional(),
   "presentationTheme": zod.union([zod.object({
@@ -351,6 +466,7 @@ export const GenerateActivityResponse = zod.object({
   "prompts": zod.array(zod.string()),
   "durationMinutes": zod.number().min(1).max(generateActivityResponseDurationMinutesMax).multipleOf(generateActivityResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
+  "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
   "resourceNote": zod.string().nullish(),
@@ -360,6 +476,8 @@ export const GenerateActivityResponse = zod.object({
   "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
   "sourceGoal": zod.string().nullish(),
+  "sourceUnitId": zod.string().nullish(),
+  "sourceUnitName": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
@@ -460,6 +578,7 @@ export const ListActivitiesResponseItem = zod.object({
   "prompts": zod.array(zod.string()),
   "durationMinutes": zod.number().min(1).max(listActivitiesResponseDurationMinutesMax).multipleOf(listActivitiesResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
+  "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
   "resourceNote": zod.string().nullish(),
@@ -469,6 +588,8 @@ export const ListActivitiesResponseItem = zod.object({
   "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
   "sourceGoal": zod.string().nullish(),
+  "sourceUnitId": zod.string().nullish(),
+  "sourceUnitName": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
@@ -510,6 +631,7 @@ export const CreateActivityBody = zod.object({
   "prompts": zod.array(zod.string()).optional(),
   "durationMinutes": zod.number().min(1).max(createActivityBodyDurationMinutesMax).multipleOf(createActivityBodyDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
+  "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
   "resourceNote": zod.string().nullish(),
@@ -519,6 +641,8 @@ export const CreateActivityBody = zod.object({
   "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
   "sourceGoal": zod.string().nullish(),
+  "sourceUnitId": zod.string().nullish(),
+  "sourceUnitName": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
@@ -553,6 +677,7 @@ export const CreateActivityResponse = zod.object({
   "prompts": zod.array(zod.string()),
   "durationMinutes": zod.number().min(1).max(createActivityResponseDurationMinutesMax).multipleOf(createActivityResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
+  "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
   "resourceNote": zod.string().nullish(),
@@ -562,6 +687,8 @@ export const CreateActivityResponse = zod.object({
   "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
   "sourceGoal": zod.string().nullish(),
+  "sourceUnitId": zod.string().nullish(),
+  "sourceUnitName": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
@@ -607,6 +734,7 @@ export const GetActivityResponse = zod.object({
   "prompts": zod.array(zod.string()),
   "durationMinutes": zod.number().min(1).max(getActivityResponseDurationMinutesMax).multipleOf(getActivityResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
+  "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
   "resourceNote": zod.string().nullish(),
@@ -616,6 +744,8 @@ export const GetActivityResponse = zod.object({
   "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
   "sourceGoal": zod.string().nullish(),
+  "sourceUnitId": zod.string().nullish(),
+  "sourceUnitName": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
@@ -660,6 +790,7 @@ export const UpdateActivityBody = zod.object({
   "prompts": zod.array(zod.string()).optional(),
   "durationMinutes": zod.number().min(1).max(updateActivityBodyDurationMinutesMax).multipleOf(updateActivityBodyDurationMinutesMultipleOf).optional(),
   "deviceMode": zod.enum(['off', 'on']).optional(),
+  "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
   "resourceNote": zod.string().nullish(),
@@ -669,6 +800,8 @@ export const UpdateActivityBody = zod.object({
   "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
   "sourceGoal": zod.string().nullish(),
+  "sourceUnitId": zod.string().nullish(),
+  "sourceUnitName": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
@@ -703,6 +836,7 @@ export const UpdateActivityResponse = zod.object({
   "prompts": zod.array(zod.string()),
   "durationMinutes": zod.number().min(1).max(updateActivityResponseDurationMinutesMax).multipleOf(updateActivityResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
+  "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
   "resourceNote": zod.string().nullish(),
@@ -712,6 +846,8 @@ export const UpdateActivityResponse = zod.object({
   "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
   "sourceGoal": zod.string().nullish(),
+  "sourceUnitId": zod.string().nullish(),
+  "sourceUnitName": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
@@ -777,6 +913,7 @@ export const DuplicateActivityResponse = zod.object({
   "prompts": zod.array(zod.string()),
   "durationMinutes": zod.number().min(1).max(duplicateActivityResponseDurationMinutesMax).multipleOf(duplicateActivityResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
+  "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
   "resourceNote": zod.string().nullish(),
@@ -786,6 +923,8 @@ export const DuplicateActivityResponse = zod.object({
   "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
   "sourceGoal": zod.string().nullish(),
+  "sourceUnitId": zod.string().nullish(),
+  "sourceUnitName": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
@@ -835,6 +974,7 @@ export const SetActivityFavoriteResponse = zod.object({
   "prompts": zod.array(zod.string()),
   "durationMinutes": zod.number().min(1).max(setActivityFavoriteResponseDurationMinutesMax).multipleOf(setActivityFavoriteResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
+  "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
   "arrivalInstructions": zod.string().nullish(),
   "resourceUrl": zod.string().nullish(),
   "resourceNote": zod.string().nullish(),
@@ -844,6 +984,8 @@ export const SetActivityFavoriteResponse = zod.object({
   "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
   "sourceGoal": zod.string().nullish(),
+  "sourceUnitId": zod.string().nullish(),
+  "sourceUnitName": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({

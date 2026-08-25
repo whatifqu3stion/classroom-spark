@@ -68,6 +68,9 @@ vi.mock("@workspace/api-client-react", () => ({
   useCreateActivity: () => ({ mutateAsync: mocks.createActivity }),
   useGenerateActivity: () => ({ mutateAsync: mocks.generateActivity }),
   useUpdateActivity: () => ({ mutateAsync: vi.fn() }),
+  useCreateUnit: () => ({ mutate: vi.fn() }),
+  useUpdateUnit: () => ({ mutate: vi.fn() }),
+  useDeleteUnit: () => ({ mutate: vi.fn() }),
   getGetAppStateQueryKey: () => ["app-state"],
 }));
 
@@ -94,6 +97,7 @@ const appState = {
       standardsObjectives: "",
     },
   ],
+  units: [],
   activities: [],
 } as unknown as AppState;
 
@@ -155,7 +159,7 @@ describe("Home presentation defaults", () => {
     );
   });
 
-  it("reveals the teacher resource fields with Device On and sends them to generation", async () => {
+  it("reveals the teacher resource fields with Computer Available and sends them to generation", async () => {
     mocks.generateActivity.mockResolvedValue({
       id: "activity-1",
       classId: "class-1",
@@ -167,7 +171,7 @@ describe("Home presentation defaults", () => {
     });
 
     render(<Home />);
-    fireEvent.click(screen.getByTestId("segment-on"));
+    fireEvent.click(screen.getByTestId("segment-computer_available"));
 
     const resourceUrl = screen.getByTestId("input-resource-url");
     const resourceNote = screen.getByTestId("input-resource-note");

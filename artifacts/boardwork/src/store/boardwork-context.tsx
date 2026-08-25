@@ -3,6 +3,7 @@ import { useGetAppState, AppState, type PresentationThemeSelection } from "@work
 import { Loader2 } from "lucide-react";
 
 export type DeviceMode = "off" | "on";
+export type TechnologyMode = "no_computer" | "computer_available" | "computer_required";
 export type Duration = number;
 
 export interface Chip {
@@ -42,6 +43,7 @@ export interface ActivityDraft {
   prompts: string[];
   durationMinutes: Duration;
   deviceMode: DeviceMode;
+  technologyMode?: TechnologyMode;
   arrivalInstructions?: string | null;
   resourceUrl?: string | null;
   resourceNote?: string | null;
@@ -51,6 +53,8 @@ export interface ActivityDraft {
   teacherNote?: string | null;
   sourceTopic?: string | null;
   sourceGoal?: string | null;
+  sourceUnitId?: string | null;
+  sourceUnitName?: string | null;
   sourceChipIds?: string[];
   style?: string | null;
   presentationTheme?: PresentationThemeSelection | null;

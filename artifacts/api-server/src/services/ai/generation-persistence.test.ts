@@ -6,6 +6,7 @@ import {
   classesTable,
   db,
   instructionalContextsTable,
+  unitsTable,
 } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { duplicateActivity } from "../../lib/boardwork-repo";
@@ -141,6 +142,47 @@ describe.sequential("generation persistence", () => {
       .from(activitiesTable)
       .where(eq(activitiesTable.classId, classId));
     expect(rows).toHaveLength(5);
+  });
+
+  it("uses the selected reusable unit instead of stale class context", async () => {
+    const [selectedUnit] = await db
+      .insert(unitsTable)
+      .values({
+        name: "Current unit",
+        conceptsTopics: "current concepts",
+        skills: "current skills",
+        standardsObjectives: "current objectives",
+      })
+      .returning();
+
+    try {
+      let capturedContext: BoardworkGenerationContext | undefined;
+      await generateAndSaveActivity(
+        {
+          classId,
+          unitId: selectedUnit.id,
+          chipIds: [],
+          deviceMode: "off",
+          durationMinutes: 7,
+          surprise: false,
+        },
+        {
+          async generate(context) {
+            capturedContext = context;
+            return { ...validActivity, deviceMode: "off", resourceUrl: null };
+          },
+        },
+      );
+
+      expect(capturedContext?.instructionalContext).toEqual({
+        unitOrProject: "Current unit",
+        conceptsTopics: "current concepts",
+        skills: "current skills",
+        standardsObjectives: "current objectives",
+      });
+    } finally {
+      await db.delete(unitsTable).where(eq(unitsTable.id, selectedUnit.id));
+    }
   });
 
   it("does not save after both structured-output attempts are malformed", async () => {

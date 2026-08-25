@@ -22,6 +22,18 @@ export const DeviceMode = {
 } as const;
 
 /**
+ * Three-state creation setting; legacy deviceMode remains available for saved compatibility.
+ */
+export type TechnologyMode = typeof TechnologyMode[keyof typeof TechnologyMode];
+
+
+export const TechnologyMode = {
+  no_computer: 'no_computer',
+  computer_available: 'computer_available',
+  computer_required: 'computer_required',
+} as const;
+
+/**
  * @minimum 1
  * @maximum 120
  */
@@ -148,6 +160,44 @@ export interface InstructionalContextInput {
   standardsObjectives?: string;
 }
 
+export interface Unit {
+  id: string;
+  name: string;
+  conceptsTopics: string;
+  skills: string;
+  standardsObjectives: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UnitInput {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name: string;
+  /** @maxLength 2000 */
+  conceptsTopics?: string;
+  /** @maxLength 2000 */
+  skills?: string;
+  /** @maxLength 2000 */
+  standardsObjectives?: string;
+}
+
+export interface UnitUpdate {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name?: string;
+  /** @maxLength 2000 */
+  conceptsTopics?: string;
+  /** @maxLength 2000 */
+  skills?: string;
+  /** @maxLength 2000 */
+  standardsObjectives?: string;
+}
+
 export interface Chip {
   id: string;
   classId: string;
@@ -175,6 +225,7 @@ export interface Activity {
   prompts: string[];
   durationMinutes: Duration;
   deviceMode: DeviceMode;
+  technologyMode?: TechnologyMode;
   /** @nullable */
   arrivalInstructions?: string | null;
   /** @nullable */
@@ -192,6 +243,10 @@ export interface Activity {
   sourceTopic?: string | null;
   /** @nullable */
   sourceGoal?: string | null;
+  /** @nullable */
+  sourceUnitId?: string | null;
+  /** @nullable */
+  sourceUnitName?: string | null;
   sourceChipIds?: string[];
   /** @nullable */
   style?: string | null;
@@ -217,6 +272,7 @@ export interface ActivityInput {
   prompts?: string[];
   durationMinutes: Duration;
   deviceMode: DeviceMode;
+  technologyMode?: TechnologyMode;
   /** @nullable */
   arrivalInstructions?: string | null;
   /** @nullable */
@@ -234,6 +290,10 @@ export interface ActivityInput {
   sourceTopic?: string | null;
   /** @nullable */
   sourceGoal?: string | null;
+  /** @nullable */
+  sourceUnitId?: string | null;
+  /** @nullable */
+  sourceUnitName?: string | null;
   sourceChipIds?: string[];
   /** @nullable */
   style?: string | null;
@@ -249,6 +309,7 @@ export interface ActivityUpdate {
   prompts?: string[];
   durationMinutes?: Duration;
   deviceMode?: DeviceMode;
+  technologyMode?: TechnologyMode;
   /** @nullable */
   arrivalInstructions?: string | null;
   /** @nullable */
@@ -266,6 +327,10 @@ export interface ActivityUpdate {
   sourceTopic?: string | null;
   /** @nullable */
   sourceGoal?: string | null;
+  /** @nullable */
+  sourceUnitId?: string | null;
+  /** @nullable */
+  sourceUnitName?: string | null;
   sourceChipIds?: string[];
   /** @nullable */
   style?: string | null;
@@ -273,8 +338,29 @@ export interface ActivityUpdate {
   favorite?: boolean;
 }
 
+export type GenerateActivityInputWorkMode = typeof GenerateActivityInputWorkMode[keyof typeof GenerateActivityInputWorkMode];
+
+
+export const GenerateActivityInputWorkMode = {
+  quiet: 'quiet',
+  think_together: 'think_together',
+  discussion: 'discussion',
+  teacher_check: 'teacher_check',
+} as const;
+
 export interface GenerateActivityInput {
   classId: string;
+  unitId?: string;
+  /**
+     * Optional observable thing students should produce or leave behind.
+     * @maxLength 300
+     */
+  studentOutput?: string;
+  workMode?: GenerateActivityInputWorkMode;
+  /** @maxLength 500 */
+  materialsAvailable?: string;
+  /** @maxLength 300 */
+  completionSignal?: string;
   /** @maxLength 1000 */
   topic?: string;
   /** @maxLength 1000 */
@@ -282,6 +368,7 @@ export interface GenerateActivityInput {
   /** @maxItems 20 */
   chipIds: string[];
   deviceMode: DeviceMode;
+  technologyMode?: TechnologyMode;
   durationMinutes: Duration;
   activityStyle?: ActivityStyle | null;
   presentationTheme?: PresentationThemeSelection | null;
@@ -310,6 +397,7 @@ export interface ActiveSelection {
 export interface AppState {
   classes: ClassProfile[];
   instructionalContexts: InstructionalContext[];
+  units: Unit[];
   chips: Chip[];
   activities: Activity[];
   /** @nullable */

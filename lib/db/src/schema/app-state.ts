@@ -10,6 +10,9 @@ export const appStateTable = pgTable("app_state", {
   activeClassId: uuid("active_class_id").references(() => classesTable.id, {
     onDelete: "set null",
   }),
+  legacyUnitsMigratedAt: timestamp("legacy_units_migrated_at", {
+    withTimezone: true,
+  }),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow()
