@@ -154,4 +154,42 @@ describe("Home presentation defaults", () => {
       }),
     );
   });
+
+  it("reveals the teacher resource fields with Device On and sends them to generation", async () => {
+    mocks.generateActivity.mockResolvedValue({
+      id: "activity-1",
+      classId: "class-1",
+      title: "Generated",
+      task: "Practice",
+      prompts: [],
+      durationMinutes: 7,
+      deviceMode: "on",
+    });
+
+    render(<Home />);
+    fireEvent.click(screen.getByTestId("segment-on"));
+
+    const resourceUrl = screen.getByTestId("input-resource-url");
+    const resourceNote = screen.getByTestId("input-resource-note");
+    expect(resourceUrl).toBeVisible();
+    expect(resourceNote).toBeVisible();
+
+    fireEvent.change(resourceUrl, {
+      target: { value: "https://example.com/article" },
+    });
+    fireEvent.change(resourceNote, {
+      target: { value: "Read the short article." },
+    });
+    fireEvent.click(screen.getByTestId("button-generate"));
+
+    await waitFor(() =>
+      expect(mocks.generateActivity).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          deviceMode: "on",
+          teacherProvidedUrl: "https://example.com/article",
+          teacherProvidedResourceNote: "Read the short article.",
+        }),
+      }),
+    );
+  });
 });

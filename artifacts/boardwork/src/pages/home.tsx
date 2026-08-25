@@ -767,6 +767,43 @@ export default function Home() {
                         )}
                 </div>
               </div>
+               {deviceMode === "on" && (
+                 <div className="col-span-2 space-y-4 border-t pt-3">
+                   <div className="space-y-2">
+                     <Label htmlFor="resourceUrl">
+                       Student resource URL{" "}
+                       <span className="font-normal text-muted-foreground">(optional)</span>
+                     </Label>
+                     <p className="text-xs leading-relaxed text-muted-foreground">
+                       Add the link students should use for this board. Boardwork will not invent or inspect links.
+                     </p>
+                     <Input
+                       id="resourceUrl"
+                       type="url"
+                       inputMode="url"
+                       placeholder="https://..."
+                       value={resourceUrl}
+                       onChange={(e) => setResourceUrl(e.target.value)}
+                       data-testid="input-resource-url"
+                     />
+                   </div>
+                   <div className="space-y-2">
+                     <Label htmlFor="resourceNote">
+                       Resource description{" "}
+                       <span className="font-normal text-muted-foreground">(optional)</span>
+                     </Label>
+                     <Input
+                       id="resourceNote"
+                       dir="auto"
+                       className="boardwork-user-content"
+                       placeholder="e.g. A short article introducing biomimicry"
+                       value={resourceNote}
+                       onChange={(e) => setResourceNote(e.target.value)}
+                       data-testid="input-resource-note"
+                     />
+                   </div>
+                 </div>
+               )}
             </div>
 
             <Collapsible open={customizeOpen} onOpenChange={setCustomizeOpen} className="rounded-xl border bg-muted/10">
@@ -777,7 +814,7 @@ export default function Home() {
                 <span className="min-w-0">
                   <span className="block text-sm font-semibold text-foreground">Add optional details</span>
                   <span className="mt-0.5 block text-xs text-muted-foreground">
-                     Teaching focus, student resources, and activity style
+                      Teaching focus and activity style
                   </span>
                 </span>
                 <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform ${customizeOpen ? "rotate-180" : ""}`} />
@@ -795,36 +832,6 @@ export default function Home() {
                   />
 
                   <div className="space-y-4">
-                    {deviceMode === "on" && (
-                      <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                        <div className="space-y-2">
-                          <Label htmlFor="resourceUrl">Resource URL (optional)</Label>
-                          <Input
-                            id="resourceUrl"
-                            placeholder="https://..."
-                            value={resourceUrl}
-                            onChange={(e) => setResourceUrl(e.target.value)}
-                            data-testid="input-resource-url"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="resourceNote">Resource description (optional)</Label>
-                          <Input
-                            id="resourceNote"
-                            dir="auto"
-                            className="boardwork-user-content"
-                            placeholder="e.g. A short article introducing biomimicry"
-                            value={resourceNote}
-                            onChange={(e) => setResourceNote(e.target.value)}
-                            data-testid="input-resource-note"
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            Boardwork uses your description, but never opens or invents links.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
                     <div className="space-y-2">
                        <Label htmlFor="activityStyle">Activity style <span className="font-normal text-muted-foreground">(optional)</span></Label>
                        <p className="text-xs leading-relaxed text-muted-foreground">
