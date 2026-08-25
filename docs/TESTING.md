@@ -102,3 +102,11 @@ Before calling MVP complete:
 - Production verification is blocked as of August 21, 2026: the deployment service reports no active published deployment, so there is no live URL against which to run the access-gate, real-AI persistence, direct-route, projector-asset, fullscreen, or PNG-export smoke tests.
 - The three unchecked items above are intentionally still unchecked. They require either a published deployment (A) or a physical classroom projector/distance observation (F); marking them complete without those observations would be misleading.
 - Local production builds succeed when the required `PORT` and `BASE_PATH` values are supplied. Local typecheck and persistence tests currently expose an existing database/schema mismatch (`activities.visual_url` is present in the Drizzle model but absent from the test database); this was not changed as part of a production verification task.
+
+## Stage 5 local PNG typography verification
+
+- On August 25, 2026, a browser pass selected every exposed typography pairing on one mixed-script activity and inspected the actual downloaded PNG bytes: Boardwork, Editorial, Structured, and Clear.
+- Each desktop export was a non-interlaced RGBA PNG at exactly 1920×1080. A portrait/mobile-triggered Clear export kept the same fixed dimensions.
+- Computed presentation styles matched the selected heading/body pairs: Inter 700/500, DM Serif Display 400 + DM Sans 500, IBM Plex Serif 600 + IBM Plex Sans 500, and Atkinson Hyperlegible 700/500. Pixel comparisons were non-zero across every pairing, and zoomed crops showed accented/combining, Arabic, Devanagari, and CJK glyphs without replacement boxes.
+- The downloaded images contained the student board only: no Back, Export PNG, Teacher controls, timer panel, live alarm state, timer controls, or teacher-only note. The student-facing `7 MIN` board badge remained as intended.
+- All bundled font assets returned HTTP 200 with `font/ttf`; after `document.fonts.ready` and explicit requested-face loads, every exposed face reported `loaded` and `document.fonts.check()` returned true. No app-side console or backend errors were observed.

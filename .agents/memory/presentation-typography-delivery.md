@@ -17,6 +17,17 @@ improving the current teacher-facing choices.
 weights, license attribution, and export readiness request together. Keep
 fallback stacks explicit for multilingual and legacy content.
 
+Font verification in a browser should await `document.fonts.ready` and explicitly
+load each exposed family/weight before interpreting `document.fonts.check()` or
+inspecting export pixels.
+
+**Why:** An early `FontFaceSet.check()` can report false while the same local
+font assets are reachable and become loaded after the export preparation barrier.
+
+**How to apply:** Treat the shared export preparation barrier as the start of
+font assertions; verify the served local asset response and loaded face status
+when diagnosing a PNG mismatch.
+
 The normal Boardwork application shell remains on its established `Inter`,
 `sans-serif` baseline; appearance-specific typography is scoped to presentation
 surfaces and should not silently change home, editor, dialog, or navigation copy.
