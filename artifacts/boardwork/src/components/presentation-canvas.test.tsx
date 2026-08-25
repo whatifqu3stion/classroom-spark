@@ -51,7 +51,7 @@ describe("PresentationCanvas timer visibility", () => {
       <PresentationCanvas
         activity={activity}
         onShowTimer={onShowTimer}
-        timer={{ ...timer, visible: false }}
+        timer={{ ...timer, visible: false, remainingSeconds: 42, status: "running" }}
         timerControls={<button type="button">Start timer</button>}
       />,
     );
@@ -63,6 +63,26 @@ describe("PresentationCanvas timer visibility", () => {
 
     screen.getByRole("button", { name: "Show timer to students" }).click();
     expect(onShowTimer).toHaveBeenCalledOnce();
+  });
+
+  it("restores the unchanged live reading after student visibility is toggled", () => {
+    const { rerender } = render(
+      <PresentationCanvas
+        activity={activity}
+        onShowTimer={() => undefined}
+        timer={{ ...timer, visible: false, remainingSeconds: 42, status: "running" }}
+      />,
+    );
+
+    rerender(
+      <PresentationCanvas
+        activity={activity}
+        timer={{ ...timer, remainingSeconds: 42, status: "running" }}
+      />,
+    );
+
+    expect(screen.getByText("0:42").closest(".presentation-timer")).toBeInTheDocument();
+    expect(screen.getByText("Time remaining")).toBeInTheDocument();
   });
 
   it("keeps the timer large by default and moves it with its controls when minimized", () => {

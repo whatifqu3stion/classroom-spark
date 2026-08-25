@@ -43,6 +43,10 @@ A feature is not “done” because it exists. The following behaviors should wo
 ## F. Presentation
 - [x] Present opens a dedicated clean view.
 - [x] No teacher editing controls appear on the student board.
+- [x] Countdown timing uses an absolute deadline, catches up after visibility changes, and preserves remaining time across pause/resume.
+- [x] Timer reset and one-minute adjustments work from idle, paused, running, and completed states.
+- [x] Timer alarms honor mute, repeat until dismissed, and remain compatible with reduced-motion presentation styles.
+- [x] Hiding the timer changes student visibility only; the live session and PNG export surface remain separate.
 - [x] Board looks intentional at 1280×720.
 - [x] Board looks intentional at 1920×1080.
 - [x] Projector-resolution typography, contrast, hierarchy, and layout pass at 1280×720 and 1920×1080.
