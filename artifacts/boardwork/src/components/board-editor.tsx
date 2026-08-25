@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { getSafeResourceUrl } from "@/lib/resource-url";
 import { PresentationThemePicker } from "@/components/presentation-theme-picker";
 import { FormulaPreview, FormulaText } from "@/components/formula-text";
+import { PresentationCanvas } from "@/components/presentation-canvas";
 
 interface BoardEditorProps {
   draft: ActivityDraft;
@@ -364,6 +365,27 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
                 </div>
               )}
             </div>
+            </div>
+          </section>
+
+          <section
+            className="presentation-preview-section space-y-3 pt-6 mt-6 border-t"
+            aria-labelledby="presentation-preview-heading"
+            data-testid="presentation-preview"
+          >
+            <div>
+              <div
+                id="presentation-preview-heading"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+              >
+                Presentation preview
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Live student view. It updates as you edit and excludes teacher controls and live timer state.
+              </p>
+            </div>
+            <div className="presentation-preview-frame">
+              <PresentationCanvas activity={draft} editorPreview />
             </div>
           </section>
           

@@ -5,6 +5,86 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter-400.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter-500.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter-600.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter-700.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "DM Sans";
+  src: url("/fonts/dm-sans-500.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "DM Serif Display";
+  src: url("/fonts/dm-serif-display-400.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  src: url("/fonts/atkinson-hyperlegible-500.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  src: url("/fonts/atkinson-hyperlegible-700.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("/fonts/ibm-plex-sans-500.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Serif";
+  src: url("/fonts/ibm-plex-serif-600.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme inline {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -199,6 +279,100 @@
     color: var(--presentation-primary-text, #171717);
     font-family: var(--presentation-font-body, var(--app-font-sans));
     font-weight: var(--presentation-body-weight, 500);
+  }
+
+  .presentation-preview-frame {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--presentation-bg, #fafafa);
+    box-shadow: var(--shadow-sm);
+    aspect-ratio: 16 / 9;
+  }
+
+  .presentation-surface--editor-preview {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    padding: clamp(0.75rem, 3vw, 1.75rem);
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+  }
+
+  .presentation-surface--editor-preview .presentation-header {
+    gap: clamp(0.5rem, 2vw, 1.5rem);
+  }
+
+  .presentation-surface--editor-preview .presentation-eyebrow,
+  .presentation-surface--editor-preview .presentation-time {
+    font-size: clamp(0.55rem, 1.35vw, 0.82rem);
+  }
+
+  .presentation-surface--editor-preview .presentation-header-title {
+    font-size: clamp(0.72rem, 2.1vw, 1.25rem);
+  }
+
+  .presentation-surface--editor-preview .presentation-main {
+    min-height: 0;
+    padding-block: clamp(0.75rem, 3.5vw, 2rem);
+    gap: clamp(0.75rem, 3vw, 2.5rem);
+  }
+
+  .presentation-surface--editor-preview .presentation-content {
+    gap: clamp(0.5rem, 1.8vw, 1.25rem);
+    max-width: 100%;
+  }
+
+  .presentation-surface--editor-preview .presentation-task {
+    font-size: clamp(0.85rem, 3.35vw, 1.8rem);
+  }
+
+  .presentation-surface--editor-preview .presentation-prompts {
+    gap: clamp(0.35rem, 1.4vw, 0.8rem);
+    padding-top: 0;
+  }
+
+  .presentation-surface--editor-preview .presentation-prompt {
+    gap: clamp(0.35rem, 1.6vw, 1rem);
+    font-size: clamp(0.68rem, 2.35vw, 1.15rem);
+  }
+
+  .presentation-surface--editor-preview .presentation-materials,
+  .presentation-surface--editor-preview .presentation-resource {
+    margin-top: 0.5rem;
+  }
+
+  .presentation-surface--editor-preview .presentation-materials,
+  .presentation-surface--editor-preview .presentation-resource-link {
+    font-size: clamp(0.62rem, 1.45vw, 0.9rem);
+  }
+
+  .presentation-surface--editor-preview .presentation-resource-note,
+  .presentation-surface--editor-preview .presentation-visual figcaption {
+    font-size: clamp(0.55rem, 1.2vw, 0.75rem);
+  }
+
+  .presentation-surface--editor-preview .presentation-visual {
+    gap: 0.35rem;
+  }
+
+  .presentation-surface--editor-preview .presentation-visual img {
+    max-height: 18vh;
+    border-radius: 0.5rem;
+  }
+
+  .presentation-surface--editor-preview .presentation-footer {
+    min-height: 0;
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .presentation-surface--editor-preview .presentation-arrival {
+    margin-bottom: clamp(0.5rem, 1.5vw, 1rem);
+    padding-bottom: clamp(0.4rem, 1.2vw, 0.75rem);
+    font-size: clamp(0.62rem, 1.85vw, 1rem);
   }
 
   .presentation-header {

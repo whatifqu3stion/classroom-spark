@@ -146,6 +146,62 @@ describe("PresentationCanvas timer visibility", () => {
     });
   });
 
+  it("resolves missing and invalid appearances to the Boardwork default", () => {
+    const { rerender } = render(<PresentationCanvas activity={activity} />);
+    const surface = screen.getByTestId("presentation-surface");
+
+    expect(surface.style.getPropertyValue("--presentation-bg")).toBe("#FDFCF8");
+    expect(surface.style.getPropertyValue("--presentation-accent")).toBe("#334155");
+    expect(surface.style.getPropertyValue("--presentation-font-heading")).toContain(
+      "'Inter'",
+    );
+    expect(surface.style.getPropertyValue("--presentation-font-body")).toContain(
+      "'Inter'",
+    );
+
+    rerender(
+      <PresentationCanvas
+        activity={{
+          ...activity,
+          presentationTheme: {
+            kind: "curated",
+            themeId: "not-a-theme",
+            accentId: "not-an-accent",
+            typographyId: "not-a-typography",
+          },
+        }}
+      />,
+    );
+
+    expect(surface.style.getPropertyValue("--presentation-bg")).toBe("#FDFCF8");
+    expect(surface.style.getPropertyValue("--presentation-accent")).toBe("#334155");
+  });
+
+  it("uses the shared student structure without timer state in editor preview mode", () => {
+    render(
+      <PresentationCanvas
+        activity={{
+          ...activity,
+          arrivalInstructions: "Read this first.",
+          visualUrl: "data:image/png;base64,preview",
+          visualDescription: "A preview image",
+        }}
+        editorPreview
+        timer={{ ...timer, visible: false }}
+        onShowTimer={vi.fn()}
+        timerControls={<button type="button">Pause timer</button>}
+        controls={<button type="button">Teacher controls</button>}
+      />,
+    );
+
+    expect(screen.getByTestId("presentation-preview-surface")).toBeInTheDocument();
+    expect(screen.getByTestId("present-arrival")).toHaveTextContent("Read this first.");
+    expect(screen.getByTestId("present-title")).toHaveTextContent("Independent practice");
+    expect(screen.queryByText("Time remaining")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Pause timer" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Teacher controls" })).not.toBeInTheDocument();
+  });
+
   it("renders formulas in the student canvas", () => {
     render(
       <PresentationCanvas

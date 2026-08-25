@@ -630,6 +630,8 @@ components:
           type: string
         accentId:
           type: string
+        typographyId:
+          type: string
         sourceThemeId:
           type: string
         anchors:

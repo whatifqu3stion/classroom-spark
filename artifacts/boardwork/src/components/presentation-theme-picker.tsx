@@ -4,11 +4,13 @@ import {
   getPresentationAccentName,
   presentationAccentThemes,
   presentationSurfaceThemes,
+  presentationTypographySystems,
   type PresentationThemeSelection,
 } from "@workspace/api-zod";
 import {
   getThemeAccentId,
   getThemeId,
+  getThemeTypographyId,
   rememberPresentationTheme,
   type BoardworkPresentationTheme,
 } from "@/lib/presentation-theme";
@@ -18,6 +20,29 @@ interface PresentationThemePickerProps {
   value?: BoardworkPresentationTheme | null;
   onChange: (value: PresentationThemeSelection) => void;
 }
+
+const typographyLabels: Record<string, { name: string; description: string }> = {
+  boardwork: {
+    name: "Boardwork",
+    description: "Familiar and steady for everyday lessons.",
+  },
+  editorial: {
+    name: "Editorial",
+    description: "Expressive headings with a friendly sans body.",
+  },
+  structured: {
+    name: "Structured",
+    description: "Confident serif headings with clear sans text.",
+  },
+  clear: {
+    name: "Clear",
+    description: "Extra-readable type for mixed reading needs.",
+  },
+};
+
+const exposedTypographySystems = presentationTypographySystems.filter(
+  (typography) => typographyLabels[typography.id],
+);
 
 function SurfaceSwatch({
   surface,
@@ -109,6 +134,57 @@ function AccentSwatch({
   );
 }
 
+function TypographySwatch({
+  typography,
+  selected,
+  onSelect,
+}: {
+  typography: (typeof exposedTypographySystems)[number];
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const label = typographyLabels[typography.id];
+
+  return (
+    <button
+      type="button"
+      aria-label={`Use ${label.name} typography`}
+      aria-pressed={selected}
+      title={label.description}
+      onClick={onSelect}
+      className={cn(
+        "relative flex min-w-[8rem] flex-1 items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-w-0",
+        selected
+          ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+          : "border-border hover:bg-muted/50",
+      )}
+      data-testid={`typography-option-${typography.id}`}
+    >
+      <span
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-background text-sm text-foreground"
+        style={{
+          fontFamily: typography.heading.family,
+          fontWeight: typography.heading.weight,
+        }}
+        aria-hidden="true"
+      >
+        Aa
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate text-xs font-medium text-foreground">
+          {label.name}
+        </span>
+        <span className="block truncate text-[0.68rem] text-muted-foreground">
+          {label.description}
+        </span>
+      </span>
+      {selected && (
+        <Check className="ml-auto h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
+      )}
+    </button>
+  );
+}
+
 export function PresentationThemePicker({
   value,
   onChange,
@@ -124,9 +200,23 @@ export function PresentationThemePicker({
   );
   const selectedAccentId =
     getThemeAccentId(value) ?? selectedSurface?.defaultAccentId ?? null;
+  const selectedTypographyId = getThemeTypographyId(value);
   const selectSelection = (selection: PresentationThemeSelection) => {
     rememberPresentationTheme(selection);
     onChange(selection);
+  };
+  const selectTypography = (typographyId: string) => {
+    if (value?.kind === "custom") {
+      selectSelection({ ...value, typographyId });
+      return;
+    }
+
+    selectSelection({
+      kind: "curated",
+      themeId: selectedSurfaceId ?? getThemeId(value),
+      ...(selectedAccentId ? { accentId: selectedAccentId } : {}),
+      typographyId,
+    });
   };
 
   return (
@@ -164,6 +254,7 @@ export function PresentationThemePicker({
                     kind: "curated",
                     themeId: surface.id,
                     accentId: surface.defaultAccentId,
+                    typographyId: getThemeTypographyId(value),
                   })
                 }
               />
@@ -198,6 +289,7 @@ export function PresentationThemePicker({
                     kind: "curated",
                     themeId: selectedSurface.id,
                     accentId: accent.id,
+                    typographyId: getThemeTypographyId(value),
                   })
                 }
               />
@@ -209,6 +301,27 @@ export function PresentationThemePicker({
           This activity uses a saved appearance. Choose a new background to move it to the calmer color system.
         </p>
       )}
+
+      <div className="space-y-2" data-testid="presentation-typography">
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Typography
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Choose a heading and body pairing for the student board.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {exposedTypographySystems.map((typography) => (
+            <TypographySwatch
+              key={typography.id}
+              typography={typography}
+              selected={selectedTypographyId === typography.id}
+              onSelect={() => selectTypography(typography.id)}
+            />
+          ))}
+        </div>
+      </div>
 
     </div>
   );

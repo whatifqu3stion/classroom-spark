@@ -15,6 +15,7 @@ export type PresentationThemeSelection = {
   kind: "curated" | "custom";
   themeId?: string;
   accentId?: string;
+  typographyId?: string;
   sourceThemeId?: string;
   anchors?: { background: string; text: string; accent: string };
 };

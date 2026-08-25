@@ -34,6 +34,7 @@ export type PresentationThemeChoice = {
   kind: "curated" | "custom";
   themeId?: string;
   accentId?: string;
+  typographyId?: string;
   sourceThemeId?: string;
   anchors?: CustomPresentationThemeAnchors;
 };
@@ -758,6 +759,23 @@ export function getPresentationThemeAccentForeground(accent: string): string {
 export function getPresentationThemeTypography(
   selection: PresentationThemeChoice | null | undefined,
 ): PresentationTypography {
+  const resolvedCuratedThemeId =
+    selection?.kind === "curated"
+      ? LEGACY_THEME_ALIASES[selection.themeId ?? ""] ??
+        selection.themeId ??
+        DEFAULT_PRESENTATION_THEME_ID
+      : null;
+  const isKnownCuratedTheme =
+    selection?.kind === "curated" &&
+    (surfaceThemeById.has(resolvedCuratedThemeId!) ||
+      legacyPresentationThemes.some((theme) => theme.id === selection.themeId));
+  if (
+    selection?.typographyId &&
+    typographyById.has(selection.typographyId) &&
+    (selection.kind === "custom" || isKnownCuratedTheme)
+  ) {
+    return typographyById.get(selection.typographyId)!;
+  }
   const sourceThemeId =
     selection?.kind === "custom"
       ? selection.sourceThemeId

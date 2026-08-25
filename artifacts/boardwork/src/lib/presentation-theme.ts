@@ -6,6 +6,7 @@ import {
   getPresentationThemeColors,
   getPresentationThemeTypography,
   isHexColor,
+  presentationTypographySystems,
   presentationSurfaceThemes,
   type PresentationThemeColors,
   type PresentationTypography,
@@ -79,6 +80,20 @@ export function getThemeAccentId(
   );
 }
 
+export function getThemeTypographyId(
+  selection: BoardworkPresentationTheme | null | undefined,
+): string {
+  const selectedTypographyId =
+    selection?.typographyId &&
+    presentationTypographySystems.some(
+      (typography) => typography.id === selection.typographyId,
+    )
+      ? selection.typographyId
+      : null;
+
+  return selectedTypographyId ?? getThemeTypography(selection).id;
+}
+
 export function getThemeAccentName(
   selection: BoardworkPresentationTheme | null | undefined,
 ): string | null {
@@ -118,10 +133,19 @@ export function getLastUsedPresentationTheme(): BoardworkPresentationTheme | nul
               accentId: parsed.accentId,
             })
           : null;
+      const typographyId =
+        "typographyId" in parsed &&
+        typeof parsed.typographyId === "string" &&
+        presentationTypographySystems.some(
+          (typography) => typography.id === parsed.typographyId,
+        )
+          ? parsed.typographyId
+          : null;
       return {
         kind: "curated",
         themeId,
         ...(accentId ? { accentId } : {}),
+        ...(typographyId ? { typographyId } : {}),
       };
     }
     if (
@@ -171,6 +195,12 @@ export function rememberPresentationTheme(
         themeId: selection.themeId,
         ...(getThemeAccentId(selection)
           ? { accentId: getThemeAccentId(selection) }
+          : {}),
+        ...(selection.typographyId &&
+        presentationTypographySystems.some(
+          (typography) => typography.id === selection.typographyId,
+        )
+          ? { typographyId: selection.typographyId }
           : {}),
       }),
     );

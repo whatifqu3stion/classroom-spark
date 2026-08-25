@@ -15,6 +15,7 @@ interface PresentationCanvasProps {
   onShowTimer?: () => void;
   timerMinimized?: boolean;
   exportLayout?: boolean;
+  editorPreview?: boolean;
   surfaceRef?: Ref<HTMLDivElement>;
   timer?: Pick<CountdownTimerState, "remainingSeconds" | "status"> & {
     visible: boolean;
@@ -32,6 +33,7 @@ export function PresentationCanvas({
   onShowTimer,
   timerMinimized = false,
   exportLayout = false,
+  editorPreview = false,
   surfaceRef,
   timer,
 }: PresentationCanvasProps) {
@@ -41,10 +43,14 @@ export function PresentationCanvas({
   const themeTypography = getThemeTypography(activity.presentationTheme);
   const includeTestIds = !exportLayout;
   const hasVisual = Boolean(activity.visualUrl);
-  const showTimer = !exportLayout && timer?.visible;
+  const showTimer = !exportLayout && !editorPreview && timer?.visible;
   const showLargeTimer = Boolean(showTimer && !timerMinimized);
-  const showCompactTimer = !exportLayout && Boolean(timer?.visible && timerMinimized);
-  const showTimerControls = !exportLayout && Boolean(timerControls && (showLargeTimer || showCompactTimer));
+  const showCompactTimer =
+    !exportLayout && !editorPreview && Boolean(timer?.visible && timerMinimized);
+  const showTimerControls =
+    !exportLayout &&
+    !editorPreview &&
+    Boolean(timerControls && (showLargeTimer || showCompactTimer));
   const railMode = showLargeTimer
     ? hasVisual
       ? "split"
@@ -60,6 +66,7 @@ export function PresentationCanvas({
       className={cn(
         "presentation-surface",
         exportLayout && "presentation-surface--export",
+        editorPreview && "presentation-surface--editor-preview",
       )}
       style={{
         "--presentation-bg": themeColors.background,
@@ -81,7 +88,10 @@ export function PresentationCanvas({
         fontFamily: themeTypography.body.family,
         fontWeight: themeTypography.body.weight,
       } as CSSProperties}
-      {...testId(includeTestIds, "presentation-surface")}
+       {...testId(
+         includeTestIds,
+         editorPreview ? "presentation-preview-surface" : "presentation-surface",
+       )}
     >
       <div
         className={cn(
@@ -120,17 +130,19 @@ export function PresentationCanvas({
           className={cn(
             "presentation-time",
             timer &&
+              !editorPreview &&
               timer.visible &&
               timerMinimized &&
               "presentation-time--compact",
             timer &&
+              !editorPreview &&
               !timer.visible &&
               onShowTimer &&
               "presentation-time--hidden",
           )}
           {...testId(includeTestIds, "present-time")}
         >
-          {timer && !timer.visible && onShowTimer ? (
+          {!editorPreview && timer && !timer.visible && onShowTimer ? (
             <button
               type="button"
               className="presentation-time-toggle"
@@ -255,7 +267,7 @@ export function PresentationCanvas({
       </main>
 
       <footer className="presentation-footer">
-        {controls}
+        {!editorPreview && controls}
       </footer>
     </div>
   );

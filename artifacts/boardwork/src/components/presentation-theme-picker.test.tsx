@@ -21,7 +21,7 @@ describe("PresentationThemePicker", () => {
     expect(screen.getByTestId("theme-swatch-color-boardwork")).toHaveStyle({
       backgroundColor: "#FDFCF8",
     });
-    expect(screen.queryByText("Aa")).not.toBeInTheDocument();
+    expect(screen.getAllByText("Aa")).toHaveLength(4);
   });
 
   it("shows the limited surface catalog and restrained accent catalog", () => {
@@ -78,6 +78,26 @@ describe("PresentationThemePicker", () => {
       kind: "curated",
       themeId: "midnight",
       accentId: "blue",
+      typographyId: "boardwork",
+    });
+  });
+
+  it("changes typography without changing the selected surface or accent", () => {
+    const onChange = vi.fn();
+    render(
+      <PresentationThemePicker
+        onChange={onChange}
+        value={{ kind: "curated", themeId: "paper-v2", accentId: "sage" }}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("typography-option-clear"));
+
+    expect(onChange).toHaveBeenLastCalledWith({
+      kind: "curated",
+      themeId: "paper-v2",
+      accentId: "sage",
+      typographyId: "clear",
     });
   });
 

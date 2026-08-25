@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { getCuratedPresentationTheme } from "@workspace/api-zod";
+import {
+  getCuratedPresentationTheme,
+  getPresentationThemeTypography,
+} from "@workspace/api-zod";
 
 describe("presentation typography systems", () => {
   it("keeps Boardwork as the stable default system", () => {
@@ -30,5 +33,39 @@ describe("presentation typography systems", () => {
     expect(typography.body.family).toContain("'Noto Sans Arabic'");
     expect(typography.body.family).toContain("system-ui");
     expect(typography.heading.family).toContain("sans-serif");
+  });
+
+  it("allows an explicit typography choice without changing the surface", () => {
+    const typography = getPresentationThemeTypography({
+      kind: "curated",
+      themeId: "paper-v2",
+      accentId: "sage",
+      typographyId: "clear",
+    });
+
+    expect(typography.id).toBe("clear");
+    expect(getCuratedPresentationTheme("paper-v2", "sage").colors.background).toBe(
+      "#F3EEE4",
+    );
+  });
+
+  it("falls back to Boardwork typography for an invalid surface", () => {
+    const typography = getPresentationThemeTypography({
+      kind: "curated",
+      themeId: "not-a-surface",
+      typographyId: "clear",
+    });
+
+    expect(typography.id).toBe("boardwork");
+  });
+
+  it("keeps an explicit typography choice available for a legacy surface", () => {
+    expect(
+      getPresentationThemeTypography({
+        kind: "curated",
+        themeId: "ocean",
+        typographyId: "clear",
+      }).id,
+    ).toBe("clear");
   });
 });

@@ -12,6 +12,7 @@ export interface PresentationThemeSelection {
   kind: PresentationThemeSelectionKind;
   themeId?: string;
   accentId?: string;
+  typographyId?: string;
   sourceThemeId?: string;
   anchors?: PresentationThemeAnchors;
 }
