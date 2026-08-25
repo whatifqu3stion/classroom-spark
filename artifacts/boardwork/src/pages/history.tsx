@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { format } from "date-fns";
 import { MoreHorizontal, MonitorSmartphone, MonitorOff, Star, Trash2, Copy, Play, FileText } from "lucide-react";
@@ -30,6 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClassColorDot } from "@/components/class-color-dot";
 import { FormulaText } from "@/components/formula-text";
 
@@ -44,6 +45,8 @@ export default function History() {
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [historyView, setHistoryView] = useState<"all" | "favorites">("all");
+  const [classFilter, setClassFilter] = useState("all");
+  const [subjectFilter, setSubjectFilter] = useState("all");
   const [clearOpen, setClearOpen] = useState(false);
   const [clearError, setClearError] = useState<string | null>(null);
   const duplicateInFlightRef = useRef(false);
@@ -52,10 +55,40 @@ export default function History() {
   const classes = appState?.classes || [];
   const chips = appState?.chips || [];
 
+  const classById = useMemo(() => new Map(classes.map((classProfile) => [classProfile.id, classProfile])), [classes]);
+  const subjects = useMemo(
+    () => [...new Set(classes.map((classProfile) => classProfile.subject).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })),
+    [classes],
+  );
+
+  useEffect(() => {
+    if (classFilter !== "all" && !classById.has(classFilter)) {
+      setClassFilter("all");
+    }
+  }, [classById, classFilter]);
+
+  useEffect(() => {
+    if (subjectFilter !== "all" && !subjects.includes(subjectFilter)) {
+      setSubjectFilter("all");
+    }
+  }, [subjectFilter, subjects]);
+
   const sortedActivities = [...activities].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   const favoriteActivities = sortedActivities.filter((activity) => activity.favorite);
   const nonFavoriteCount = sortedActivities.length - favoriteActivities.length;
-  const visibleActivities = historyView === "favorites" ? favoriteActivities : sortedActivities;
+  const filteredActivities = sortedActivities.filter((activity) => {
+    const activityClass = classById.get(activity.classId);
+    return (
+      (classFilter === "all" || activity.classId === classFilter) &&
+      (subjectFilter === "all" || activityClass?.subject === subjectFilter)
+    );
+  });
+  const visibleActivities = historyView === "favorites"
+    ? filteredActivities.filter((activity) => activity.favorite)
+    : filteredActivities;
+  const hasActiveFilters = classFilter !== "all" || subjectFilter !== "all";
+  const selectedClass = classById.get(classFilter);
 
   const handleDuplicate = (id: string) => {
     if (duplicateInFlightRef.current) return;
@@ -164,10 +197,94 @@ export default function History() {
           </div>
         </div>
 
+        <div className="mb-6 flex flex-col gap-3 rounded-xl border bg-muted/10 p-3 sm:flex-row sm:items-end" data-testid="history-filters">
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <label htmlFor="history-class-filter" className="text-xs font-medium text-muted-foreground">
+              Class
+            </label>
+            <Select value={classFilter} onValueChange={setClassFilter}>
+              <SelectTrigger id="history-class-filter" className="bg-background" data-testid="select-history-class">
+                <SelectValue placeholder="All classes" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All classes</SelectItem>
+                {classes.map((classProfile) => (
+                  <SelectItem key={classProfile.id} value={classProfile.id}>
+                    <span className="flex items-center gap-2">
+                      <ClassColorDot color={classProfile.color || undefined} />
+                      <span className="boardwork-user-content" dir="auto">{classProfile.name}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <label htmlFor="history-subject-filter" className="text-xs font-medium text-muted-foreground">
+              Subject
+            </label>
+            <Select value={subjectFilter} onValueChange={setSubjectFilter}>
+              <SelectTrigger id="history-subject-filter" className="bg-background" data-testid="select-history-subject">
+                <SelectValue placeholder="All subjects" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All subjects</SelectItem>
+                {subjects.map((subject) => (
+                  <SelectItem key={subject} value={subject}>
+                    <span className="boardwork-user-content" dir="auto">{subject}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {hasActiveFilters && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="shrink-0 text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setClassFilter("all");
+                setSubjectFilter("all");
+              }}
+              data-testid="button-clear-history-filters"
+            >
+              Clear filters
+            </Button>
+          )}
+        </div>
+
         {visibleActivities.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed rounded-xl bg-muted/10">
             <FileText className="w-12 h-12 text-muted-foreground/30 mb-4" />
-            {historyView === "favorites" && sortedActivities.length > 0 ? (
+            {hasActiveFilters ? (
+              <>
+                <h3 className="text-lg font-medium text-foreground mb-2">
+                  {historyView === "favorites" && selectedClass
+                    ? `No favorites saved for ${selectedClass.name}`
+                    : historyView === "favorites"
+                      ? "No favorites match these filters"
+                      : "No activities match these filters"}
+                </h3>
+                <p className="text-muted-foreground max-w-sm mb-6">
+                  {historyView === "favorites" && selectedClass
+                    ? subjectFilter !== "all"
+                      ? `This class has no saved favorites for ${subjectFilter}.`
+                      : "Star an activity from this class to keep it easy to find here."
+                    : "Try a different class or subject, or clear the filters."}
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setClassFilter("all");
+                    setSubjectFilter("all");
+                  }}
+                  data-testid="button-clear-history-filters-empty"
+                >
+                  Clear filters
+                </Button>
+              </>
+            ) : historyView === "favorites" && favoriteActivities.length > 0 ? (
               <>
                 <h3 className="text-lg font-medium text-foreground mb-2">No favorites yet</h3>
                 <p className="text-muted-foreground max-w-sm mb-6">
@@ -192,7 +309,7 @@ export default function History() {
         ) : (
           <div className="grid gap-3">
             {visibleActivities.map((activity) => {
-              const cls = classes.find(c => c.id === activity.classId);
+              const cls = classById.get(activity.classId);
               const activityTitle = activity.title || "Untitled Activity";
               const focusLabels = (activity.sourceChipIds ?? [])
                 .map((chipId) => chips.find((chip) => chip.id === chipId)?.label)
@@ -229,6 +346,10 @@ export default function History() {
                           <span className="flex items-center gap-1.5 shrink-0">
                             <ClassColorDot color={cls.color || undefined} />
                              <span className="boardwork-user-content" dir="auto">{cls.name}</span>
+                             <span aria-hidden="true">·</span>
+                             <span className="boardwork-user-content" dir="auto">{cls.grade}</span>
+                             <span aria-hidden="true">·</span>
+                             <span className="boardwork-user-content" dir="auto">{cls.subject}</span>
                           </span>
                         )}
                         <span className="w-1 h-1 rounded-full bg-border shrink-0" />
