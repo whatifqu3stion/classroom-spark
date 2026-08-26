@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   setLocation: vi.fn(),
   generateActivity: vi.fn(),
   createActivity: vi.fn(),
+  updateClass: vi.fn(),
   setQueryData: vi.fn(),
   invalidateQueries: vi.fn(),
   toast: vi.fn(),
@@ -45,7 +46,60 @@ vi.mock("@/components/board-editor", () => ({
 }));
 
 vi.mock("@/components/class-form-dialog", () => ({
-  ClassFormDialog: () => null,
+  ClassFormDialog: ({
+    open,
+    onOpenChange,
+    onSubmit,
+    initialData,
+  }: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    onSubmit: (data: {
+      name: string;
+      grade: string;
+      subject: string;
+      defaultDeviceMode: "off" | "on";
+      defaultDuration: number;
+    }) => void;
+    initialData?: {
+      name: string;
+      grade: string;
+      subject: string;
+      defaultDuration: number;
+    } | null;
+  }) =>
+    open ? (
+      <>
+        <button
+          type="button"
+          data-testid="mock-set-default-device-on"
+          onClick={() => {
+            onSubmit({
+              name: initialData?.name ?? "Science",
+              grade: initialData?.grade ?? "5",
+              subject: initialData?.subject ?? "Science",
+              defaultDeviceMode: "on",
+              defaultDuration: initialData?.defaultDuration ?? 7,
+            });
+            onOpenChange(false);
+          }}
+        />
+        <button
+          type="button"
+          data-testid="mock-set-default-device-off"
+          onClick={() => {
+            onSubmit({
+              name: initialData?.name ?? "Science",
+              grade: initialData?.grade ?? "5",
+              subject: initialData?.subject ?? "Science",
+              defaultDeviceMode: "off",
+              defaultDuration: initialData?.defaultDuration ?? 7,
+            });
+            onOpenChange(false);
+          }}
+        />
+      </>
+    ) : null,
 }));
 
 vi.mock("@/components/chip-group", () => ({
@@ -58,7 +112,7 @@ vi.mock("@/components/class-color-dot", () => ({
 
 vi.mock("@workspace/api-client-react", () => ({
   useCreateClass: () => ({ mutate: vi.fn() }),
-  useUpdateClass: () => ({ mutate: vi.fn(), mutateAsync: vi.fn() }),
+  useUpdateClass: () => ({ mutate: mocks.updateClass, mutateAsync: vi.fn() }),
   useDeleteClass: () => ({ mutate: vi.fn() }),
   useSelectClass: () => ({ mutate: vi.fn() }),
   useUpdateInstructionalContext: () => ({ mutate: vi.fn() }),
@@ -99,6 +153,24 @@ const appState = {
   ],
   units: [],
   activities: [],
+} as unknown as AppState;
+
+const secondClassState = {
+  ...appState,
+  activeClassId: "class-2",
+  classes: [
+    ...appState.classes,
+    {
+      id: "class-2",
+      name: "Math",
+      grade: "5",
+      subject: "Math",
+      color: "#16a34a",
+      defaultDuration: 12,
+      defaultDeviceMode: "on" as const,
+      arrivalRoutine: null,
+    },
+  ],
 } as unknown as AppState;
 
 describe("Home presentation defaults", () => {
@@ -192,6 +264,143 @@ describe("Home presentation defaults", () => {
           deviceMode: "on",
           teacherProvidedUrl: "https://example.com/article",
           teacherProvidedResourceNote: "Read the short article.",
+        }),
+      }),
+    );
+  });
+
+  it("resets creation inputs and uses the new class defaults after a class switch", async () => {
+    const firstReturn = {
+      appState,
+      isLoading: false,
+      activeClassId: "class-1",
+      selectedChipIds: ["old-chip"],
+      toggleChipSelection: vi.fn(),
+      clearChipSelection: vi.fn(),
+    };
+    const secondReturn = {
+      ...firstReturn,
+      appState: secondClassState,
+      activeClassId: "class-2",
+      selectedChipIds: [],
+    };
+    vi.mocked(useBoardwork).mockReturnValue(firstReturn);
+    const { rerender } = render(<Home />);
+
+    fireEvent.change(screen.getByTestId("input-topic"), {
+      target: { value: "Old class topic" },
+    });
+    fireEvent.change(screen.getByTestId("input-goal"), {
+      target: { value: "Old class goal" },
+    });
+
+    vi.mocked(useBoardwork).mockReturnValue(secondReturn);
+    rerender(<Home />);
+    await waitFor(() => {
+      expect(screen.getByTestId("input-topic")).toHaveValue("");
+      expect(screen.getByTestId("input-goal")).toHaveValue("");
+      expect(screen.getByTestId("segment-computer_available")).toHaveClass(
+        "bg-background",
+      );
+    });
+
+    mocks.generateActivity.mockResolvedValue({
+      id: "activity-2",
+      classId: "class-2",
+      title: "Generated",
+      task: "Practice",
+      prompts: [],
+      durationMinutes: 12,
+      deviceMode: "on",
+      technologyMode: "computer_available",
+    });
+    fireEvent.click(screen.getByTestId("button-generate"));
+    await waitFor(() =>
+      expect(mocks.generateActivity).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          classId: "class-2",
+          topic: undefined,
+          goal: undefined,
+          deviceMode: "on",
+          technologyMode: "computer_available",
+          durationMinutes: 12,
+        }),
+      }),
+    );
+  });
+
+  it("initializes blank activities with the normalized technology default in both directions", () => {
+    render(<Home />);
+    fireEvent.click(screen.getByTestId("button-blank"));
+    expect(screen.getByTestId("board-editor-draft")).toHaveTextContent(
+      '"deviceMode":"off","technologyMode":"no_computer"',
+    );
+
+    vi.mocked(useBoardwork).mockReturnValue({
+      appState: {
+        ...appState,
+        activeClassId: "class-2",
+        classes: [
+          {
+            ...appState.classes[0],
+            id: "class-2",
+            defaultDeviceMode: "on",
+          },
+        ],
+      } as unknown as AppState,
+      isLoading: false,
+      activeClassId: "class-2",
+      selectedChipIds: [],
+      toggleChipSelection: vi.fn(),
+      clearChipSelection: vi.fn(),
+    });
+    // Re-rendering represents the active class changing before starting another blank board.
+    render(<Home />);
+    fireEvent.click(screen.getAllByTestId("button-blank").at(-1)!);
+    expect(screen.getAllByTestId("board-editor-draft").at(-1)).toHaveTextContent(
+      '"deviceMode":"on","technologyMode":"computer_available"',
+    );
+  });
+
+  it("keeps technology and generation aligned when class defaults change", async () => {
+    mocks.generateActivity.mockResolvedValue({
+      id: "activity-default",
+      classId: "class-1",
+      title: "Generated",
+      task: "Practice",
+      prompts: [],
+      durationMinutes: 7,
+      deviceMode: "on",
+      technologyMode: "computer_available",
+    });
+
+    render(<Home />);
+    fireEvent.click(screen.getByTestId("button-edit-class"));
+    fireEvent.click(screen.getByTestId("mock-set-default-device-on"));
+    expect(screen.getByTestId("segment-computer_available")).toHaveClass(
+      "bg-background",
+    );
+
+    fireEvent.click(screen.getByTestId("button-generate"));
+    await waitFor(() =>
+      expect(mocks.generateActivity).toHaveBeenLastCalledWith({
+        data: expect.objectContaining({
+          deviceMode: "on",
+          technologyMode: "computer_available",
+        }),
+      }),
+    );
+
+    fireEvent.click(screen.getByTestId("button-edit-class"));
+    fireEvent.click(screen.getByTestId("mock-set-default-device-off"));
+    expect(screen.getByTestId("segment-no_computer")).toHaveClass("bg-background");
+
+    fireEvent.click(screen.getByTestId("button-generate"));
+    await waitFor(() =>
+      expect(mocks.generateActivity).toHaveBeenLastCalledWith({
+        data: expect.objectContaining({
+          deviceMode: "off",
+          technologyMode: "no_computer",
         }),
       }),
     );

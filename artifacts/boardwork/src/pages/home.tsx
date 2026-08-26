@@ -44,6 +44,7 @@ import {
 } from "@workspace/api-client-react";
 import {
   activityStyleCatalog,
+  technologyModeForDeviceMode,
   type ActivityStyleValue,
 } from "@workspace/api-zod";
 import {
@@ -221,6 +222,35 @@ export default function Home() {
   const activeClass = classes.find((c) => c.id === activeClassId);
   const activeChips = chips.filter((c) => c.classId === activeClassId);
   const selectedUnit = units.find((unit) => unit.id === selectedUnitId) ?? null;
+  const generatorClassIdRef = useRef<string | null>(null);
+
+  const resetGeneratorState = (classProfile: ClassProfile | undefined) => {
+    setTopic("");
+    setGoal("");
+    setSelectedUnitId(null);
+    setStudentOutput("");
+    setWorkMode("");
+    setMaterialsAvailable("");
+    setCompletionSignal("");
+    setResourceUrl("");
+    setResourceNote("");
+    setActivityStyle("Auto");
+    setCustomizeOpen(false);
+    setGenerationError(null);
+
+    if (classProfile) {
+      setDeviceMode(classProfile.defaultDeviceMode);
+      setTechnologyMode(technologyModeForDeviceMode(classProfile.defaultDeviceMode));
+      setDuration(classProfile.defaultDuration);
+    }
+  };
+
+  useEffect(() => {
+    if (!activeClassId || generatorClassIdRef.current === activeClassId) return;
+    generatorClassIdRef.current = activeClassId;
+    resetGeneratorState(activeClass);
+  }, [activeClassId, activeClass]);
+
   const unitClassRef = useRef<string | null>(null);
   useEffect(() => {
     if (unitClassRef.current !== activeClassId) {
@@ -239,19 +269,6 @@ export default function Home() {
       setSelectedUnitId(null);
     }
   }, [activeClassId, instructionalContexts, selectedUnit, selectedUnitId, units]);
-
-  // Init Generator
-  useEffect(() => {
-    if (activeClass && !activityId && !localDraft) {
-      setDeviceMode(activeClass.defaultDeviceMode);
-      setTechnologyMode(
-        activeClass.defaultDeviceMode === "off"
-          ? "no_computer"
-          : "computer_available",
-      );
-      setDuration(activeClass.defaultDuration);
-    }
-  }, [activeClassId, activeClass, activityId, localDraft]);
 
   // Init Editor
   useEffect(() => {
@@ -387,7 +404,7 @@ export default function Home() {
   // Autosave Editor
   const debouncedDraft = useDebounce(localDraft, 800);
   useEffect(() => {
-    if (!debouncedDraft || !activeClassId) return;
+    if (!debouncedDraft || !activeClassId || debouncedDraft.classId !== activeClassId) return;
 
     const currentString = JSON.stringify(activitySavePayload(debouncedDraft));
     if (currentString === lastSavedRef.current) return;
@@ -441,6 +458,8 @@ export default function Home() {
       pendingPresentRef.current = false;
       setLocalDraft(null);
       setSaveStatus("idle");
+      resetGeneratorState(classes.find((classProfile) => classProfile.id === id));
+      clearChipSelection();
     }
 
     // Optimistic update
@@ -469,6 +488,7 @@ export default function Home() {
 
       if (shouldApplyDefaults) {
         setDeviceMode(data.defaultDeviceMode);
+        setTechnologyMode(technologyModeForDeviceMode(data.defaultDeviceMode));
         setDuration(data.defaultDuration);
       }
 
@@ -479,6 +499,7 @@ export default function Home() {
         onError: () => {
           if (shouldApplyDefaults) {
             setDeviceMode(previousDeviceMode);
+            setTechnologyMode(technologyModeForDeviceMode(previousDeviceMode));
             setDuration(previousDuration);
           }
         },
@@ -625,6 +646,7 @@ export default function Home() {
       prompts: [],
       durationMinutes: activeClass.defaultDuration,
       deviceMode: activeClass.defaultDeviceMode,
+      technologyMode: technologyModeForDeviceMode(activeClass.defaultDeviceMode),
       arrivalInstructions: activeClass.arrivalRoutine,
       presentationTheme: getLastUsedPresentationTheme(),
     };

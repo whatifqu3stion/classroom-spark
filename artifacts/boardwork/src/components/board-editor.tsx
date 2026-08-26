@@ -70,7 +70,13 @@ function EditableText({
 
 export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", isMeaningful = true }: BoardEditorProps) {
   const [presentationVisualOpen, setPresentationVisualOpen] = useState(false);
+  const [durationError, setDurationError] = useState<string | null>(null);
   const safeResourceUrl = getSafeResourceUrl(draft.resourceUrl);
+
+  useEffect(() => {
+    setDurationError(null);
+  }, [draft.id, draft.durationMinutes]);
+
   const addPrompt = () => {
     if (draft.prompts.length < 3) {
       onChange({ prompts: [...draft.prompts, ""] });
@@ -89,7 +95,7 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
     onChange({ prompts: newPrompts });
   };
 
-  const disablePresent = !draft.id && !isMeaningful;
+  const disablePresent = (!draft.id && !isMeaningful) || Boolean(durationError);
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background rounded-xl border shadow-sm">
@@ -159,14 +165,31 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
                 <EditableText
                   value={String(draft.durationMinutes)}
                   onChange={(val) => {
-                    const num = parseInt(val);
-                     if (!isNaN(num)) onChange({ durationMinutes: num as Duration });
+                    if (!/^\d+$/.test(val)) {
+                      setDurationError("Enter a whole number from 1 to 120 minutes.");
+                      return;
+                    }
+                    const num = Number(val);
+                    if (num < 1 || num > 120) {
+                      setDurationError("Enter a whole number from 1 to 120 minutes.");
+                      return;
+                    }
+                    setDurationError(null);
+                    onChange({ durationMinutes: num as Duration });
                   }}
                   placeholder="7"
-                  className="font-medium text-foreground min-w-[1ch] text-center inline-block"
+                  className={cn(
+                    "font-medium text-foreground min-w-[1ch] text-center inline-block",
+                    durationError && "text-destructive",
+                  )}
                 />
                 <span className="font-medium">MIN</span>
               </div>
+              {durationError && (
+                <p className="mt-1 text-right text-xs text-destructive" role="alert" data-testid="duration-error">
+                  {durationError}
+                </p>
+              )}
             </div>
 
             <EditableText

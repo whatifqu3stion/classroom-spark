@@ -1,4 +1,9 @@
-import type { TechnologyMode } from "@workspace/api-zod";
+import {
+  technologyModeForDeviceMode,
+  type TechnologyMode,
+} from "@workspace/api-zod";
+
+export { technologyModeForDeviceMode } from "@workspace/api-zod";
 
 export class ActivityTechnologyValidationError extends Error {
   constructor(message: string) {
@@ -15,8 +20,7 @@ export function normalizeActivityTechnology(
   technologyMode: TechnologyMode;
 } {
   const normalizedTechnologyMode =
-    technologyMode ??
-    (deviceMode === "off" ? "no_computer" : "computer_available");
+    technologyMode ?? technologyModeForDeviceMode(deviceMode);
   const expectedDeviceMode =
     normalizedTechnologyMode === "no_computer" ? "off" : "on";
 

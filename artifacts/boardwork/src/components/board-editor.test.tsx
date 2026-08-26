@@ -86,4 +86,28 @@ describe("BoardEditor presentation visual disclosure", () => {
       previewSurface.style.getPropertyValue("--presentation-font-body"),
     ).toContain("Atkinson Hyperlegible");
   });
+
+  it("keeps invalid duration text out of the draft and blocks presenting", () => {
+    const onChange = vi.fn();
+    render(<BoardEditor draft={draft} onChange={onChange} />);
+
+    const durationEditor = screen.getByRole("textbox", { name: "7" });
+    durationEditor.textContent = "121";
+    fireEvent.input(durationEditor);
+
+    expect(screen.getByTestId("duration-error")).toHaveTextContent(
+      "Enter a whole number from 1 to 120 minutes.",
+    );
+    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByTestId("button-present-disabled")).toBeInTheDocument();
+
+    durationEditor.textContent = "0";
+    fireEvent.input(durationEditor);
+    expect(onChange).not.toHaveBeenCalled();
+
+    durationEditor.textContent = "120";
+    fireEvent.input(durationEditor);
+    expect(onChange).toHaveBeenCalledWith({ durationMinutes: 120 });
+    expect(screen.queryByTestId("duration-error")).not.toBeInTheDocument();
+  });
 });
