@@ -21,7 +21,7 @@ describe("PresentationThemePicker", () => {
     expect(screen.getByTestId("theme-swatch-color-boardwork")).toHaveStyle({
       backgroundColor: "#FDFCF8",
     });
-    expect(screen.getAllByText("Aa")).toHaveLength(4);
+    expect(screen.getAllByText("Aa")).toHaveLength(5);
   });
 
   it("shows the limited surface catalog and restrained accent catalog", () => {
@@ -45,6 +45,20 @@ describe("PresentationThemePicker", () => {
     expect(screen.getByTestId("theme-swatch-color-boardwork")).toHaveClass(
       "h-5",
       "w-5",
+    );
+    for (const typographyId of [
+      "boardwork",
+      "editorial",
+      "structured",
+      "clear",
+      "friendly",
+    ]) {
+      expect(screen.getByTestId(`typography-option-${typographyId}`)).toBeInTheDocument();
+      expect(screen.getByTestId(`typography-preview-${typographyId}`)).toBeInTheDocument();
+    }
+    expect(screen.getByRole("button", { name: "Use Classic typography" })).toHaveAttribute(
+      "title",
+      "Literary serif headings with a warm sans body.",
     );
   });
 

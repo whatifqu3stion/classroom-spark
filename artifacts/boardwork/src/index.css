@@ -401,10 +401,10 @@
     max-width: 42ch;
     color: var(--presentation-primary-text, rgb(23 23 23 / 88%));
     font-family: var(--presentation-font-heading, var(--app-font-sans));
-    font-size: clamp(0.95rem, 3.2vw, 1.4rem);
+    font-size: calc(clamp(0.95rem, 3.2vw, 1.4rem) * var(--presentation-heading-scale, 1));
     font-weight: var(--presentation-heading-weight, 700);
     line-height: 1.15;
-    letter-spacing: 0.08em;
+    letter-spacing: var(--presentation-heading-letter-spacing, -0.035em);
   }
 
   .presentation-header-copy {
@@ -773,7 +773,7 @@
     font-family: var(--presentation-font-body, var(--app-font-sans));
     font-size: clamp(1.45rem, 6.5vw, 3rem);
     font-weight: var(--presentation-body-weight, 500);
-    line-height: 1.26;
+    line-height: 1.28;
     overflow-wrap: anywhere;
   }
 
@@ -792,7 +792,7 @@
     font-family: var(--presentation-font-body, var(--app-font-sans));
     font-size: clamp(1.1rem, 4.6vw, 2rem);
     font-weight: var(--presentation-body-weight, 500);
-    line-height: 1.28;
+    line-height: 1.35;
     overflow-wrap: anywhere;
   }
 

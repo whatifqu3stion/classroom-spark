@@ -23,20 +23,24 @@ interface PresentationThemePickerProps {
 
 const typographyLabels: Record<string, { name: string; description: string }> = {
   boardwork: {
-    name: "Boardwork",
-    description: "Familiar and steady for everyday lessons.",
+    name: "Steady",
+    description: "Crisp Inter headings for everyday lessons.",
   },
   editorial: {
-    name: "Editorial",
-    description: "Expressive headings with a friendly sans body.",
+    name: "Classic",
+    description: "Literary serif headings with a warm sans body.",
   },
   structured: {
-    name: "Structured",
-    description: "Confident serif headings with clear sans text.",
+    name: "Modern",
+    description: "Architectural serif headings with orderly sans text.",
   },
   clear: {
     name: "Clear",
     description: "Extra-readable type for mixed reading needs.",
+  },
+  friendly: {
+    name: "Friendly",
+    description: "Warm, easygoing headings with highly readable text.",
   },
 };
 
@@ -161,20 +165,35 @@ function TypographySwatch({
       data-testid={`typography-option-${typography.id}`}
     >
       <span
-        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-background text-sm text-foreground"
-        style={{
-          fontFamily: typography.heading.family,
-          fontWeight: typography.heading.weight,
-        }}
+        className="flex h-9 w-10 shrink-0 flex-col items-center justify-center rounded-md border border-border bg-background leading-none text-foreground"
         aria-hidden="true"
+        data-testid={`typography-preview-${typography.id}`}
       >
-        Aa
+        <span
+          className="text-sm"
+          style={{
+            fontFamily: typography.heading.family,
+            fontWeight: typography.heading.weight,
+            letterSpacing: typography.headingLetterSpacing,
+          }}
+        >
+          Aa
+        </span>
+        <span
+          className="mt-1 text-[0.52rem]"
+          style={{
+            fontFamily: typography.body.family,
+            fontWeight: typography.body.weight,
+          }}
+        >
+          body
+        </span>
       </span>
       <span className="min-w-0">
         <span className="block truncate text-xs font-medium text-foreground">
           {label.name}
         </span>
-        <span className="block truncate text-[0.68rem] text-muted-foreground">
+        <span className="block text-[0.68rem] leading-snug text-muted-foreground">
           {label.description}
         </span>
       </span>
@@ -235,7 +254,7 @@ export function PresentationThemePicker({
         <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Background
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
           {presentationSurfaceThemes.map((surface) => {
             const previewTheme = getCuratedPresentationTheme(
               surface.id,

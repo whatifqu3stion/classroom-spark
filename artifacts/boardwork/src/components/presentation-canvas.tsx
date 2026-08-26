@@ -83,6 +83,7 @@ export function PresentationCanvas({
         "--presentation-body-weight": themeTypography.body.weight,
         "--presentation-heading-letter-spacing":
           themeTypography.headingLetterSpacing,
+        "--presentation-heading-scale": themeTypography.headingScale,
         backgroundColor: themeColors.background,
         color: themeColors.primaryText,
         fontFamily: themeTypography.body.family,

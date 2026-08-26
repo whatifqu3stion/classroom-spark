@@ -2,9 +2,40 @@ import { describe, expect, it } from "vitest";
 import {
   getCuratedPresentationTheme,
   getPresentationThemeTypography,
+  presentationTypographySystems,
 } from "@workspace/api-zod";
 
 describe("presentation typography systems", () => {
+  it("offers distinct teacher-facing personalities on a shared readability baseline", () => {
+    expect(presentationTypographySystems.map(({ id }) => id)).toEqual([
+      "boardwork",
+      "editorial",
+      "structured",
+      "clear",
+      "friendly",
+      "ocean",
+      "ink",
+      "sage",
+      "clay",
+      "plum",
+      "sunlit",
+      "teal",
+    ]);
+
+    const exposed = presentationTypographySystems.filter((typography) =>
+      ["boardwork", "editorial", "structured", "clear", "friendly"].includes(
+        typography.id,
+      ),
+    );
+    expect(new Set(exposed.map(({ heading }) => heading.family)).size).toBeGreaterThan(2);
+    expect(exposed.every(({ headingScale }) => headingScale >= 1 && headingScale <= 1.1)).toBe(
+      true,
+    );
+    expect(exposed.every(({ headingLetterSpacing }) => headingLetterSpacing.endsWith("em"))).toBe(
+      true,
+    );
+  });
+
   it("keeps Boardwork as the stable default system", () => {
     const typography = getCuratedPresentationTheme("boardwork").typography;
 
@@ -12,6 +43,7 @@ describe("presentation typography systems", () => {
     expect(typography.body.family).toContain("'Inter'");
     expect(typography.heading.weight).toBe(700);
     expect(typography.body.weight).toBe(500);
+    expect(typography.headingScale).toBe(1);
   });
 
   it("maps exposed appearances to matched semantic systems", () => {
@@ -25,6 +57,14 @@ describe("presentation typography systems", () => {
     expect(structured.body.family).toContain("'IBM Plex Sans'");
     expect(clear.heading.family).toContain("'Atkinson Hyperlegible'");
     expect(clear.body.family).toContain("'Atkinson Hyperlegible'");
+
+    const friendly = getPresentationThemeTypography({
+      kind: "curated",
+      themeId: "paper-v2",
+      typographyId: "friendly",
+    });
+    expect(friendly.heading.family).toContain("'DM Sans'");
+    expect(friendly.body.family).toContain("'Atkinson Hyperlegible'");
   });
 
   it("includes explicit script and system fallbacks for legacy content", () => {

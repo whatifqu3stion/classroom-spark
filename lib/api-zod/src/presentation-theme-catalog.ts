@@ -20,6 +20,7 @@ export type PresentationTypography = {
     weight: number;
   };
   headingLetterSpacing: string;
+  headingScale: number;
 };
 
 export type CustomPresentationThemeAnchors = {
@@ -209,66 +210,84 @@ export const presentationTypographySystems = [
     heading: { family: sansFamily("'Inter'"), weight: 700 },
     body: { family: sansFamily("'Inter'"), weight: 500 },
     headingLetterSpacing: "-0.045em",
+    headingScale: 1,
   },
   {
     id: "editorial",
     heading: { family: serifFamily("'DM Serif Display'"), weight: 400 },
     body: { family: sansFamily("'DM Sans'"), weight: 500 },
     headingLetterSpacing: "-0.025em",
+    headingScale: 1.06,
   },
   {
     id: "structured",
     heading: { family: serifFamily("'IBM Plex Serif'"), weight: 600 },
     body: { family: sansFamily("'IBM Plex Sans'"), weight: 500 },
     headingLetterSpacing: "-0.035em",
+    headingScale: 1.02,
   },
   {
     id: "clear",
     heading: { family: sansFamily("'Atkinson Hyperlegible'"), weight: 700 },
     body: { family: sansFamily("'Atkinson Hyperlegible'"), weight: 500 },
     headingLetterSpacing: "-0.025em",
+    headingScale: 1,
+  },
+  {
+    id: "friendly",
+    heading: { family: sansFamily("'DM Sans'"), weight: 500 },
+    body: { family: sansFamily("'Atkinson Hyperlegible'"), weight: 500 },
+    headingLetterSpacing: "-0.02em",
+    headingScale: 1.04,
   },
   {
     id: "ocean",
     heading: { family: sansFamily("'Space Grotesk'"), weight: 700 },
     body: { family: sansFamily("'Inter'"), weight: 500 },
     headingLetterSpacing: "-0.04em",
+    headingScale: 1,
   },
   {
     id: "ink",
     heading: { family: monoFamily("'IBM Plex Mono'"), weight: 600 },
     body: { family: sansFamily("'IBM Plex Sans'"), weight: 500 },
     headingLetterSpacing: "-0.035em",
+    headingScale: 1,
   },
   {
     id: "sage",
     heading: { family: serifFamily("'Fraunces'"), weight: 700 },
     body: { family: sansFamily("'Atkinson Hyperlegible'"), weight: 500 },
     headingLetterSpacing: "-0.03em",
+    headingScale: 1,
   },
   {
     id: "clay",
     heading: { family: sansFamily("'DM Sans'"), weight: 700 },
     body: { family: sansFamily("'DM Sans'"), weight: 500 },
     headingLetterSpacing: "-0.045em",
+    headingScale: 1,
   },
   {
     id: "plum",
     heading: { family: serifFamily("'Playfair Display'"), weight: 700 },
     body: { family: sansFamily("'Source Sans 3'"), weight: 500 },
     headingLetterSpacing: "-0.035em",
+    headingScale: 1,
   },
   {
     id: "sunlit",
     heading: { family: serifFamily("'Lora'"), weight: 700 },
     body: { family: sansFamily("'Atkinson Hyperlegible'"), weight: 500 },
     headingLetterSpacing: "-0.025em",
+    headingScale: 1,
   },
   {
     id: "teal",
     heading: { family: sansFamily("'Plus Jakarta Sans'"), weight: 700 },
     body: { family: sansFamily("'Plus Jakarta Sans'"), weight: 500 },
     headingLetterSpacing: "-0.04em",
+    headingScale: 1,
   },
 ] as const satisfies readonly PresentationTypography[];
 
