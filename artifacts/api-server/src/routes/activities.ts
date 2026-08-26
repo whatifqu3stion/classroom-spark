@@ -18,6 +18,7 @@ import {
   SetActivityFavoriteBody,
   SetActivityFavoriteResponse,
   ClearNonFavoriteActivitiesResponse,
+  getPresentationImagePayloadError,
   sanitizeUnicodeValue,
 } from "@workspace/api-zod";
 import {
@@ -54,6 +55,12 @@ router.post("/activities", async (req, res): Promise<void> => {
   const parsed = CreateActivityBody.safeParse(sanitizeUnicodeValue(req.body));
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const visualError = getPresentationImagePayloadError(parsed.data.visualUrl);
+  if (visualError) {
+    res.status(413).json({ error: visualError });
     return;
   }
 
@@ -134,6 +141,12 @@ router.patch("/activities/:activityId", async (req, res): Promise<void> => {
   const parsed = UpdateActivityBody.safeParse(sanitizeUnicodeValue(req.body));
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const visualError = getPresentationImagePayloadError(parsed.data.visualUrl);
+  if (visualError) {
+    res.status(413).json({ error: visualError });
     return;
   }
 

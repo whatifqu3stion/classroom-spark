@@ -9,6 +9,13 @@ import { PresentationThemePicker } from "@/components/presentation-theme-picker"
 import { FormulaPreview, FormulaText } from "@/components/formula-text";
 import { PresentationCanvas } from "@/components/presentation-canvas";
 import { HelpTooltip, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  estimatePresentationImageDataUrlBytes,
+  getPresentationImagePayloadError,
+  PRESENTATION_IMAGE_DATA_URL_LIMIT_BYTES,
+  PRESENTATION_IMAGE_FILE_LIMIT_BYTES,
+  PRESENTATION_IMAGE_SIZE_ERROR,
+} from "@workspace/api-zod";
 
 interface BoardEditorProps {
   draft: ActivityDraft;
@@ -82,10 +89,12 @@ export function BoardEditor({
 }: BoardEditorProps) {
   const [presentationVisualOpen, setPresentationVisualOpen] = useState(false);
   const [durationError, setDurationError] = useState<string | null>(null);
+  const [visualUploadError, setVisualUploadError] = useState<string | null>(null);
   const safeResourceUrl = getSafeResourceUrl(draft.resourceUrl);
 
   useEffect(() => {
     setDurationError(null);
+    setVisualUploadError(null);
   }, [draft.id, draft.durationMinutes]);
 
   const addPrompt = () => {
@@ -386,21 +395,62 @@ export function BoardEditor({
                   onChange={(event) => {
                     const file = event.target.files?.[0];
                     if (!file) return;
-                    if (file.size > 5 * 1024 * 1024) {
-                      window.alert("Choose an image smaller than 5 MB.");
+                     if (file.size > PRESENTATION_IMAGE_FILE_LIMIT_BYTES) {
+                       setVisualUploadError(PRESENTATION_IMAGE_SIZE_ERROR);
+                       event.target.value = "";
+                       return;
+                     }
+                     if (
+                       estimatePresentationImageDataUrlBytes(file.size, file.type) >
+                       PRESENTATION_IMAGE_DATA_URL_LIMIT_BYTES
+                     ) {
+                       setVisualUploadError(PRESENTATION_IMAGE_SIZE_ERROR);
+                       event.target.value = "";
                       return;
                     }
                     const reader = new FileReader();
-                    reader.onload = () => onChange({ visualUrl: String(reader.result) });
+                     reader.onerror = () => {
+                       setVisualUploadError(
+                         "This image could not be read. Choose another image and try again.",
+                       );
+                     };
+                     reader.onload = () => {
+                       const visualUrl = String(reader.result ?? "");
+                       const payloadError =
+                         getPresentationImagePayloadError(visualUrl);
+                       if (payloadError) {
+                         setVisualUploadError(payloadError);
+                         return;
+                       }
+                       setVisualUploadError(null);
+                       onChange({ visualUrl });
+                     };
                     reader.readAsDataURL(file);
                     event.target.value = "";
                   }}
                 />
               </label>
+               {visualUploadError && (
+                 <p
+                   className="text-xs text-destructive"
+                   role="alert"
+                   data-testid="visual-upload-error"
+                 >
+                   {visualUploadError}
+                 </p>
+               )}
               {draft.visualUrl && (
                 <>
                   <img src={draft.visualUrl} alt="" className="h-24 w-full rounded-md border object-contain bg-muted/30" />
-                  <Button type="button" variant="ghost" size="sm" onClick={() => onChange({ visualUrl: null, visualDescription: null })}>
+                   <Button
+                     type="button"
+                     variant="ghost"
+                     size="sm"
+                     onClick={() => {
+                       setVisualUploadError(null);
+                       onChange({ visualUrl: null, visualDescription: null });
+                     }}
+                   >
                     Remove image
                   </Button>
                   <input

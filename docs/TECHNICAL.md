@@ -255,6 +255,14 @@ Handle:
 - missing class/activity
 - access-gate failure
 
+### Activity payload limit
+The API explicitly accepts activity JSON and form bodies up to 8 MiB and returns
+a JSON `413` error when that boundary is exceeded. Local presentation images
+remain capped at 5 MB (the current data-URL design), with roughly 1 MiB of the
+request budget reserved for the rest of the activity fields. The client checks
+the base64-encoded image size before adding it to the draft, and the API repeats
+the check so oversized images cannot be persisted by another client.
+
 Rules:
 - preserve teacher input
 - use plain-language errors

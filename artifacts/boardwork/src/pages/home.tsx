@@ -44,6 +44,7 @@ import {
   GenerateActivityInput,
 } from "@workspace/api-client-react";
 import {
+  ACTIVITY_PAYLOAD_TOO_LARGE_ERROR,
   activityStyleCatalog,
   technologyModeForDeviceMode,
   type ActivityStyleValue,
@@ -85,6 +86,29 @@ const getGenerationErrorMessage = (error: unknown) => {
     return error.data.error;
   }
   return "Boardwork couldn’t generate an activity. Try again.";
+};
+
+const getActivitySaveErrorMessage = (error: unknown, fallback: string) => {
+  if (
+    error &&
+    typeof error === "object" &&
+    "data" in error &&
+    error.data &&
+    typeof error.data === "object" &&
+    "error" in error.data &&
+    typeof error.data.error === "string"
+  ) {
+    return error.data.error;
+  }
+  if (
+    error &&
+    typeof error === "object" &&
+    "status" in error &&
+    error.status === 413
+  ) {
+    return ACTIVITY_PAYLOAD_TOO_LARGE_ERROR;
+  }
+  return fallback;
 };
 
 const isMeaningful = (
@@ -338,10 +362,15 @@ export default function Home() {
         }
         setSaveStatus("saved");
           setSaveError(null);
-      } catch {
+      } catch (error) {
         setSaveStatus("error");
-          setSaveError("Your latest changes were not saved. Check your connection and try again.");
-        throw new Error("Activity autosave failed");
+        setSaveError(
+          getActivitySaveErrorMessage(
+            error,
+            "Your latest changes were not saved. Check your connection and try again.",
+          ),
+        );
+        throw error;
       } finally {
         saveLoopPromiseRef.current = null;
       }
@@ -404,9 +433,14 @@ export default function Home() {
           setLocation(`/present/${newActivity.id}`);
         }
         return true;
-      } catch {
+      } catch (error) {
         setSaveStatus("error");
-        setSaveError("Your activity could not be saved. Your edits are still here—try again.");
+        setSaveError(
+          getActivitySaveErrorMessage(
+            error,
+            "Your activity could not be saved. Your edits are still here—try again.",
+          ),
+        );
         pendingPresentRef.current = false;
         return false;
       } finally {

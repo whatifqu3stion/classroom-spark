@@ -222,6 +222,30 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.queryByRole("button", { name: "Teacher controls" })).not.toBeInTheDocument();
   });
 
+  it("keeps a saved local image in both preview and export surfaces", () => {
+    const imageActivity = {
+      ...activity,
+      visualUrl: "data:image/png;base64,saved-image",
+      visualDescription: "A saved classroom image",
+    };
+    const { rerender } = render(
+      <PresentationCanvas activity={imageActivity} editorPreview />,
+    );
+
+    expect(screen.getByRole("img", { name: "A saved classroom image" })).toHaveAttribute(
+      "src",
+      imageActivity.visualUrl,
+    );
+
+    rerender(<PresentationCanvas activity={imageActivity} exportLayout />);
+
+    expect(screen.getByRole("img", { name: "A saved classroom image" })).toHaveAttribute(
+      "src",
+      imageActivity.visualUrl,
+    );
+    expect(screen.getByText("A saved classroom image")).toBeInTheDocument();
+  });
+
   it("renders formulas in the student canvas", () => {
     render(
       <PresentationCanvas

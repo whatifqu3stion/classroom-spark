@@ -8,3 +8,4 @@
 - [Countdown alarm behavior](countdown-alarm-behavior.md) — Base countdown completion on an absolute deadline and keep the live alarm state out of exported presentation surfaces.
 - [Presentation typography delivery](presentation-typography-delivery.md) — Bundle only exposed font weights; legacy systems use explicit script and system fallbacks.
 - [Standalone tooltip rendering](standalone-tooltip-rendering.md) — Keep Radix tooltip consumers provider-safe when UI components are tested outside the app shell.
+- [Shared package runtime portability](shared-package-runtime-portability.md) — Keep shared validation helpers free of DOM-only globals unless their package explicitly includes DOM typings.

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { ActivityDraft } from "@/store/boardwork-context";
+import { PRESENTATION_IMAGE_FILE_LIMIT_BYTES, PRESENTATION_IMAGE_SIZE_ERROR } from "@workspace/api-zod";
 import { BoardEditor } from "./board-editor";
 
 const draft: ActivityDraft = {
@@ -139,5 +140,54 @@ describe("BoardEditor presentation visual disclosure", () => {
     expect(noteEditor).toHaveTextContent("Ask for evidence.");
     fireEvent.click(screen.getByTestId("button-remove-teacher-note"));
     expect(screen.queryByPlaceholderText("Optional note for the teacher...")).not.toBeInTheDocument();
+  });
+
+  it("rejects an oversized image before it changes the draft", () => {
+    const onChange = vi.fn();
+    render(<BoardEditor draft={draft} onChange={onChange} />);
+    fireEvent.click(screen.getByTestId("button-toggle-presentation-visual"));
+
+    const fileInput = document.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement;
+    const oversizedImage = new File(
+      [new Uint8Array(PRESENTATION_IMAGE_FILE_LIMIT_BYTES + 1)],
+      "too-large.png",
+      { type: "image/png" },
+    );
+
+    fireEvent.change(fileInput, { target: { files: [oversizedImage] } });
+
+    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByTestId("visual-upload-error")).toHaveTextContent(
+      PRESENTATION_IMAGE_SIZE_ERROR,
+    );
+  });
+
+  it("keeps the image and retry recovery actions available after a save failure", () => {
+    const onChange = vi.fn();
+    const onRetrySave = vi.fn();
+    render(
+      <BoardEditor
+        draft={{ ...draft, visualUrl: "data:image/png;base64,preview" }}
+        onChange={onChange}
+        saveStatus="error"
+        saveError={PRESENTATION_IMAGE_SIZE_ERROR}
+        onRetrySave={onRetrySave}
+      />,
+    );
+
+    expect(screen.getByTestId("activity-save-error")).toHaveTextContent(
+      PRESENTATION_IMAGE_SIZE_ERROR,
+    );
+    fireEvent.click(screen.getByTestId("button-retry-activity-save"));
+    expect(onRetrySave).toHaveBeenCalledOnce();
+
+    fireEvent.click(screen.getByTestId("button-toggle-presentation-visual"));
+    fireEvent.click(screen.getByRole("button", { name: "Remove image" }));
+    expect(onChange).toHaveBeenCalledWith({
+      visualUrl: null,
+      visualDescription: null,
+    });
   });
 });
