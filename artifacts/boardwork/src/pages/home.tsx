@@ -126,6 +126,15 @@ const activitySavePayload = (draft: ActivityDraft) => ({
   presentationTheme: draft.presentationTheme,
 });
 
+const runMutation = <T,>(mutation: any, variables: any): Promise<T> => {
+  if (typeof mutation.mutateAsync === "function") {
+    return mutation.mutateAsync(variables);
+  }
+  return new Promise<T>((resolve, reject) => {
+    mutation.mutate(variables, { onSuccess: resolve, onError: reject });
+  });
+};
+
 export default function Home() {
   const [, params] = useRoute("/activity/:id");
   const activityId = params?.id;
@@ -211,6 +220,7 @@ export default function Home() {
   const serverActivity = React.useMemo(() => activities.find(a => a.id === activityId), [activities, activityId]);
   const [localDraft, setLocalDraft] = useState<ActivityDraft | null>(null);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const initializedForId = useRef<string | null>(null);
   const lastSavedRef = useRef<string>("");
@@ -284,6 +294,7 @@ export default function Home() {
         setLocalDraft(serverActivity);
         lastSavedRef.current = JSON.stringify(activitySavePayload(serverActivity));
         setSaveStatus("idle");
+        setSaveError(null);
       }
     } else {
       if (initializedForId.current !== null) {
@@ -291,6 +302,7 @@ export default function Home() {
         latestDraftRef.current = null;
         setLocalDraft(null);
         setSaveStatus("idle");
+        setSaveError(null);
       }
     }
   }, [activityId, serverActivity]);
@@ -308,6 +320,7 @@ export default function Home() {
           if (currentString === lastSavedRef.current) break;
 
           setSaveStatus("saving");
+           setSaveError(null);
           const updatedActivity = await updateActivityMut.mutateAsync({
             activityId: targetActivityId,
             data: savePayload,
@@ -324,8 +337,10 @@ export default function Home() {
           });
         }
         setSaveStatus("saved");
+          setSaveError(null);
       } catch {
         setSaveStatus("error");
+          setSaveError("Your latest changes were not saved. Check your connection and try again.");
         throw new Error("Activity autosave failed");
       } finally {
         saveLoopPromiseRef.current = null;
@@ -361,6 +376,7 @@ export default function Home() {
       try {
         isCreatingRef.current = true;
         setSaveStatus("saving");
+        setSaveError(null);
         const newActivity = await createActivityMut.mutateAsync({ data: payload });
         lastSavedRef.current = currentString;
         queryClient.setQueryData(getGetAppStateQueryKey(), (old: any) => {
@@ -390,6 +406,7 @@ export default function Home() {
         return true;
       } catch {
         setSaveStatus("error");
+        setSaveError("Your activity could not be saved. Your edits are still here—try again.");
         pendingPresentRef.current = false;
         return false;
       } finally {
@@ -440,6 +457,11 @@ export default function Home() {
           try {
             await flushActivityUpdates(draftAtSwitch.id);
           } catch {
+            toast({
+              title: "Couldn’t switch class",
+              description: "Your activity could not be saved first. Try again.",
+              variant: "destructive",
+            });
             return;
           }
         } else {
@@ -448,7 +470,14 @@ export default function Home() {
           );
           if (isMeaningful(draftAtSwitch, draftClass?.arrivalRoutine)) {
             const saved = await createDraft(draftAtSwitch);
-            if (!saved) return;
+            if (!saved) {
+              toast({
+                title: "Couldn’t switch class",
+                description: "Your activity could not be saved first. Try again.",
+                variant: "destructive",
+              });
+              return;
+            }
           }
         }
       }
@@ -459,11 +488,12 @@ export default function Home() {
       pendingPresentRef.current = false;
       setLocalDraft(null);
       setSaveStatus("idle");
+      setSaveError(null);
       resetGeneratorState(classes.find((classProfile) => classProfile.id === id));
       clearChipSelection();
     }
 
-    // Optimistic update
+    const previousActiveClassId = activeClassId;
     queryClient.setQueryData(getGetAppStateQueryKey(), (old: any) => {
       if (!old) return old;
       return { ...old, activeClassId: id };
@@ -476,12 +506,22 @@ export default function Home() {
           setLocation("/");
         }
       },
-      onError: () =>
-        queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() }),
+      onError: () => {
+        queryClient.setQueryData(getGetAppStateQueryKey(), (old: any) => {
+          if (!old) return old;
+          return { ...old, activeClassId: previousActiveClassId };
+        });
+        toast({
+          title: "Couldn’t switch class",
+          description: "The class was not changed. Try again.",
+          variant: "destructive",
+        });
+        queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
+      },
     });
   };
 
-  const handleClassSubmit = (data: Omit<ClassProfile, "id">) => {
+  const handleClassSubmit = async (data: Omit<ClassProfile, "id">) => {
     if (editingClassId) {
       const shouldApplyDefaults = editingClassId === activeClassId && !activityId && !localDraft;
       const previousDeviceMode = activeClass?.defaultDeviceMode ?? deviceMode;
@@ -493,22 +533,20 @@ export default function Home() {
         setDuration(data.defaultDuration);
       }
 
-      updateClassMut.mutate({ classId: editingClassId, data }, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
-        },
-        onError: () => {
-          if (shouldApplyDefaults) {
-            setDeviceMode(previousDeviceMode);
-            setTechnologyMode(technologyModeForDeviceMode(previousDeviceMode));
-            setDuration(previousDuration);
-          }
-        },
-      });
+      try {
+        await runMutation(updateClassMut, { classId: editingClassId, data });
+        queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
+      } catch (error) {
+        if (shouldApplyDefaults) {
+          setDeviceMode(previousDeviceMode);
+          setTechnologyMode(technologyModeForDeviceMode(previousDeviceMode));
+          setDuration(previousDuration);
+        }
+        throw error;
+      }
     } else {
-      createClassMut.mutate({ data }, {
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() })
-      });
+      await runMutation(createClassMut, { data });
+      queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
     }
   };
 
@@ -519,14 +557,22 @@ export default function Home() {
     }
   };
 
-  const confirmDeleteClass = () => {
+  const confirmDeleteClass = (event?: React.MouseEvent) => {
     if (editingClassId) {
+      event?.preventDefault();
       deleteClassMut.mutate({ classId: editingClassId }, {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
           setDeleteClassAlertOpen(false);
           setLocation("/");
-        }
+        },
+        onError: () => {
+          toast({
+            title: "Couldn’t delete class",
+            description: "The class was not deleted. Try again.",
+            variant: "destructive",
+          });
+        },
       });
     }
   };
@@ -537,31 +583,17 @@ export default function Home() {
     setUnitDialogOpen(true);
   };
 
-  const handleUnitSubmit = (data: UnitFormValues) => {
+  const handleUnitSubmit = async (data: UnitFormValues) => {
     if (editingUnitId) {
-      updateUnitMut.mutate(
-        { unitId: editingUnitId, data },
-        {
-          onSuccess: (updatedUnit) => {
-            setSelectedUnitId(updatedUnit.id);
-            setUnitDialogOpen(false);
-            queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
-          },
-        },
-      );
+      const updatedUnit = await runMutation<any>(updateUnitMut, { unitId: editingUnitId, data });
+      setSelectedUnitId(updatedUnit.id);
+      queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
       return;
     }
 
-    createUnitMut.mutate(
-      { data },
-      {
-        onSuccess: (createdUnit) => {
-          setSelectedUnitId(createdUnit.id);
-          setUnitDialogOpen(false);
-          queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
-        },
-      },
-    );
+    const createdUnit = await runMutation<any>(createUnitMut, { data });
+    setSelectedUnitId(createdUnit.id);
+    queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
   };
 
   const handleDeleteUnit = () => {
@@ -569,8 +601,9 @@ export default function Home() {
     setDeleteUnitAlertOpen(true);
   };
 
-  const confirmDeleteUnit = () => {
+  const confirmDeleteUnit = (event?: React.MouseEvent) => {
     if (!editingUnitId) return;
+    event?.preventDefault();
     deleteUnitMut.mutate(
       { unitId: editingUnitId },
       {
@@ -579,6 +612,13 @@ export default function Home() {
           setEditingUnitId(null);
           setDeleteUnitAlertOpen(false);
           queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
+        },
+        onError: () => {
+          toast({
+            title: "Couldn’t remove unit",
+            description: "The unit was not removed. Try again.",
+            variant: "destructive",
+          });
         },
       },
     );
@@ -656,6 +696,7 @@ export default function Home() {
     latestDraftRef.current = blankDraft;
     setLocalDraft(blankDraft);
     setSaveStatus("idle");
+    setSaveError(null);
     isCreatingRef.current = false;
     pendingPresentRef.current = false;
   };
@@ -684,6 +725,19 @@ export default function Home() {
     }
 
     await createDraft(localDraft, true);
+  };
+
+  const retryActivitySave = () => {
+    const draft = latestDraftRef.current ?? localDraft;
+    if (!draft) return;
+    if (draft.id) {
+      void flushActivityUpdates(draft.id);
+    } else if (isMeaningful(
+      draft,
+      classes.find((classProfile) => classProfile.id === draft.classId)?.arrivalRoutine,
+    )) {
+      void createDraft(draft);
+    }
   };
 
   if (classes.length === 0) {
@@ -969,9 +1023,39 @@ export default function Home() {
                     chips={activeChips}
                     selectedChipIds={selectedChipIds}
                     onToggleSelection={toggleChipSelection}
-                    onAddChip={(label) => createChipMut.mutate({ classId: activeClassId!, data: { label } }, { onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() }) })}
-                    onUpdateChip={(id, label) => updateChipMut.mutate({ chipId: id, data: { label } }, { onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() }) })}
-                    onDeleteChip={(id) => deleteChipMut.mutate({ chipId: id }, { onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() }) })}
+                    onAddChip={(label) => createChipMut.mutate(
+                      { classId: activeClassId!, data: { label } },
+                      {
+                        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() }),
+                        onError: () => toast({
+                          title: "Couldn’t add focus chip",
+                          description: "The new chip was not saved. Try again.",
+                          variant: "destructive",
+                        }),
+                      },
+                    )}
+                    onUpdateChip={(id, label) => updateChipMut.mutate(
+                      { chipId: id, data: { label } },
+                      {
+                        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() }),
+                        onError: () => toast({
+                          title: "Couldn’t rename focus chip",
+                          description: "The chip name was not changed. Try again.",
+                          variant: "destructive",
+                        }),
+                      },
+                    )}
+                    onDeleteChip={(id) => deleteChipMut.mutate(
+                      { chipId: id },
+                      {
+                        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() }),
+                        onError: () => toast({
+                          title: "Couldn’t delete focus chip",
+                          description: "The chip was not deleted. Try again.",
+                          variant: "destructive",
+                        }),
+                      },
+                    )}
                     onClearSelection={clearChipSelection}
                   />
 
@@ -1140,6 +1224,8 @@ export default function Home() {
                 }}
                 onPresent={handlePresent}
                 saveStatus={saveStatus}
+                saveError={saveError}
+                onRetrySave={retryActivitySave}
                 isMeaningful={isMeaningful(
                   localDraft,
                   classes.find((classProfile) => classProfile.id === localDraft.classId)

@@ -52,7 +52,7 @@ type ClassProfileFormValues = z.infer<typeof classProfileSchema>;
 interface ClassFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: Omit<ClassProfile, "id">) => void;
+  onSubmit: (data: Omit<ClassProfile, "id">) => void | Promise<void>;
   onDelete?: () => void;
   initialData?: ClassProfile | null;
 }
@@ -79,6 +79,8 @@ export function ClassFormDialog({
   initialData,
 }: ClassFormDialogProps) {
   const [moreOpen, setMoreOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const form = useForm<ClassProfileFormValues>({
     resolver: zodResolver(classProfileSchema),
     defaultValues: getDefaultValues(initialData),
@@ -88,26 +90,39 @@ export function ClassFormDialog({
     if (open) {
       form.reset(getDefaultValues(initialData));
       setMoreOpen(false);
+      setSaveError(null);
+      setIsSaving(false);
     }
   }, [form, initialData, open]);
 
-  const handleSubmit = (values: ClassProfileFormValues) => {
-    onSubmit({
-      name: values.name.trim(),
-      grade: values.grade.trim(),
-      subject: values.subject.trim(),
-      curriculumFramework: optionalValue(values.curriculumFramework),
-      curriculumDetails: optionalValue(values.curriculumDetails),
-      generalContext: optionalValue(values.generalContext),
-      defaultDeviceMode: values.defaultDeviceMode,
-      defaultDuration: values.defaultDuration,
-      color: optionalValue(values.color),
-    });
-    onOpenChange(false);
+  const handleSubmit = async (values: ClassProfileFormValues) => {
+    setSaveError(null);
+    setIsSaving(true);
+    try {
+      await onSubmit({
+        name: values.name.trim(),
+        grade: values.grade.trim(),
+        subject: values.subject.trim(),
+        curriculumFramework: optionalValue(values.curriculumFramework),
+        curriculumDetails: optionalValue(values.curriculumDetails),
+        generalContext: optionalValue(values.generalContext),
+        defaultDeviceMode: values.defaultDeviceMode,
+        defaultDuration: values.defaultDuration,
+        color: optionalValue(values.color),
+      });
+      onOpenChange(false);
+    } catch {
+      setSaveError(`Couldn't save this class. Your changes are still here. Try again.`);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(nextOpen) => {
+      if (!nextOpen && isSaving) return;
+      onOpenChange(nextOpen);
+    }}>
       <DialogContent className="max-h-[92dvh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{initialData ? "Edit class profile" : "Create class"}</DialogTitle>
@@ -120,6 +135,11 @@ export function ClassFormDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
+            {saveError && (
+              <p className="text-sm text-destructive" role="alert" data-testid="class-save-error">
+                {saveError}
+              </p>
+            )}
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
@@ -418,12 +438,13 @@ export function ClassFormDialog({
                   type="button"
                   variant="ghost"
                   onClick={() => onOpenChange(false)}
+                  disabled={isSaving}
                   data-testid="button-cancel-class"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" data-testid="button-save-class">
-                  {initialData ? "Save changes" : "Create class"}
+                <Button type="submit" disabled={isSaving} data-testid="button-save-class">
+                  {isSaving ? "Saving…" : initialData ? "Save changes" : "Create class"}
                 </Button>
               </div>
             </DialogFooter>

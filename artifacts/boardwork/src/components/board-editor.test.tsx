@@ -110,4 +110,34 @@ describe("BoardEditor presentation visual disclosure", () => {
     expect(onChange).toHaveBeenCalledWith({ durationMinutes: 120 });
     expect(screen.queryByTestId("duration-error")).not.toBeInTheDocument();
   });
+
+  it("lets a teacher add, edit, and remove a teacher note", () => {
+    function StatefulEditor() {
+      const [currentDraft, setCurrentDraft] = useState<ActivityDraft>(draft);
+
+      return (
+        <BoardEditor
+          draft={currentDraft}
+          onChange={(updates) =>
+            setCurrentDraft((previous) => ({ ...previous, ...updates }))
+          }
+        />
+      );
+    }
+
+    render(<StatefulEditor />);
+    fireEvent.click(screen.getByTestId("button-toggle-presentation-visual"));
+    expect(screen.queryByPlaceholderText("Optional note for the teacher...")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("button-add-teacher-note"));
+    const noteEditor = screen.getByRole("textbox", {
+      name: "Optional note for the teacher...",
+    });
+    noteEditor.textContent = "Ask for evidence.";
+    fireEvent.input(noteEditor);
+
+    expect(noteEditor).toHaveTextContent("Ask for evidence.");
+    fireEvent.click(screen.getByTestId("button-remove-teacher-note"));
+    expect(screen.queryByPlaceholderText("Optional note for the teacher...")).not.toBeInTheDocument();
+  });
 });

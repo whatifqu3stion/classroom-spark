@@ -4,29 +4,43 @@ import History from "./history";
 import { useBoardwork } from "@/store/boardwork-context";
 import type { AppState } from "@workspace/api-client-react";
 
+const mocks = vi.hoisted(() => ({
+  clearMutate: vi.fn(),
+  deleteMutate: vi.fn(),
+  duplicateMutate: vi.fn(),
+  favoriteMutate: vi.fn(),
+  invalidateQueries: vi.fn(),
+  setLocation: vi.fn(),
+  toast: vi.fn(),
+}));
+
 vi.mock("@/store/boardwork-context", () => ({
   useBoardwork: vi.fn(),
 }));
 
 vi.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({
-    invalidateQueries: vi.fn(),
+    invalidateQueries: mocks.invalidateQueries,
   }),
 }));
 
 vi.mock("@workspace/api-client-react", () => ({
-  useClearNonFavoriteActivities: () => ({ isPending: false, mutate: vi.fn() }),
-  useDeleteActivity: () => ({ isPending: false, mutate: vi.fn() }),
-  useDuplicateActivity: () => ({ isPending: false, mutate: vi.fn() }),
-  useSetActivityFavorite: () => ({ isPending: false, mutate: vi.fn() }),
+  useClearNonFavoriteActivities: () => ({ isPending: false, mutate: mocks.clearMutate }),
+  useDeleteActivity: () => ({ isPending: false, mutate: mocks.deleteMutate }),
+  useDuplicateActivity: () => ({ isPending: false, mutate: mocks.duplicateMutate }),
+  useSetActivityFavorite: () => ({ isPending: false, mutate: mocks.favoriteMutate }),
   getGetAppStateQueryKey: () => ["app-state"],
+}));
+
+vi.mock("@/hooks/use-toast", () => ({
+  useToast: () => ({ toast: mocks.toast }),
 }));
 
 vi.mock("wouter", () => ({
   Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
     <a href={href} {...props}>{children}</a>
   ),
-  useLocation: () => ["/history", vi.fn()],
+  useLocation: () => ["/history", mocks.setLocation],
 }));
 
 const formulaTitle = "Quadratic \\(x^2 + y^2 = r^2\\)";
@@ -90,6 +104,7 @@ const appState = {
 
 describe("History", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     vi.mocked(useBoardwork).mockReturnValue({
       appState,
       isLoading: false,
@@ -155,5 +170,21 @@ describe("History", () => {
     fireEvent.click(screen.getByRole("option", { name: "Biology" }));
 
     expect(screen.getByTestId("button-clear-history")).toBeInTheDocument();
+  });
+
+  it("reports a failed favorite and succeeds when the teacher retries", () => {
+    mocks.favoriteMutate
+      .mockImplementationOnce((_variables, options) => options.onError(new Error("temporary failure")))
+      .mockImplementationOnce((_variables, options) => options.onSuccess());
+    render(<History />);
+
+    fireEvent.click(screen.getByTestId("button-favorite-plain-activity"));
+    expect(mocks.toast).toHaveBeenCalledWith(expect.objectContaining({
+      title: "Couldn’t update favorite",
+      variant: "destructive",
+    }));
+
+    fireEvent.click(screen.getByTestId("button-favorite-plain-activity"));
+    expect(mocks.invalidateQueries).toHaveBeenCalled();
   });
 });

@@ -15,6 +15,8 @@ interface BoardEditorProps {
   onChange: (updates: Partial<ActivityDraft>) => void;
   onPresent?: (e: React.MouseEvent) => void;
   saveStatus?: "idle" | "saving" | "saved" | "error";
+  saveError?: string | null;
+  onRetrySave?: () => void;
   isMeaningful?: boolean;
 }
 
@@ -69,7 +71,15 @@ function EditableText({
   );
 }
 
-export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", isMeaningful = true }: BoardEditorProps) {
+export function BoardEditor({
+  draft,
+  onChange,
+  onPresent,
+  saveStatus = "idle",
+  saveError,
+  onRetrySave,
+  isMeaningful = true,
+}: BoardEditorProps) {
   const [presentationVisualOpen, setPresentationVisualOpen] = useState(false);
   const [durationError, setDurationError] = useState<string | null>(null);
   const safeResourceUrl = getSafeResourceUrl(draft.resourceUrl);
@@ -127,6 +137,16 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
               <>
                 <AlertCircle className="w-3 h-3 text-destructive" />
                 Save failed
+                {onRetrySave && (
+                  <button
+                    type="button"
+                    onClick={onRetrySave}
+                    className="ml-1 font-medium text-primary underline underline-offset-2 hover:text-primary/80"
+                    data-testid="button-retry-activity-save"
+                  >
+                    Retry
+                  </button>
+                )}
               </>
             )}
             {saveStatus === "idle" && (
@@ -137,6 +157,11 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
             )}
           </div>
         </div>
+        {saveStatus === "error" && saveError && (
+          <p className="mt-1 text-right text-xs text-destructive" role="alert" data-testid="activity-save-error">
+            {saveError}
+          </p>
+        )}
         <div className="flex gap-2">
           {disablePresent ? (
             <Tooltip>
@@ -393,21 +418,48 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
                 value={draft.presentationTheme}
                 onChange={(presentationTheme) => onChange({ presentationTheme })}
               />
-              {draft.teacherNote != null && (
-                <div>
-                  <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <div>
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Teacher note
                   </div>
-                  <EditableText
-                    multiline
-                    value={draft.teacherNote}
-                    onChange={(val) => onChange({ teacherNote: val || null })}
-                    placeholder="Optional note for the teacher..."
-                    className="text-muted-foreground text-sm block w-full"
-                  />
-                  <FormulaPreview>{draft.teacherNote}</FormulaPreview>
+                  {draft.teacherNote == null ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 text-xs"
+                      onClick={() => onChange({ teacherNote: "" })}
+                      data-testid="button-add-teacher-note"
+                    >
+                      Add note
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 text-xs text-muted-foreground"
+                      onClick={() => onChange({ teacherNote: null })}
+                      data-testid="button-remove-teacher-note"
+                    >
+                      Remove
+                    </Button>
+                  )}
                 </div>
-              )}
+                {draft.teacherNote != null && (
+                  <>
+                    <EditableText
+                      multiline
+                      value={draft.teacherNote}
+                      onChange={(val) => onChange({ teacherNote: val || null })}
+                      placeholder="Optional note for the teacher..."
+                      className="text-muted-foreground text-sm block w-full"
+                    />
+                    <FormulaPreview>{draft.teacherNote}</FormulaPreview>
+                  </>
+                )}
+              </div>
             </div>
             </div>
           </section>

@@ -13,6 +13,7 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +44,7 @@ export default function History() {
   const duplicateMutation = useDuplicateActivity();
   const favoriteMutation = useSetActivityFavorite();
   const clearMutation = useClearNonFavoriteActivities();
+  const { toast } = useToast();
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [historyView, setHistoryView] = useState<"all" | "favorites">("all");
@@ -99,6 +101,13 @@ export default function History() {
         queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
         setLocation(`/activity/${newActivity.id}`);
       },
+      onError: () => {
+        toast({
+          title: "Couldn’t copy activity",
+          description: "The activity was not copied. Try again.",
+          variant: "destructive",
+        });
+      },
       onSettled: () => {
         duplicateInFlightRef.current = false;
       },
@@ -110,23 +119,39 @@ export default function History() {
     favoriteMutation.mutate({ activityId: id, data: { favorite } }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
-      }
+      },
+      onError: () => {
+        toast({
+          title: "Couldn’t update favorite",
+          description: "The favorite was not changed. Try again.",
+          variant: "destructive",
+        });
+      },
     });
   };
 
-  const handleDelete = () => {
+  const handleDelete = (event?: React.MouseEvent) => {
     if (!deleteId || deleteMutation.isPending) return;
+    event?.preventDefault();
     deleteMutation.mutate({ activityId: deleteId }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
         setDeleteId(null);
-      }
+      },
+      onError: () => {
+        toast({
+          title: "Couldn’t delete activity",
+          description: "The activity was not deleted. Try again.",
+          variant: "destructive",
+        });
+      },
     });
   };
 
-  const handleClear = () => {
+  const handleClear = (event?: React.MouseEvent) => {
     if (clearMutation.isPending || nonFavoriteCount === 0) return;
 
+    event?.preventDefault();
     setClearError(null);
     clearMutation.mutate(undefined, {
       onSuccess: () => {
@@ -135,6 +160,11 @@ export default function History() {
       },
       onError: () => {
         setClearError("Couldn’t clear history. Your activities were not changed.");
+        toast({
+          title: "Couldn’t clear history",
+          description: "Your activities were not changed. Try again.",
+          variant: "destructive",
+        });
       },
     });
   };

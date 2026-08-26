@@ -23,7 +23,7 @@ export interface UnitFormValues {
 interface UnitFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: UnitFormValues) => void;
+  onSubmit: (data: UnitFormValues) => void | Promise<void>;
   onDelete?: () => void;
   initialUnit?: Unit | null;
 }
@@ -44,11 +44,15 @@ export function UnitFormDialog({
 }: UnitFormDialogProps) {
   const [values, setValues] = useState<UnitFormValues>(() => getValues(initialUnit));
   const [showError, setShowError] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
       setValues(getValues(initialUnit));
       setShowError(false);
+      setSaveError(null);
+      setIsSaving(false);
     }
   }, [initialUnit, open]);
 
@@ -57,22 +61,34 @@ export function UnitFormDialog({
     if (key === "name") setShowError(false);
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!values.name.trim()) {
       setShowError(true);
       return;
     }
-    onSubmit({
-      name: values.name.trim(),
-      conceptsTopics: values.conceptsTopics.trim(),
-      skills: values.skills.trim(),
-      standardsObjectives: values.standardsObjectives.trim(),
-    });
+    setSaveError(null);
+    setIsSaving(true);
+    try {
+      await onSubmit({
+        name: values.name.trim(),
+        conceptsTopics: values.conceptsTopics.trim(),
+        skills: values.skills.trim(),
+        standardsObjectives: values.standardsObjectives.trim(),
+      });
+      onOpenChange(false);
+    } catch {
+      setSaveError(`Couldn't save this unit. Your changes are still here. Try again.`);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(nextOpen) => {
+      if (!nextOpen && isSaving) return;
+      onOpenChange(nextOpen);
+    }}>
       <DialogContent className="max-h-[92dvh] max-w-xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{initialUnit ? "Edit unit" : "Add a reusable unit"}</DialogTitle>
@@ -103,6 +119,11 @@ export function UnitFormDialog({
               </p>
             )}
           </div>
+          {saveError && (
+            <p className="text-sm text-destructive" role="alert" data-testid="unit-save-error">
+              {saveError}
+            </p>
+          )}
 
           <div className="space-y-2">
             <label htmlFor="unit-concepts" className="text-sm font-medium text-foreground">
@@ -165,11 +186,11 @@ export function UnitFormDialog({
               <div />
             )}
             <div className="flex gap-2">
-              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              <Button type="button" variant="ghost" disabled={isSaving} onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" data-testid="button-save-unit">
-                {initialUnit ? "Save unit" : "Add unit"}
+              <Button type="submit" disabled={isSaving} data-testid="button-save-unit">
+                {isSaving ? "Saving…" : initialUnit ? "Save unit" : "Add unit"}
               </Button>
             </div>
           </DialogFooter>
