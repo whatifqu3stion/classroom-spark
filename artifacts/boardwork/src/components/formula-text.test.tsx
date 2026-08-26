@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { FormulaText, hasFormulaNotation, parseFormulaText } from "./formula-text";
@@ -64,5 +65,16 @@ describe("FormulaText", () => {
     expect(parseFormulaText("Unclosed $x^2")).toEqual([
       { kind: "text", value: "Unclosed $x^2" },
     ]);
+  });
+
+  it("inherits surrounding typography for prose while preserving math styling", async () => {
+    const stylesheet = await readFile("src/index.css", "utf8");
+    const formulaTextRule = stylesheet.match(/\.formula-text\s*\{([^}]*)\}/)?.[1] ?? "";
+    const renderedFormulaRule =
+      stylesheet.match(/\.formula-rendered\s*\{([^}]*)\}/)?.[1] ?? "";
+
+    expect(formulaTextRule).toContain("font-family: inherit;");
+    expect(formulaTextRule).not.toContain("Cambria Math");
+    expect(renderedFormulaRule).toContain("Cambria Math");
   });
 });

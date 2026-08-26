@@ -88,6 +88,45 @@ describe("BoardEditor presentation visual disclosure", () => {
     ).toContain("Atkinson Hyperlegible");
   });
 
+  it("keeps the typography picker selection in sync across repeated changes", () => {
+    function StatefulEditor() {
+      const [currentDraft, setCurrentDraft] = useState<ActivityDraft>(draft);
+
+      return (
+        <BoardEditor
+          draft={currentDraft}
+          onChange={(updates) =>
+            setCurrentDraft((previous) => ({ ...previous, ...updates }))
+          }
+        />
+      );
+    }
+
+    render(<StatefulEditor />);
+    fireEvent.click(screen.getByTestId("button-toggle-presentation-visual"));
+
+    for (const typographyId of ["friendly", "editorial", "structured", "clear", "boardwork"]) {
+      fireEvent.click(screen.getByTestId(`typography-option-${typographyId}`));
+
+      expect(screen.getByTestId(`typography-option-${typographyId}`)).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      for (const otherTypographyId of [
+        "friendly",
+        "editorial",
+        "structured",
+        "clear",
+        "boardwork",
+      ]) {
+        if (otherTypographyId === typographyId) continue;
+        expect(
+          screen.getByTestId(`typography-option-${otherTypographyId}`),
+        ).toHaveAttribute("aria-pressed", "false");
+      }
+    }
+  });
+
   it("keeps invalid duration text out of the draft and blocks presenting", () => {
     const onChange = vi.fn();
     render(<BoardEditor draft={draft} onChange={onChange} />);

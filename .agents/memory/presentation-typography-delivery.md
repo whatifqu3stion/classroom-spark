@@ -39,3 +39,15 @@ presentation content.
 **How to apply:** Keep app-shell font tokens separate from presentation
 heading/body variables. Any future font-delivery change should verify both the
 normal UI baseline and the presentation/export fallback behavior independently.
+
+Formula-aware text wrappers must inherit the surrounding presentation font;
+apply the math fallback only to spans that actually contain parsed formula
+notation.
+
+**Why:** The formula renderer wraps ordinary prose and formulas in the same
+component. Styling that outer wrapper as math makes every presentation option
+look identical even when its surface variables and local fonts are correct.
+
+**How to apply:** Keep the wrapper typography-neutral and scope the explicit
+math stack to rendered formula spans. Verify both plain prose and a real
+formula in the editor preview and Present view.

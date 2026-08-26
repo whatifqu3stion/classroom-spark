@@ -877,7 +877,7 @@
   }
 
   .formula-text {
-    font-family: "Cambria Math", "STIX Two Math", "Times New Roman", serif;
+    font-family: inherit;
   }
 
   .formula-rendered {
