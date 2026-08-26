@@ -3,23 +3,86 @@ import { describe, expect, it, vi } from "vitest";
 import { DurationDial } from "./duration-dial";
 
 describe("DurationDial", () => {
-  it("keeps quick choices available and marks only 5 or 7 as quick selections", () => {
+  it("keeps 3, 5, and 7 quick choices beside the integrated 10-minute control", () => {
     const onChange = vi.fn();
     const { rerender } = render(<DurationDial value={7} onChange={onChange} />);
 
+    expect(screen.getByTestId("duration-quick-3")).toBeInTheDocument();
     expect(screen.getByTestId("duration-quick-7")).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByTestId("duration-quick-5")).toHaveAttribute("aria-pressed", "false");
-    expect(screen.getByTestId("duration-dial-value")).toHaveAttribute("aria-valuenow", "7");
+    expect(screen.getByTestId("duration-quick-10")).toHaveAttribute("data-selected", "false");
+    expect(screen.getByTestId("duration-quick-10")).toHaveAttribute("aria-pressed", "false");
+    expect(screen.queryByTestId("duration-dial-value")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId("duration-quick-5"));
     expect(onChange).toHaveBeenCalledWith(5);
 
     rerender(<DurationDial value={10} onChange={onChange} />);
-    expect(screen.getByTestId("duration-quick-10")).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId("duration-quick-10")).toHaveAttribute("data-selected", "true");
     expect(screen.getByTestId("duration-dial-value")).toHaveAttribute("aria-valuenow", "10");
+    expect(screen.queryByText("Scroll")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId("duration-quick-10"));
     expect(onChange).toHaveBeenLastCalledWith(10);
+
+    fireEvent.keyDown(screen.getByTestId("duration-dial-value"), { key: "Enter" });
+    expect(onChange).toHaveBeenLastCalledWith(10);
+  });
+
+  it("fades rounded neighboring values naturally around the centered minute", () => {
+    render(<DurationDial value={10} onChange={vi.fn()} />);
+
+    const nearNeighbor = screen.getByTestId("duration-dial-neighbor-9");
+    const farNeighbor = screen.getByTestId("duration-dial-neighbor-8");
+
+    expect(nearNeighbor).toHaveClass("rounded-full", "hover:text-foreground");
+    expect(farNeighbor).toHaveClass("rounded-full");
+    expect(Number(nearNeighbor.style.opacity)).toBeGreaterThan(
+      Number(farNeighbor.style.opacity),
+    );
+    expect(screen.getByTestId("duration-dial-current")).toHaveClass("rounded-full");
+  });
+
+  it("keeps the integrated control unique when custom quick options include 10", () => {
+    render(<DurationDial value={10} onChange={vi.fn()} quickOptions={[3, 5, 7, 10]} />);
+
+    expect(screen.getAllByTestId("duration-quick-10")).toHaveLength(1);
+  });
+
+  it("keeps quick presets stable until 10 is selected, then adjusts one shared value", () => {
+    for (const quickValue of [3, 5, 7]) {
+      const onChange = vi.fn();
+      const { rerender, unmount } = render(
+        <DurationDial value={quickValue} onChange={onChange} />,
+      );
+      const tenMinuteControl = screen.getByTestId("duration-quick-10");
+      const viewport = screen.getByTestId("duration-dial-viewport");
+
+      fireEvent.wheel(viewport, { deltaY: -40 });
+      fireEvent.keyDown(tenMinuteControl, { key: "ArrowUp" });
+      expect(onChange).not.toHaveBeenCalled();
+      expect(screen.queryByTestId("duration-dial-value")).not.toBeInTheDocument();
+
+      fireEvent.click(tenMinuteControl);
+      expect(onChange).toHaveBeenLastCalledWith(10);
+
+      rerender(<DurationDial value={10} onChange={onChange} />);
+      fireEvent.wheel(viewport, { deltaY: -40 });
+      expect(onChange).toHaveBeenLastCalledWith(11);
+      rerender(<DurationDial value={11} onChange={onChange} />);
+      expect(screen.getByTestId("duration-dial-current")).toHaveTextContent("11");
+
+      fireEvent.keyDown(screen.getByTestId("duration-dial-value"), { key: "ArrowUp" });
+      expect(onChange).toHaveBeenLastCalledWith(12);
+      rerender(<DurationDial value={12} onChange={onChange} />);
+      fireEvent.click(screen.getByTestId("button-increase-duration"));
+      expect(onChange).toHaveBeenLastCalledWith(13);
+
+      rerender(<DurationDial value={13} onChange={onChange} />);
+      fireEvent.click(screen.getByTestId("duration-dial-current"));
+      expect(onChange).toHaveBeenLastCalledWith(10);
+      unmount();
+    }
   });
 
   it("adjusts by wheel, explicit controls, and keyboard without leaving whole-minute bounds", () => {
@@ -83,6 +146,7 @@ describe("DurationDial", () => {
       "This class default is 120 minutes.",
     );
     expect(screen.getByTestId("duration-dial-value")).toHaveTextContent("120");
+    expect(screen.queryByTestId("duration-dial-neighbor-118")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId("duration-quick-10"));
     expect(onChange).toHaveBeenCalledWith(10);
