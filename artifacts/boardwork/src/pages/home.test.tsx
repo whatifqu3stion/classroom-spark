@@ -405,4 +405,22 @@ describe("Home presentation defaults", () => {
       }),
     );
   });
+
+  it("does not repeat optional markers inside the collapsed details section", () => {
+    render(<Home />);
+
+    expect(screen.getByText("How will this board run?")).toBeInTheDocument();
+    expect(screen.queryByText("Adjust the setup for this board.")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("button-toggle-customize"));
+
+    expect(screen.getByText("What will students leave behind?")).toBeInTheDocument();
+    expect(screen.getByText("Work mode")).toBeInTheDocument();
+    expect(screen.getByText("Materials already available")).toBeInTheDocument();
+    expect(screen.getByText("How should students signal done or stuck?")).toBeInTheDocument();
+    expect(screen.getByText("Activity approach")).toBeInTheDocument();
+    expect(screen.queryByText("What will students leave behind? (optional)")).not.toBeInTheDocument();
+    expect(screen.queryByText("Work mode (optional)")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "About board setup" })).toBeInTheDocument();
+  });
 });

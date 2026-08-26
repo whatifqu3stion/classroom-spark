@@ -898,10 +898,9 @@ export default function Home() {
             </div>
 
             <div className="space-y-3 rounded-xl border bg-card/50 p-4">
-              <div>
-                <h2 className="text-sm font-semibold text-foreground">How will this board run?</h2>
-                 <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
-                   <span>Adjust the setup for this board.</span>
+               <div>
+                 <div className="flex items-center gap-1">
+                   <h2 className="text-sm font-semibold text-foreground">How will this board run?</h2>
                    <HelpTooltip label="About board setup">
                      These choices start from the class defaults and apply only to this board.
                    </HelpTooltip>
@@ -1061,7 +1060,7 @@ export default function Home() {
 
                    <div className="grid gap-4 sm:grid-cols-2">
                      <div className="space-y-2 sm:col-span-2">
-                       <Label htmlFor="student-output">What will students leave behind? <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                        <Label htmlFor="student-output">What will students leave behind?</Label>
                        <Input
                          id="student-output"
                          dir="auto"
@@ -1073,7 +1072,7 @@ export default function Home() {
                        />
                      </div>
                      <div className="space-y-2">
-                       <Label htmlFor="work-mode">Work mode <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                        <Label htmlFor="work-mode">Work mode</Label>
                        <Select value={workMode || "none"} onValueChange={(value) => setWorkMode(value === "none" ? "" : value as WorkMode)}>
                          <SelectTrigger id="work-mode" data-testid="select-work-mode">
                            <SelectValue placeholder="Choose if useful" />
@@ -1088,7 +1087,7 @@ export default function Home() {
                        </Select>
                      </div>
                      <div className="space-y-2">
-                       <Label htmlFor="materials-available">Materials already available <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                        <Label htmlFor="materials-available">Materials already available</Label>
                        <Input
                          id="materials-available"
                          dir="auto"
@@ -1100,7 +1099,7 @@ export default function Home() {
                        />
                      </div>
                      <div className="space-y-2 sm:col-span-2">
-                       <Label htmlFor="completion-signal">How should students signal done or stuck? <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                        <Label htmlFor="completion-signal">How should students signal done or stuck?</Label>
                        <Input
                          id="completion-signal"
                          dir="auto"
@@ -1113,7 +1112,7 @@ export default function Home() {
                      </div>
                      <div className="space-y-2 sm:col-span-2">
                         <div className="flex items-center gap-1">
-                          <Label htmlFor="activityStyle">Activity approach <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                          <Label htmlFor="activityStyle">Activity approach</Label>
                           <HelpTooltip label="About activity approaches">
                             Choose a familiar starting move to guide the generated board, or leave Auto to let Boardwork choose.
                           </HelpTooltip>
