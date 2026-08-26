@@ -15,6 +15,7 @@ import {
   type BoardworkPresentationTheme,
 } from "@/lib/presentation-theme";
 import { cn } from "@/lib/utils";
+import { HelpTooltip } from "@/components/ui/tooltip";
 
 interface PresentationThemePickerProps {
   value?: BoardworkPresentationTheme | null;
@@ -64,7 +65,6 @@ function SurfaceSwatch({
       type="button"
       aria-label={`Use ${surface.name} background`}
       aria-pressed={selected}
-      title={surface.description}
       onClick={onSelect}
       className={cn(
         "relative flex min-w-[5.5rem] flex-1 items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-w-0",
@@ -113,7 +113,6 @@ function AccentSwatch({
       type="button"
       aria-label={`Use ${name} accent`}
       aria-pressed={selected}
-      title={accent.description}
       onClick={onSelect}
       className={cn(
         "relative flex min-w-[5.5rem] flex-1 items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-w-0",
@@ -154,7 +153,6 @@ function TypographySwatch({
       type="button"
       aria-label={`Use ${label.name} typography`}
       aria-pressed={selected}
-      title={label.description}
       onClick={onSelect}
       className={cn(
         "relative flex min-w-[8rem] flex-1 items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-w-0",
@@ -244,15 +242,18 @@ export function PresentationThemePicker({
         <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
           Visual presentation colors
+          <HelpTooltip label="About presentation colors">
+            Choose the background first, then use accents for small signals such as links, progress, and emphasis.
+          </HelpTooltip>
         </div>
-        <p className="mt-1 max-w-xl text-xs text-muted-foreground">
-          Choose a calm background first. Accents add small signals without competing with the lesson.
-        </p>
       </div>
 
       <div className="space-y-2" data-testid="presentation-surfaces">
-        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Background
+              <HelpTooltip label="About presentation backgrounds">
+                Pick the surface students will see behind the lesson. Light and dark options are labeled for quick comparison.
+              </HelpTooltip>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
           {presentationSurfaceThemes.map((surface) => {
@@ -284,13 +285,13 @@ export function PresentationThemePicker({
 
       {selectedSurface ? (
         <div className="space-y-2" data-testid="presentation-accents">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <div>
+              <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Accent
+                <HelpTooltip label="About presentation accents">
+                  Accents mark links, progress, and emphasis without changing the background.
+                </HelpTooltip>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              A small signal for links, progress, and emphasis.
-            </p>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {presentationAccentThemes.map((accent) => (
@@ -322,13 +323,13 @@ export function PresentationThemePicker({
       )}
 
       <div className="space-y-2" data-testid="presentation-typography">
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <div>
+            <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Typography
+              <HelpTooltip label="About presentation typography">
+                This pairing changes the student board, Present view, and PNG export—not the teacher workspace.
+              </HelpTooltip>
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Choose a heading and body pairing for the student board.
-          </p>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {exposedTypographySystems.map((typography) => (

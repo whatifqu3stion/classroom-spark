@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { PresentationThemePicker } from "./presentation-theme-picker";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 describe("PresentationThemePicker", () => {
   it("keeps the prior Boardwork appearance as the default", () => {
@@ -56,10 +57,8 @@ describe("PresentationThemePicker", () => {
       expect(screen.getByTestId(`typography-option-${typographyId}`)).toBeInTheDocument();
       expect(screen.getByTestId(`typography-preview-${typographyId}`)).toBeInTheDocument();
     }
-    expect(screen.getByRole("button", { name: "Use Classic typography" })).toHaveAttribute(
-      "title",
-      "Literary serif headings with a warm sans body.",
-    );
+    expect(screen.getByRole("button", { name: "Use Classic typography" })).not.toHaveAttribute("title");
+    expect(screen.getByRole("button", { name: "About presentation typography" })).toBeInTheDocument();
   });
 
   it("uses the selected surface mode for accent names without a summary pill", () => {
@@ -73,9 +72,23 @@ describe("PresentationThemePicker", () => {
     expect(screen.getByRole("button", { name: "Use Mint accent" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Use Sage accent" })).not.toBeInTheDocument();
     expect(screen.queryByText("Midnight · Mint")).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Use Mint accent" }),
-    ).toHaveAttribute("title", "A quiet natural signal for calm emphasis.");
+    expect(screen.getByRole("button", { name: "Use Mint accent" })).not.toHaveAttribute("title");
+  });
+
+  it("reveals secondary presentation guidance when the help control receives focus", async () => {
+    render(
+      <TooltipProvider delayDuration={0}>
+        <PresentationThemePicker onChange={vi.fn()} />
+      </TooltipProvider>,
+    );
+
+    fireEvent.focus(screen.getByRole("button", { name: "About presentation typography" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("tooltip")).toHaveTextContent(
+        "This pairing changes the student board, Present view, and PNG export—not the teacher workspace.",
+      );
+    });
   });
 
   it("selects a surface with its matched accent and allows a secondary accent choice", () => {

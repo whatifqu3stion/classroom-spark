@@ -8,6 +8,7 @@ import { getSafeResourceUrl } from "@/lib/resource-url";
 import { PresentationThemePicker } from "@/components/presentation-theme-picker";
 import { FormulaPreview, FormulaText } from "@/components/formula-text";
 import { PresentationCanvas } from "@/components/presentation-canvas";
+import { HelpTooltip, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface BoardEditorProps {
   draft: ActivityDraft;
@@ -96,6 +97,9 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
   };
 
   const disablePresent = (!draft.id && !isMeaningful) || Boolean(durationError);
+  const disabledPresentHint = durationError
+    ? "Fix the duration before presenting."
+    : "Add a title or task before presenting.";
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-background rounded-xl border shadow-sm">
@@ -135,10 +139,20 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
         </div>
         <div className="flex gap-2">
           {disablePresent ? (
-            <span className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md bg-muted px-3 text-sm font-medium text-muted-foreground gap-1.5 cursor-not-allowed opacity-50" data-testid="button-present-disabled">
-              <Monitor className="w-4 h-4" />
-              Present Screen
-            </span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  tabIndex={0}
+                  className="inline-flex h-9 cursor-not-allowed items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-muted px-3 text-sm font-medium text-muted-foreground opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  data-testid="button-present-disabled"
+                  aria-label={`Present Screen unavailable: ${disabledPresentHint}`}
+                >
+                  <Monitor className="w-4 h-4" aria-hidden="true" />
+                  Present Screen
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>{disabledPresentHint}</TooltipContent>
+            </Tooltip>
           ) : (
             <Link href={`/present/${draft.id || ''}`} onClick={onPresent} className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring gap-1.5 cursor-pointer" data-testid="button-present">
               <Monitor className="w-4 h-4" />
@@ -225,15 +239,19 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
                     />
                     <FormulaPreview>{prompt}</FormulaPreview>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removePrompt(idx)}
-                    className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-1.5 hover:bg-muted rounded-md absolute -left-10 top-1 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    title="Remove prompt"
-                    aria-label={`Remove prompt ${idx + 1}`}
-                  >
-                    <X className="w-4 h-4 text-muted-foreground" />
-                  </button>
+                   <Tooltip>
+                     <TooltipTrigger asChild>
+                       <button
+                         type="button"
+                         onClick={() => removePrompt(idx)}
+                         className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-1.5 hover:bg-muted rounded-md absolute -left-10 top-1 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                         aria-label={`Remove prompt ${idx + 1}`}
+                       >
+                         <X className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+                       </button>
+                     </TooltipTrigger>
+                     <TooltipContent>Remove this prompt.</TooltipContent>
+                   </Tooltip>
                 </li>
               ))}
             </ul>
@@ -292,7 +310,13 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
             <FormulaPreview>{(draft.materials ?? []).join(", ")}</FormulaPreview>
           </div>
 
-          <section className="presentation-visual-editor-section space-y-3 pt-6 mt-6 border-t" data-testid="presentation-visual-section">
+           <section className="presentation-visual-editor-section space-y-3 pt-6 mt-6 border-t" data-testid="presentation-visual-section">
+             <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+               <span>Visual presentation</span>
+               <HelpTooltip label="About visual presentation">
+                 Add a local image for Present and PNG export. Images are shown without cropping.
+               </HelpTooltip>
+             </div>
             <button
               type="button"
               className="flex min-h-10 w-full items-center justify-between gap-3 rounded-md px-2 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -302,9 +326,6 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
               data-testid="button-toggle-presentation-visual"
             >
               <span className="min-w-0">
-                <span className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Visual presentation
-                </span>
                 <span className="mt-0.5 block truncate text-xs text-muted-foreground">
                   {draft.visualUrl ? "Image added" : "No image"}
                 </span>
@@ -366,7 +387,7 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
                   />
                 </>
               )}
-              <p className="text-xs text-muted-foreground">Local image only. It will be shown without cropping in Present and PNG export.</p>
+               <p className="text-xs text-muted-foreground">Use a local image up to 5 MB. It appears in Present and PNG export without cropping.</p>
                 </div>
               <PresentationThemePicker
                 value={draft.presentationTheme}
@@ -396,16 +417,16 @@ export function BoardEditor({ draft, onChange, onPresent, saveStatus = "idle", i
             aria-labelledby="presentation-preview-heading"
             data-testid="presentation-preview"
           >
-            <div>
+             <div className="flex items-center gap-1">
               <div
                 id="presentation-preview-heading"
                 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
               >
                 Presentation preview
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Live student view. It updates as you edit and excludes teacher controls and live timer state.
-              </p>
+               <HelpTooltip label="About the presentation preview">
+                 This is the student-facing board without teacher controls or live timer state.
+               </HelpTooltip>
             </div>
             <div className="presentation-preview-frame">
               <PresentationCanvas activity={draft} editorPreview />

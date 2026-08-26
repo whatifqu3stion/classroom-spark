@@ -77,7 +77,7 @@ export function UnitFormDialog({
         <DialogHeader>
           <DialogTitle>{initialUnit ? "Edit unit" : "Add a reusable unit"}</DialogTitle>
           <DialogDescription>
-            Keep changing unit details here, separate from the class profile. You can reuse this unit with another class later.
+            Keep unit details separate from the class so you can reuse them later.
           </DialogDescription>
         </DialogHeader>
 
@@ -94,9 +94,14 @@ export function UnitFormDialog({
               onChange={(event) => update("name", event.target.value)}
               placeholder="e.g. Cells and transport"
               data-testid="input-unit-name"
-              aria-invalid={showError}
+               aria-invalid={showError}
+               aria-describedby={showError ? "unit-name-error" : undefined}
             />
-            {showError && <p className="text-xs text-destructive">Enter a unit name.</p>}
+            {showError && (
+              <p id="unit-name-error" className="text-xs text-destructive" role="alert">
+                Enter a unit name.
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">

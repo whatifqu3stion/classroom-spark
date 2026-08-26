@@ -113,8 +113,8 @@ export function ClassFormDialog({
           <DialogTitle>{initialData ? "Edit class profile" : "Create class"}</DialogTitle>
           <DialogDescription>
             {initialData
-              ? "Update the details Boardwork should remember for this class."
-              : "Start with the essentials. You can add more context now or later."}
+              ? "Update what Boardwork remembers for this class."
+              : "Add the essentials now; add more context later if needed."}
           </DialogDescription>
         </DialogHeader>
 
@@ -204,7 +204,7 @@ export function ClassFormDialog({
                       aria-checked={!field.value}
                       onClick={() => field.onChange("")}
                       className={`flex size-9 items-center justify-center rounded-full border text-[10px] text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${!field.value ? "border-foreground ring-1 ring-foreground" : "border-border"}`}
-                      title="No color"
+                       aria-label="No class color"
                       data-testid="button-class-color-none"
                     >
                       —
@@ -217,7 +217,7 @@ export function ClassFormDialog({
                         aria-checked={field.value === option.value}
                         onClick={() => field.onChange(option.value)}
                         className={`flex size-9 items-center justify-center rounded-full border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${field.value === option.value ? "border-foreground ring-1 ring-foreground" : "border-transparent"}`}
-                        title={option.label}
+                         aria-label={`Use ${option.label} class color`}
                         data-testid={`button-class-color-${option.label.toLowerCase()}`}
                       >
                         <span
@@ -240,8 +240,8 @@ export function ClassFormDialog({
               >
                 <span>
                   <span className="block text-sm font-medium">More about this class</span>
-                  <span className="block text-xs text-muted-foreground">
-                     Curriculum, class context, and defaults
+                   <span className="block text-xs text-muted-foreground">
+                      Curriculum, context, and defaults
                   </span>
                 </span>
                 <ChevronDown className={`size-4 text-muted-foreground transition-transform ${moreOpen ? "rotate-180" : ""}`} />

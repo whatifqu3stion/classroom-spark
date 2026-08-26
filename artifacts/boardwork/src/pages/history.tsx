@@ -33,6 +33,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClassColorDot } from "@/components/class-color-dot";
 import { FormulaText } from "@/components/formula-text";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function History() {
   const { appState } = useBoardwork();
@@ -298,7 +299,7 @@ export default function History() {
               <>
                 <h3 className="text-lg font-medium text-foreground mb-2">No activities yet</h3>
                 <p className="text-muted-foreground max-w-sm mb-6">
-                  Activities you generate or create will appear here.
+                   Create a board to see it here.
                 </p>
                 <Button asChild variant="outline">
                   <Link href="/" data-testid="link-history-empty-workspace">Back to Workspace</Link>
@@ -315,18 +316,24 @@ export default function History() {
                 .map((chipId) => chips.find((chip) => chip.id === chipId)?.label)
                 .filter((label): label is string => Boolean(label));
               return (
-                <div key={activity.id} className="group flex items-center justify-between p-4 rounded-xl border bg-card hover:border-foreground/20 transition-colors shadow-sm" data-testid={`history-item-${activity.id}`}>
+                <div key={activity.id} className="group flex min-w-0 items-center justify-between rounded-xl border bg-card p-4 shadow-sm transition-colors hover:border-foreground/20" data-testid={`history-item-${activity.id}`}>
                   <div className="flex items-center gap-4 min-w-0 flex-1">
-                    <button 
-                      onClick={() => handleFavorite(activity.id, !activity.favorite)}
-                      className={`shrink-0 p-1 rounded-md transition-colors ${activity.favorite ? "text-amber-500 hover:text-amber-600" : "text-muted-foreground/30 hover:text-muted-foreground"}`}
-                      title={activity.favorite ? "Unfavorite" : "Favorite"}
-                      aria-label={`${activity.favorite ? "Unfavorite" : "Favorite"} ${activityTitle}`}
-                      disabled={favoriteMutation.isPending}
-                      data-testid={`button-favorite-${activity.id}`}
-                    >
-                      <Star className={`w-5 h-5 ${activity.favorite ? "fill-current" : ""}`} />
-                    </button>
+                     <Tooltip>
+                       <TooltipTrigger asChild>
+                         <button
+                           onClick={() => handleFavorite(activity.id, !activity.favorite)}
+                           className={`shrink-0 rounded-md p-1 transition-colors ${activity.favorite ? "text-amber-500 hover:text-amber-600" : "text-muted-foreground/30 hover:text-muted-foreground"}`}
+                           aria-label={`${activity.favorite ? "Unfavorite" : "Favorite"} ${activityTitle}`}
+                           disabled={favoriteMutation.isPending}
+                           data-testid={`button-favorite-${activity.id}`}
+                         >
+                           <Star className={`w-5 h-5 ${activity.favorite ? "fill-current" : ""}`} aria-hidden="true" />
+                         </button>
+                       </TooltipTrigger>
+                       <TooltipContent>
+                         {activity.favorite ? "Remove this board from Favorites." : "Keep this board in Favorites for quick access."}
+                       </TooltipContent>
+                     </Tooltip>
                     
                     <Link href={`/activity/${activity.id}`} className="flex-1 min-w-0 block" data-testid={`link-open-${activity.id}`}>
                       <div className="flex items-baseline gap-2 mb-1">
@@ -342,14 +349,14 @@ export default function History() {
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                         <span className="shrink-0">{format(new Date(activity.updatedAt), "MMM d, yyyy")}</span>
                         <span className="w-1 h-1 rounded-full bg-border shrink-0" />
-                        {cls && (
-                          <span className="flex items-center gap-1.5 shrink-0">
+                         {cls && (
+                           <span className="flex min-w-0 max-w-full flex-wrap items-center gap-1.5">
                             <ClassColorDot color={cls.color || undefined} />
-                             <span className="boardwork-user-content" dir="auto">{cls.name}</span>
+                              <span className="min-w-0 max-w-full truncate boardwork-user-content" dir="auto">{cls.name}</span>
                              <span aria-hidden="true">·</span>
-                             <span className="boardwork-user-content" dir="auto">{cls.grade}</span>
+                              <span className="min-w-0 max-w-full truncate boardwork-user-content" dir="auto">{cls.grade}</span>
                              <span aria-hidden="true">·</span>
-                             <span className="boardwork-user-content" dir="auto">{cls.subject}</span>
+                              <span className="min-w-0 max-w-full truncate boardwork-user-content" dir="auto">{cls.subject}</span>
                           </span>
                         )}
                         <span className="w-1 h-1 rounded-full bg-border shrink-0" />

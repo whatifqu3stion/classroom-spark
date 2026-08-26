@@ -19,6 +19,7 @@ import { getLastUsedPresentationTheme } from "@/lib/presentation-theme";
 import { ClassFormDialog } from "@/components/class-form-dialog";
 import { UnitFormDialog, UnitFormValues } from "@/components/unit-form-dialog";
 import { ClassColorDot } from "@/components/class-color-dot";
+import { HelpTooltip } from "@/components/ui/tooltip";
 import { Settings, Plus, Play, Shuffle, FilePlus, MonitorOff, MonitorSmartphone, Loader2, AlertCircle, ChevronDown } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useQueryClient } from "@tanstack/react-query";
@@ -692,7 +693,7 @@ export default function Home() {
           <div className="w-full max-w-md text-center">
             <h1 className="mb-2 text-2xl font-bold tracking-tight">Create your first class</h1>
             <p className="mx-auto mb-7 max-w-sm text-muted-foreground">
-              Add the essentials now. You can add curriculum details, routines, and defaults later.
+              Add the essentials now. Add more class context later if you need it.
             </p>
             <Button onClick={() => { setEditingClassId(null); setClassDialogOpen(true); }} size="lg" className="gap-2" data-testid="button-create-first-class">
               <Plus className="w-5 h-5" />
@@ -742,12 +743,12 @@ export default function Home() {
               </SelectContent>
             </Select>
             {activeClass && (
-              <Button variant="ghost" size="icon" onClick={() => { setEditingClassId(activeClassId); setClassDialogOpen(true); }} className="-ml-2 shrink-0 text-muted-foreground hover:text-foreground" title="Edit class settings" aria-label="Edit class settings" data-testid="button-edit-class">
+              <Button variant="ghost" size="icon" onClick={() => { setEditingClassId(activeClassId); setClassDialogOpen(true); }} className="-ml-2 shrink-0 text-muted-foreground hover:text-foreground" aria-label="Edit class settings" data-testid="button-edit-class">
                 <Settings className="w-4 h-4" />
               </Button>
             )}
           </div>
-          <Button variant="outline" size="sm" onClick={() => { setEditingClassId(null); setClassDialogOpen(true); }} className="shrink-0 gap-2" title="New class" aria-label="New class" data-testid="button-new-class">
+          <Button variant="outline" size="sm" onClick={() => { setEditingClassId(null); setClassDialogOpen(true); }} className="shrink-0 gap-2" aria-label="New class" data-testid="button-new-class">
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">New Class</span>
           </Button>
@@ -769,10 +770,12 @@ export default function Home() {
               <div className="space-y-2 rounded-xl border bg-card/50 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <Label htmlFor="unit-select">Current unit <span className="font-normal text-muted-foreground">(optional)</span></Label>
-                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                      Reuse planning context without tying it to one class.
-                    </p>
+                     <div className="flex items-center gap-1">
+                       <Label htmlFor="unit-select">Current unit <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                       <HelpTooltip label="About current units">
+                         Select a reusable unit to carry its planning context into this board. Units can be used with other classes.
+                       </HelpTooltip>
+                     </div>
                   </div>
                   <Button type="button" variant="ghost" size="sm" className="shrink-0 gap-1" onClick={openNewUnit} data-testid="button-add-unit">
                     <Plus className="size-4" />
@@ -801,7 +804,6 @@ export default function Home() {
                       variant="outline"
                       size="icon"
                       aria-label="Edit selected unit"
-                      title="Edit selected unit"
                       onClick={() => { setEditingUnitId(selectedUnit.id); setUnitDialogOpen(true); }}
                       data-testid="button-edit-unit"
                     >
@@ -823,10 +825,12 @@ export default function Home() {
                 />
               </div>
                <div className="space-y-2">
-                  <Label htmlFor="goal">What should students be able to do? <span className="font-normal text-muted-foreground">(optional)</span></Label>
-                 <p className="text-xs leading-relaxed text-muted-foreground">
-                    A quick refinement for the board, not a full lesson plan.
-                 </p>
+                  <div className="flex items-center gap-1">
+                    <Label htmlFor="goal">What should students be able to do? <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                    <HelpTooltip label="About the student goal">
+                      Add one observable outcome to steer this short board. A full lesson plan is not needed.
+                    </HelpTooltip>
+                  </div>
                 <Input
                   id="goal"
                   dir="auto"
@@ -842,7 +846,12 @@ export default function Home() {
             <div className="space-y-3 rounded-xl border bg-card/50 p-4">
               <div>
                 <h2 className="text-sm font-semibold text-foreground">How will this board run?</h2>
-                <p className="mt-0.5 text-xs text-muted-foreground">Starts with your class defaults. Adjust for this board when needed.</p>
+                 <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                   <span>Adjust the setup for this board.</span>
+                   <HelpTooltip label="About board setup">
+                     These choices start from the class defaults and apply only to this board.
+                   </HelpTooltip>
+                 </div>
               </div>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                  <div className="space-y-2 sm:col-span-2">
@@ -903,13 +912,15 @@ export default function Home() {
                {technologyMode !== "no_computer" && (
                  <div className="col-span-2 space-y-4 border-t pt-3">
                    <div className="space-y-2">
-                     <Label htmlFor="resourceUrl">
+                      <div className="flex items-center gap-1">
+                        <Label htmlFor="resourceUrl">
                         Teacher-provided resource URL{" "}
                        <span className="font-normal text-muted-foreground">(optional)</span>
-                     </Label>
-                     <p className="text-xs leading-relaxed text-muted-foreground">
-                       Add the link students should use for this board. Boardwork will not invent or inspect links.
-                     </p>
+                        </Label>
+                        <HelpTooltip label="About student resource links">
+                          Paste the link students should open. Boardwork saves the link you provide; it does not create or inspect links.
+                        </HelpTooltip>
+                      </div>
                      <Input
                        id="resourceUrl"
                        type="url"
@@ -946,9 +957,9 @@ export default function Home() {
               >
                 <span className="min-w-0">
                   <span className="block text-sm font-semibold text-foreground">Add optional details</span>
-                  <span className="mt-0.5 block text-xs text-muted-foreground">
-                       Student action, classroom logistics, and teaching focus
-                  </span>
+                   <span className="mt-0.5 block text-xs text-muted-foreground">
+                     Add details only when they will shape the board.
+                   </span>
                 </span>
                 <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform ${customizeOpen ? "rotate-180" : ""}`} />
               </CollapsibleTrigger>
@@ -1017,10 +1028,12 @@ export default function Home() {
                        />
                      </div>
                      <div className="space-y-2 sm:col-span-2">
-                       <Label htmlFor="activityStyle">Activity approach <span className="font-normal text-muted-foreground">(optional)</span></Label>
-                       <p className="text-xs leading-relaxed text-muted-foreground">
-                         Choose a familiar starting move, or leave it on Auto.
-                       </p>
+                        <div className="flex items-center gap-1">
+                          <Label htmlFor="activityStyle">Activity approach <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                          <HelpTooltip label="About activity approaches">
+                            Choose a familiar starting move to guide the generated board, or leave Auto to let Boardwork choose.
+                          </HelpTooltip>
+                        </div>
                        <Select value={activityStyle} onValueChange={(value) => setActivityStyle(value as ActivityStyleValue)}>
                          <SelectTrigger id="activityStyle" data-testid="select-activity-style">
                            <SelectValue>{selectedActivityStyle.label}</SelectValue>
