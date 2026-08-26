@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { describe, expect, it, vi } from "vitest";
 import {
   getPresentationExportOptions,
@@ -53,5 +54,12 @@ describe("presentation font handling", () => {
     await expect(waitForPresentationFonts()).resolves.toBeUndefined();
 
     vi.unstubAllGlobals();
+  });
+
+  it("keeps font loading local to the shipped stylesheet", async () => {
+    const stylesheet = await readFile("src/index.css", "utf8");
+
+    expect(stylesheet).not.toMatch(/fonts\.googleapis\.com|fonts\.gstatic\.com/);
+    expect(stylesheet).toContain('src: url("/fonts/inter-400.ttf")');
   });
 });
