@@ -362,6 +362,39 @@ describe("Home presentation defaults", () => {
     );
   });
 
+  it("uses the dial selection for generated and blank boards", async () => {
+    mocks.generateActivity.mockResolvedValue({
+      id: "activity-duration",
+      classId: "class-1",
+      title: "Generated",
+      task: "Practice",
+      prompts: [],
+      durationMinutes: 5,
+      deviceMode: "off",
+      technologyMode: "no_computer",
+    });
+
+    render(<Home />);
+    fireEvent.click(screen.getByTestId("duration-quick-5"));
+    fireEvent.click(screen.getByTestId("button-generate"));
+
+    await waitFor(() =>
+      expect(mocks.generateActivity).toHaveBeenCalledWith({
+        data: expect.objectContaining({ durationMinutes: 5 }),
+      }),
+    );
+  });
+
+  it("carries a changed duration into a blank board draft", () => {
+    render(<Home />);
+    fireEvent.click(screen.getByTestId("duration-quick-10"));
+    fireEvent.click(screen.getByTestId("button-blank"));
+
+    expect(screen.getByTestId("board-editor-draft")).toHaveTextContent(
+      '"durationMinutes":10',
+    );
+  });
+
   it("keeps technology and generation aligned when class defaults change", async () => {
     mocks.generateActivity.mockResolvedValue({
       id: "activity-default",

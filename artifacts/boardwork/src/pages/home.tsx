@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { ChipGroup } from "@/components/chip-group";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { DurationDial } from "@/components/ui/duration-dial";
 import { BoardEditor } from "@/components/board-editor";
 import { getLastUsedPresentationTheme } from "@/lib/presentation-theme";
 import { ClassFormDialog } from "@/components/class-form-dialog";
@@ -70,7 +71,6 @@ const FAST_ACTIVITY_STYLES = [
   "Quick Write",
   "Apply",
 ] as const;
-const PRESET_DURATIONS = [3, 5, 7, 10] as const;
 type WorkMode = "quiet" | "think_together" | "discussion" | "teacher_check";
 
 const getGenerationErrorMessage = (error: unknown) => {
@@ -208,7 +208,6 @@ export default function Home() {
   const [deviceMode, setDeviceMode] = useState<DeviceMode>("off");
   const [technologyMode, setTechnologyMode] = useState<TechnologyMode>("no_computer");
   const [duration, setDuration] = useState<Duration>(7);
-  const [customDurationInput, setCustomDurationInput] = useState("");
   const [resourceUrl, setResourceUrl] = useState("");
   const [resourceNote, setResourceNote] = useState("");
   const [activityStyle, setActivityStyle] = useState<ActivityStyleValue>("Auto");
@@ -220,18 +219,14 @@ export default function Home() {
     activityStyleCatalog.find((style) => style.value === activityStyle) ??
     activityStyleCatalog[0];
 
-  const isCustomDuration = !PRESET_DURATIONS.includes(duration as (typeof PRESET_DURATIONS)[number]);
-  const customDurationError = isCustomDuration
-    ? !/^\d+$/.test(customDurationInput)
-      ? "Enter a whole number from 1 to 120 minutes."
-      : Number(customDurationInput) < 1 || Number(customDurationInput) > 120
-        ? "Enter a whole number from 1 to 120 minutes."
-        : null
-    : null;
-
-  useEffect(() => {
-    setCustomDurationInput(isCustomDuration ? String(duration) : "");
-  }, [duration, isCustomDuration]);
+  const durationError =
+    !Number.isInteger(duration) || duration < 1 || duration > 120
+      ? "Choose a whole number from 1 to 120 minutes."
+      : null;
+  const durationCompatibilityMessage =
+    Number.isInteger(duration) && duration > 60 && duration <= 120
+      ? `This class default is ${duration} minutes. It is preserved for compatibility; choose the dial to use a new 1–60 minute value.`
+      : null;
 
   const [classDialogOpen, setClassDialogOpen] = useState(false);
   const [editingClassId, setEditingClassId] = useState<string | null>(null);
@@ -659,7 +654,7 @@ export default function Home() {
   };
 
   const handleGenerate = async (surprise: boolean = false) => {
-    if (isGenerating || !activeClassId || !activeClass || customDurationError) return;
+    if (isGenerating || !activeClassId || !activeClass || durationError) return;
     setLastGenerationWasSurprise(surprise);
     setGenerationError(null);
     setIsGenerating(true);
@@ -713,15 +708,15 @@ export default function Home() {
   };
 
   const startBlank = () => {
-    if (!activeClassId || !activeClass) return;
+    if (!activeClassId || !activeClass || durationError) return;
     const blankDraft: ActivityDraft = {
       classId: activeClassId,
       title: "",
       task: "",
       prompts: [],
-      durationMinutes: activeClass.defaultDuration,
-      deviceMode: activeClass.defaultDeviceMode,
-      technologyMode: technologyModeForDeviceMode(activeClass.defaultDeviceMode),
+      durationMinutes: duration,
+      deviceMode,
+      technologyMode,
       arrivalInstructions: activeClass.arrivalRoutine,
       presentationTheme: getLastUsedPresentationTheme(),
     };
@@ -957,44 +952,15 @@ export default function Home() {
                      className="grid-cols-3"
                   />
                 </div>
-                 <div className="space-y-2 sm:max-w-[360px]">
-                  <Label>Duration (min)</Label>
-                        <div className="flex items-center gap-2">
-                          <SegmentedControl<Duration>
-                            options={PRESET_DURATIONS.map((value) => ({ label: String(value), value }))}
-                            value={duration}
-                            onChange={setDuration}
-                            className="min-w-0 flex-1"
-                          />
-                          {isCustomDuration && (
-                            <Input
-                              type="text"
-                              inputMode="numeric"
-                              maxLength={3}
-                              value={customDurationInput}
-                              onChange={(event) => {
-                                const value = event.target.value;
-                                setCustomDurationInput(value);
-                                if (/^\d+$/.test(value)) {
-                                  const parsed = Number(value);
-                                  if (parsed >= 1 && parsed <= 120) {
-                                    setDuration(parsed);
-                                  }
-                                }
-                              }}
-                              className="w-20 shrink-0"
-                              aria-label="Custom duration in minutes"
-                              aria-invalid={Boolean(customDurationError)}
-                              data-testid="input-custom-activity-duration"
-                            />
-                          )}
-                        </div>
-                        {isCustomDuration && (
-                          <p className={`text-xs ${customDurationError ? "text-destructive" : "text-muted-foreground"}`} role={customDurationError ? "alert" : undefined} data-testid={customDurationError ? "custom-duration-error" : undefined}>
-                            {customDurationError ?? "Custom class default"}
-                          </p>
-                        )}
-                </div>
+                  <div className="space-y-2 sm:max-w-[360px]">
+                   <Label htmlFor="duration-dial-value">Duration (min)</Label>
+                   <DurationDial
+                     value={duration}
+                     onChange={setDuration}
+                     compatibilityMessage={durationCompatibilityMessage}
+                     errorMessage={durationError}
+                   />
+                 </div>
               </div>
                {technologyMode !== "no_computer" && (
                  <div className="col-span-2 space-y-4 border-t pt-3">
