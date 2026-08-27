@@ -88,8 +88,8 @@ export function DurationDial({
     <div className="space-y-2" data-testid="duration-dial">
       <div
         className={cn(
-          "grid min-h-[148px] grid-cols-4 gap-1.5 overflow-hidden overscroll-contain rounded-lg border bg-background p-1.5",
-          "focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 sm:gap-2 sm:p-2",
+          "grid min-h-[148px] min-w-0 grid-cols-4 gap-1 overflow-hidden overscroll-contain rounded-lg border bg-background p-1",
+          "focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 sm:gap-1.5 sm:p-1.5",
           errorMessage && "border-destructive",
         )}
         onWheel={isDialSelection ? handleWheel : undefined}
@@ -103,7 +103,8 @@ export function DurationDial({
               type="button"
               onClick={() => onChange(option)}
               className={cn(
-                "min-h-10 rounded-md border px-3 text-sm font-medium transition-colors",
+                "min-w-0 rounded-md border px-1 py-2 text-sm font-medium transition-colors",
+                "flex min-h-10 flex-col items-center justify-center gap-0.5 leading-none",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 "hover:bg-muted/60 motion-reduce:transition-none",
                 isSelected && "border-primary bg-primary/10 text-primary",
@@ -112,8 +113,10 @@ export function DurationDial({
               aria-label={`${option} minutes`}
               data-testid={`duration-quick-${option}`}
             >
-              <span className="text-xl font-semibold tracking-tight">{option}</span>
-              <span className="text-[0.65rem] font-medium text-muted-foreground">min</span>
+              <span className="text-xl font-semibold leading-none tracking-tight">{option}</span>
+              <span className="text-[0.65rem] font-medium leading-none text-muted-foreground">
+                min
+              </span>
             </button>
           );
         })}
@@ -153,7 +156,7 @@ export function DurationDial({
                 return (
                   <span
                     key={`previous-${neighbor}`}
-                    className="duration-dial-neighbor rounded-full px-2 py-0.5 text-[0.68rem] font-medium text-muted-foreground transition-colors hover:text-foreground motion-reduce:transition-none"
+                    className="duration-dial-neighbor whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium leading-none text-muted-foreground transition-colors hover:text-foreground motion-reduce:transition-none"
                     style={{ opacity: 0.28 + (3 - distance) * 0.2 }}
                     aria-hidden="true"
                     data-testid={`duration-dial-neighbor-${neighbor}`}
@@ -163,10 +166,13 @@ export function DurationDial({
                 );
               })}
               <span
-                className="my-0.5 flex items-baseline gap-0.5 rounded-full bg-foreground px-2.5 py-1 leading-none text-xl font-semibold tracking-tight text-background transition-colors hover:bg-foreground/80 motion-safe:transition-all motion-reduce:transition-none"
+                className="relative z-10 my-0.5 flex cursor-pointer flex-col items-center gap-0.5 rounded-full bg-foreground px-2 py-1.5 leading-none text-background transition-colors hover:bg-foreground/80 motion-safe:transition-all motion-reduce:transition-none"
                 data-testid="duration-dial-current"
+                onClick={() => setDialValue(DURATION_DIAL_ANCHOR)}
               >
-                {isWholeMinute ? rollerValue : value}
+                <span className="text-xl font-semibold tracking-tight">
+                  {isWholeMinute ? rollerValue : value}
+                </span>
                 <span className="text-[0.6rem] font-medium">min</span>
               </span>
               {nextValues.map((neighbor, index) => {
@@ -174,7 +180,7 @@ export function DurationDial({
                 return (
                   <span
                     key={`next-${neighbor}`}
-                    className="duration-dial-neighbor rounded-full px-2 py-0.5 text-[0.68rem] font-medium text-muted-foreground transition-colors hover:text-foreground motion-reduce:transition-none"
+                    className="duration-dial-neighbor whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium leading-none text-muted-foreground transition-colors hover:text-foreground motion-reduce:transition-none"
                     style={{ opacity: 0.28 + (3 - distance) * 0.2 }}
                     aria-hidden="true"
                     data-testid={`duration-dial-neighbor-${neighbor}`}
@@ -233,8 +239,8 @@ export function DurationDial({
             onClick={() => setDialValue(DURATION_DIAL_ANCHOR)}
             data-testid="duration-quick-10"
           >
-            <span className="text-xl font-semibold tracking-tight">10</span>
-            <span className="text-[0.65rem] font-medium text-muted-foreground">min</span>
+            <span className="text-xl font-semibold leading-none tracking-tight">10</span>
+            <span className="text-[0.65rem] font-medium leading-none text-muted-foreground">min</span>
             <span className="sr-only">
               Select 10 minutes to start adjusting one minute at a time.
             </span>

@@ -8,6 +8,10 @@ describe("DurationDial", () => {
     const { rerender } = render(<DurationDial value={7} onChange={onChange} />);
 
     expect(screen.getByTestId("duration-quick-3")).toBeInTheDocument();
+    expect(screen.getByTestId("duration-quick-3")).toHaveClass(
+      "flex-col",
+      "items-center",
+    );
     expect(screen.getByTestId("duration-quick-7")).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByTestId("duration-quick-5")).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByTestId("duration-quick-10")).toHaveAttribute("data-selected", "false");
@@ -41,6 +45,8 @@ describe("DurationDial", () => {
       Number(farNeighbor.style.opacity),
     );
     expect(screen.getByTestId("duration-dial-current")).toHaveClass("rounded-full");
+    expect(screen.getByTestId("duration-dial-current")).toHaveClass("flex-col");
+    expect(nearNeighbor).toHaveClass("whitespace-nowrap", "leading-none");
   });
 
   it("keeps the integrated control unique when custom quick options include 10", () => {
