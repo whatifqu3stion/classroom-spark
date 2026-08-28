@@ -315,6 +315,29 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.queryByText(/\\frac|\\sqrt/)).not.toBeInTheDocument();
   });
 
+  it("renders prompt lists with bullets", () => {
+    render(
+      <PresentationCanvas
+        activity={{
+          ...activity,
+          prompts: ["First prompt", "Second prompt", "Third prompt"],
+        }}
+      />,
+    );
+
+    const markers = Array.from(
+      screen
+        .getByTestId("presentation-surface")
+        .querySelectorAll(".presentation-prompt-marker"),
+    );
+
+    expect(markers).toHaveLength(3);
+    expect(markers.every((marker) => marker.textContent === "•")).toBe(true);
+    expect(screen.queryByText("01")).not.toBeInTheDocument();
+    expect(screen.queryByText("02")).not.toBeInTheDocument();
+    expect(screen.queryByText("03")).not.toBeInTheDocument();
+  });
+
   it("puts arrival instructions first and the activity name in the header", () => {
     render(
       <PresentationCanvas

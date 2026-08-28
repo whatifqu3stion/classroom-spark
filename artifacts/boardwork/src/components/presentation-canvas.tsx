@@ -186,7 +186,7 @@ export function PresentationCanvas({
               {activity.prompts.map((prompt, index) => (
                 <li key={index} className="presentation-prompt">
                   <span className="presentation-prompt-marker" aria-hidden="true">
-                    {String(index + 1).padStart(2, "0")}
+                    •
                   </span>
                   <span className="boardwork-user-content" dir="auto">
                     <FormulaText>{prompt}</FormulaText>

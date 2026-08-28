@@ -1,13 +1,12 @@
 import React, { useRef, useEffect, useState } from "react";
 import { ActivityDraft, Duration } from "@/store/boardwork-context";
 import { Button } from "./ui/button";
-import { Plus, X, Monitor, Clock, FileText, Loader2, CheckCircle2, AlertCircle, ExternalLink, ImagePlus, ChevronDown } from "lucide-react";
+import { Plus, X, Monitor, Clock, FileText, Loader2, CheckCircle2, AlertCircle, ExternalLink, ImagePlus, Palette } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { getSafeResourceUrl } from "@/lib/resource-url";
 import { PresentationThemePicker } from "@/components/presentation-theme-picker";
 import { FormulaPreview, FormulaText } from "@/components/formula-text";
-import { PresentationCanvas } from "@/components/presentation-canvas";
 import { HelpTooltip, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   estimatePresentationImageDataUrlBytes,
@@ -344,196 +343,178 @@ export function BoardEditor({
             <FormulaPreview>{(draft.materials ?? []).join(", ")}</FormulaPreview>
           </div>
 
-           <section className="presentation-visual-editor-section space-y-3 pt-6 mt-6 border-t" data-testid="presentation-visual-section">
-             <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-               <span>Visual presentation</span>
-               <HelpTooltip label="About visual presentation">
-                 Add a local image for Present and PNG export. Images are shown without cropping.
-               </HelpTooltip>
-             </div>
-            <button
-              type="button"
-              className="flex min-h-10 w-full items-center justify-between gap-3 rounded-md px-2 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-expanded={presentationVisualOpen}
-              aria-controls="presentation-visual-editor"
-              onClick={() => setPresentationVisualOpen((value) => !value)}
-              data-testid="button-toggle-presentation-visual"
-            >
-              <span className="min-w-0">
-                <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                  {draft.visualUrl ? "Image added" : "No image"}
-                </span>
-              </span>
-              <ChevronDown
-                className={cn(
-                  "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
-                  presentationVisualOpen && "rotate-180",
-                )}
-                aria-hidden="true"
-              />
-            </button>
-            <div
-              id="presentation-visual-editor"
-              className={cn(
-                "presentation-visual-editor",
-                presentationVisualOpen && "presentation-visual-editor--open",
-              )}
-              data-state={presentationVisualOpen ? "open" : "closed"}
-              aria-hidden={!presentationVisualOpen}
-              inert={!presentationVisualOpen ? true : undefined}
-              data-testid="presentation-visual-editor"
-            >
-              <div className="space-y-3 pt-2">
-                <div className="space-y-3">
-              <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-medium hover:bg-muted/50 focus-within:ring-2 focus-within:ring-ring">
-                <ImagePlus className="h-4 w-4" aria-hidden="true" />
-                {draft.visualUrl ? "Replace image" : "Add image"}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="sr-only"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    if (!file) return;
-                     if (file.size > PRESENTATION_IMAGE_FILE_LIMIT_BYTES) {
-                       setVisualUploadError(PRESENTATION_IMAGE_SIZE_ERROR);
-                       event.target.value = "";
-                       return;
-                     }
-                     if (
-                       estimatePresentationImageDataUrlBytes(file.size, file.type) >
-                       PRESENTATION_IMAGE_DATA_URL_LIMIT_BYTES
-                     ) {
-                       setVisualUploadError(PRESENTATION_IMAGE_SIZE_ERROR);
-                       event.target.value = "";
-                      return;
-                    }
-                    const reader = new FileReader();
-                     reader.onerror = () => {
-                       setVisualUploadError(
-                         "This image could not be read. Choose another image and try again.",
-                       );
-                     };
-                     reader.onload = () => {
-                       const visualUrl = String(reader.result ?? "");
-                       const payloadError =
-                         getPresentationImagePayloadError(visualUrl);
-                       if (payloadError) {
-                         setVisualUploadError(payloadError);
-                         return;
-                       }
-                       setVisualUploadError(null);
-                       onChange({ visualUrl });
-                     };
-                    reader.readAsDataURL(file);
-                    event.target.value = "";
-                  }}
-                />
-              </label>
-               {visualUploadError && (
-                 <p
-                   className="text-xs text-destructive"
-                   role="alert"
-                   data-testid="visual-upload-error"
-                 >
-                   {visualUploadError}
-                 </p>
-               )}
-              {draft.visualUrl && (
-                <>
-                  <img src={draft.visualUrl} alt="" className="h-24 w-full rounded-md border object-contain bg-muted/30" />
-                   <Button
-                     type="button"
-                     variant="ghost"
-                     size="sm"
-                     onClick={() => {
-                       setVisualUploadError(null);
-                       onChange({ visualUrl: null, visualDescription: null });
-                     }}
-                   >
-                    Remove image
-                  </Button>
-                  <input
-                    aria-label="Visual description"
-                    value={draft.visualDescription ?? ""}
-                    onChange={(event) => onChange({ visualDescription: event.target.value })}
-                    placeholder="Optional description for students"
-                    className="h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-                  />
-                </>
-              )}
-               <p className="text-xs text-muted-foreground">Use a local image up to 5 MB. It appears in Present and PNG export without cropping.</p>
+            <section className="presentation-visual-editor-section mt-8 border-t pt-6" data-testid="presentation-visual-section">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex min-w-0 items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <span>Visual presentation</span>
+                  <HelpTooltip label="About visual presentation">
+                    Add a local image for Present and PNG export. Images are shown without cropping.
+                  </HelpTooltip>
                 </div>
-              <PresentationThemePicker
-                value={draft.presentationTheme}
-                onChange={(presentationTheme) => onChange({ presentationTheme })}
-              />
-              <div>
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Teacher note
-                  </div>
-                  {draft.teacherNote == null ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 text-xs"
-                      onClick={() => onChange({ teacherNote: "" })}
-                      data-testid="button-add-teacher-note"
-                    >
-                      Add note
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 text-xs text-muted-foreground"
-                      onClick={() => onChange({ teacherNote: null })}
-                      data-testid="button-remove-teacher-note"
-                    >
-                      Remove
-                    </Button>
+                <button
+                  type="button"
+                  className={cn(
+                    "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    presentationVisualOpen && "bg-muted/50 text-foreground",
                   )}
-                </div>
-                {draft.teacherNote != null && (
-                  <>
-                    <EditableText
-                      multiline
-                      value={draft.teacherNote}
-                      onChange={(val) => onChange({ teacherNote: val || null })}
-                      placeholder="Optional note for the teacher..."
-                      className="text-muted-foreground text-sm block w-full"
-                    />
-                    <FormulaPreview>{draft.teacherNote}</FormulaPreview>
-                  </>
-                )}
+                  aria-label={
+                    presentationVisualOpen
+                      ? "Close visual presentation settings"
+                      : "Open visual presentation settings"
+                  }
+                  aria-expanded={presentationVisualOpen}
+                  aria-controls="presentation-visual-editor"
+                  onClick={() => setPresentationVisualOpen((value) => !value)}
+                  data-testid="button-toggle-presentation-visual"
+                >
+                  <Palette className="h-4 w-4" aria-hidden="true" />
+                </button>
               </div>
-            </div>
-            </div>
-          </section>
-
-          <section
-            className="presentation-preview-section space-y-3 pt-6 mt-6 border-t"
-            aria-labelledby="presentation-preview-heading"
-            data-testid="presentation-preview"
-          >
-             <div className="flex items-center gap-1">
               <div
-                id="presentation-preview-heading"
-                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                id="presentation-visual-editor"
+                className={cn(
+                  "presentation-visual-editor",
+                  presentationVisualOpen && "presentation-visual-editor--open",
+                )}
+                data-state={presentationVisualOpen ? "open" : "closed"}
+                aria-hidden={!presentationVisualOpen}
+                inert={!presentationVisualOpen ? true : undefined}
+                data-testid="presentation-visual-editor"
               >
-                Presentation preview
+                <div className="space-y-6 pt-5">
+                  <div className="space-y-4">
+                    <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-medium hover:bg-muted/50 focus-within:ring-2 focus-within:ring-ring">
+                      <ImagePlus className="h-4 w-4" aria-hidden="true" />
+                      {draft.visualUrl ? "Replace image" : "Add image"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="sr-only"
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          if (!file) return;
+                          if (file.size > PRESENTATION_IMAGE_FILE_LIMIT_BYTES) {
+                            setVisualUploadError(PRESENTATION_IMAGE_SIZE_ERROR);
+                            event.target.value = "";
+                            return;
+                          }
+                          if (
+                            estimatePresentationImageDataUrlBytes(file.size, file.type) >
+                            PRESENTATION_IMAGE_DATA_URL_LIMIT_BYTES
+                          ) {
+                            setVisualUploadError(PRESENTATION_IMAGE_SIZE_ERROR);
+                            event.target.value = "";
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onerror = () => {
+                            setVisualUploadError(
+                              "This image could not be read. Choose another image and try again.",
+                            );
+                          };
+                          reader.onload = () => {
+                            const visualUrl = String(reader.result ?? "");
+                            const payloadError =
+                              getPresentationImagePayloadError(visualUrl);
+                            if (payloadError) {
+                              setVisualUploadError(payloadError);
+                              return;
+                            }
+                            setVisualUploadError(null);
+                            onChange({ visualUrl });
+                          };
+                          reader.readAsDataURL(file);
+                          event.target.value = "";
+                        }}
+                      />
+                    </label>
+                    {visualUploadError && (
+                      <p
+                        className="text-xs text-destructive"
+                        role="alert"
+                        data-testid="visual-upload-error"
+                      >
+                        {visualUploadError}
+                      </p>
+                    )}
+                    {draft.visualUrl && (
+                      <div className="space-y-3">
+                        <img src={draft.visualUrl} alt="" className="h-24 w-full rounded-md border object-contain bg-muted/30" />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setVisualUploadError(null);
+                            onChange({ visualUrl: null, visualDescription: null });
+                          }}
+                        >
+                          Remove image
+                        </Button>
+                        <input
+                          aria-label="Visual description"
+                          value={draft.visualDescription ?? ""}
+                          onChange={(event) => onChange({ visualDescription: event.target.value })}
+                          placeholder="Optional description for students"
+                          className="h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground">Use a local image up to 5 MB. It appears in Present and PNG export without cropping.</p>
+                  </div>
+
+                  <div className="border-t pt-5">
+                    <PresentationThemePicker
+                      value={draft.presentationTheme}
+                      onChange={(presentationTheme) => onChange({ presentationTheme })}
+                    />
+                  </div>
+
+                  <div className="border-t pt-5">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Teacher note
+                      </div>
+                      {draft.teacherNote == null ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-xs"
+                          onClick={() => onChange({ teacherNote: "" })}
+                          data-testid="button-add-teacher-note"
+                        >
+                          Add note
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-xs text-muted-foreground"
+                          onClick={() => onChange({ teacherNote: null })}
+                          data-testid="button-remove-teacher-note"
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </div>
+                    {draft.teacherNote != null && (
+                      <div className="space-y-2">
+                        <EditableText
+                          multiline
+                          value={draft.teacherNote}
+                          onChange={(val) => onChange({ teacherNote: val || null })}
+                          placeholder="Optional note for the teacher..."
+                          className="text-muted-foreground text-sm block w-full"
+                        />
+                        <FormulaPreview>{draft.teacherNote}</FormulaPreview>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-               <HelpTooltip label="About the presentation preview">
-                 This is the student-facing board without teacher controls or live timer state.
-               </HelpTooltip>
-            </div>
-            <div className="presentation-preview-frame">
-              <PresentationCanvas activity={draft} editorPreview />
-            </div>
-          </section>
+            </section>
           
         </div>
       </div>

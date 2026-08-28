@@ -16,7 +16,7 @@ const draft: ActivityDraft = {
 };
 
 describe("BoardEditor presentation visual disclosure", () => {
-  it("starts collapsed with a useful summary and reveals all visual controls", () => {
+  it("starts collapsed and reveals visual controls without an embedded board preview", () => {
     render(<BoardEditor draft={draft} onChange={vi.fn()} />);
 
     const toggle = screen.getByTestId("button-toggle-presentation-visual");
@@ -26,9 +26,10 @@ describe("BoardEditor presentation visual disclosure", () => {
     expect(editor).toHaveAttribute("data-state", "closed");
     expect(editor).toHaveAttribute("aria-hidden", "true");
     expect(editor.children).toHaveLength(1);
-    expect(editor.firstElementChild).toHaveClass("space-y-3");
-    expect(screen.getByText("No image")).toBeInTheDocument();
-    expect(screen.queryByText("No image · Midnight · Mint accent")).not.toBeInTheDocument();
+    expect(editor.firstElementChild).toHaveClass("space-y-6");
+    expect(screen.queryByText("No image")).not.toBeInTheDocument();
+    expect(screen.queryByText("Image added")).not.toBeInTheDocument();
+    expect(toggle).toHaveAccessibleName("Open visual presentation settings");
     expect(screen.getByText("Visual presentation colors")).toBeInTheDocument();
 
     fireEvent.click(toggle);
@@ -39,18 +40,16 @@ describe("BoardEditor presentation visual disclosure", () => {
     expect(editor.children).toHaveLength(1);
     expect(screen.getByText("Add image")).toBeInTheDocument();
     expect(screen.getByTestId("presentation-theme-picker")).toBeInTheDocument();
-    expect(screen.getByTestId("presentation-preview")).toBeInTheDocument();
-    expect(screen.getByTestId("presentation-preview-surface")).toHaveClass(
-      "presentation-surface--editor-preview",
-    );
-    expect(screen.getByTestId("present-title")).toHaveTextContent("Independent practice");
+    expect(screen.queryByTestId("presentation-preview")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("presentation-preview-surface")).not.toBeInTheDocument();
+    expect(toggle).toHaveAccessibleName("Close visual presentation settings");
     expect(screen.queryByRole("button", { name: "Teacher controls" })).not.toBeInTheDocument();
     expect(
       screen.queryByPlaceholderText("Arrival instructions (optional footer)..."),
     ).not.toBeInTheDocument();
   });
 
-  it("updates the student preview immediately from unsaved content with fixed typography", () => {
+  it("keeps the visual settings separate from the editable board content", () => {
     function StatefulEditor() {
       const [currentDraft, setCurrentDraft] = useState<ActivityDraft>(draft);
 
@@ -69,22 +68,15 @@ describe("BoardEditor presentation visual disclosure", () => {
     const titleEditor = screen.getByRole("textbox", {
       name: "Enter a short title...",
     });
-    titleEditor.textContent = "Unsaved preview title";
+    titleEditor.textContent = "Unsaved board title";
     fireEvent.input(titleEditor);
 
-    expect(screen.getByTestId("present-title")).toHaveTextContent(
-      "Unsaved preview title",
-    );
+    expect(titleEditor).toHaveTextContent("Unsaved board title");
 
     fireEvent.click(screen.getByTestId("button-toggle-presentation-visual"));
 
-    const previewSurface = screen.getByTestId("presentation-preview-surface");
-    expect(
-      previewSurface.style.getPropertyValue("--presentation-font-heading"),
-    ).toContain("Inter");
-    expect(
-      previewSurface.style.getPropertyValue("--presentation-font-body"),
-    ).toContain("Inter");
+    expect(screen.queryByTestId("presentation-preview")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("presentation-preview-surface")).not.toBeInTheDocument();
   });
 
   it("keeps invalid duration text out of the draft while allowing custom lengths", () => {
