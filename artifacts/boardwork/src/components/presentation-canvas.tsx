@@ -186,7 +186,7 @@ export function PresentationCanvas({
               {activity.prompts.map((prompt, index) => (
                 <li key={index} className="presentation-prompt">
                   <span className="presentation-prompt-marker" aria-hidden="true">
-                    •
+                    {String(index + 1).padStart(2, "0")}
                   </span>
                   <span className="boardwork-user-content" dir="auto">
                     <FormulaText>{prompt}</FormulaText>
@@ -196,36 +196,40 @@ export function PresentationCanvas({
             </ul>
           )}
 
-          {activity.materials && activity.materials.length > 0 && (
-            <p
-              className="presentation-materials boardwork-user-content"
-              dir="auto"
-              {...testId(includeTestIds, "present-materials")}
-            >
-              <FormulaText>{`Materials: ${activity.materials.join(", ")}`}</FormulaText>
-            </p>
-          )}
-
-          {safeResourceUrl && (
-            <div
-              className="presentation-resource"
-              {...testId(includeTestIds, "present-resource")}
-            >
-              <a
-                href={safeResourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                tabIndex={exportLayout ? -1 : undefined}
-                className="presentation-resource-link"
-                {...testId(includeTestIds, "present-resource-link")}
-              >
-                Open resource
-                <ExternalLink className="h-[1em] w-[1em]" aria-hidden="true" />
-              </a>
-              {activity.resourceNote && (
-                <p className="presentation-resource-note boardwork-user-content" dir="auto">
-                 <FormulaText>{activity.resourceNote}</FormulaText>
+          {(activity.materials?.length || safeResourceUrl) && (
+            <div className="presentation-supporting">
+              {activity.materials && activity.materials.length > 0 && (
+                <p
+                  className="presentation-materials boardwork-user-content"
+                  dir="auto"
+                  {...testId(includeTestIds, "present-materials")}
+                >
+                  <FormulaText>{`Materials: ${activity.materials.join(", ")}`}</FormulaText>
                 </p>
+              )}
+
+              {safeResourceUrl && (
+                <div
+                  className="presentation-resource"
+                  {...testId(includeTestIds, "present-resource")}
+                >
+                  <a
+                    href={safeResourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    tabIndex={exportLayout ? -1 : undefined}
+                    className="presentation-resource-link"
+                    {...testId(includeTestIds, "present-resource-link")}
+                  >
+                    Open resource
+                    <ExternalLink className="h-[1em] w-[1em]" aria-hidden="true" />
+                  </a>
+                  {activity.resourceNote && (
+                    <p className="presentation-resource-note boardwork-user-content" dir="auto">
+                      <FormulaText>{activity.resourceNote}</FormulaText>
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           )}
