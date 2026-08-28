@@ -858,10 +858,9 @@ export default function Home() {
           <div className="w-full lg:w-[400px] xl:w-[460px] flex flex-col gap-5 lg:overflow-y-auto lg:pl-1 lg:pr-2 pb-8">
             <div className="space-y-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Create today&apos;s board</p>
-                <h1 className="mt-1 text-xl font-semibold tracking-tight text-foreground">What should students practice today?</h1>
+                <h1 className="text-xl font-semibold tracking-tight text-foreground">What are students working on today?</h1>
                 <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                  Start with one clear idea. You can fine-tune the board before presenting it.
+                  Add a topic or goal. You can refine the board before presenting.
                 </p>
               </div>
               <div className="space-y-2 rounded-xl border bg-card/50 p-4">

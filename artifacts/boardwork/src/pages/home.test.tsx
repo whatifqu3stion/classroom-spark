@@ -462,4 +462,24 @@ describe("Home presentation defaults", () => {
     expect(screen.queryByText("Work mode (optional)")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "About board setup" })).toBeInTheDocument();
   });
+
+  it("shows the concise board creation introduction", () => {
+    render(<Home />);
+
+    expect(
+      screen.getByRole("heading", {
+        name: "What are students working on today?",
+        level: 1,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Add a topic or goal. You can refine the board before presenting.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Create today's board")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("What should students practice today?"),
+    ).not.toBeInTheDocument();
+  });
 });
