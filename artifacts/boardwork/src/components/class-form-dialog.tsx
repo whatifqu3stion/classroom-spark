@@ -43,7 +43,7 @@ const classProfileSchema = z.object({
   curriculumDetails: z.string(),
   generalContext: z.string(),
   defaultDeviceMode: z.enum(["off", "on"]),
-  defaultDuration: z.number().int().min(1, "Enter at least 1 minute.").max(120, "Enter 120 minutes or less."),
+  defaultDuration: z.number().int().min(1, "Enter at least 1 minute."),
   color: z.string(),
 });
 
@@ -392,7 +392,6 @@ export function ClassFormDialog({
                                    id="custom-default-duration"
                                    type="number"
                                    min={1}
-                                   max={120}
                                    step={1}
                                    value={field.value ?? ""}
                                    onChange={(event) => {
@@ -405,7 +404,7 @@ export function ClassFormDialog({
                                    data-testid="input-custom-default-duration"
                                  />
                                </FormControl>
-                               <p className="text-xs text-muted-foreground">Enter a whole number from 1 to 120 minutes.</p>
+                               <p className="text-xs text-muted-foreground">Enter a whole number of minutes.</p>
                                <FormMessage />
                              </div>
                            )}

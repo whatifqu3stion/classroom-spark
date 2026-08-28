@@ -11,3 +11,4 @@
 - [Shared package runtime portability](shared-package-runtime-portability.md) — Keep shared validation helpers free of DOM-only globals unless their package explicitly includes DOM typings.
 - [Proxied wheel handling](proxied-wheel-handlers.md) — Avoid preventDefault in proxied React wheel handlers; use overscroll containment for reliable signed changes.
 - [Compact segmented controls](compact-segmented-controls.md) — Narrow setup controls need shrinkable tracks, wrapped labels, and stacked icon treatments to avoid hidden page overflow.
+- [Duration control baseline](duration-control-baseline.md) — Board setup uses compact 3/5/7 presets plus an unbounded positive whole-minute custom entry.

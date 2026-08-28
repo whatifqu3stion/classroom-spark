@@ -80,7 +80,7 @@ const ACTIVITY_JSON_SCHEMA = {
       maxItems: 3,
       items: { type: "string", minLength: 1, maxLength: 160 },
     },
-    durationMinutes: { type: "integer", minimum: 1, maximum: 120 },
+    durationMinutes: { type: "integer", minimum: 1 },
     deviceMode: { type: "string", enum: ["off", "on"] },
     materials: {
       type: "array",

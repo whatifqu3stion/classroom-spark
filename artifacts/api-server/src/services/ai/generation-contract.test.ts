@@ -133,9 +133,9 @@ describe("Boardwork generation contract", () => {
     expect(() =>
       generatedActivitySchema.parse({ ...activity, durationMinutes: 0 }),
     ).toThrow();
-    expect(() =>
+    expect(
       generatedActivitySchema.parse({ ...activity, durationMinutes: 121 }),
-    ).toThrow();
+    ).toMatchObject({ durationMinutes: 121 });
   });
 
   it("allows only the exact teacher-approved Device On URL", () => {
@@ -314,8 +314,8 @@ describe("Boardwork generation contract", () => {
     })) {
       expect(getCuratedPresentationTheme(legacyId).colors.background).toBe(background);
     }
-    expect(getCuratedPresentationTheme("ink").typography.id).toBe("ink");
-    expect(getCuratedPresentationTheme("ocean").typography.id).toBe("ocean");
+    expect(getCuratedPresentationTheme("ink").typography.id).toBe("boardwork");
+    expect(getCuratedPresentationTheme("ocean").typography.id).toBe("boardwork");
 
     for (const theme of curatedPresentationThemes) {
       expect(

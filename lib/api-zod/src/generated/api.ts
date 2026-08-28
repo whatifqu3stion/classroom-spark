@@ -21,10 +21,8 @@ export const HealthCheckResponse = zod.object({
  * Returns all classes, instructional contexts, chips, activities, and the most recently used class id so the frontend can restore workspace state.
  * @summary Bootstrap application state
  */
-export const getAppStateResponseClassesItemDefaultDurationMax = 120;
 export const getAppStateResponseClassesItemDefaultDurationMultipleOf = 1;
 
-export const getAppStateResponseActivitiesItemDurationMinutesMax = 120;
 export const getAppStateResponseActivitiesItemDurationMinutesMultipleOf = 1;
 
 export const getAppStateResponseActivitiesItemPresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -43,7 +41,7 @@ export const GetAppStateResponse = zod.object({
   "generalContext": zod.string().nullish(),
   "arrivalRoutine": zod.string().nullish(),
   "defaultDeviceMode": zod.enum(['off', 'on']),
-  "defaultDuration": zod.number().min(1).max(getAppStateResponseClassesItemDefaultDurationMax).multipleOf(getAppStateResponseClassesItemDefaultDurationMultipleOf),
+  "defaultDuration": zod.number().min(1).multipleOf(getAppStateResponseClassesItemDefaultDurationMultipleOf),
   "color": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -78,7 +76,7 @@ export const GetAppStateResponse = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
-  "durationMinutes": zod.number().min(1).max(getAppStateResponseActivitiesItemDurationMinutesMax).multipleOf(getAppStateResponseActivitiesItemDurationMinutesMultipleOf),
+  "durationMinutes": zod.number().min(1).multipleOf(getAppStateResponseActivitiesItemDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
   "arrivalInstructions": zod.string().nullish(),
@@ -118,7 +116,6 @@ export const GetAppStateResponse = zod.object({
 /**
  * @summary List classes
  */
-export const listClassesResponseDefaultDurationMax = 120;
 export const listClassesResponseDefaultDurationMultipleOf = 1;
 
 
@@ -133,7 +130,7 @@ export const ListClassesResponseItem = zod.object({
   "generalContext": zod.string().nullish(),
   "arrivalRoutine": zod.string().nullish(),
   "defaultDeviceMode": zod.enum(['off', 'on']),
-  "defaultDuration": zod.number().min(1).max(listClassesResponseDefaultDurationMax).multipleOf(listClassesResponseDefaultDurationMultipleOf),
+  "defaultDuration": zod.number().min(1).multipleOf(listClassesResponseDefaultDurationMultipleOf),
   "color": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -145,7 +142,6 @@ export const ListClassesResponse = zod.array(ListClassesResponseItem)
  * @summary Create a class
  */
 
-export const createClassBodyDefaultDurationMax = 120;
 export const createClassBodyDefaultDurationMultipleOf = 1;
 
 
@@ -159,11 +155,10 @@ export const CreateClassBody = zod.object({
   "generalContext": zod.string().nullish(),
   "arrivalRoutine": zod.string().nullish(),
   "defaultDeviceMode": zod.enum(['off', 'on']),
-  "defaultDuration": zod.number().min(1).max(createClassBodyDefaultDurationMax).multipleOf(createClassBodyDefaultDurationMultipleOf),
+  "defaultDuration": zod.number().min(1).multipleOf(createClassBodyDefaultDurationMultipleOf),
   "color": zod.string().nullish()
 })
 
-export const createClassResponseDefaultDurationMax = 120;
 export const createClassResponseDefaultDurationMultipleOf = 1;
 
 
@@ -178,7 +173,7 @@ export const CreateClassResponse = zod.object({
   "generalContext": zod.string().nullish(),
   "arrivalRoutine": zod.string().nullish(),
   "defaultDeviceMode": zod.enum(['off', 'on']),
-  "defaultDuration": zod.number().min(1).max(createClassResponseDefaultDurationMax).multipleOf(createClassResponseDefaultDurationMultipleOf),
+  "defaultDuration": zod.number().min(1).multipleOf(createClassResponseDefaultDurationMultipleOf),
   "color": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -193,7 +188,6 @@ export const UpdateClassParams = zod.object({
 })
 
 
-export const updateClassBodyDefaultDurationMax = 120;
 export const updateClassBodyDefaultDurationMultipleOf = 1;
 
 
@@ -207,11 +201,10 @@ export const UpdateClassBody = zod.object({
   "generalContext": zod.string().nullish(),
   "arrivalRoutine": zod.string().nullish(),
   "defaultDeviceMode": zod.enum(['off', 'on']).optional(),
-  "defaultDuration": zod.number().min(1).max(updateClassBodyDefaultDurationMax).multipleOf(updateClassBodyDefaultDurationMultipleOf).optional(),
+  "defaultDuration": zod.number().min(1).multipleOf(updateClassBodyDefaultDurationMultipleOf).optional(),
   "color": zod.string().nullish()
 })
 
-export const updateClassResponseDefaultDurationMax = 120;
 export const updateClassResponseDefaultDurationMultipleOf = 1;
 
 
@@ -226,7 +219,7 @@ export const UpdateClassResponse = zod.object({
   "generalContext": zod.string().nullish(),
   "arrivalRoutine": zod.string().nullish(),
   "defaultDeviceMode": zod.enum(['off', 'on']),
-  "defaultDuration": zod.number().min(1).max(updateClassResponseDefaultDurationMax).multipleOf(updateClassResponseDefaultDurationMultipleOf),
+  "defaultDuration": zod.number().min(1).multipleOf(updateClassResponseDefaultDurationMultipleOf),
   "color": zod.string().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -406,7 +399,6 @@ export const generateActivityBodyGoalMax = 1000;
 
 export const generateActivityBodyChipIdsMax = 20;
 
-export const generateActivityBodyDurationMinutesMax = 120;
 export const generateActivityBodyDurationMinutesMultipleOf = 1;
 
 export const generateActivityBodyPresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -430,7 +422,7 @@ export const GenerateActivityBody = zod.object({
   "chipIds": zod.array(zod.string()).max(generateActivityBodyChipIdsMax),
   "deviceMode": zod.enum(['off', 'on']),
   "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
-  "durationMinutes": zod.number().min(1).max(generateActivityBodyDurationMinutesMax).multipleOf(generateActivityBodyDurationMinutesMultipleOf),
+  "durationMinutes": zod.number().min(1).multipleOf(generateActivityBodyDurationMinutesMultipleOf),
   "activityStyle": zod.union([zod.enum(['Curiosity Hook', 'Retrieval Practice', 'Explain / Reason', 'Observe & Notice', 'Draw / Sketch', 'Predict', 'Compare / Contrast', 'Evaluate / Critique', 'Quick Write', 'Apply', 'Reflect']).describe('Supported activity approaches. Auto is a client-side convenience and is sent as null to request generation without a preference.'),zod.null()]).optional(),
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
@@ -449,7 +441,6 @@ export const GenerateActivityBody = zod.object({
   "surprise": zod.boolean()
 })
 
-export const generateActivityResponseDurationMinutesMax = 120;
 export const generateActivityResponseDurationMinutesMultipleOf = 1;
 
 export const generateActivityResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -464,7 +455,7 @@ export const GenerateActivityResponse = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
-  "durationMinutes": zod.number().min(1).max(generateActivityResponseDurationMinutesMax).multipleOf(generateActivityResponseDurationMinutesMultipleOf),
+  "durationMinutes": zod.number().min(1).multipleOf(generateActivityResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
   "arrivalInstructions": zod.string().nullish(),
@@ -561,7 +552,6 @@ export const ListActivitiesQueryParams = zod.object({
   "classId": zod.coerce.string().optional()
 })
 
-export const listActivitiesResponseDurationMinutesMax = 120;
 export const listActivitiesResponseDurationMinutesMultipleOf = 1;
 
 export const listActivitiesResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -576,7 +566,7 @@ export const ListActivitiesResponseItem = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
-  "durationMinutes": zod.number().min(1).max(listActivitiesResponseDurationMinutesMax).multipleOf(listActivitiesResponseDurationMinutesMultipleOf),
+  "durationMinutes": zod.number().min(1).multipleOf(listActivitiesResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
   "arrivalInstructions": zod.string().nullish(),
@@ -615,7 +605,6 @@ export const ListActivitiesResponse = zod.array(ListActivitiesResponseItem)
 /**
  * @summary Create an activity
  */
-export const createActivityBodyDurationMinutesMax = 120;
 export const createActivityBodyDurationMinutesMultipleOf = 1;
 
 export const createActivityBodyPresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -629,7 +618,7 @@ export const CreateActivityBody = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()).optional(),
-  "durationMinutes": zod.number().min(1).max(createActivityBodyDurationMinutesMax).multipleOf(createActivityBodyDurationMinutesMultipleOf),
+  "durationMinutes": zod.number().min(1).multipleOf(createActivityBodyDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
   "arrivalInstructions": zod.string().nullish(),
@@ -660,7 +649,6 @@ export const CreateActivityBody = zod.object({
   "favorite": zod.boolean().optional()
 })
 
-export const createActivityResponseDurationMinutesMax = 120;
 export const createActivityResponseDurationMinutesMultipleOf = 1;
 
 export const createActivityResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -675,7 +663,7 @@ export const CreateActivityResponse = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
-  "durationMinutes": zod.number().min(1).max(createActivityResponseDurationMinutesMax).multipleOf(createActivityResponseDurationMinutesMultipleOf),
+  "durationMinutes": zod.number().min(1).multipleOf(createActivityResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
   "arrivalInstructions": zod.string().nullish(),
@@ -717,7 +705,6 @@ export const GetActivityParams = zod.object({
   "activityId": zod.coerce.string()
 })
 
-export const getActivityResponseDurationMinutesMax = 120;
 export const getActivityResponseDurationMinutesMultipleOf = 1;
 
 export const getActivityResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -732,7 +719,7 @@ export const GetActivityResponse = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
-  "durationMinutes": zod.number().min(1).max(getActivityResponseDurationMinutesMax).multipleOf(getActivityResponseDurationMinutesMultipleOf),
+  "durationMinutes": zod.number().min(1).multipleOf(getActivityResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
   "arrivalInstructions": zod.string().nullish(),
@@ -775,7 +762,6 @@ export const UpdateActivityParams = zod.object({
   "activityId": zod.coerce.string()
 })
 
-export const updateActivityBodyDurationMinutesMax = 120;
 export const updateActivityBodyDurationMinutesMultipleOf = 1;
 
 export const updateActivityBodyPresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -788,7 +774,7 @@ export const UpdateActivityBody = zod.object({
   "title": zod.string().optional(),
   "task": zod.string().optional(),
   "prompts": zod.array(zod.string()).optional(),
-  "durationMinutes": zod.number().min(1).max(updateActivityBodyDurationMinutesMax).multipleOf(updateActivityBodyDurationMinutesMultipleOf).optional(),
+  "durationMinutes": zod.number().min(1).multipleOf(updateActivityBodyDurationMinutesMultipleOf).optional(),
   "deviceMode": zod.enum(['off', 'on']).optional(),
   "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
   "arrivalInstructions": zod.string().nullish(),
@@ -819,7 +805,6 @@ export const UpdateActivityBody = zod.object({
   "favorite": zod.boolean().optional()
 })
 
-export const updateActivityResponseDurationMinutesMax = 120;
 export const updateActivityResponseDurationMinutesMultipleOf = 1;
 
 export const updateActivityResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -834,7 +819,7 @@ export const UpdateActivityResponse = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
-  "durationMinutes": zod.number().min(1).max(updateActivityResponseDurationMinutesMax).multipleOf(updateActivityResponseDurationMinutesMultipleOf),
+  "durationMinutes": zod.number().min(1).multipleOf(updateActivityResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
   "arrivalInstructions": zod.string().nullish(),
@@ -896,7 +881,6 @@ export const DuplicateActivityParams = zod.object({
   "activityId": zod.coerce.string()
 })
 
-export const duplicateActivityResponseDurationMinutesMax = 120;
 export const duplicateActivityResponseDurationMinutesMultipleOf = 1;
 
 export const duplicateActivityResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -911,7 +895,7 @@ export const DuplicateActivityResponse = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
-  "durationMinutes": zod.number().min(1).max(duplicateActivityResponseDurationMinutesMax).multipleOf(duplicateActivityResponseDurationMinutesMultipleOf),
+  "durationMinutes": zod.number().min(1).multipleOf(duplicateActivityResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
   "arrivalInstructions": zod.string().nullish(),
@@ -957,7 +941,6 @@ export const SetActivityFavoriteBody = zod.object({
   "favorite": zod.boolean()
 })
 
-export const setActivityFavoriteResponseDurationMinutesMax = 120;
 export const setActivityFavoriteResponseDurationMinutesMultipleOf = 1;
 
 export const setActivityFavoriteResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -972,7 +955,7 @@ export const SetActivityFavoriteResponse = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
-  "durationMinutes": zod.number().min(1).max(setActivityFavoriteResponseDurationMinutesMax).multipleOf(setActivityFavoriteResponseDurationMinutesMultipleOf),
+  "durationMinutes": zod.number().min(1).multipleOf(setActivityFavoriteResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
   "arrivalInstructions": zod.string().nullish(),

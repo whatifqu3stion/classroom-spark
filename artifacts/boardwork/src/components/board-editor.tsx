@@ -214,12 +214,12 @@ export function BoardEditor({
                   value={String(draft.durationMinutes)}
                   onChange={(val) => {
                     if (!/^\d+$/.test(val)) {
-                      setDurationError("Enter a whole number from 1 to 120 minutes.");
+                      setDurationError("Enter a whole number of minutes.");
                       return;
                     }
                     const num = Number(val);
-                    if (num < 1 || num > 120) {
-                      setDurationError("Enter a whole number from 1 to 120 minutes.");
+                    if (!Number.isSafeInteger(num) || num < 1) {
+                      setDurationError("Enter a whole number of minutes.");
                       return;
                     }
                     setDurationError(null);

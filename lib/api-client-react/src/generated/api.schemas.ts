@@ -35,7 +35,6 @@ export const TechnologyMode = {
 
 /**
  * @minimum 1
- * @maximum 120
  */
 export type Duration = number;
 

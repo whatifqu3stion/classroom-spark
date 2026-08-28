@@ -8,6 +8,5 @@
 
 /**
  * @minimum 1
- * @maximum 120
  */
 export type Duration = number;

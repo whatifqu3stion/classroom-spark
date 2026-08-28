@@ -187,7 +187,7 @@ describe("PresentationCanvas timer visibility", () => {
             kind: "curated",
             themeId: "not-a-theme",
             accentId: "not-an-accent",
-            typographyId: "not-a-typography",
+            typographyId: "clear",
           },
         }}
       />,
@@ -195,6 +195,57 @@ describe("PresentationCanvas timer visibility", () => {
 
     expect(surface.style.getPropertyValue("--presentation-bg")).toBe("#FDFCF8");
     expect(surface.style.getPropertyValue("--presentation-accent")).toBe("#334155");
+    expect(surface.style.getPropertyValue("--presentation-font-heading")).toContain("'Inter'");
+    expect(surface.style.getPropertyValue("--presentation-font-body")).toContain("'Inter'");
+  });
+
+  it("keeps the fixed pairing identical in editor preview and PNG export", () => {
+    const { rerender } = render(
+      <PresentationCanvas
+        activity={{
+          ...activity,
+          presentationTheme: {
+            kind: "curated",
+            themeId: "paper-v2",
+            typographyId: "editorial",
+          },
+        }}
+        editorPreview
+      />,
+    );
+
+    const preview = screen.getByTestId("presentation-preview-surface");
+    const previewTypography = {
+      heading: preview.style.getPropertyValue("--presentation-font-heading"),
+      body: preview.style.getPropertyValue("--presentation-font-body"),
+      headingWeight: preview.style.getPropertyValue("--presentation-heading-weight"),
+      bodyWeight: preview.style.getPropertyValue("--presentation-body-weight"),
+    };
+
+    rerender(
+      <PresentationCanvas
+        activity={{
+          ...activity,
+          presentationTheme: {
+            kind: "curated",
+            themeId: "paper-v2",
+            typographyId: "editorial",
+          },
+        }}
+        exportLayout
+      />,
+    );
+
+    const exportSurface = document.querySelector(
+      ".presentation-surface--export",
+    ) as HTMLElement;
+    expect(exportSurface).toBeInTheDocument();
+    expect({
+      heading: exportSurface.style.getPropertyValue("--presentation-font-heading"),
+      body: exportSurface.style.getPropertyValue("--presentation-font-body"),
+      headingWeight: exportSurface.style.getPropertyValue("--presentation-heading-weight"),
+      bodyWeight: exportSurface.style.getPropertyValue("--presentation-body-weight"),
+    }).toEqual(previewTypography);
   });
 
   it("uses the shared student structure without timer state in editor preview mode", () => {

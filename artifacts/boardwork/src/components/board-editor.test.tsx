@@ -50,7 +50,7 @@ describe("BoardEditor presentation visual disclosure", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("updates the student preview immediately from unsaved content and typography", () => {
+  it("updates the student preview immediately from unsaved content with fixed typography", () => {
     function StatefulEditor() {
       const [currentDraft, setCurrentDraft] = useState<ActivityDraft>(draft);
 
@@ -77,77 +77,37 @@ describe("BoardEditor presentation visual disclosure", () => {
     );
 
     fireEvent.click(screen.getByTestId("button-toggle-presentation-visual"));
-    fireEvent.click(screen.getByTestId("typography-option-clear"));
 
     const previewSurface = screen.getByTestId("presentation-preview-surface");
     expect(
       previewSurface.style.getPropertyValue("--presentation-font-heading"),
-    ).toContain("Atkinson Hyperlegible");
+    ).toContain("Inter");
     expect(
       previewSurface.style.getPropertyValue("--presentation-font-body"),
-    ).toContain("Atkinson Hyperlegible");
+    ).toContain("Inter");
   });
 
-  it("keeps the typography picker selection in sync across repeated changes", () => {
-    function StatefulEditor() {
-      const [currentDraft, setCurrentDraft] = useState<ActivityDraft>(draft);
-
-      return (
-        <BoardEditor
-          draft={currentDraft}
-          onChange={(updates) =>
-            setCurrentDraft((previous) => ({ ...previous, ...updates }))
-          }
-        />
-      );
-    }
-
-    render(<StatefulEditor />);
-    fireEvent.click(screen.getByTestId("button-toggle-presentation-visual"));
-
-    for (const typographyId of ["friendly", "editorial", "structured", "clear", "boardwork"]) {
-      fireEvent.click(screen.getByTestId(`typography-option-${typographyId}`));
-
-      expect(screen.getByTestId(`typography-option-${typographyId}`)).toHaveAttribute(
-        "aria-pressed",
-        "true",
-      );
-      for (const otherTypographyId of [
-        "friendly",
-        "editorial",
-        "structured",
-        "clear",
-        "boardwork",
-      ]) {
-        if (otherTypographyId === typographyId) continue;
-        expect(
-          screen.getByTestId(`typography-option-${otherTypographyId}`),
-        ).toHaveAttribute("aria-pressed", "false");
-      }
-    }
-  });
-
-  it("keeps invalid duration text out of the draft and blocks presenting", () => {
+  it("keeps invalid duration text out of the draft while allowing custom lengths", () => {
     const onChange = vi.fn();
     render(<BoardEditor draft={draft} onChange={onChange} />);
 
     const durationEditor = screen.getByRole("textbox", { name: "7" });
-    durationEditor.textContent = "121";
+    durationEditor.textContent = "0";
     fireEvent.input(durationEditor);
 
     expect(screen.getByTestId("duration-error")).toHaveTextContent(
-      "Enter a whole number from 1 to 120 minutes.",
+      "Enter a whole number of minutes.",
     );
     expect(onChange).not.toHaveBeenCalled();
     expect(screen.getByTestId("button-present-disabled")).toBeInTheDocument();
 
-    durationEditor.textContent = "0";
+    durationEditor.textContent = "not-a-number";
     fireEvent.input(durationEditor);
     expect(onChange).not.toHaveBeenCalled();
 
-    durationEditor.textContent = "120";
+    durationEditor.textContent = "121";
     fireEvent.input(durationEditor);
-    expect(onChange).toHaveBeenCalledWith({ durationMinutes: 120 });
+    expect(onChange).toHaveBeenCalledWith({ durationMinutes: 121 });
     expect(screen.queryByTestId("duration-error")).not.toBeInTheDocument();
   });
 

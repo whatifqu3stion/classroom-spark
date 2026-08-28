@@ -22,7 +22,8 @@ describe("PresentationThemePicker", () => {
     expect(screen.getByTestId("theme-swatch-color-boardwork")).toHaveStyle({
       backgroundColor: "#FDFCF8",
     });
-    expect(screen.getAllByText("Aa")).toHaveLength(5);
+    expect(screen.queryByText("Typography")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("presentation-typography")).not.toBeInTheDocument();
   });
 
   it("shows the limited surface catalog and restrained accent catalog", () => {
@@ -47,18 +48,7 @@ describe("PresentationThemePicker", () => {
       "h-5",
       "w-5",
     );
-    for (const typographyId of [
-      "boardwork",
-      "editorial",
-      "structured",
-      "clear",
-      "friendly",
-    ]) {
-      expect(screen.getByTestId(`typography-option-${typographyId}`)).toBeInTheDocument();
-      expect(screen.getByTestId(`typography-preview-${typographyId}`)).toBeInTheDocument();
-    }
-    expect(screen.getByRole("button", { name: "Use Classic typography" })).not.toHaveAttribute("title");
-    expect(screen.getByRole("button", { name: "About presentation typography" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /typography/i })).not.toBeInTheDocument();
   });
 
   it("uses the selected surface mode for accent names without a summary pill", () => {
@@ -82,11 +72,11 @@ describe("PresentationThemePicker", () => {
       </TooltipProvider>,
     );
 
-    fireEvent.focus(screen.getByRole("button", { name: "About presentation typography" }));
+    fireEvent.focus(screen.getByRole("button", { name: "About presentation colors" }));
 
     await waitFor(() => {
       expect(screen.getByRole("tooltip")).toHaveTextContent(
-        "This pairing changes the student board, Present view, and PNG export—not the teacher workspace.",
+        "Choose the background first, then use accents for small signals such as links, progress, and emphasis.",
       );
     });
   });
@@ -105,11 +95,10 @@ describe("PresentationThemePicker", () => {
       kind: "curated",
       themeId: "midnight",
       accentId: "blue",
-      typographyId: "boardwork",
     });
   });
 
-  it("changes typography without changing the selected surface or accent", () => {
+  it("changes accents without adding a typography preference", () => {
     const onChange = vi.fn();
     render(
       <PresentationThemePicker
@@ -118,13 +107,12 @@ describe("PresentationThemePicker", () => {
       />,
     );
 
-    fireEvent.click(screen.getByTestId("typography-option-clear"));
+    fireEvent.click(screen.getByTestId("accent-option-blue"));
 
     expect(onChange).toHaveBeenLastCalledWith({
       kind: "curated",
       themeId: "paper-v2",
-      accentId: "sage",
-      typographyId: "clear",
+      accentId: "blue",
     });
   });
 

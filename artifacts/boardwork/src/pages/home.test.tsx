@@ -199,7 +199,7 @@ describe("Home presentation defaults", () => {
     fireEvent.click(screen.getByTestId("button-blank"));
 
     expect(screen.getByTestId("board-editor-draft")).toHaveTextContent(
-      '"presentationTheme":{"kind":"curated","themeId":"paper-v2","accentId":"sage","typographyId":"clear"}',
+      '"presentationTheme":{"kind":"curated","themeId":"paper-v2","accentId":"sage"}',
     );
   });
 
@@ -224,7 +224,6 @@ describe("Home presentation defaults", () => {
             kind: "curated",
             themeId: "paper-v2",
             accentId: "sage",
-            typographyId: "clear",
           },
         }),
       }),
@@ -362,7 +361,7 @@ describe("Home presentation defaults", () => {
     );
   });
 
-  it("uses the dial selection for generated and blank boards", async () => {
+  it("uses the original preset selection for generated boards", async () => {
     mocks.generateActivity.mockResolvedValue({
       id: "activity-duration",
       classId: "class-1",
@@ -375,7 +374,7 @@ describe("Home presentation defaults", () => {
     });
 
     render(<Home />);
-    fireEvent.click(screen.getByTestId("duration-quick-5"));
+    fireEvent.click(screen.getByTestId("segment-5"));
     fireEvent.click(screen.getByTestId("button-generate"));
 
     await waitFor(() =>
@@ -385,13 +384,20 @@ describe("Home presentation defaults", () => {
     );
   });
 
-  it("carries a changed duration into a blank board draft", () => {
+  it("keeps the original 357 presets and accepts an unlimited custom duration", () => {
     render(<Home />);
-    fireEvent.click(screen.getByTestId("duration-quick-10"));
+    expect(screen.getByTestId("segment-3")).toBeInTheDocument();
+    expect(screen.getByTestId("segment-5")).toBeInTheDocument();
+    expect(screen.getByTestId("segment-7")).toBeInTheDocument();
+    expect(screen.queryByTestId("segment-10")).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByTestId("input-custom-activity-duration"), {
+      target: { value: "121" },
+    });
     fireEvent.click(screen.getByTestId("button-blank"));
 
     expect(screen.getByTestId("board-editor-draft")).toHaveTextContent(
-      '"durationMinutes":10',
+      '"durationMinutes":121',
     );
   });
 

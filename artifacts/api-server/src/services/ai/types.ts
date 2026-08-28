@@ -8,7 +8,7 @@ export const generatedActivitySchema = z.object({
   title: z.string().trim().min(1).max(80),
   task: z.string().trim().min(1).max(500),
   prompts: z.array(z.string().trim().min(1).max(160)).max(3),
-  durationMinutes: z.number().int().min(1).max(120),
+  durationMinutes: z.number().int().min(1),
   deviceMode: z.enum(["off", "on"]),
   materials: z.array(z.string().trim().min(1).max(80)).max(5),
   resourceUrl: z.string().trim().max(2000).nullable(),

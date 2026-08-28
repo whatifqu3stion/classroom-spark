@@ -40,6 +40,18 @@ presentation content.
 heading/body variables. Any future font-delivery change should verify both the
 normal UI baseline and the presentation/export fallback behavior independently.
 
+Presentation surfaces use one fixed original pairing: Inter 700 for headings and
+Inter 500 for body copy, with explicit script-capable and system fallbacks.
+Legacy `typographyId` values remain accepted in stored/API data but are ignored
+by presentation resolution and new local preferences.
+
+**Why:** Experimental pairings were not reliably distinguishable across editor
+preview, Present, and PNG export, so a single predictable treatment is safer
+for classroom use while preserving backward-compatible data shapes.
+
+**How to apply:** Request only Inter 500/700 for presentation export; retain
+other Inter weights only when needed by the teacher application shell.
+
 Formula-aware text wrappers must inherit the surrounding presentation font;
 apply the math fallback only to spans that actually contain parsed formula
 notation.

@@ -86,10 +86,6 @@ const SANS_SYSTEM_FALLBACK =
   "'Segoe UI', 'Helvetica Neue', Arial, system-ui, sans-serif";
 const sansFamily = (family: string) =>
   `${family}, ${SCRIPT_FONT_FALLBACK}, ${SANS_SYSTEM_FALLBACK}`;
-const serifFamily = (family: string) =>
-  `${family}, Georgia, 'Noto Serif', ${SCRIPT_FONT_FALLBACK}, 'Times New Roman', serif`;
-const monoFamily = (family: string) =>
-  `${family}, 'Noto Sans Mono', ${SCRIPT_FONT_FALLBACK}, ui-monospace, monospace`;
 
 // Background surfaces are intentionally restrained. Accent colors are a
 // secondary semantic system: they mark links, progress, controls, and small
@@ -205,6 +201,8 @@ export const presentationSurfaceThemes = [
 ] as const satisfies readonly PresentationSurfaceTheme[];
 
 export const presentationTypographySystems = [
+  // This is the original Boardwork presentation treatment. Keep the
+  // heading/body pairing fixed so preview, Present, and PNG export agree.
   {
     id: "boardwork",
     heading: { family: sansFamily("'Inter'"), weight: 700 },
@@ -212,90 +210,13 @@ export const presentationTypographySystems = [
     headingLetterSpacing: "-0.045em",
     headingScale: 1,
   },
-  {
-    id: "editorial",
-    heading: { family: serifFamily("'DM Serif Display'"), weight: 400 },
-    body: { family: sansFamily("'DM Sans'"), weight: 500 },
-    headingLetterSpacing: "-0.025em",
-    headingScale: 1.06,
-  },
-  {
-    id: "structured",
-    heading: { family: serifFamily("'IBM Plex Serif'"), weight: 600 },
-    body: { family: sansFamily("'IBM Plex Sans'"), weight: 500 },
-    headingLetterSpacing: "-0.035em",
-    headingScale: 1.02,
-  },
-  {
-    id: "clear",
-    heading: { family: sansFamily("'Atkinson Hyperlegible'"), weight: 700 },
-    body: { family: sansFamily("'Atkinson Hyperlegible'"), weight: 500 },
-    headingLetterSpacing: "-0.025em",
-    headingScale: 1,
-  },
-  {
-    id: "friendly",
-    heading: { family: sansFamily("'DM Sans'"), weight: 500 },
-    body: { family: sansFamily("'Atkinson Hyperlegible'"), weight: 500 },
-    headingLetterSpacing: "-0.02em",
-    headingScale: 1.04,
-  },
-  {
-    id: "ocean",
-    heading: { family: sansFamily("'Space Grotesk'"), weight: 700 },
-    body: { family: sansFamily("'Inter'"), weight: 500 },
-    headingLetterSpacing: "-0.04em",
-    headingScale: 1,
-  },
-  {
-    id: "ink",
-    heading: { family: monoFamily("'IBM Plex Mono'"), weight: 600 },
-    body: { family: sansFamily("'IBM Plex Sans'"), weight: 500 },
-    headingLetterSpacing: "-0.035em",
-    headingScale: 1,
-  },
-  {
-    id: "sage",
-    heading: { family: serifFamily("'Fraunces'"), weight: 700 },
-    body: { family: sansFamily("'Atkinson Hyperlegible'"), weight: 500 },
-    headingLetterSpacing: "-0.03em",
-    headingScale: 1,
-  },
-  {
-    id: "clay",
-    heading: { family: sansFamily("'DM Sans'"), weight: 700 },
-    body: { family: sansFamily("'DM Sans'"), weight: 500 },
-    headingLetterSpacing: "-0.045em",
-    headingScale: 1,
-  },
-  {
-    id: "plum",
-    heading: { family: serifFamily("'Playfair Display'"), weight: 700 },
-    body: { family: sansFamily("'Source Sans 3'"), weight: 500 },
-    headingLetterSpacing: "-0.035em",
-    headingScale: 1,
-  },
-  {
-    id: "sunlit",
-    heading: { family: serifFamily("'Lora'"), weight: 700 },
-    body: { family: sansFamily("'Atkinson Hyperlegible'"), weight: 500 },
-    headingLetterSpacing: "-0.025em",
-    headingScale: 1,
-  },
-  {
-    id: "teal",
-    heading: { family: sansFamily("'Plus Jakarta Sans'"), weight: 700 },
-    body: { family: sansFamily("'Plus Jakarta Sans'"), weight: 500 },
-    headingLetterSpacing: "-0.04em",
-    headingScale: 1,
-  },
 ] as const satisfies readonly PresentationTypography[];
 
 const appearancePresetDefinitions = [
   { surfaceId: "boardwork", typographyId: "boardwork" },
-  { surfaceId: "paper-v2", typographyId: "editorial" },
-  { surfaceId: "charcoal-v2", typographyId: "structured" },
-  { surfaceId: "midnight", typographyId: "clear" },
+  { surfaceId: "paper-v2", typographyId: "boardwork" },
+  { surfaceId: "charcoal-v2", typographyId: "boardwork" },
+  { surfaceId: "midnight", typographyId: "boardwork" },
 ] as const;
 
 const surfaceThemeById = new Map<string, PresentationSurfaceTheme>(
@@ -589,16 +510,6 @@ export const RECOMMENDED_PRESENTATION_THEME_IDS = presentationSurfaceThemes.map(
   (theme) => theme.id,
 ) as readonly string[];
 
-const legacyTypographyById: Record<string, string> = {
-  ink: "ink",
-  ocean: "ocean",
-  sage: "sage",
-  clay: "clay",
-  plum: "plum",
-  sunlit: "sunlit",
-  teal: "teal",
-};
-
 export function getCuratedPresentationTheme(
   themeId: string | null | undefined,
   accentId?: string | null,
@@ -624,9 +535,7 @@ export function getCuratedPresentationTheme(
     (legacyTheme
       ? {
           ...legacyTheme,
-          typography:
-            typographyById.get(legacyTypographyById[legacyTheme.id] ?? "boardwork") ??
-            boardworkTypography,
+          typography: boardworkTypography,
         }
       : undefined) ??
     curatedPresentationThemes.find(
@@ -778,30 +687,9 @@ export function getPresentationThemeAccentForeground(accent: string): string {
 export function getPresentationThemeTypography(
   selection: PresentationThemeChoice | null | undefined,
 ): PresentationTypography {
-  const resolvedCuratedThemeId =
-    selection?.kind === "curated"
-      ? LEGACY_THEME_ALIASES[selection.themeId ?? ""] ??
-        selection.themeId ??
-        DEFAULT_PRESENTATION_THEME_ID
-      : null;
-  const isKnownCuratedTheme =
-    selection?.kind === "curated" &&
-    (surfaceThemeById.has(resolvedCuratedThemeId!) ||
-      legacyPresentationThemes.some((theme) => theme.id === selection.themeId));
-  if (
-    selection?.typographyId &&
-    typographyById.has(selection.typographyId) &&
-    (selection.kind === "custom" || isKnownCuratedTheme)
-  ) {
-    return typographyById.get(selection.typographyId)!;
-  }
-  const sourceThemeId =
-    selection?.kind === "custom"
-      ? selection.sourceThemeId
-      : selection?.kind === "curated"
-        ? selection.themeId
-        : DEFAULT_PRESENTATION_THEME_ID;
-  return getCuratedPresentationTheme(sourceThemeId).typography;
+  // typographyId remains accepted in saved/API data for compatibility, but
+  // experimental choices no longer alter any presentation surface.
+  return boardworkTypography;
 }
 
 export function getPresentationThemeAccentId(

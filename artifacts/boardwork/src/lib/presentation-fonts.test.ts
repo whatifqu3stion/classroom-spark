@@ -19,14 +19,7 @@ describe("presentation font handling", () => {
       backgroundColor: "#ffffff",
     });
     expect(options).not.toHaveProperty("skipFonts");
-    expect(PRESENTATION_FONT_FAMILIES).toEqual([
-      "Inter",
-      "DM Sans",
-      "DM Serif Display",
-      "Atkinson Hyperlegible",
-      "IBM Plex Sans",
-      "IBM Plex Serif",
-    ]);
+    expect(PRESENTATION_FONT_FAMILIES).toEqual(["Inter"]);
   });
 
   it("waits for requested script-capable fonts before capture", async () => {
@@ -37,11 +30,11 @@ describe("presentation font handling", () => {
     await waitForPresentationFonts();
 
     expect(load).toHaveBeenCalled();
-    expect(load).toHaveBeenCalledWith('400 1em "Inter"');
     expect(load).toHaveBeenCalledWith('500 1em "Inter"');
-    expect(load).toHaveBeenCalledWith('600 1em "Inter"');
     expect(load).toHaveBeenCalledWith('700 1em "Inter"');
-    expect(load).toHaveBeenCalledWith('600 1em "IBM Plex Serif"');
+    expect(load).not.toHaveBeenCalledWith('400 1em "Inter"');
+    expect(load).not.toHaveBeenCalledWith('600 1em "Inter"');
+    expect(load).not.toHaveBeenCalledWith('500 1em "DM Sans"');
     expect(load).not.toHaveBeenCalledWith('400 1em "Noto Sans Arabic"');
     vi.unstubAllGlobals();
   });
@@ -61,5 +54,7 @@ describe("presentation font handling", () => {
 
     expect(stylesheet).not.toMatch(/fonts\.googleapis\.com|fonts\.gstatic\.com/);
     expect(stylesheet).toContain('src: url("/fonts/inter-400.ttf")');
+    expect(stylesheet).not.toContain("DM Sans");
+    expect(stylesheet).not.toContain("Atkinson Hyperlegible");
   });
 });

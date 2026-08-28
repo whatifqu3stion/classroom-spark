@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/select";
 import { ChipGroup } from "@/components/chip-group";
 import { SegmentedControl } from "@/components/ui/segmented-control";
-import { DurationDial } from "@/components/ui/duration-dial";
 import { BoardEditor } from "@/components/board-editor";
 import { getLastUsedPresentationTheme } from "@/lib/presentation-theme";
 import { ClassFormDialog } from "@/components/class-form-dialog";
@@ -71,6 +70,7 @@ const FAST_ACTIVITY_STYLES = [
   "Quick Write",
   "Apply",
 ] as const;
+const PRESET_DURATIONS = [3, 5, 7] as const;
 type WorkMode = "quiet" | "think_together" | "discussion" | "teacher_check";
 
 const getGenerationErrorMessage = (error: unknown) => {
@@ -208,6 +208,7 @@ export default function Home() {
   const [deviceMode, setDeviceMode] = useState<DeviceMode>("off");
   const [technologyMode, setTechnologyMode] = useState<TechnologyMode>("no_computer");
   const [duration, setDuration] = useState<Duration>(7);
+  const [customDurationInput, setCustomDurationInput] = useState("");
   const [resourceUrl, setResourceUrl] = useState("");
   const [resourceNote, setResourceNote] = useState("");
   const [activityStyle, setActivityStyle] = useState<ActivityStyleValue>("Auto");
@@ -219,14 +220,27 @@ export default function Home() {
     activityStyleCatalog.find((style) => style.value === activityStyle) ??
     activityStyleCatalog[0];
 
+  const isCustomDuration = !PRESET_DURATIONS.includes(
+    duration as (typeof PRESET_DURATIONS)[number],
+  );
   const durationError =
-    !Number.isInteger(duration) || duration < 1 || duration > 120
-      ? "Choose a whole number from 1 to 120 minutes."
-      : null;
-  const durationCompatibilityMessage =
-    Number.isInteger(duration) && duration > 60 && duration <= 120
-      ? `This class default is ${duration} minutes. It is preserved for compatibility; choose the dial to use a new 1–60 minute value.`
-      : null;
+    !Number.isSafeInteger(duration) || duration < 1
+      ? "Enter a whole number of minutes."
+      : isCustomDuration &&
+          (!/^\d+$/.test(customDurationInput) ||
+            !Number.isSafeInteger(Number(customDurationInput)) ||
+            Number(customDurationInput) < 1)
+        ? "Enter a whole number of minutes."
+        : customDurationInput &&
+            (!/^\d+$/.test(customDurationInput) ||
+              !Number.isSafeInteger(Number(customDurationInput)) ||
+              Number(customDurationInput) < 1)
+          ? "Enter a whole number of minutes."
+          : null;
+
+  useEffect(() => {
+    setCustomDurationInput(isCustomDuration ? String(duration) : "");
+  }, [duration, isCustomDuration]);
 
   const [classDialogOpen, setClassDialogOpen] = useState(false);
   const [editingClassId, setEditingClassId] = useState<string | null>(null);
@@ -953,14 +967,46 @@ export default function Home() {
                   />
                 </div>
                   <div className="space-y-2 sm:max-w-[360px]">
-                   <Label htmlFor="duration-dial-value">Duration (min)</Label>
-                   <DurationDial
-                     value={duration}
-                     onChange={setDuration}
-                     compatibilityMessage={durationCompatibilityMessage}
-                     errorMessage={durationError}
-                   />
-                 </div>
+                    <Label htmlFor="input-custom-activity-duration">Duration (min)</Label>
+                    <div className="flex min-w-0 items-center gap-2">
+                      <SegmentedControl<Duration>
+                        options={PRESET_DURATIONS.map((value) => ({
+                          label: String(value),
+                          value,
+                        }))}
+                        value={duration}
+                        onChange={setDuration}
+                        className="min-w-0 flex-1 grid-cols-3"
+                      />
+                      <Input
+                        id="input-custom-activity-duration"
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="Custom"
+                        value={customDurationInput}
+                        onChange={(event) => {
+                          const value = event.target.value;
+                          setCustomDurationInput(value);
+                          if (
+                            /^\d+$/.test(value) &&
+                            Number.isSafeInteger(Number(value)) &&
+                            Number(value) >= 1
+                          ) {
+                            setDuration(Number(value) as Duration);
+                          }
+                        }}
+                        className="w-24 shrink-0"
+                        aria-label="Custom duration in minutes"
+                        aria-invalid={Boolean(durationError)}
+                        data-testid="input-custom-activity-duration"
+                      />
+                    </div>
+                    {durationError && (
+                      <p className="text-xs text-destructive" role="alert" data-testid="custom-duration-error">
+                        {durationError}
+                      </p>
+                    )}
+                  </div>
               </div>
                {technologyMode !== "no_computer" && (
                  <div className="col-span-2 space-y-4 border-t pt-3">

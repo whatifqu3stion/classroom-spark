@@ -1,39 +1,23 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import {
   getCuratedPresentationTheme,
   getPresentationThemeTypography,
   presentationTypographySystems,
 } from "@workspace/api-zod";
+import {
+  getLastUsedPresentationTheme,
+  rememberPresentationTheme,
+} from "./presentation-theme";
+
+beforeEach(() => {
+  localStorage.clear();
+});
 
 describe("presentation typography systems", () => {
-  it("offers distinct teacher-facing personalities on a shared readability baseline", () => {
+  it("exposes only the original Boardwork presentation pairing", () => {
     expect(presentationTypographySystems.map(({ id }) => id)).toEqual([
       "boardwork",
-      "editorial",
-      "structured",
-      "clear",
-      "friendly",
-      "ocean",
-      "ink",
-      "sage",
-      "clay",
-      "plum",
-      "sunlit",
-      "teal",
     ]);
-
-    const exposed = presentationTypographySystems.filter((typography) =>
-      ["boardwork", "editorial", "structured", "clear", "friendly"].includes(
-        typography.id,
-      ),
-    );
-    expect(new Set(exposed.map(({ heading }) => heading.family)).size).toBeGreaterThan(2);
-    expect(exposed.every(({ headingScale }) => headingScale >= 1 && headingScale <= 1.1)).toBe(
-      true,
-    );
-    expect(exposed.every(({ headingLetterSpacing }) => headingLetterSpacing.endsWith("em"))).toBe(
-      true,
-    );
   });
 
   it("keeps Boardwork as the stable default system", () => {
@@ -46,25 +30,14 @@ describe("presentation typography systems", () => {
     expect(typography.headingScale).toBe(1);
   });
 
-  it("maps exposed appearances to matched semantic systems", () => {
+  it("uses the fixed pairing for every current appearance", () => {
     const editorial = getCuratedPresentationTheme("paper-v2").typography;
     const structured = getCuratedPresentationTheme("charcoal-v2").typography;
     const clear = getCuratedPresentationTheme("midnight").typography;
 
-    expect(editorial.heading.family).toContain("'DM Serif Display'");
-    expect(editorial.body.family).toContain("'DM Sans'");
-    expect(structured.heading.family).toContain("'IBM Plex Serif'");
-    expect(structured.body.family).toContain("'IBM Plex Sans'");
-    expect(clear.heading.family).toContain("'Atkinson Hyperlegible'");
-    expect(clear.body.family).toContain("'Atkinson Hyperlegible'");
-
-    const friendly = getPresentationThemeTypography({
-      kind: "curated",
-      themeId: "paper-v2",
-      typographyId: "friendly",
-    });
-    expect(friendly.heading.family).toContain("'DM Sans'");
-    expect(friendly.body.family).toContain("'Atkinson Hyperlegible'");
+    for (const typography of [editorial, structured, clear]) {
+      expect(typography).toEqual(getCuratedPresentationTheme("boardwork").typography);
+    }
   });
 
   it("includes explicit script and system fallbacks for legacy content", () => {
@@ -75,7 +48,7 @@ describe("presentation typography systems", () => {
     expect(typography.heading.family).toContain("sans-serif");
   });
 
-  it("allows an explicit typography choice without changing the surface", () => {
+  it("ignores legacy typography choices without changing the surface", () => {
     const typography = getPresentationThemeTypography({
       kind: "curated",
       themeId: "paper-v2",
@@ -83,7 +56,9 @@ describe("presentation typography systems", () => {
       typographyId: "clear",
     });
 
-    expect(typography.id).toBe("clear");
+    expect(typography.id).toBe("boardwork");
+    expect(typography.heading.family).toContain("'Inter'");
+    expect(typography.body.family).toContain("'Inter'");
     expect(getCuratedPresentationTheme("paper-v2", "sage").colors.background).toBe(
       "#F3EEE4",
     );
@@ -99,13 +74,46 @@ describe("presentation typography systems", () => {
     expect(typography.id).toBe("boardwork");
   });
 
-  it("keeps an explicit typography choice available for a legacy surface", () => {
+  it("keeps legacy appearance content readable with the fixed pairing", () => {
     expect(
       getPresentationThemeTypography({
         kind: "curated",
         themeId: "ocean",
         typographyId: "clear",
       }).id,
-    ).toBe("clear");
+    ).toBe("boardwork");
+  });
+
+  it("strips an experimental typography choice from restored local preferences", () => {
+    localStorage.setItem(
+      "boardwork:last-presentation-theme",
+      JSON.stringify({
+        kind: "curated",
+        themeId: "paper-v2",
+        accentId: "sage",
+        typographyId: "clear",
+      }),
+    );
+
+    expect(getLastUsedPresentationTheme()).toEqual({
+      kind: "curated",
+      themeId: "paper-v2",
+      accentId: "sage",
+    });
+  });
+
+  it("does not write typography choices to new local preferences", () => {
+    rememberPresentationTheme({
+      kind: "curated",
+      themeId: "paper-v2",
+      accentId: "sage",
+      typographyId: "clear",
+    });
+
+    expect(JSON.parse(localStorage.getItem("boardwork:last-presentation-theme")!)).toEqual({
+      kind: "curated",
+      themeId: "paper-v2",
+      accentId: "sage",
+    });
   });
 });

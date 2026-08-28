@@ -4,13 +4,11 @@ import {
   getPresentationAccentName,
   presentationAccentThemes,
   presentationSurfaceThemes,
-  presentationTypographySystems,
   type PresentationThemeSelection,
 } from "@workspace/api-zod";
 import {
   getThemeAccentId,
   getThemeId,
-  getThemeTypographyId,
   rememberPresentationTheme,
   type BoardworkPresentationTheme,
 } from "@/lib/presentation-theme";
@@ -21,33 +19,6 @@ interface PresentationThemePickerProps {
   value?: BoardworkPresentationTheme | null;
   onChange: (value: PresentationThemeSelection) => void;
 }
-
-const typographyLabels: Record<string, { name: string; description: string }> = {
-  boardwork: {
-    name: "Steady",
-    description: "Crisp Inter headings for everyday lessons.",
-  },
-  editorial: {
-    name: "Classic",
-    description: "Literary serif headings with a warm sans body.",
-  },
-  structured: {
-    name: "Modern",
-    description: "Architectural serif headings with orderly sans text.",
-  },
-  clear: {
-    name: "Clear",
-    description: "Extra-readable type for mixed reading needs.",
-  },
-  friendly: {
-    name: "Friendly",
-    description: "Warm, easygoing headings with highly readable text.",
-  },
-};
-
-const exposedTypographySystems = presentationTypographySystems.filter(
-  (typography) => typographyLabels[typography.id],
-);
 
 function SurfaceSwatch({
   surface,
@@ -137,71 +108,6 @@ function AccentSwatch({
   );
 }
 
-function TypographySwatch({
-  typography,
-  selected,
-  onSelect,
-}: {
-  typography: (typeof exposedTypographySystems)[number];
-  selected: boolean;
-  onSelect: () => void;
-}) {
-  const label = typographyLabels[typography.id];
-
-  return (
-    <button
-      type="button"
-      aria-label={`Use ${label.name} typography`}
-      aria-pressed={selected}
-      onClick={onSelect}
-      className={cn(
-        "relative flex min-w-[8rem] flex-1 items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-w-0",
-        selected
-          ? "border-primary bg-primary/5 ring-1 ring-primary/30"
-          : "border-border hover:bg-muted/50",
-      )}
-      data-testid={`typography-option-${typography.id}`}
-    >
-      <span
-        className="flex h-9 w-10 shrink-0 flex-col items-center justify-center rounded-md border border-border bg-background leading-none text-foreground"
-        aria-hidden="true"
-        data-testid={`typography-preview-${typography.id}`}
-      >
-        <span
-          className="text-sm"
-          style={{
-            fontFamily: typography.heading.family,
-            fontWeight: typography.heading.weight,
-            letterSpacing: typography.headingLetterSpacing,
-          }}
-        >
-          Aa
-        </span>
-        <span
-          className="mt-1 text-[0.52rem]"
-          style={{
-            fontFamily: typography.body.family,
-            fontWeight: typography.body.weight,
-          }}
-        >
-          body
-        </span>
-      </span>
-      <span className="min-w-0">
-        <span className="block truncate text-xs font-medium text-foreground">
-          {label.name}
-        </span>
-        <span className="block text-[0.68rem] leading-snug text-muted-foreground">
-          {label.description}
-        </span>
-      </span>
-      {selected && (
-        <Check className="ml-auto h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
-      )}
-    </button>
-  );
-}
-
 export function PresentationThemePicker({
   value,
   onChange,
@@ -217,23 +123,9 @@ export function PresentationThemePicker({
   );
   const selectedAccentId =
     getThemeAccentId(value) ?? selectedSurface?.defaultAccentId ?? null;
-  const selectedTypographyId = getThemeTypographyId(value);
   const selectSelection = (selection: PresentationThemeSelection) => {
     rememberPresentationTheme(selection);
     onChange(selection);
-  };
-  const selectTypography = (typographyId: string) => {
-    if (value?.kind === "custom") {
-      selectSelection({ ...value, typographyId });
-      return;
-    }
-
-    selectSelection({
-      kind: "curated",
-      themeId: selectedSurfaceId ?? getThemeId(value),
-      ...(selectedAccentId ? { accentId: selectedAccentId } : {}),
-      typographyId,
-    });
   };
 
   return (
@@ -274,7 +166,6 @@ export function PresentationThemePicker({
                     kind: "curated",
                     themeId: surface.id,
                     accentId: surface.defaultAccentId,
-                    typographyId: getThemeTypographyId(value),
                   })
                 }
               />
@@ -309,7 +200,6 @@ export function PresentationThemePicker({
                     kind: "curated",
                     themeId: selectedSurface.id,
                     accentId: accent.id,
-                    typographyId: getThemeTypographyId(value),
                   })
                 }
               />
@@ -321,27 +211,6 @@ export function PresentationThemePicker({
           This activity uses a saved appearance. Choose a new background to move it to the calmer color system.
         </p>
       )}
-
-      <div className="space-y-2" data-testid="presentation-typography">
-          <div>
-            <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Typography
-              <HelpTooltip label="About presentation typography">
-                This pairing changes the student board, Present view, and PNG export—not the teacher workspace.
-              </HelpTooltip>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {exposedTypographySystems.map((typography) => (
-            <TypographySwatch
-              key={typography.id}
-              typography={typography}
-              selected={selectedTypographyId === typography.id}
-              onSelect={() => selectTypography(typography.id)}
-            />
-          ))}
-        </div>
-      </div>
 
     </div>
   );
