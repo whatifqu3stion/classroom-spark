@@ -409,4 +409,45 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.getByTestId("present-task")).toHaveTextContent("اقرأ النص ثم اشرح: 日本語の観察。");
     expect(screen.getByText("नमस्ते — اكتب دليلاً.").closest("[dir='auto']")).toBeTruthy();
   });
+
+  it("preserves all classroom scripts in the PNG export layout", () => {
+    render(
+      <PresentationCanvas
+        activity={{
+          ...activity,
+          eyebrow: "العربية • עברית",
+          title: "Multilingual classroom board",
+          task: "اقرأ النص ثم اشرح.",
+          prompts: ["שלום עולם", "नमस्ते दुनिया", "日本語の観察"],
+        }}
+        exportLayout
+      />,
+    );
+
+    const exportSurface = document.querySelector(".presentation-surface--export");
+    const eyebrow = exportSurface?.querySelector(".presentation-eyebrow");
+    const title = exportSurface?.querySelector(".presentation-header-title");
+    const task = exportSurface?.querySelector(".presentation-task");
+    const promptRuns = Array.from(
+      exportSurface?.querySelectorAll(
+        ".presentation-prompts > li > .boardwork-user-content",
+      ) ?? [],
+    );
+
+    expect(exportSurface).toBeInTheDocument();
+    expect(eyebrow).toHaveAttribute("dir", "auto");
+    expect(eyebrow).toHaveTextContent("العربية • עברית");
+    expect(title).toHaveAttribute("dir", "auto");
+    expect(title).toHaveTextContent("Multilingual classroom board");
+    expect(task).toHaveAttribute("dir", "auto");
+    expect(task).toHaveTextContent("اقرأ النص ثم اشرح.");
+    expect(promptRuns).toHaveLength(3);
+
+    ["שלום עולם", "नमस्ते दुनिया", "日本語の観察"].forEach(
+      (expectedText, index) => {
+        expect(promptRuns[index]).toHaveAttribute("dir", "auto");
+        expect(promptRuns[index]).toHaveTextContent(expectedText);
+      },
+    );
+  });
 });
