@@ -273,6 +273,62 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.queryByRole("button", { name: "Teacher controls" })).not.toBeInTheDocument();
   });
 
+  it("keeps teacher controls in live Present only", () => {
+    const controls = <button type="button">Teacher controls</button>;
+    const { rerender } = render(
+      <PresentationCanvas activity={activity} controls={controls} />,
+    );
+
+    expect(screen.getByRole("button", { name: "Teacher controls" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Teacher controls" }).closest(".presentation-footer"),
+    ).toBeInTheDocument();
+
+    rerender(
+      <PresentationCanvas activity={activity} controls={controls} editorPreview />,
+    );
+    expect(screen.queryByRole("button", { name: "Teacher controls" })).not.toBeInTheDocument();
+
+    rerender(
+      <PresentationCanvas activity={activity} controls={controls} exportLayout />,
+    );
+    expect(screen.queryByRole("button", { name: "Teacher controls" })).not.toBeInTheDocument();
+  });
+
+  it("can move the resource link out of the student canvas while keeping its note", () => {
+    const resourceActivity = {
+      ...activity,
+      resourceUrl: "https://example.com/resource",
+      resourceNote: "Use the linked reading for context.",
+    };
+    const { rerender } = render(
+      <PresentationCanvas activity={resourceActivity} />,
+    );
+
+    expect(screen.getByTestId("present-resource-link")).toHaveAttribute(
+      "href",
+      "https://example.com/resource",
+    );
+
+    rerender(
+      <PresentationCanvas
+        activity={resourceActivity}
+        showResourceLink={false}
+      />,
+    );
+
+    expect(screen.queryByTestId("present-resource-link")).not.toBeInTheDocument();
+    expect(screen.getByTestId("present-resource")).toHaveTextContent(
+      "Use the linked reading for context.",
+    );
+
+    rerender(
+      <PresentationCanvas activity={resourceActivity} exportLayout />,
+    );
+    expect(screen.queryByTestId("present-resource-link")).not.toBeInTheDocument();
+    expect(screen.getByText("Use the linked reading for context.")).toBeInTheDocument();
+  });
+
   it("keeps a saved local image in both preview and export surfaces", () => {
     const imageActivity = {
       ...activity,

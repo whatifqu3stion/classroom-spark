@@ -6,10 +6,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useCountdownTimer } from "@/components/countdown-timer";
 import { PresentationCanvas } from "@/components/presentation-canvas";
 import { getResolvedPresentationTheme } from "@/lib/presentation-theme";
+import { getSafeResourceUrl } from "@/lib/resource-url";
 import {
   ChevronDown,
   ChevronLeft,
   Download,
+  ExternalLink,
   Eye,
   Loader2,
   Maximize,
@@ -138,6 +140,7 @@ export default function Present() {
   }
 
   const resolvedTheme = getResolvedPresentationTheme(activeDraft.presentationTheme);
+  const safeResourceUrl = getSafeResourceUrl(activeDraft.resourceUrl);
   const presentationPageStyle = {
     "--presentation-bg": resolvedTheme.colors.background,
     "--presentation-surface": resolvedTheme.colors.surface,
@@ -180,6 +183,19 @@ export default function Present() {
           <ChevronLeft className="w-4 h-4" aria-hidden="true" />
           <span>Back</span>
         </Link>
+        {safeResourceUrl && (
+          <a
+            href={safeResourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="presentation-control"
+            title="Open resource in a new tab"
+            data-testid="button-open-resource"
+          >
+            <ExternalLink className="w-4 h-4" aria-hidden="true" />
+            <span>Open resource</span>
+          </a>
+        )}
         <button
           type="button"
           onClick={() => void exportPng()}
@@ -303,6 +319,7 @@ export default function Present() {
       <PresentationCanvas
         activity={activeDraft}
         controls={controls}
+        showResourceLink={false}
         timerControls={timerControls}
         onShowTimer={() => {
           setTimerVisible(true);
@@ -315,6 +332,7 @@ export default function Present() {
         <PresentationCanvas
           activity={activeDraft}
           exportLayout
+          showResourceLink={false}
           surfaceRef={exportRef}
         />
       </div>

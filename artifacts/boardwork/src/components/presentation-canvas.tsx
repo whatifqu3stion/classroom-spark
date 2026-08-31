@@ -16,6 +16,7 @@ interface PresentationCanvasProps {
   timerMinimized?: boolean;
   exportLayout?: boolean;
   editorPreview?: boolean;
+  showResourceLink?: boolean;
   surfaceRef?: Ref<HTMLDivElement>;
   timer?: Pick<CountdownTimerState, "remainingSeconds" | "status"> & {
     visible: boolean;
@@ -34,6 +35,7 @@ export function PresentationCanvas({
   timerMinimized = false,
   exportLayout = false,
   editorPreview = false,
+  showResourceLink = !exportLayout,
   surfaceRef,
   timer,
 }: PresentationCanvasProps) {
@@ -213,17 +215,18 @@ export function PresentationCanvas({
                   className="presentation-resource"
                   {...testId(includeTestIds, "present-resource")}
                 >
-                  <a
-                    href={safeResourceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    tabIndex={exportLayout ? -1 : undefined}
-                    className="presentation-resource-link"
-                    {...testId(includeTestIds, "present-resource-link")}
-                  >
-                    Open resource
-                    <ExternalLink className="h-[1em] w-[1em]" aria-hidden="true" />
-                  </a>
+                  {showResourceLink && (
+                    <a
+                      href={safeResourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="presentation-resource-link"
+                      {...testId(includeTestIds, "present-resource-link")}
+                    >
+                      Open resource
+                      <ExternalLink className="h-[1em] w-[1em]" aria-hidden="true" />
+                    </a>
+                  )}
                   {activity.resourceNote && (
                     <p className="presentation-resource-note boardwork-user-content" dir="auto">
                       <FormulaText>{activity.resourceNote}</FormulaText>
@@ -272,7 +275,7 @@ export function PresentationCanvas({
       </main>
 
       <footer className="presentation-footer">
-        {!editorPreview && controls}
+        {!editorPreview && !exportLayout && controls}
       </footer>
     </div>
   );

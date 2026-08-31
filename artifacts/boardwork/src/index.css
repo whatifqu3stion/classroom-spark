@@ -675,7 +675,7 @@
     display: grid;
     gap: 0.35rem;
     border: 1px solid color-mix(in srgb, var(--presentation-primary-text, #171717) 14%, transparent);
-    border-top: 0.25rem solid var(--presentation-accent, hsl(var(--primary)));
+    border-top: 0;
     border-radius: 0.9rem;
     background: var(--presentation-surface, #fafafa);
     padding: 1rem;
@@ -946,6 +946,13 @@
     padding-top: clamp(1rem, 4vw, 1.5rem);
   }
 
+  .presentation-surface:not(.presentation-surface--export):not(.presentation-surface--editor-preview) > .presentation-footer {
+    min-height: calc(3.75rem + env(safe-area-inset-bottom));
+    border-top: 0;
+    padding-top: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
   .presentation-arrival {
     max-width: 52ch;
     color: var(--presentation-secondary-text, rgb(23 23 23 / 52%));
@@ -1121,10 +1128,12 @@
   }
 
   .presentation-controls-dock {
-    position: relative;
-    z-index: 5;
+    position: fixed;
+    right: max(clamp(1rem, 4vw, 2rem), env(safe-area-inset-right));
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    z-index: 20;
     display: grid;
-    width: 100%;
+    width: auto;
     min-width: 0;
     justify-items: end;
   }
@@ -1162,7 +1171,7 @@
     display: flex;
     box-sizing: border-box;
     width: max-content;
-    max-width: min(100%, calc(100dvw - 1rem - env(safe-area-inset-left) - env(safe-area-inset-right)));
+    max-width: min(36rem, calc(100dvw - 1rem - env(safe-area-inset-left) - env(safe-area-inset-right)));
     align-items: center;
     justify-content: flex-end;
     flex-wrap: wrap;
@@ -1222,7 +1231,7 @@
 
   @media (max-width: 520px) {
     .presentation-controls {
-      width: min(100%, calc(100dvw - 1rem - env(safe-area-inset-left) - env(safe-area-inset-right)));
+      width: min(24rem, calc(100dvw - 1rem - env(safe-area-inset-left) - env(safe-area-inset-right)));
       gap: 0.25rem;
     }
 
