@@ -2,6 +2,11 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { PresentationThemePicker } from "./presentation-theme-picker";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import {
+  getCuratedPresentationTheme,
+  presentationAccentThemes,
+  presentationSurfaceThemes,
+} from "@workspace/api-zod";
 
 describe("PresentationThemePicker", () => {
   it("keeps the prior Boardwork appearance as the default", () => {
@@ -21,6 +26,12 @@ describe("PresentationThemePicker", () => {
     );
     expect(screen.getByTestId("theme-swatch-color-boardwork")).toHaveStyle({
       backgroundColor: "#FDFCF8",
+    });
+    expect(screen.getByTestId("theme-option-boardwork")).toHaveStyle({
+      "--theme-control-color": "#FDFCF8",
+    });
+    expect(screen.getByTestId("accent-option-blue")).toHaveStyle({
+      "--theme-control-color": "#334155",
     });
     expect(screen.queryByText("Typography")).not.toBeInTheDocument();
     expect(screen.queryByTestId("presentation-typography")).not.toBeInTheDocument();
@@ -57,6 +68,27 @@ describe("PresentationThemePicker", () => {
     expect(screen.getByTestId("presentation-surfaces").querySelector(".presentation-theme-grid")).toBeTruthy();
     expect(screen.getByTestId("presentation-accents").querySelector(".presentation-theme-grid")).toBeTruthy();
     expect(screen.queryByRole("button", { name: /typography/i })).not.toBeInTheDocument();
+  });
+
+  it("uses the curated surface and accent colors as the control color cues", () => {
+    render(<PresentationThemePicker onChange={vi.fn()} />);
+
+    for (const surface of presentationSurfaceThemes) {
+      const theme = getCuratedPresentationTheme(surface.id, surface.defaultAccentId);
+      const testId = surface.id === "paper-v2" ? "paper" : surface.id.replace("-v2", "");
+      expect(screen.getByTestId(`theme-option-${testId}`)).toHaveStyle({
+        "--theme-control-color": theme.colors.background,
+      });
+      expect(screen.getByTestId(`theme-swatch-color-${surface.id}`)).toHaveStyle({
+        backgroundColor: theme.colors.background,
+      });
+    }
+
+    for (const accent of presentationAccentThemes) {
+      expect(screen.getByTestId(`accent-option-${accent.id}`)).toHaveStyle({
+        "--theme-control-color": getCuratedPresentationTheme("boardwork", accent.id).colors.accent,
+      });
+    }
   });
 
   it("uses the selected surface mode for accent names without a summary pill", () => {

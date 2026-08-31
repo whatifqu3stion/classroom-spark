@@ -1,4 +1,5 @@
 import { Check, Moon, Sparkles, Sun } from "lucide-react";
+import type { CSSProperties } from "react";
 import {
   getCuratedPresentationTheme,
   getPresentationAccentName,
@@ -14,6 +15,10 @@ import {
 } from "@/lib/presentation-theme";
 import { cn } from "@/lib/utils";
 import { HelpTooltip } from "@/components/ui/tooltip";
+
+function themeControlStyle(color: string): CSSProperties {
+  return { "--theme-control-color": color } as CSSProperties;
+}
 
 interface PresentationThemePickerProps {
   value?: BoardworkPresentationTheme | null;
@@ -37,30 +42,28 @@ function SurfaceSwatch({
       aria-label={`Use ${surface.name} background`}
       aria-pressed={selected}
       onClick={onSelect}
+      style={themeControlStyle(backgroundColor)}
       className={cn(
-        "relative grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-lg border px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        selected
-          ? "border-primary bg-primary/5 ring-1 ring-primary/30"
-          : "border-border hover:bg-muted/50",
+        "presentation-theme-option presentation-theme-option--surface relative grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-lg border px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
       )}
       data-testid={`theme-option-${surface.id === "paper-v2" ? "paper" : surface.id.replace("-v2", "")}`}
     >
       <span
         aria-hidden="true"
-        className="h-5 w-5 shrink-0 rounded-md border border-black/10 shadow-sm"
+        className="presentation-theme-swatch h-5 w-5 shrink-0 rounded-md border shadow-sm"
         style={{ backgroundColor }}
         data-testid={`theme-swatch-color-${surface.id}`}
       />
       <span className="flex min-w-0 items-center gap-1 text-xs font-medium text-foreground">
         <span className="min-w-0 truncate">{surface.name}</span>
         {surface.mode === "dark" ? (
-          <Moon className="h-3 w-3 text-muted-foreground" aria-label="Dark" />
+          <Moon className="presentation-theme-mode h-3 w-3 text-muted-foreground" aria-label="Dark" />
         ) : (
-          <Sun className="h-3 w-3 text-muted-foreground" aria-label="Light" />
+          <Sun className="presentation-theme-mode h-3 w-3 text-muted-foreground" aria-label="Light" />
         )}
       </span>
       {selected && (
-        <Check className="ml-auto h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
+        <Check className="presentation-theme-check ml-auto h-3.5 w-3.5 shrink-0" aria-hidden="true" />
       )}
     </button>
   );
@@ -85,16 +88,14 @@ function AccentSwatch({
       aria-label={`Use ${name} accent`}
       aria-pressed={selected}
       onClick={onSelect}
+      style={themeControlStyle(color)}
       className={cn(
-        "relative grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-lg border px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        selected
-          ? "border-primary bg-primary/5 ring-1 ring-primary/30"
-          : "border-border hover:bg-muted/50",
+        "presentation-theme-option presentation-theme-option--accent relative grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-lg border px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
       )}
       data-testid={`accent-option-${accent.id}`}
     >
       <span
-        className="h-4 w-4 shrink-0 rounded-full border border-black/10"
+        className="presentation-theme-swatch h-4 w-4 shrink-0 rounded-full border"
         style={{ backgroundColor: color }}
         aria-hidden="true"
       />
@@ -102,7 +103,7 @@ function AccentSwatch({
         {name}
       </span>
       {selected && (
-        <Check className="ml-auto h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
+        <Check className="presentation-theme-check ml-auto h-3.5 w-3.5 shrink-0" aria-hidden="true" />
       )}
     </button>
   );
