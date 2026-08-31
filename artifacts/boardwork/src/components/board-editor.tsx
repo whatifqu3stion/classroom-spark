@@ -348,14 +348,14 @@ export function BoardEditor({
                 <div className="flex min-w-0 items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <span>Visual presentation</span>
                   <HelpTooltip label="About visual presentation">
-                    Add a local image for Present and PNG export. Images are shown without cropping.
+                    Shape how this board appears in Present and PNG export: add a local image, choose presentation colors, and add a teacher note. Images are shown without cropping.
                   </HelpTooltip>
                 </div>
                 <button
                   type="button"
                   className={cn(
-                    "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    presentationVisualOpen && "bg-muted/50 text-foreground",
+                    "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border/70 bg-background/70 text-muted-foreground shadow-xs transition-colors hover:border-border hover:bg-muted/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    presentationVisualOpen && "border-border bg-muted/70 text-foreground",
                   )}
                   aria-label={
                     presentationVisualOpen

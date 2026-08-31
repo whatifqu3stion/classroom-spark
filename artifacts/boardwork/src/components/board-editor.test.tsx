@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { ActivityDraft } from "@/store/boardwork-context";
 import { PRESENTATION_IMAGE_FILE_LIMIT_BYTES, PRESENTATION_IMAGE_SIZE_ERROR } from "@workspace/api-zod";
@@ -47,6 +47,22 @@ describe("BoardEditor presentation visual disclosure", () => {
     expect(
       screen.queryByPlaceholderText("Arrival instructions (optional footer)..."),
     ).not.toBeInTheDocument();
+  });
+
+  it("presents visual settings as a secondary button with complete guidance", async () => {
+    render(<BoardEditor draft={draft} onChange={vi.fn()} />);
+
+    const toggle = screen.getByTestId("button-toggle-presentation-visual");
+
+    expect(toggle).toHaveClass("border-border/70", "shadow-xs");
+
+    fireEvent.focus(screen.getByRole("button", { name: "About visual presentation" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("tooltip")).toHaveTextContent(
+        "add a local image, choose presentation colors, and add a teacher note",
+      );
+    });
   });
 
   it("keeps the visual settings separate from the editable board content", () => {
