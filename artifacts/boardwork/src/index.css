@@ -205,7 +205,7 @@
 
 @layer components {
   .board-creation-setup input::placeholder {
-    color: color-mix(in srgb, hsl(var(--muted-foreground)) 58%, hsl(var(--background)));
+    color: color-mix(in srgb, hsl(var(--muted-foreground)) 38%, hsl(var(--background)));
     opacity: 1;
   }
 
