@@ -122,3 +122,34 @@ for (const viewport of viewports) {
     await expectElementReachableInViewport(page, actions, viewport);
   });
 }
+
+test("keeps creation examples very faint compared with entered text", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+
+  const topic = page.getByTestId("input-topic");
+  const styles = await topic.evaluate((element) => {
+    const placeholder = getComputedStyle(element, "::placeholder");
+    const text = getComputedStyle(element);
+    const parseRgb = (value: string) => {
+      const channels = value.match(/[\d.]+/g)?.map(Number) ?? [];
+      return channels.slice(0, 3);
+    };
+    const luminance = (value: string) => {
+      const [red, green, blue] = parseRgb(value);
+      return red * 0.2126 + green * 0.7152 + blue * 0.0722;
+    };
+
+    return {
+      placeholderColor: placeholder.color,
+      placeholderOpacity: placeholder.opacity,
+      textColor: text.color,
+      placeholderLuminance: luminance(placeholder.color),
+      textLuminance: luminance(text.color),
+    };
+  });
+
+  expect(styles.placeholderOpacity).toBe("1");
+  expect(styles.placeholderColor).not.toBe(styles.textColor);
+  expect(styles.placeholderLuminance).toBeGreaterThan(styles.textLuminance + 60);
+});

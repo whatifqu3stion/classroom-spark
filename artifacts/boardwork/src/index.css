@@ -204,11 +204,6 @@
 }
 
 @layer components {
-  .board-creation-setup input::placeholder {
-    color: color-mix(in srgb, hsl(var(--muted-foreground)) 38%, hsl(var(--background)));
-    opacity: 1;
-  }
-
   .board-editor-empty-state {
     position: relative;
     display: flex;
@@ -1590,4 +1585,14 @@
       transition: none;
     }
   }
+}
+
+/*
+ * Keep creation examples quiet without changing the shared Input default.
+ * This intentionally lives outside the component layer so it wins over the
+ * generated placeholder utility used by the shared input component.
+ */
+.board-creation-setup input::placeholder {
+  color: hsl(var(--muted-foreground) / 0.38);
+  opacity: 1;
 }
