@@ -175,6 +175,7 @@ export function PresentationCanvas({
               timer.visible &&
               timerMinimized &&
               "presentation-time--compact",
+            showCompactTimerControls && "presentation-time--compact-open",
             timer &&
               !editorPreview &&
               !timer.visible &&
@@ -220,10 +221,11 @@ export function PresentationCanvas({
           ) : (
             `${activity.durationMinutes} MIN`
           )}
-          {showCompactTimerControls && (
+          {showCompactTimer && showTimerControls && (
             <div
               id="presentation-compact-timer-controls"
               className="presentation-time-compact-controls"
+              aria-hidden={!showCompactTimerControls}
             >
               {timerControls}
             </div>

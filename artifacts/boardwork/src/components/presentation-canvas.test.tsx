@@ -119,7 +119,10 @@ describe("PresentationCanvas timer visibility", () => {
       "aria-expanded",
       "false",
     );
-    expect(document.getElementById("presentation-compact-timer-controls")).not.toBeInTheDocument();
+    expect(document.getElementById("presentation-compact-timer-controls")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
 
     screen.getByRole("button", { name: "Show timer controls" }).click();
     expect(onToggleTimerControls).toHaveBeenCalledOnce();
@@ -179,6 +182,10 @@ describe("PresentationCanvas timer visibility", () => {
         vi.advanceTimersByTime(1);
       });
       expect(screen.queryByRole("button", { name: "Start timer" })).not.toBeInTheDocument();
+      expect(document.getElementById("presentation-compact-timer-controls")).toHaveAttribute(
+        "aria-hidden",
+        "true",
+      );
 
       const compactToggle = screen.getByTestId("button-toggle-timer-controls");
       fireEvent.focus(compactToggle);

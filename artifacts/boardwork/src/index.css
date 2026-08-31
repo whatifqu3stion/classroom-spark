@@ -559,7 +559,7 @@
   .presentation-time--compact::before {
     position: absolute;
     right: 0;
-    bottom: 100%;
+    top: 100%;
     width: min(18rem, calc(100vw - 2rem));
     height: 0.4rem;
     content: "";
@@ -575,12 +575,6 @@
   .presentation-time-compact-toggle:focus-visible {
     outline: 2px solid var(--presentation-accent, hsl(var(--primary)));
     outline-offset: 2px;
-  }
-
-  .presentation-time-compact-controls {
-    display: inline-flex;
-    max-width: 100%;
-    align-items: center;
   }
 
   .presentation-time--hidden .presentation-timer-controls,
@@ -622,27 +616,48 @@
   }
 
   .presentation-time-compact-controls {
-    display: none;
-  }
-
-  .presentation-time--hidden .presentation-time-compact-controls,
-  .presentation-time--compact .presentation-time-compact-controls {
     display: block;
-  }
-
-  .presentation-time--hidden .presentation-timer-controls,
-  .presentation-time--compact .presentation-timer-controls {
-    position: absolute;
-    top: calc(100% + 0.4rem);
-    right: 0;
-    z-index: 4;
-    min-width: min(18rem, calc(100vw - 2rem));
-    margin-top: 0;
+    box-sizing: border-box;
+    width: max-content;
+    max-width: min(18rem, calc(100vw - 2rem));
     border: 1px solid color-mix(in srgb, var(--presentation-primary-text, #171717) 16%, transparent);
     border-radius: 0.5rem;
     background: var(--presentation-surface, #fafafa);
     padding: 0.35rem;
     box-shadow: 0 0.4rem 1.2rem color-mix(in srgb, var(--presentation-primary-text, #171717) 15%, transparent);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-0.3rem);
+    visibility: hidden;
+    transition: opacity 180ms ease, transform 180ms ease, visibility 180ms ease;
+  }
+
+  .presentation-time--compact .presentation-time-compact-controls {
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    right: 0;
+    z-index: 4;
+    min-width: min(18rem, calc(100vw - 2rem));
+  }
+
+  .presentation-time--compact:hover .presentation-time-compact-controls,
+  .presentation-time--compact.presentation-time--compact-open .presentation-time-compact-controls,
+  .presentation-time--compact:focus-within .presentation-time-compact-controls {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+    visibility: visible;
+  }
+
+  .presentation-time--compact .presentation-timer-controls {
+    position: static;
+    width: 100%;
+    min-width: 0;
+    margin-top: 0;
+    border: 0;
+    padding-top: 0;
+    background: transparent;
+    box-shadow: none;
   }
 
   .presentation-visual-editor {
