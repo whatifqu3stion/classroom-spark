@@ -41,13 +41,21 @@ describe("PresentationThemePicker", () => {
     expect(screen.getByText("Background")).toBeInTheDocument();
     expect(screen.getByText("Accent")).toBeInTheDocument();
     expect(screen.getByTestId("theme-option-boardwork")).toHaveClass(
-      "items-center",
-      "gap-2",
+      "w-full",
+      "min-w-0",
+      "grid-cols-[auto_minmax(0,1fr)_auto]",
     );
     expect(screen.getByTestId("theme-swatch-color-boardwork")).toHaveClass(
       "h-5",
       "w-5",
     );
+    expect(screen.getByTestId("accent-option-blue")).toHaveClass(
+      "w-full",
+      "min-w-0",
+      "grid-cols-[auto_minmax(0,1fr)_auto]",
+    );
+    expect(screen.getByTestId("presentation-surfaces").querySelector(".presentation-theme-grid")).toBeTruthy();
+    expect(screen.getByTestId("presentation-accents").querySelector(".presentation-theme-grid")).toBeTruthy();
     expect(screen.queryByRole("button", { name: /typography/i })).not.toBeInTheDocument();
   });
 

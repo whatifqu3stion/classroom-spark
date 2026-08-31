@@ -204,6 +204,25 @@
 }
 
 @layer components {
+  .presentation-theme-grid-container {
+    container-type: inline-size;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .presentation-theme-grid {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  @container (min-width: 36rem) {
+    .presentation-theme-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
   .presentation-page {
     min-height: 100dvh;
     width: 100%;

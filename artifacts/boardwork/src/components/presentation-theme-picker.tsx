@@ -38,7 +38,7 @@ function SurfaceSwatch({
       aria-pressed={selected}
       onClick={onSelect}
       className={cn(
-        "relative flex min-w-[5.5rem] flex-1 items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-w-0",
+        "relative grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-lg border px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         selected
           ? "border-primary bg-primary/5 ring-1 ring-primary/30"
           : "border-border hover:bg-muted/50",
@@ -52,7 +52,7 @@ function SurfaceSwatch({
         data-testid={`theme-swatch-color-${surface.id}`}
       />
       <span className="flex min-w-0 items-center gap-1 text-xs font-medium text-foreground">
-        {surface.name}
+        <span className="min-w-0 truncate">{surface.name}</span>
         {surface.mode === "dark" ? (
           <Moon className="h-3 w-3 text-muted-foreground" aria-label="Dark" />
         ) : (
@@ -86,7 +86,7 @@ function AccentSwatch({
       aria-pressed={selected}
       onClick={onSelect}
       className={cn(
-        "relative flex min-w-[5.5rem] flex-1 items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-w-0",
+        "relative grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-lg border px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         selected
           ? "border-primary bg-primary/5 ring-1 ring-primary/30"
           : "border-border hover:bg-muted/50",
@@ -147,30 +147,32 @@ export function PresentationThemePicker({
                 Pick the surface students will see behind the lesson. Light and dark options are labeled for quick comparison.
               </HelpTooltip>
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-          {presentationSurfaceThemes.map((surface) => {
-            const previewTheme = getCuratedPresentationTheme(
-              surface.id,
-              surface.id === selectedSurfaceId
-                ? selectedAccentId
-                : surface.defaultAccentId,
-            );
-            return (
-              <SurfaceSwatch
-                key={surface.id}
-                surface={surface}
-                backgroundColor={previewTheme.colors.background}
-                selected={value?.kind !== "custom" && selectedSurfaceId === surface.id}
-                onSelect={() =>
-                  selectSelection({
-                    kind: "curated",
-                    themeId: surface.id,
-                    accentId: surface.defaultAccentId,
-                  })
-                }
-              />
-            );
-          })}
+        <div className="presentation-theme-grid-container">
+          <div className="presentation-theme-grid">
+            {presentationSurfaceThemes.map((surface) => {
+              const previewTheme = getCuratedPresentationTheme(
+                surface.id,
+                surface.id === selectedSurfaceId
+                  ? selectedAccentId
+                  : surface.defaultAccentId,
+              );
+              return (
+                <SurfaceSwatch
+                  key={surface.id}
+                  surface={surface}
+                  backgroundColor={previewTheme.colors.background}
+                  selected={value?.kind !== "custom" && selectedSurfaceId === surface.id}
+                  onSelect={() =>
+                    selectSelection({
+                      kind: "curated",
+                      themeId: surface.id,
+                      accentId: surface.defaultAccentId,
+                    })
+                  }
+                />
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -184,26 +186,28 @@ export function PresentationThemePicker({
                 </HelpTooltip>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {presentationAccentThemes.map((accent) => (
-              <AccentSwatch
-                key={accent.id}
-                accent={accent}
-                name={getPresentationAccentName(accent.id, selectedSurface.mode)}
-                color={getCuratedPresentationTheme(
-                  selectedSurface.id,
-                  accent.id,
-                ).colors.accent}
-                selected={selectedAccentId === accent.id}
-                onSelect={() =>
-                  selectSelection({
-                    kind: "curated",
-                    themeId: selectedSurface.id,
-                    accentId: accent.id,
-                  })
-                }
-              />
-            ))}
+          <div className="presentation-theme-grid-container">
+            <div className="presentation-theme-grid">
+              {presentationAccentThemes.map((accent) => (
+                <AccentSwatch
+                  key={accent.id}
+                  accent={accent}
+                  name={getPresentationAccentName(accent.id, selectedSurface.mode)}
+                  color={getCuratedPresentationTheme(
+                    selectedSurface.id,
+                    accent.id,
+                  ).colors.accent}
+                  selected={selectedAccentId === accent.id}
+                  onSelect={() =>
+                    selectSelection({
+                      kind: "curated",
+                      themeId: selectedSurface.id,
+                      accentId: accent.id,
+                    })
+                  }
+                />
+              ))}
+            </div>
           </div>
         </div>
       ) : (
