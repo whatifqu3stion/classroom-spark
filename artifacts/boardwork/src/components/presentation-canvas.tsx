@@ -280,7 +280,12 @@ export function PresentationCanvas({
         </div>
       </header>
 
-      <main className="presentation-main">
+      <main
+        className={cn(
+          "presentation-main",
+          !hasVisual && !showLargeTimer && "presentation-main--content-only",
+        )}
+      >
         <div className="presentation-content">
           {activity.task && (
             <p

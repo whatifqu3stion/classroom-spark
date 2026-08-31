@@ -431,6 +431,7 @@
     font-weight: var(--presentation-heading-weight, 700);
     line-height: 1.05;
     letter-spacing: var(--presentation-heading-letter-spacing, -0.035em);
+    overflow-wrap: anywhere;
   }
 
   .presentation-header-copy {
@@ -650,6 +651,10 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(15rem, 31%);
     gap: clamp(1.75rem, 5vw, 5.5rem);
+  }
+
+  .presentation-main--content-only {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .presentation-content {
@@ -1482,7 +1487,12 @@
     gap: 82px;
   }
 
+  .presentation-surface--export .presentation-main--content-only {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .presentation-surface--export .presentation-header-title {
+    max-width: 42ch;
     font-size: 64px;
   }
 
@@ -1505,7 +1515,12 @@
     gap: 34px;
   }
 
+  .presentation-surface--export .presentation-main--content-only .presentation-content {
+    max-width: none;
+  }
+
   .presentation-surface--export .presentation-task {
+    max-width: 54ch;
     font-size: 46px;
     line-height: 1.2;
   }
@@ -1516,6 +1531,7 @@
   }
 
   .presentation-surface--export .presentation-prompt {
+    max-width: 72ch;
     gap: 22px;
     font-size: 31px;
   }

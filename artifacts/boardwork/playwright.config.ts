@@ -2,7 +2,7 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./src/pages",
-  testMatch: "home.e2e.spec.ts",
+  testMatch: "*.e2e.spec.ts",
   fullyParallel: false,
   reporter: process.env.CI ? "line" : "list",
   webServer: {
