@@ -50,7 +50,7 @@ A feature is not “done” because it exists. The following behaviors should wo
 - [x] Board looks intentional at 1280×720.
 - [x] Board looks intentional at 1920×1080.
 - [x] Projector-resolution typography, contrast, hierarchy, and layout pass at 1280×720 and 1920×1080.
-- [ ] Physical classroom projector/distance observation is complete.
+- [x] Physical classroom projector/distance observation is complete.
 - [x] Arrival instruction is visually secondary.
 - [x] Fullscreen action works in supported browsers.
 - [x] Long AI text does not create tiny unreadable typography; content constraints/layout protect readability.
@@ -100,7 +100,7 @@ Before calling MVP complete:
 ## Stage 5 production verification
 
 - Production verification is blocked as of August 21, 2026: the deployment service reports no active published deployment, so there is no live URL against which to run the access-gate, real-AI persistence, direct-route, projector-asset, fullscreen, or PNG-export smoke tests.
-- The three unchecked items above are intentionally still unchecked. They require either a published deployment (A) or a physical classroom projector/distance observation (F); marking them complete without those observations would be misleading.
+- The remaining unchecked access and production items require a published deployment; the physical classroom projector/distance observation is recorded below.
 - Local production builds succeed when the required `PORT` and `BASE_PATH` values are supplied. The development database is synchronized with the current Drizzle activity schema, including `activities.visual_url`; the API app-state check, typecheck, and persistence suite pass locally. Production schema changes remain Publish-flow work.
 
 ## Stage 5 local PNG typography verification
@@ -110,3 +110,10 @@ Before calling MVP complete:
 - Computed presentation styles matched the selected heading/body pairs: Inter 700/500, DM Serif Display 400 + DM Sans 500, IBM Plex Serif 600 + IBM Plex Sans 500, and Atkinson Hyperlegible 700/500. Pixel comparisons were non-zero across every pairing, and zoomed crops showed accented/combining, Arabic, Devanagari, and CJK glyphs without replacement boxes.
 - The downloaded images contained the student board only: no Back, Export PNG, Teacher controls, timer panel, live alarm state, timer controls, or teacher-only note. The student-facing `7 MIN` board badge remained as intended.
 - All bundled font assets returned HTTP 200 with `font/ttf`; after `document.fonts.ready` and explicit requested-face loads, every exposed face reported `loaded` and `document.fonts.check()` returned true. No app-side console or backend errors were observed.
+
+## Stage 5 projector-readability verification
+
+- On August 31, 2026, a classroom projector review at the intended viewing distance found the countdown, completion state, and teacher-only controls generally clear and distinguishable. The review identified excess unused vertical space in the left content column, with bullet points feeling crowded and too small.
+- The presentation now uses the left column more flexibly: normal boards receive larger, more widely spaced bullets, while unusually long boards use a content-aware compact treatment to keep all prompts visible at shorter projector heights.
+- A focused browser viewport proxy pass rechecked Present at 1920×1080 and 1280×720. The long content-dense fixture kept every prompt inside both viewports; normal boards retained the larger airy treatment. Running and completed countdown states remained readable, and teacher controls did not obscure the board.
+- Proxy measurements after the adjustment: at 1920×1080, dense prompts measured 27px with 32.4px line height; at 1280×720, dense prompts measured 18px with 20.7px line height, while normal prompts measured 28.16px with 36.608px line height. No browser console, page, or network errors were observed.

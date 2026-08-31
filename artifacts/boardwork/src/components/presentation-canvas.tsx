@@ -61,6 +61,14 @@ export function PresentationCanvas({
   const themeTypography = getThemeTypography(activity.presentationTheme);
   const includeTestIds = !exportLayout;
   const hasVisual = Boolean(activity.visualUrl);
+  const presentationContentLength = [
+    activity.task,
+    ...activity.prompts,
+    activity.materials?.join(" "),
+  ].reduce((total, value) => total + (value?.trim().length ?? 0), 0);
+  const contentIsDense =
+    presentationContentLength > 420 ||
+    activity.prompts.some((prompt) => prompt.trim().length > 170);
   const showTimer = !exportLayout && !editorPreview && timer?.visible;
   const showLargeTimer = Boolean(showTimer && !timerMinimized);
   const showCompactTimer =
@@ -120,6 +128,7 @@ export function PresentationCanvas({
         "presentation-surface",
         exportLayout && "presentation-surface--export",
         editorPreview && "presentation-surface--editor-preview",
+        contentIsDense && "presentation-surface--content-dense",
       )}
       style={{
         "--presentation-bg": themeColors.background,

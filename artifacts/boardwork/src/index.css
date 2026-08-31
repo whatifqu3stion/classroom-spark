@@ -1343,12 +1343,13 @@
     }
 
     .presentation-main {
-      padding-block: clamp(2.75rem, 7vh, 6rem) clamp(1.5rem, 3vh, 2.5rem);
+      padding-block: clamp(2rem, 5.5vh, 4rem) clamp(1.5rem, 3vh, 2.5rem);
     }
 
     .presentation-content {
-      max-width: 82%;
-      gap: clamp(1.35rem, 2.7vh, 2.6rem);
+      max-width: min(100%, 64rem);
+      align-content: start;
+      gap: clamp(1.35rem, 3.1vh, 3rem);
     }
 
     .presentation-task {
@@ -1356,13 +1357,34 @@
     }
 
     .presentation-prompts {
-      gap: clamp(0.55rem, 1.25vh, 1rem);
-      padding-top: clamp(0.25rem, 0.8vh, 0.75rem);
+      gap: clamp(0.65rem, 1.6vh, 1.25rem);
+      padding-top: clamp(0.4rem, 1vh, 0.9rem);
     }
 
     .presentation-prompt {
       gap: clamp(0.8rem, 1.4vw, 1.4rem);
-      font-size: clamp(1.15rem, 2vw, 2rem);
+      font-size: clamp(1.3rem, 2.15vw, 2.15rem);
+      line-height: 1.28;
+    }
+
+    .presentation-surface--content-dense .presentation-content {
+      gap: clamp(0.9rem, 2vh, 1.6rem);
+    }
+
+    .presentation-surface--content-dense .presentation-task {
+      font-size: clamp(1.5rem, 3.3vh, 2.2rem);
+      line-height: 1.12;
+    }
+
+    .presentation-surface--content-dense .presentation-prompts {
+      gap: clamp(0.45rem, 0.9vh, 0.7rem);
+      padding-top: clamp(0.2rem, 0.5vh, 0.45rem);
+    }
+
+    .presentation-surface--content-dense .presentation-prompt {
+      gap: clamp(0.55rem, 1vw, 0.9rem);
+      font-size: clamp(1.25rem, 2.5vh, 1.75rem);
+      line-height: 1.2;
     }
 
     .presentation-footer {
@@ -1386,11 +1408,11 @@
     }
 
     .presentation-main {
-      padding-block: 1.75rem 1rem;
+      padding-block: 1rem 0.5rem;
     }
 
     .presentation-content {
-      gap: 1rem;
+      gap: clamp(1rem, 2vh, 1.35rem);
     }
 
     .presentation-task {
@@ -1398,13 +1420,33 @@
     }
 
     .presentation-prompts {
-      gap: 0.4rem;
-      padding-top: 0.2rem;
+      gap: clamp(0.55rem, 1.2vh, 0.85rem);
+      padding-top: clamp(0.25rem, 0.8vh, 0.6rem);
     }
 
     .presentation-prompt {
-      font-size: clamp(1.375rem, 2.1vw, 1.75rem);
-      line-height: 1.35;
+      font-size: clamp(1.35rem, 2.2vw, 1.9rem);
+      line-height: 1.3;
+    }
+
+    .presentation-surface--content-dense .presentation-content {
+      gap: 0.55rem;
+    }
+
+    .presentation-surface--content-dense .presentation-task {
+      font-size: clamp(1.35rem, 3.3vh, 1.75rem);
+      line-height: 1.1;
+    }
+
+    .presentation-surface--content-dense .presentation-prompts {
+      gap: 0.35rem;
+      padding-top: 0.15rem;
+    }
+
+    .presentation-surface--content-dense .presentation-prompt {
+      gap: 0.55rem;
+      font-size: clamp(1.125rem, 2.5vh, 1.5rem);
+      line-height: 1.15;
     }
 
     .presentation-materials,
