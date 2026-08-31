@@ -227,6 +227,32 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.queryByRole("button", { name: "Start timer" })).not.toBeInTheDocument();
   });
 
+  it("keeps compact timer controls in a viewport-safe disclosure panel", () => {
+    render(
+      <PresentationCanvas
+        activity={activity}
+        timer={timer}
+        timerMinimized
+        timerControlsOpen
+        onToggleTimerControls={() => undefined}
+        timerControls={
+          <>
+            <button type="button">Start timer</button>
+            <button type="button">Adjust timer</button>
+          </>
+        }
+      />,
+    );
+
+    const panel = screen.getByRole("button", { name: "Start timer" }).closest(
+      "#presentation-compact-timer-controls",
+    );
+
+    expect(panel).toBeInTheDocument();
+    expect(panel).toHaveClass("presentation-time-compact-controls");
+    expect(panel).toHaveAttribute("aria-hidden", "false");
+  });
+
   it("shows an active alarm to the teacher but omits it from exports", () => {
     const alarmTimer = {
       ...timer,

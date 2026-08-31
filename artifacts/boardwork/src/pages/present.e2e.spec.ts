@@ -304,3 +304,86 @@ test("exports long mixed-direction board text as a complete local-font PNG", asy
 
   assertBrowserHealth();
 });
+
+test("keeps Present disclosures reachable at zoom-equivalent viewport sizes", async ({
+  page,
+}) => {
+  await page.route("**/api/auth/status", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ passwordRequired: false, authenticated: true }),
+    }),
+  );
+  await page.route("**/api/app-state", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify(appState),
+    }),
+  );
+
+  const zoomViewports = [
+    { width: 1024, height: 640, zoom: "125%" },
+    { width: 854, height: 534, zoom: "150%" },
+    { width: 640, height: 400, zoom: "200%" },
+  ];
+
+  for (const viewport of zoomViewports) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto("/present/activity-long-mixed-direction");
+
+    const pageMetrics = await page.evaluate(() => ({
+      viewportWidth: window.innerWidth,
+      viewportHeight: window.innerHeight,
+      documentWidth: document.documentElement.scrollWidth,
+    }));
+    expect(pageMetrics.documentWidth, `${viewport.zoom} should not overflow horizontally`).toBeLessThanOrEqual(
+      pageMetrics.viewportWidth,
+    );
+
+    await page.getByRole("button", { name: "Minimize timer" }).click();
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const timerToggle = page.getByTestId("button-toggle-timer-controls");
+    const teacherToggle = page.getByTestId("button-teacher-controls");
+    await expect(timerToggle).toBeVisible();
+    await expect(teacherToggle).toBeVisible();
+
+    for (const [name, locator] of [
+      ["timer trigger", timerToggle],
+      ["teacher controls trigger", teacherToggle],
+    ] as const) {
+      const box = await locator.boundingBox();
+      expect(box, `${name} should have geometry at ${viewport.zoom}`).not.toBeNull();
+      expect(box!.x, `${name} should start inside the viewport at ${viewport.zoom}`).toBeGreaterThanOrEqual(0);
+      expect(box!.y, `${name} should start inside the viewport at ${viewport.zoom}`).toBeGreaterThanOrEqual(0);
+      expect(box!.x + box!.width, `${name} should fit horizontally at ${viewport.zoom}`).toBeLessThanOrEqual(
+        pageMetrics.viewportWidth,
+      );
+      expect(box!.y + box!.height, `${name} should fit vertically at ${viewport.zoom}`).toBeLessThanOrEqual(
+        pageMetrics.viewportHeight,
+      );
+    }
+
+    await timerToggle.hover();
+    const timerPanel = page.locator("#presentation-compact-timer-controls");
+    await expect(timerPanel).toBeVisible();
+    const timerPanelBox = await timerPanel.boundingBox();
+    expect(timerPanelBox, `timer panel should have geometry at ${viewport.zoom}`).not.toBeNull();
+    expect(timerPanelBox!.x).toBeGreaterThanOrEqual(0);
+    expect(timerPanelBox!.y).toBeGreaterThanOrEqual(0);
+    expect(timerPanelBox!.x + timerPanelBox!.width).toBeLessThanOrEqual(pageMetrics.viewportWidth);
+    expect(timerPanelBox!.y + timerPanelBox!.height).toBeLessThanOrEqual(pageMetrics.viewportHeight);
+
+    await teacherToggle.hover();
+    const teacherPanel = page.locator("#presentation-controls-panel");
+    await expect(teacherPanel).toBeVisible();
+    const teacherPanelBox = await teacherPanel.boundingBox();
+    expect(teacherPanelBox, `teacher panel should have geometry at ${viewport.zoom}`).not.toBeNull();
+    expect(teacherPanelBox!.x).toBeGreaterThanOrEqual(0);
+    expect(teacherPanelBox!.y).toBeGreaterThanOrEqual(0);
+    expect(teacherPanelBox!.x + teacherPanelBox!.width).toBeLessThanOrEqual(pageMetrics.viewportWidth);
+    expect(teacherPanelBox!.y + teacherPanelBox!.height).toBeLessThanOrEqual(pageMetrics.viewportHeight);
+
+    await expect(page.getByTestId("button-exit-present")).toBeVisible();
+    await expect(page.getByTestId("button-fullscreen")).toBeVisible();
+  }
+});

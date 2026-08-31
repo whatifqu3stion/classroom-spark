@@ -268,9 +268,11 @@
 
   .presentation-page {
     min-height: 100dvh;
+    min-width: 0;
     width: 100%;
     overflow-x: hidden;
     overflow-y: auto;
+    overscroll-behavior-x: none;
     background: var(--presentation-bg, #fafafa);
     color: var(--presentation-primary-text, #171717);
   }
@@ -284,8 +286,10 @@
     grid-template-rows: auto auto minmax(0, 1fr) auto;
     align-content: start;
     gap: 0;
+    box-sizing: border-box;
     width: min(100%, 1920px);
     min-height: 100dvh;
+    min-width: 0;
     margin-inline: auto;
     padding: clamp(1.25rem, 5vw, 2rem);
     background: var(--presentation-bg, #fafafa);
@@ -405,6 +409,7 @@
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: end;
     gap: clamp(1rem, 3vw, 3rem);
+    min-width: 0;
   }
 
   .presentation-eyebrow,
@@ -442,6 +447,7 @@
   }
 
   .presentation-time {
+    min-width: 0;
     letter-spacing: 0.16em;
     white-space: nowrap;
   }
@@ -571,6 +577,9 @@
     box-sizing: border-box;
     width: min(18rem, calc(100dvw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right)));
     max-width: calc(100dvw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right));
+    max-height: calc(100vh - 5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overscroll-behavior: contain;
     border: 1px solid color-mix(in srgb, var(--presentation-primary-text, #171717) 16%, transparent);
     border-radius: 0.5rem;
     background: var(--presentation-surface, #fafafa);
@@ -592,6 +601,7 @@
     display: block;
     width: min(18rem, calc(100dvw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right)));
     max-width: calc(100dvw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right));
+    max-height: calc(100dvh - 5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   }
 
   .presentation-time--compact.presentation-time--compact-open .presentation-time-compact-controls {
@@ -796,6 +806,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
     gap: 0.5rem;
   }
 
@@ -803,6 +814,7 @@
   .presentation-timer-options-trigger,
   .presentation-timer-option {
     display: inline-flex;
+    min-width: 0;
     min-height: 2rem;
     align-items: center;
     justify-content: center;
@@ -812,6 +824,8 @@
     color: var(--presentation-secondary-text, rgb(23 23 23 / 62%));
     font-size: 0.75rem;
     font-weight: 600;
+    overflow-wrap: anywhere;
+    text-align: center;
     transition: background-color 150ms ease, color 150ms ease;
   }
 
@@ -849,6 +863,7 @@
 
   .presentation-timer-option-row {
     display: flex;
+    min-width: 0;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.2rem;
@@ -1160,6 +1175,7 @@
     z-index: 20;
     display: grid;
     width: auto;
+    max-width: calc(100vw - 1rem - env(safe-area-inset-left) - env(safe-area-inset-right));
     min-width: 0;
     justify-items: end;
   }
@@ -1208,6 +1224,9 @@
     box-sizing: border-box;
     width: max-content;
     max-width: min(36rem, calc(100dvw - 1rem - env(safe-area-inset-left) - env(safe-area-inset-right)));
+    max-height: calc(100dvh - 5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overscroll-behavior: contain;
     align-items: center;
     justify-content: flex-end;
     flex-wrap: wrap;
