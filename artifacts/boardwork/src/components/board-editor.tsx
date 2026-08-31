@@ -176,7 +176,7 @@ export function BoardEditor({
               <TooltipTrigger asChild>
                 <span
                   tabIndex={0}
-                  className="inline-flex h-9 cursor-not-allowed items-center justify-center gap-1.5 whitespace-nowrap rounded-md bg-muted px-3 text-sm font-medium text-muted-foreground opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="inline-flex h-10 cursor-not-allowed items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-border/60 bg-muted px-4 text-sm font-semibold text-muted-foreground opacity-50 shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   data-testid="button-present-disabled"
                   aria-label={`Present Screen unavailable: ${disabledPresentHint}`}
                 >
@@ -187,7 +187,7 @@ export function BoardEditor({
               <TooltipContent>{disabledPresentHint}</TooltipContent>
             </Tooltip>
           ) : (
-            <Link href={`/present/${draft.id || ''}`} onClick={onPresent} className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring gap-1.5 cursor-pointer" data-testid="button-present">
+            <Link href={`/present/${draft.id || ''}`} onClick={onPresent} className="inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-primary/20 bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition-[background-color,box-shadow,transform] hover:bg-primary/80 hover:shadow-md active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" data-testid="button-present">
               <Monitor className="w-4 h-4" />
               Present Screen
             </Link>

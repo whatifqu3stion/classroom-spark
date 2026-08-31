@@ -198,3 +198,54 @@ describe("BoardEditor presentation visual disclosure", () => {
     });
   });
 });
+
+describe("BoardEditor Present Screen action", () => {
+  it("gives the enabled action stronger weight while preserving its route and callback", () => {
+    const onPresent = vi.fn();
+    render(
+      <BoardEditor
+        draft={{ ...draft, id: "activity-1" }}
+        onChange={vi.fn()}
+        onPresent={onPresent}
+      />,
+    );
+
+    const presentButton = screen.getByTestId("button-present");
+    expect(presentButton).toHaveAttribute("href", "/present/activity-1");
+    expect(presentButton).toHaveClass(
+      "h-10",
+      "rounded-lg",
+      "font-semibold",
+      "shadow-sm",
+      "hover:bg-primary/80",
+      "hover:shadow-md",
+      "focus-visible:ring-2",
+    );
+
+    fireEvent.click(presentButton);
+    expect(onPresent).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the unavailable action visibly disabled with its guidance", async () => {
+    render(
+      <BoardEditor
+        draft={{ ...draft, id: undefined }}
+        onChange={vi.fn()}
+        isMeaningful={false}
+      />,
+    );
+
+    const presentButton = screen.getByTestId("button-present-disabled");
+    expect(presentButton).toHaveAccessibleName(
+      "Present Screen unavailable: Add a title or task before presenting.",
+    );
+    expect(presentButton).toHaveClass("h-10", "cursor-not-allowed", "opacity-50");
+
+    fireEvent.focus(presentButton);
+    await waitFor(() => {
+      expect(screen.getByRole("tooltip")).toHaveTextContent(
+        "Add a title or task before presenting.",
+      );
+    });
+  });
+});
