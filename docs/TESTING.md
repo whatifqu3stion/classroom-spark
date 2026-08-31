@@ -101,7 +101,7 @@ Before calling MVP complete:
 
 - Production verification is blocked as of August 21, 2026: the deployment service reports no active published deployment, so there is no live URL against which to run the access-gate, real-AI persistence, direct-route, projector-asset, fullscreen, or PNG-export smoke tests.
 - The three unchecked items above are intentionally still unchecked. They require either a published deployment (A) or a physical classroom projector/distance observation (F); marking them complete without those observations would be misleading.
-- Local production builds succeed when the required `PORT` and `BASE_PATH` values are supplied. Local typecheck and persistence tests currently expose an existing database/schema mismatch (`activities.visual_url` is present in the Drizzle model but absent from the test database); this was not changed as part of a production verification task.
+- Local production builds succeed when the required `PORT` and `BASE_PATH` values are supplied. The development database is synchronized with the current Drizzle activity schema, including `activities.visual_url`; the API app-state check, typecheck, and persistence suite pass locally. Production schema changes remain Publish-flow work.
 
 ## Stage 5 local PNG typography verification
 
