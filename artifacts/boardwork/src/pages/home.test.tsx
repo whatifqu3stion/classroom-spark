@@ -474,7 +474,7 @@ describe("Home presentation defaults", () => {
   it("does not repeat optional markers inside the collapsed details section", () => {
     render(<Home />);
 
-    expect(screen.getByText("How will this board run?")).toBeInTheDocument();
+    expect(screen.getByText("Board settings")).toBeInTheDocument();
     expect(screen.queryByText("Adjust the setup for this board.")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId("button-toggle-customize"));
@@ -537,9 +537,13 @@ describe("Home presentation defaults", () => {
       const workspace = screen.getByTestId("creation-workspace");
       const controls = within(workspace).getByTestId("creation-controls");
       const actions = within(workspace).getByTestId("creation-actions");
+      const editorPanel = within(workspace).getByTestId("editor-workspace-panel");
 
       expect(window.innerWidth).toBe(width);
       expect(window.innerHeight).toBe(height);
+      expect(controls).toHaveClass("boardwork-creation-panel");
+      expect(within(controls).getByTestId("select-class")).toBeVisible();
+      expect(editorPanel).toHaveClass("boardwork-editor-panel");
       expect(
         within(controls).getByRole("heading", {
           name: "What are students working on today?",
@@ -555,6 +559,8 @@ describe("Home presentation defaults", () => {
       expect(within(controls).getByTestId("select-unit")).toBeVisible();
       expect(within(controls).getByTestId("input-topic")).toBeVisible();
       expect(within(controls).getByTestId("input-goal")).toBeVisible();
+      expect(within(controls).getByLabelText("Topic or starting point (optional)")).toBeVisible();
+      expect(within(controls).getByLabelText("Learning goal (optional)")).toBeVisible();
       expect(within(actions).getByTestId("button-generate")).toBeVisible();
       expect(within(actions).getByTestId("button-surprise")).toBeVisible();
       expect(within(actions).getByTestId("button-blank")).toBeVisible();
@@ -576,14 +582,12 @@ describe("Home presentation defaults", () => {
   it("keeps example inputs scoped to the airier creation setup", () => {
     render(<Home />);
 
-    expect(screen.getByTestId("board-creation-setup")).toHaveClass(
+    expect(screen.getByTestId("creation-controls")).toHaveClass(
       "lg:w-[420px]",
       "xl:w-[500px]",
     );
-    expect(screen.getByTestId("input-topic")).toHaveAttribute(
-      "placeholder",
-      "e.g. a diagram of osmosis",
-    );
+    expect(screen.getByTestId("input-topic")).toHaveAttribute("aria-label", "Topic or starting point (optional)");
+    expect(screen.getByTestId("input-topic")).toHaveAttribute("placeholder", "e.g. a diagram of osmosis");
     expect(screen.getByTestId("input-goal")).toHaveAttribute(
       "placeholder",
       "e.g. explain the evidence in one sentence",

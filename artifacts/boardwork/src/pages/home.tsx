@@ -811,46 +811,6 @@ export default function Home() {
     <Shell>
       <div className="container mx-auto px-4 md:px-8 py-6 min-h-[calc(100dvh-3.5rem)] lg:h-[calc(100dvh-3.5rem)] flex flex-col">
 
-        {/* Top Class Selector */}
-        <div className="mb-6 flex flex-shrink-0 items-center justify-between gap-2 border-b border-border/70 pb-4">
-          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
-            <Select value={activeClassId || ""} onValueChange={handleSetActiveClass}>
-              <SelectTrigger className="-ml-2 h-auto min-w-0 flex-1 border-transparent bg-transparent px-2 py-2 text-lg font-semibold transition-colors hover:border-border hover:bg-muted/50 focus:ring-0 focus:ring-offset-0 sm:w-[280px] sm:flex-none" data-testid="select-class">
-                {activeClass ? (
-                  <div className="flex min-w-0 items-center gap-2">
-                    <ClassColorDot color={activeClass.color || undefined} />
-                    <span className="truncate boardwork-user-content" dir="auto">{activeClass.name}</span>
-                  </div>
-                ) : (
-                  <SelectValue placeholder="Select a class" />
-                )}
-              </SelectTrigger>
-              <SelectContent>
-                {classes.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    <span className="flex items-center gap-2">
-                      <ClassColorDot color={c.color || undefined} />
-                      <span className="boardwork-user-content" dir="auto">{c.name}</span>
-                      {shouldShowSubject(c.name, c.subject) && (
-                        <span className="text-muted-foreground font-normal boardwork-user-content" dir="auto">{c.subject}</span>
-                      )}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {activeClass && (
-              <Button variant="ghost" size="icon" onClick={() => { setEditingClassId(activeClassId); setClassDialogOpen(true); }} className="-ml-2 shrink-0 text-muted-foreground hover:text-foreground" aria-label="Edit class settings" data-testid="button-edit-class">
-                <Settings className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
-          <Button variant="outline" size="sm" onClick={() => { setEditingClassId(null); setClassDialogOpen(true); }} className="shrink-0 gap-2" aria-label="New class" data-testid="button-new-class">
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">New Class</span>
-          </Button>
-        </div>
-
         {/* Main Workspace */}
         <div
           className="flex flex-col gap-6 lg:flex-1 lg:flex-row lg:gap-10 lg:min-h-0"
@@ -858,9 +818,51 @@ export default function Home() {
         >
 
           {/* Left Column: Generator Controls */}
-          <div className="w-full min-w-0 lg:w-auto" data-testid="creation-controls">
+          <div
+            className="boardwork-creation-panel flex min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-xl border border-border/80 bg-card/50 shadow-sm lg:h-full lg:w-[420px] xl:w-[500px]"
+            data-testid="creation-controls"
+          >
+            <div className="flex flex-shrink-0 items-center justify-between gap-2 border-b border-border/70 px-4 py-3 lg:px-5">
+              <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
+                <Select value={activeClassId || ""} onValueChange={handleSetActiveClass}>
+                  <SelectTrigger className="-ml-2 h-auto min-w-0 flex-1 border-transparent bg-transparent px-2 py-2 text-lg font-semibold transition-colors hover:border-border hover:bg-muted/50 focus:ring-0 focus:ring-offset-0 sm:w-[280px] sm:flex-none" data-testid="select-class">
+                    {activeClass ? (
+                      <div className="flex min-w-0 items-center gap-2">
+                        <ClassColorDot color={activeClass.color || undefined} />
+                        <span className="truncate boardwork-user-content" dir="auto">{activeClass.name}</span>
+                      </div>
+                    ) : (
+                      <SelectValue placeholder="Select a class" />
+                    )}
+                  </SelectTrigger>
+                  <SelectContent>
+                    {classes.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        <span className="flex items-center gap-2">
+                          <ClassColorDot color={c.color || undefined} />
+                          <span className="boardwork-user-content" dir="auto">{c.name}</span>
+                          {shouldShowSubject(c.name, c.subject) && (
+                            <span className="text-muted-foreground font-normal boardwork-user-content" dir="auto">{c.subject}</span>
+                          )}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {activeClass && (
+                  <Button variant="ghost" size="icon" onClick={() => { setEditingClassId(activeClassId); setClassDialogOpen(true); }} className="-ml-2 shrink-0 text-muted-foreground hover:text-foreground" aria-label="Edit class settings" data-testid="button-edit-class">
+                    <Settings className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+              <Button variant="outline" size="sm" onClick={() => { setEditingClassId(null); setClassDialogOpen(true); }} className="shrink-0 gap-2" aria-label="New class" data-testid="button-new-class">
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">New Class</span>
+              </Button>
+            </div>
+
             <div
-              className="board-creation-setup w-full flex flex-col gap-6 lg:w-[420px] xl:w-[500px] lg:overflow-y-auto lg:pl-1 lg:pr-2 pb-8"
+              className="board-creation-setup flex min-h-0 w-full flex-1 flex-col gap-6 overflow-y-auto overscroll-contain p-4 pb-8 lg:p-5"
               data-testid="board-creation-setup"
             >
             <div className="space-y-5 lg:space-y-6">
@@ -870,7 +872,7 @@ export default function Home() {
                   Add a topic or goal. You can refine the board before presenting.
                 </p>
               </div>
-              <div className="space-y-5 rounded-xl border bg-card/50 p-4 lg:p-5">
+              <div className="space-y-5 border-b border-border/70 pb-6">
                 <div className="space-y-2 border-b border-border/70 pb-5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-1">
@@ -915,10 +917,11 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="topic">Topic or starting point <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                  <Label htmlFor="topic">Topic or starting point</Label>
                   <Input
                     id="topic"
                     dir="auto"
+                    aria-label="Topic or starting point (optional)"
                     className="boardwork-user-content"
                     placeholder="e.g. a diagram of osmosis"
                     value={topic}
@@ -928,7 +931,7 @@ export default function Home() {
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center gap-1">
-                    <Label htmlFor="goal">Learning goal <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                    <Label htmlFor="goal">Learning goal</Label>
                     <HelpTooltip label="About the student goal">
                       Add one observable outcome to steer this short board. A full lesson plan is not needed.
                     </HelpTooltip>
@@ -936,6 +939,7 @@ export default function Home() {
                   <Input
                     id="goal"
                     dir="auto"
+                    aria-label="Learning goal (optional)"
                     className="boardwork-user-content"
                     placeholder="e.g. explain the evidence in one sentence"
                     value={goal}
@@ -946,10 +950,10 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="space-y-5 rounded-xl border bg-card/50 p-4 lg:p-5">
+            <div className="space-y-5 border-b border-border/70 pb-6">
                <div>
                  <div className="flex items-center gap-1">
-                   <h2 className="text-sm font-semibold text-foreground">How will this board run?</h2>
+                    <h2 className="text-sm font-semibold text-foreground">Board settings</h2>
                    <HelpTooltip label="About board setup">
                      These choices start from the class defaults and apply only to this board.
                    </HelpTooltip>
@@ -1265,7 +1269,10 @@ export default function Home() {
           </div>
 
           {/* Right Column: Editor */}
-          <div className="flex-1 min-w-0 min-h-[500px] lg:min-h-0 pb-6 lg:pb-0">
+          <div
+            className="boardwork-editor-panel flex min-h-[500px] min-w-0 flex-1 overflow-hidden rounded-xl border border-border/80 bg-card/30 shadow-sm lg:min-h-0 lg:pb-0"
+            data-testid="editor-workspace-panel"
+          >
             {localDraft ? (
               <BoardEditor
                 draft={localDraft}

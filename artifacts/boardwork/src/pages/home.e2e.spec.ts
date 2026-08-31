@@ -101,11 +101,17 @@ for (const viewport of viewports) {
 
     const workspace = page.getByTestId("creation-workspace");
     const controls = page.getByTestId("creation-controls");
+    const editorPanel = page.getByTestId("editor-workspace-panel");
     const actions = page.getByTestId("creation-actions");
 
     await expect(workspace).toBeVisible();
+    await expect(controls).toHaveClass(/boardwork-creation-panel/);
+    await expect(controls.getByTestId("select-class")).toBeVisible();
+    await expect(editorPanel).toHaveClass(/boardwork-editor-panel/);
     await expect(controls.getByRole("heading", { name: APPROVED_HEADING, level: 1 })).toBeVisible();
     await expect(controls.getByText(APPROVED_SUPPORTING_COPY)).toBeVisible();
+    await expect(controls.getByLabel("Topic or starting point (optional)")).toBeVisible();
+    await expect(controls.getByLabel("Learning goal (optional)")).toBeVisible();
 
     for (const testId of requiredControls) {
       const locator = page.getByTestId(testId);
@@ -119,6 +125,8 @@ for (const viewport of viewports) {
     );
 
     await expectElementFitsHorizontally(page, workspace, viewport);
+    await expectElementFitsHorizontally(page, controls, viewport);
+    await expectElementFitsHorizontally(page, editorPanel, viewport);
     await expectElementReachableInViewport(page, actions, viewport);
   });
 }
