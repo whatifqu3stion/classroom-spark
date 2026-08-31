@@ -1,4 +1,12 @@
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type Ref } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent,
+  type ReactNode,
+  type Ref,
+} from "react";
 import { Clock, ExternalLink } from "lucide-react";
 import type { ActivityDraft } from "@/store/boardwork-context";
 import { getSafeResourceUrl } from "@/lib/resource-url";
@@ -45,6 +53,7 @@ export function PresentationCanvas({
 }: PresentationCanvasProps) {
   const [timerPointerInside, setTimerPointerInside] = useState(false);
   const [timerFocusWithin, setTimerFocusWithin] = useState(false);
+  const timerPointerDownRef = useRef(false);
   const timerPointerCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const arrivalInstruction = activity.arrivalInstructions?.trim();
   const safeResourceUrl = getSafeResourceUrl(activity.resourceUrl);
@@ -82,7 +91,9 @@ export function PresentationCanvas({
     };
   }, []);
 
-  const handleTimerPointerEnter = () => {
+  const handleTimerPointerEnter = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "touch") return;
+
     if (timerPointerCloseTimeoutRef.current) {
       clearTimeout(timerPointerCloseTimeoutRef.current);
       timerPointerCloseTimeoutRef.current = null;
@@ -90,7 +101,9 @@ export function PresentationCanvas({
     setTimerPointerInside(true);
   };
 
-  const handleTimerPointerLeave = () => {
+  const handleTimerPointerLeave = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "touch") return;
+
     if (timerPointerCloseTimeoutRef.current) {
       clearTimeout(timerPointerCloseTimeoutRef.current);
     }
@@ -184,11 +197,45 @@ export function PresentationCanvas({
           )}
           onPointerEnter={handleTimerPointerEnter}
           onPointerLeave={handleTimerPointerLeave}
-          onFocusCapture={() => setTimerFocusWithin(true)}
+          onPointerDown={(event) => {
+            timerPointerDownRef.current = true;
+            setTimerFocusWithin(false);
+            if (event.pointerType !== "mouse") {
+              if (timerPointerCloseTimeoutRef.current) {
+                clearTimeout(timerPointerCloseTimeoutRef.current);
+                timerPointerCloseTimeoutRef.current = null;
+              }
+              setTimerPointerInside(false);
+            }
+          }}
+          onPointerUp={() => {
+            timerPointerDownRef.current = false;
+          }}
+          onPointerCancel={() => {
+            timerPointerDownRef.current = false;
+          }}
+          onFocusCapture={() => {
+            if (!timerPointerDownRef.current) {
+              setTimerFocusWithin(true);
+            }
+          }}
           onBlurCapture={(event) => {
             if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
               setTimerFocusWithin(false);
             }
+          }}
+          onKeyDown={(event) => {
+            if (event.key !== "Escape" || !showCompactTimerControls) return;
+
+            event.preventDefault();
+            if (timerControlsOpen) {
+              onToggleTimerControls?.();
+            }
+            setTimerPointerInside(false);
+            setTimerFocusWithin(false);
+            (event.currentTarget.querySelector(
+              ".presentation-time-compact-toggle",
+            ) as HTMLButtonElement | null)?.focus();
           }}
           {...testId(includeTestIds, "present-time")}
         >

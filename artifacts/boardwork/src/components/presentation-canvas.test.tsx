@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, act } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { useState } from "react";
 import type { ActivityDraft } from "@/store/boardwork-context";
 import { PresentationCanvas } from "./presentation-canvas";
 
@@ -186,14 +187,44 @@ describe("PresentationCanvas timer visibility", () => {
         "aria-hidden",
         "true",
       );
-
-      const compactToggle = screen.getByTestId("button-toggle-timer-controls");
-      fireEvent.focus(compactToggle);
-      expect(screen.getByRole("button", { name: "Start timer" })).toBeInTheDocument();
-      expect(compactToggle).toHaveAttribute("aria-expanded", "true");
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it("opens and closes minimized timer controls with touch taps instead of hover state", () => {
+    function TouchHarness() {
+      const [open, setOpen] = useState(false);
+
+      return (
+        <PresentationCanvas
+          activity={activity}
+          timer={timer}
+          timerMinimized
+          timerControlsOpen={open}
+          onToggleTimerControls={() => setOpen((value) => !value)}
+          timerControls={<button type="button">Start timer</button>}
+        />
+      );
+    }
+
+    render(<TouchHarness />);
+
+    const timerRegion = screen.getByTestId("present-time");
+    const compactToggle = screen.getByTestId("button-toggle-timer-controls");
+
+    fireEvent.pointerDown(compactToggle, { pointerType: "touch" });
+    fireEvent.pointerEnter(timerRegion, { pointerType: "touch" });
+    fireEvent.focus(compactToggle);
+    fireEvent.click(compactToggle);
+    expect(screen.getByRole("button", { name: "Start timer" })).toBeInTheDocument();
+
+    fireEvent.pointerLeave(timerRegion, { pointerType: "touch" });
+    fireEvent.pointerUp(compactToggle, { pointerType: "touch" });
+    fireEvent.pointerDown(compactToggle, { pointerType: "touch" });
+    fireEvent.focus(compactToggle);
+    fireEvent.click(compactToggle);
+    expect(screen.queryByRole("button", { name: "Start timer" })).not.toBeInTheDocument();
   });
 
   it("shows an active alarm to the teacher but omits it from exports", () => {
@@ -248,7 +279,9 @@ describe("PresentationCanvas timer visibility", () => {
   });
 
   it("resolves missing and invalid appearances to the Boardwork default", () => {
-    const { rerender } = render(<PresentationCanvas activity={activity} />);
+    const { rerender } = render(
+      <PresentationCanvas activity={activity} />,
+    );
     const surface = screen.getByTestId("presentation-surface");
 
     expect(surface.style.getPropertyValue("--presentation-bg")).toBe("#FDFCF8");

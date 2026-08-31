@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, type CSSProperties } from "react";
+import React, { useState, useEffect, useRef, type CSSProperties, type PointerEvent } from "react";
 import { useBoardwork } from "@/store/boardwork-context";
 import { Link, useRoute } from "wouter";
 import { toPng } from "html-to-image";
@@ -106,7 +106,9 @@ export default function Present() {
     }
   };
 
-  const handleControlsPointerEnter = () => {
+  const handleControlsPointerEnter = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "touch") return;
+
     if (controlsCloseTimeoutRef.current) {
       clearTimeout(controlsCloseTimeoutRef.current);
       controlsCloseTimeoutRef.current = null;
@@ -114,7 +116,9 @@ export default function Present() {
     setControlsHovering(true);
   };
 
-  const handleControlsPointerLeave = () => {
+  const handleControlsPointerLeave = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "touch") return;
+
     if (controlsCloseTimeoutRef.current) {
       clearTimeout(controlsCloseTimeoutRef.current);
     }
@@ -122,6 +126,25 @@ export default function Present() {
       setControlsHovering(false);
       controlsCloseTimeoutRef.current = null;
     }, 180);
+  };
+
+  const handleControlsPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "mouse") return;
+
+    if (controlsCloseTimeoutRef.current) {
+      clearTimeout(controlsCloseTimeoutRef.current);
+      controlsCloseTimeoutRef.current = null;
+    }
+    setControlsHovering(false);
+  };
+
+  const handleControlsKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "Escape") return;
+
+    event.preventDefault();
+    setControlsOpen(false);
+    setControlsHovering(false);
+    event.currentTarget.querySelector<HTMLButtonElement>(".presentation-controls-toggle")?.focus();
   };
 
   const exportPng = async () => {
@@ -184,15 +207,21 @@ export default function Present() {
   const controls = (
     <div
       className={`presentation-controls-dock ${controlsOpen ? "presentation-controls-dock--open" : ""} ${controlsHovering ? "presentation-controls-dock--hovering" : ""}`}
-      onFocusCapture={() => setControlsOpen(true)}
+      onFocusCapture={(event) => {
+        if (event.target !== event.currentTarget.querySelector(".presentation-controls-toggle")) {
+          setControlsOpen(true);
+        }
+      }}
+      onKeyDown={handleControlsKeyDown}
       onPointerEnter={handleControlsPointerEnter}
       onPointerLeave={handleControlsPointerLeave}
+      onPointerDown={handleControlsPointerDown}
     >
       <button
         type="button"
         className="presentation-controls-toggle"
         onClick={() => setControlsOpen((value) => !value)}
-        aria-expanded={controlsOpen}
+        aria-expanded={controlsOpen || controlsHovering}
         aria-controls="presentation-controls-panel"
         title={controlsOpen ? "Hide teacher controls" : "Show teacher controls"}
         data-testid="button-teacher-controls"

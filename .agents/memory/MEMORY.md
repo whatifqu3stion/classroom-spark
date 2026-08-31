@@ -12,3 +12,4 @@
 - [Proxied wheel handling](proxied-wheel-handlers.md) — Avoid preventDefault in proxied React wheel handlers; use overscroll containment for reliable signed changes.
 - [Compact segmented controls](compact-segmented-controls.md) — Narrow setup controls need shrinkable tracks, wrapped labels, and stacked icon treatments to avoid hidden page overflow.
 - [Duration control baseline](duration-control-baseline.md) — Board setup uses compact 3/5/7 presets plus an unbounded positive whole-minute custom entry.
+- [Touch presentation controls](touch-presentation-controls.md) — Separate touch taps from hover/focus state, and give accessible floating-panel wrappers measurable geometry.
