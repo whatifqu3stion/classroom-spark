@@ -30,6 +30,7 @@ const viewports = [
   { name: "desktop", width: 1280, height: 800 },
   { name: "narrow", width: 390, height: 844 },
 ] as const;
+type Viewport = { width: number; height: number };
 
 const requiredControls = [
   "select-unit",
@@ -43,7 +44,7 @@ const requiredControls = [
 async function expectElementReachableInViewport(
   page: Page,
   locator: Locator,
-  viewport: (typeof viewports)[number],
+  viewport: Viewport,
 ) {
   await locator.scrollIntoViewIfNeeded();
   const box = await locator.boundingBox();
@@ -64,7 +65,7 @@ async function expectElementReachableInViewport(
 async function expectElementFitsHorizontally(
   page: Page,
   locator: Locator,
-  viewport: (typeof viewports)[number],
+  viewport: Viewport,
 ) {
   const box = await locator.boundingBox();
 
@@ -194,4 +195,71 @@ test("keeps the empty editor preview visually quiet", async ({ page }) => {
   expect(styles.backgroundImage).toBe("none");
   await expect(emptyState.locator(".board-editor-empty-state-card")).toHaveCount(0);
   await expect(emptyState.locator(".board-editor-empty-state-outline-line")).toHaveCount(0);
+});
+
+test("keeps the empty editor preview contained when text is enlarged", async ({ page }) => {
+  const viewport = { width: 1024, height: 800 };
+
+  await page.setViewportSize(viewport);
+  await page.goto("/");
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = "150%";
+  });
+
+  const workspace = page.getByTestId("creation-workspace");
+  const emptyState = page.getByTestId("empty-editor-state");
+  await expect(emptyState).toBeVisible();
+  await expect(emptyState).toHaveClass(/border-dashed/);
+
+  const bounds = await emptyState.evaluate((element) => {
+    const container = element.getBoundingClientRect();
+    const content = Array.from(element.querySelectorAll("svg, h3, p")).map((child) => {
+      const childBounds = child.getBoundingClientRect();
+      return {
+        top: childBounds.top,
+        right: childBounds.right,
+        bottom: childBounds.bottom,
+        left: childBounds.left,
+      };
+    });
+
+    return {
+      container: {
+        top: container.top,
+        right: container.right,
+        bottom: container.bottom,
+        left: container.left,
+      },
+      content,
+    };
+  });
+
+  for (const child of bounds.content) {
+    expect(child.top, "empty preview content should stay inside its top edge").toBeGreaterThanOrEqual(
+      bounds.container.top,
+    );
+    expect(
+      child.right,
+      "empty preview content should stay inside its right edge",
+    ).toBeLessThanOrEqual(bounds.container.right);
+    expect(
+      child.bottom,
+      "empty preview content should stay inside its bottom edge",
+    ).toBeLessThanOrEqual(bounds.container.bottom);
+    expect(child.left, "empty preview content should stay inside its left edge").toBeGreaterThanOrEqual(
+      bounds.container.left,
+    );
+  }
+
+  for (const testId of requiredControls) {
+    const locator = page.getByTestId(testId);
+    await expect(locator).toBeVisible();
+    await expectElementReachableInViewport(page, locator, viewport);
+  }
+
+  const documentWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+  expect(documentWidth, "enlarged text should not create horizontal page overflow").toBeLessThanOrEqual(
+    viewport.width,
+  );
+  await expectElementFitsHorizontally(page, workspace, viewport);
 });
