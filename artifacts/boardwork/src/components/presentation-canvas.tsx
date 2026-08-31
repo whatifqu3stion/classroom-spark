@@ -13,6 +13,8 @@ interface PresentationCanvasProps {
   controls?: ReactNode;
   timerControls?: ReactNode;
   onShowTimer?: () => void;
+  timerControlsOpen?: boolean;
+  onToggleTimerControls?: () => void;
   timerMinimized?: boolean;
   exportLayout?: boolean;
   editorPreview?: boolean;
@@ -32,6 +34,8 @@ export function PresentationCanvas({
   controls,
   timerControls,
   onShowTimer,
+  timerControlsOpen = false,
+  onToggleTimerControls,
   timerMinimized = false,
   exportLayout = false,
   editorPreview = false,
@@ -157,14 +161,28 @@ export function PresentationCanvas({
               <Clock className="presentation-time-toggle-icon" aria-hidden="true" />
             </button>
           ) : timer && timer.visible && timerMinimized ? (
-            <span className="presentation-time-reading" aria-live="polite" aria-atomic="true">
-              {formatTimer(timer.remainingSeconds)}
-            </span>
+            <button
+              type="button"
+              className="presentation-time-compact-toggle"
+              onClick={onToggleTimerControls}
+              aria-expanded={timerControlsOpen}
+              aria-controls="presentation-compact-timer-controls"
+              aria-label={timerControlsOpen ? "Hide timer controls" : "Show timer controls"}
+              title={timerControlsOpen ? "Hide timer controls" : "Show timer controls"}
+              data-testid={includeTestIds ? "button-toggle-timer-controls" : undefined}
+            >
+              <span className="presentation-time-reading" aria-live="polite" aria-atomic="true">
+                {formatTimer(timer.remainingSeconds)}
+              </span>
+            </button>
           ) : (
             `${activity.durationMinutes} MIN`
           )}
-          {showCompactTimer && showTimerControls && (
-            <div className="presentation-time-compact-controls">
+          {showCompactTimer && showTimerControls && timerControlsOpen && (
+            <div
+              id="presentation-compact-timer-controls"
+              className="presentation-time-compact-controls"
+            >
               {timerControls}
             </div>
           )}

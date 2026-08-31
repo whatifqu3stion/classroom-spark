@@ -86,6 +86,7 @@ describe("PresentationCanvas timer visibility", () => {
   });
 
   it("keeps the timer large by default and moves it with its controls when minimized", () => {
+    const onToggleTimerControls = vi.fn();
     const { rerender } = render(
       <PresentationCanvas
         activity={activity}
@@ -103,6 +104,8 @@ describe("PresentationCanvas timer visibility", () => {
         activity={activity}
         timer={timer}
         timerMinimized
+        timerControlsOpen={false}
+        onToggleTimerControls={onToggleTimerControls}
         timerControls={<button type="button">Expand timer</button>}
       />,
     );
@@ -111,8 +114,33 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.getByTestId("present-time").querySelector(".presentation-time-reading")).toHaveTextContent(
       "5:00",
     );
+    expect(screen.queryByRole("button", { name: "Expand timer" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show timer controls" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(document.getElementById("presentation-compact-timer-controls")).not.toBeInTheDocument();
+
+    screen.getByRole("button", { name: "Show timer controls" }).click();
+    expect(onToggleTimerControls).toHaveBeenCalledOnce();
+
+    rerender(
+      <PresentationCanvas
+        activity={activity}
+        timer={timer}
+        timerMinimized
+        timerControlsOpen
+        onToggleTimerControls={onToggleTimerControls}
+        timerControls={<button type="button">Expand timer</button>}
+      />,
+    );
+
     expect(screen.getByRole("button", { name: "Expand timer" })).toBeInTheDocument();
-    expect(screen.getByTestId("present-time").querySelector(".presentation-time-compact-controls")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Hide timer controls" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    expect(document.getElementById("presentation-compact-timer-controls")).toBeInTheDocument();
   });
 
   it("shows an active alarm to the teacher but omits it from exports", () => {

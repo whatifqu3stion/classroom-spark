@@ -517,12 +517,29 @@
     align-items: center;
     gap: 0.35rem;
     border-radius: 0.4rem;
-    padding: 0.35rem 0.5rem;
+    padding: 0;
     font-family: var(--font-mono);
     font-size: clamp(0.95rem, 3.2vw, 1.2rem);
     letter-spacing: 0.08em;
     line-height: 1;
+    background: color-mix(in srgb, var(--presentation-surface, #fafafa) 94%, transparent);
+    box-shadow: 0 1px 3px color-mix(in srgb, var(--presentation-primary-text, #171717) 10%, transparent);
+    outline: 1px solid color-mix(in srgb, var(--presentation-primary-text, #171717) 16%, transparent);
     transition: background-color 150ms ease, color 150ms ease;
+  }
+
+  .presentation-time-compact-toggle {
+    display: inline-flex;
+    min-height: 2.25rem;
+    align-items: center;
+    border: 0;
+    border-radius: 0.4rem;
+    background: transparent;
+    padding: 0.35rem 0.5rem;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    line-height: inherit;
   }
 
   .presentation-time-reading {
@@ -536,6 +553,17 @@
   .presentation-time--compact:hover {
     background: var(--presentation-accent-soft, rgb(23 23 23 / 6%));
     color: var(--presentation-primary-text, #171717);
+  }
+
+  .presentation-time-compact-toggle:hover,
+  .presentation-time-compact-toggle:focus-visible {
+    background: var(--presentation-accent-soft, rgb(23 23 23 / 6%));
+    color: var(--presentation-primary-text, #171717);
+  }
+
+  .presentation-time-compact-toggle:focus-visible {
+    outline: 2px solid var(--presentation-accent, hsl(var(--primary)));
+    outline-offset: 2px;
   }
 
   .presentation-time-compact-controls {

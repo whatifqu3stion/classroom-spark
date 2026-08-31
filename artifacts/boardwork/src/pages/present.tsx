@@ -57,6 +57,7 @@ export default function Present() {
   const [isExporting, setIsExporting] = useState(false);
   const [timerVisible, setTimerVisible] = useState(true);
   const [timerMinimized, setTimerMinimized] = useState(false);
+  const [timerControlsOpen, setTimerControlsOpen] = useState(false);
   const [alarmEnabled, setAlarmEnabled] = useState(true);
   const [timerOptionsOpen, setTimerOptionsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -266,7 +267,10 @@ export default function Present() {
         <button
           type="button"
           className="presentation-timer-options-trigger"
-          onClick={() => setTimerMinimized((value) => !value)}
+            onClick={() => {
+              setTimerMinimized((value) => !value);
+              setTimerControlsOpen(false);
+            }}
           aria-label={timerMinimized ? "Expand timer" : "Minimize timer"}
         >
           {timerMinimized ? (
@@ -324,7 +328,10 @@ export default function Present() {
         onShowTimer={() => {
           setTimerVisible(true);
           setTimerMinimized(true);
+          setTimerControlsOpen(false);
         }}
+        timerControlsOpen={timerControlsOpen}
+        onToggleTimerControls={() => setTimerControlsOpen((value) => !value)}
         timerMinimized={timerMinimized}
         timer={{ visible: timerVisible, remainingSeconds, status: timerStatus, alarmActive }}
       />
