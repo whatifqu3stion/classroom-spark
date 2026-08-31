@@ -503,6 +503,8 @@ describe("Home presentation defaults", () => {
         "Add a topic or goal. You can refine the board before presenting.",
       ),
     ).toBeInTheDocument();
+    expect(screen.getByLabelText("Topic or starting point (optional)")).toBeInTheDocument();
+    expect(screen.getByLabelText("Learning goal (optional)")).toBeInTheDocument();
     expect(screen.queryByText("Create today's board")).not.toBeInTheDocument();
     expect(
       screen.queryByText("What should students practice today?"),

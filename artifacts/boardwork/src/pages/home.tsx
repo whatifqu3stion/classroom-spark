@@ -812,7 +812,7 @@ export default function Home() {
       <div className="container mx-auto px-4 md:px-8 py-6 min-h-[calc(100dvh-3.5rem)] lg:h-[calc(100dvh-3.5rem)] flex flex-col">
 
         {/* Top Class Selector */}
-        <div className="mb-6 flex flex-shrink-0 items-center justify-between gap-2">
+        <div className="mb-6 flex flex-shrink-0 items-center justify-between gap-2 border-b border-border/70 pb-4">
           <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
             <Select value={activeClassId || ""} onValueChange={handleSetActiveClass}>
               <SelectTrigger className="-ml-2 h-auto min-w-0 flex-1 border-transparent bg-transparent px-2 py-2 text-lg font-semibold transition-colors hover:border-border hover:bg-muted/50 focus:ring-0 focus:ring-offset-0 sm:w-[280px] sm:flex-none" data-testid="select-class">
@@ -863,90 +863,90 @@ export default function Home() {
               className="board-creation-setup w-full flex flex-col gap-6 lg:w-[420px] xl:w-[500px] lg:overflow-y-auto lg:pl-1 lg:pr-2 pb-8"
               data-testid="board-creation-setup"
             >
-            <div className="space-y-4 lg:space-y-5">
-              <div>
-                <h1 className="text-xl font-semibold tracking-tight text-foreground">What are students working on today?</h1>
-                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+            <div className="space-y-5 lg:space-y-6">
+              <div className="max-w-xl">
+                <h1 className="text-xl font-semibold tracking-tight text-foreground text-balance">What are students working on today?</h1>
+                <p className="mt-1 max-w-lg text-sm leading-relaxed text-muted-foreground">
                   Add a topic or goal. You can refine the board before presenting.
                 </p>
               </div>
-              <div className="space-y-2 rounded-xl border bg-card/50 p-4 lg:p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                     <div className="flex items-center gap-1">
-                       <Label htmlFor="unit-select">Current unit <span className="font-normal text-muted-foreground">(optional)</span></Label>
-                       <HelpTooltip label="About current units">
-                         Select a reusable unit to carry its planning context into this board. Units can be used with other classes.
-                       </HelpTooltip>
-                     </div>
-                  </div>
-                  <Button type="button" variant="ghost" size="sm" className="shrink-0 gap-1" onClick={openNewUnit} data-testid="button-add-unit">
-                    <Plus className="size-4" />
-                    Add unit
-                  </Button>
-                </div>
-                <div className="flex gap-2">
-                  <Select value={selectedUnitId ?? "none"} onValueChange={(value) => setSelectedUnitId(value === "none" ? null : value)}>
-                    <SelectTrigger id="unit-select" className="min-w-0 flex-1" data-testid="select-unit">
-                      <SelectValue placeholder="No unit selected">
-                        {selectedUnit?.name ?? "No unit selected"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No unit selected</SelectItem>
-                      {units.map((unit) => (
-                        <SelectItem key={unit.id} value={unit.id}>
-                          <span className="boardwork-user-content" dir="auto">{unit.name}</span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {selectedUnit && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      aria-label="Edit selected unit"
-                      onClick={() => { setEditingUnitId(selectedUnit.id); setUnitDialogOpen(true); }}
-                      data-testid="button-edit-unit"
-                    >
-                      <Settings className="size-4" />
+              <div className="space-y-5 rounded-xl border bg-card/50 p-4 lg:p-5">
+                <div className="space-y-2 border-b border-border/70 pb-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-1">
+                      <Label htmlFor="unit-select">Current unit <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                      <HelpTooltip label="About current units">
+                        Select a reusable unit to carry its planning context into this board. Units can be used with other classes.
+                      </HelpTooltip>
+                    </div>
+                    <Button type="button" variant="ghost" size="sm" className="shrink-0 gap-1" onClick={openNewUnit} data-testid="button-add-unit">
+                      <Plus className="size-4" />
+                      Add unit
                     </Button>
-                  )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Select value={selectedUnitId ?? "none"} onValueChange={(value) => setSelectedUnitId(value === "none" ? null : value)}>
+                      <SelectTrigger id="unit-select" className="min-w-0 flex-1" data-testid="select-unit">
+                        <SelectValue placeholder="No unit selected">
+                          {selectedUnit?.name ?? "No unit selected"}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No unit selected</SelectItem>
+                        {units.map((unit) => (
+                          <SelectItem key={unit.id} value={unit.id}>
+                            <span className="boardwork-user-content" dir="auto">{unit.name}</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {selectedUnit && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        aria-label="Edit selected unit"
+                        onClick={() => { setEditingUnitId(selectedUnit.id); setUnitDialogOpen(true); }}
+                        data-testid="button-edit-unit"
+                      >
+                        <Settings className="size-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="topic">Today&apos;s starting point <span className="font-normal text-muted-foreground">(optional)</span></Label>
-                <Input
-                  id="topic"
-                  dir="auto"
-                  className="boardwork-user-content"
-                   placeholder="e.g. a diagram of osmosis"
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  data-testid="input-topic"
-                />
-              </div>
-               <div className="space-y-2">
+                <div className="space-y-2">
+                  <Label htmlFor="topic">Topic or starting point <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                  <Input
+                    id="topic"
+                    dir="auto"
+                    className="boardwork-user-content"
+                    placeholder="e.g. a diagram of osmosis"
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                    data-testid="input-topic"
+                  />
+                </div>
+                <div className="space-y-2">
                   <div className="flex items-center gap-1">
-                    <Label htmlFor="goal">What should students be able to do? <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                    <Label htmlFor="goal">Learning goal <span className="font-normal text-muted-foreground">(optional)</span></Label>
                     <HelpTooltip label="About the student goal">
                       Add one observable outcome to steer this short board. A full lesson plan is not needed.
                     </HelpTooltip>
                   </div>
-                <Input
-                  id="goal"
-                  dir="auto"
-                  className="boardwork-user-content"
-                   placeholder="e.g. explain the evidence in one sentence"
-                  value={goal}
-                  onChange={(e) => setGoal(e.target.value)}
-                  data-testid="input-goal"
-                />
+                  <Input
+                    id="goal"
+                    dir="auto"
+                    className="boardwork-user-content"
+                    placeholder="e.g. explain the evidence in one sentence"
+                    value={goal}
+                    onChange={(e) => setGoal(e.target.value)}
+                    data-testid="input-goal"
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="space-y-3 rounded-xl border bg-card/50 p-4 lg:p-5">
+            <div className="space-y-5 rounded-xl border bg-card/50 p-4 lg:p-5">
                <div>
                  <div className="flex items-center gap-1">
                    <h2 className="text-sm font-semibold text-foreground">How will this board run?</h2>
@@ -955,7 +955,7 @@ export default function Home() {
                    </HelpTooltip>
                  </div>
               </div>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                  <div className="space-y-2 sm:col-span-2">
                  <Label>Technology</Label>
                    <SegmentedControl<TechnologyMode>
@@ -1015,7 +1015,7 @@ export default function Home() {
                   </div>
               </div>
                {technologyMode !== "no_computer" && (
-                 <div className="col-span-2 space-y-4 border-t pt-3">
+                  <div className="col-span-2 space-y-4 border-t border-border/70 pt-4">
                    <div className="space-y-2">
                       <div className="flex items-center gap-1">
                         <Label htmlFor="resourceUrl">
@@ -1055,7 +1055,7 @@ export default function Home() {
                )}
             </div>
 
-            <Collapsible open={customizeOpen} onOpenChange={setCustomizeOpen} className="rounded-xl border bg-muted/10">
+            <Collapsible open={customizeOpen} onOpenChange={setCustomizeOpen} className="rounded-xl border bg-card/50">
               <CollapsibleTrigger
                 className="group flex min-h-14 w-full items-center justify-between gap-4 px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-xl"
                 data-testid="button-toggle-customize"
@@ -1068,7 +1068,7 @@ export default function Home() {
                 </span>
                 <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform ${customizeOpen ? "rotate-180" : ""}`} />
               </CollapsibleTrigger>
-              <CollapsibleContent className="border-t px-4 pb-4 pt-4">
+               <CollapsibleContent className="border-t border-border/70 px-4 pb-4 pt-4 lg:px-5">
                 <div className="space-y-6">
                   <ChipGroup
                     chips={activeChips}
