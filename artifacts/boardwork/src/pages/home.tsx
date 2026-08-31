@@ -852,18 +852,21 @@ export default function Home() {
         </div>
 
         {/* Main Workspace */}
-        <div className="flex flex-col lg:flex-1 lg:flex-row gap-6 lg:gap-8 lg:min-h-0">
+        <div className="flex flex-col gap-6 lg:flex-1 lg:flex-row lg:gap-10 lg:min-h-0">
 
           {/* Left Column: Generator Controls */}
-          <div className="w-full lg:w-[400px] xl:w-[460px] flex flex-col gap-5 lg:overflow-y-auto lg:pl-1 lg:pr-2 pb-8">
-            <div className="space-y-4">
+          <div
+            className="board-creation-setup w-full flex flex-col gap-6 lg:w-[420px] xl:w-[500px] lg:overflow-y-auto lg:pl-1 lg:pr-2 pb-8"
+            data-testid="board-creation-setup"
+          >
+            <div className="space-y-4 lg:space-y-5">
               <div>
                 <h1 className="text-xl font-semibold tracking-tight text-foreground">What are students working on today?</h1>
                 <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                   Add a topic or goal. You can refine the board before presenting.
                 </p>
               </div>
-              <div className="space-y-2 rounded-xl border bg-card/50 p-4">
+              <div className="space-y-2 rounded-xl border bg-card/50 p-4 lg:p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                      <div className="flex items-center gap-1">
@@ -939,7 +942,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="space-y-3 rounded-xl border bg-card/50 p-4">
+            <div className="space-y-3 rounded-xl border bg-card/50 p-4 lg:p-5">
                <div>
                  <div className="flex items-center gap-1">
                    <h2 className="text-sm font-semibold text-foreground">How will this board run?</h2>
@@ -1254,7 +1257,7 @@ export default function Home() {
           </div>
 
           {/* Right Column: Editor */}
-          <div className="flex-1 min-h-[500px] lg:min-h-0 pb-6 lg:pb-0">
+          <div className="flex-1 min-w-0 min-h-[500px] lg:min-h-0 pb-6 lg:pb-0">
             {localDraft ? (
               <BoardEditor
                 draft={localDraft}

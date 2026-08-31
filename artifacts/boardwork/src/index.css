@@ -204,6 +204,11 @@
 }
 
 @layer components {
+  .board-creation-setup input::placeholder {
+    color: color-mix(in srgb, hsl(var(--muted-foreground)) 58%, hsl(var(--background)));
+    opacity: 1;
+  }
+
   .presentation-page {
     min-height: 100dvh;
     width: 100%;

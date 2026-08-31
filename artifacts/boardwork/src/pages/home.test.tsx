@@ -482,4 +482,25 @@ describe("Home presentation defaults", () => {
       screen.queryByText("What should students practice today?"),
     ).not.toBeInTheDocument();
   });
+
+  it("keeps example inputs scoped to the airier creation setup", () => {
+    render(<Home />);
+
+    expect(screen.getByTestId("board-creation-setup")).toHaveClass(
+      "lg:w-[420px]",
+      "xl:w-[500px]",
+    );
+    expect(screen.getByTestId("input-topic")).toHaveAttribute(
+      "placeholder",
+      "e.g. a diagram of osmosis",
+    );
+    expect(screen.getByTestId("input-goal")).toHaveAttribute(
+      "placeholder",
+      "e.g. explain the evidence in one sentence",
+    );
+    expect(screen.getByTestId("input-custom-activity-duration")).toHaveAttribute(
+      "placeholder",
+      "Custom",
+    );
+  });
 });
