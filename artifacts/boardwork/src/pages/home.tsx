@@ -822,10 +822,13 @@ export default function Home() {
             className="boardwork-creation-panel flex min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-xl border border-border/80 bg-card/50 shadow-sm lg:h-full lg:w-[420px] xl:w-[500px]"
             data-testid="creation-controls"
           >
-            <div className="flex flex-shrink-0 items-center justify-between gap-2 border-b border-border/70 px-4 py-3 lg:px-5">
+            <div
+              className="boardwork-class-header flex min-w-0 flex-shrink-0 items-center justify-between gap-2 border-b border-border/70 px-4 py-3 lg:px-5"
+              data-testid="creation-class-header"
+            >
               <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
                 <Select value={activeClassId || ""} onValueChange={handleSetActiveClass}>
-                  <SelectTrigger className="-ml-2 h-auto min-w-0 flex-1 border-transparent bg-transparent px-2 py-2 text-lg font-semibold transition-colors hover:border-border hover:bg-muted/50 focus:ring-0 focus:ring-offset-0 sm:w-[280px] sm:flex-none" data-testid="select-class">
+                  <SelectTrigger className="-ml-2 h-auto min-w-0 flex-1 border-transparent bg-transparent px-2 py-2 text-lg font-semibold transition-colors hover:border-border hover:bg-muted/50 focus:ring-0 focus:ring-offset-0" data-testid="select-class">
                     {activeClass ? (
                       <div className="flex min-w-0 items-center gap-2">
                         <ClassColorDot color={activeClass.color || undefined} />

@@ -26,6 +26,16 @@ const appState = {
   activities: [],
 };
 
+const longClassAppState = {
+  ...appState,
+  classes: [
+    {
+      ...appState.classes[0],
+      name: "Grade 7 Design Studio — Forces, Motion & Modeling",
+    },
+  ],
+};
+
 const viewports = [
   { name: "desktop", width: 1280, height: 800 },
   { name: "narrow", width: 390, height: 844 },
@@ -77,6 +87,41 @@ async function expectElementFitsHorizontally(
   ).toBeLessThanOrEqual(viewport.width);
 }
 
+async function expectHeaderControlsDoNotOverlap(page: Page) {
+  const header = page.getByTestId("creation-class-header");
+  const controls = [
+    page.getByTestId("select-class"),
+    page.getByTestId("button-edit-class"),
+    page.getByTestId("button-new-class"),
+  ];
+  const boxes = await Promise.all(controls.map((control) => control.boundingBox()));
+
+  for (const [index, box] of boxes.entries()) {
+    expect(box, `header control ${index} should have geometry`).not.toBeNull();
+  }
+
+  for (let index = 0; index < boxes.length; index += 1) {
+    for (let otherIndex = index + 1; otherIndex < boxes.length; otherIndex += 1) {
+      const box = boxes[index]!;
+      const otherBox = boxes[otherIndex]!;
+      const overlaps =
+        box.x < otherBox.x + otherBox.width &&
+        box.x + box.width > otherBox.x &&
+        box.y < otherBox.y + otherBox.height &&
+        box.y + box.height > otherBox.y;
+      expect(overlaps, `header controls ${index} and ${otherIndex} should not overlap`).toBe(false);
+    }
+  }
+
+  const metrics = await header.evaluate((element) => ({
+    scrollWidth: element.scrollWidth,
+    clientWidth: element.clientWidth,
+  }));
+  expect(metrics.scrollWidth, "the class header should not overflow horizontally").toBeLessThanOrEqual(
+    metrics.clientWidth,
+  );
+}
+
 test.beforeEach(async ({ page }) => {
   await page.route("**/api/auth/status", (route) =>
     route.fulfill({
@@ -89,6 +134,35 @@ test.beforeEach(async ({ page }) => {
       contentType: "application/json",
       body: JSON.stringify(appState),
     }),
+  );
+});
+
+test("keeps long class header controls separate at an intermediate scaled width", async ({ page }) => {
+  await page.unroute("**/api/app-state");
+  await page.route("**/api/app-state", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify(longClassAppState),
+    }),
+  );
+  await page.setViewportSize({ width: 1024, height: 800 });
+  await page.goto("/");
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = "125%";
+  });
+
+  const header = page.getByTestId("creation-class-header");
+  await expect(header).toBeVisible();
+  await expect(page.getByTestId("select-class")).toContainText(
+    "Grade 7 Design Studio — Forces, Motion & Modeling",
+  );
+  await expect(page.getByTestId("button-edit-class")).toBeVisible();
+  await expect(page.getByTestId("button-new-class")).toBeVisible();
+  await expectHeaderControlsDoNotOverlap(page);
+
+  const documentWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+  expect(documentWidth, "the scaled header should not create horizontal page overflow").toBeLessThanOrEqual(
+    1024,
   );
 });
 

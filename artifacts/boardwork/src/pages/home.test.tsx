@@ -538,11 +538,16 @@ describe("Home presentation defaults", () => {
       const controls = within(workspace).getByTestId("creation-controls");
       const actions = within(workspace).getByTestId("creation-actions");
       const editorPanel = within(workspace).getByTestId("editor-workspace-panel");
+      const classHeader = within(controls).getByTestId("creation-class-header");
+      const classSelect = within(classHeader).getByTestId("select-class");
 
       expect(window.innerWidth).toBe(width);
       expect(window.innerHeight).toBe(height);
       expect(controls).toHaveClass("boardwork-creation-panel");
-      expect(within(controls).getByTestId("select-class")).toBeVisible();
+      expect(classHeader).toHaveClass("boardwork-class-header", "min-w-0");
+      expect(classSelect).toBeVisible();
+      expect(classSelect).toHaveClass("min-w-0", "flex-1");
+      expect(classSelect).not.toHaveClass("sm:w-[280px]", "sm:flex-none");
       expect(editorPanel).toHaveClass("boardwork-editor-panel");
       expect(
         within(controls).getByRole("heading", {
