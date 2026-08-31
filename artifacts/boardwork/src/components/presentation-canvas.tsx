@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode, Ref } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type Ref } from "react";
 import { Clock, ExternalLink } from "lucide-react";
 import type { ActivityDraft } from "@/store/boardwork-context";
 import { getSafeResourceUrl } from "@/lib/resource-url";
@@ -43,6 +43,9 @@ export function PresentationCanvas({
   surfaceRef,
   timer,
 }: PresentationCanvasProps) {
+  const [timerPointerInside, setTimerPointerInside] = useState(false);
+  const [timerFocusWithin, setTimerFocusWithin] = useState(false);
+  const timerPointerCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const arrivalInstruction = activity.arrivalInstructions?.trim();
   const safeResourceUrl = getSafeResourceUrl(activity.resourceUrl);
   const themeColors = getThemeColors(activity.presentationTheme);
@@ -57,6 +60,11 @@ export function PresentationCanvas({
     !exportLayout &&
     !editorPreview &&
     Boolean(timerControls && (showLargeTimer || showCompactTimer));
+  const showCompactTimerControls = Boolean(
+    showCompactTimer &&
+      showTimerControls &&
+      (timerControlsOpen || timerPointerInside || timerFocusWithin),
+  );
   const railMode = showLargeTimer
     ? hasVisual
       ? "split"
@@ -65,6 +73,32 @@ export function PresentationCanvas({
       ? "image-only"
       : "empty";
   const formatTimer = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+
+  useEffect(() => {
+    return () => {
+      if (timerPointerCloseTimeoutRef.current) {
+        clearTimeout(timerPointerCloseTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleTimerPointerEnter = () => {
+    if (timerPointerCloseTimeoutRef.current) {
+      clearTimeout(timerPointerCloseTimeoutRef.current);
+      timerPointerCloseTimeoutRef.current = null;
+    }
+    setTimerPointerInside(true);
+  };
+
+  const handleTimerPointerLeave = () => {
+    if (timerPointerCloseTimeoutRef.current) {
+      clearTimeout(timerPointerCloseTimeoutRef.current);
+    }
+    timerPointerCloseTimeoutRef.current = setTimeout(() => {
+      setTimerPointerInside(false);
+      timerPointerCloseTimeoutRef.current = null;
+    }, 180);
+  };
 
   return (
     <div
@@ -147,6 +181,14 @@ export function PresentationCanvas({
               onShowTimer &&
               "presentation-time--hidden",
           )}
+          onPointerEnter={handleTimerPointerEnter}
+          onPointerLeave={handleTimerPointerLeave}
+          onFocusCapture={() => setTimerFocusWithin(true)}
+          onBlurCapture={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+              setTimerFocusWithin(false);
+            }
+          }}
           {...testId(includeTestIds, "present-time")}
         >
           {!editorPreview && timer && !timer.visible && onShowTimer ? (
@@ -165,10 +207,10 @@ export function PresentationCanvas({
               type="button"
               className="presentation-time-compact-toggle"
               onClick={onToggleTimerControls}
-              aria-expanded={timerControlsOpen}
+              aria-expanded={showCompactTimerControls}
               aria-controls="presentation-compact-timer-controls"
-              aria-label={timerControlsOpen ? "Hide timer controls" : "Show timer controls"}
-              title={timerControlsOpen ? "Hide timer controls" : "Show timer controls"}
+              aria-label={showCompactTimerControls ? "Hide timer controls" : "Show timer controls"}
+              title={showCompactTimerControls ? "Hide timer controls" : "Show timer controls"}
               data-testid={includeTestIds ? "button-toggle-timer-controls" : undefined}
             >
               <span className="presentation-time-reading" aria-live="polite" aria-atomic="true">
@@ -178,7 +220,7 @@ export function PresentationCanvas({
           ) : (
             `${activity.durationMinutes} MIN`
           )}
-          {showCompactTimer && showTimerControls && timerControlsOpen && (
+          {showCompactTimerControls && (
             <div
               id="presentation-compact-timer-controls"
               className="presentation-time-compact-controls"

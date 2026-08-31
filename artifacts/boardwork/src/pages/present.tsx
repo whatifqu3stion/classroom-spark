@@ -54,6 +54,7 @@ export default function Present() {
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [controlsOpen, setControlsOpen] = useState(false);
+  const [controlsHovering, setControlsHovering] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [timerVisible, setTimerVisible] = useState(true);
   const [timerMinimized, setTimerMinimized] = useState(false);
@@ -62,6 +63,7 @@ export default function Present() {
   const [timerOptionsOpen, setTimerOptionsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
+  const controlsCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
     status: timerStatus,
@@ -86,6 +88,14 @@ export default function Present() {
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (controlsCloseTimeoutRef.current) {
+        clearTimeout(controlsCloseTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const toggleFullscreen = async () => {
     if (!document.fullscreenElement && containerRef.current) {
       await containerRef.current.requestFullscreen().catch((err) => {
@@ -94,6 +104,24 @@ export default function Present() {
     } else if (document.exitFullscreen) {
       await document.exitFullscreen();
     }
+  };
+
+  const handleControlsPointerEnter = () => {
+    if (controlsCloseTimeoutRef.current) {
+      clearTimeout(controlsCloseTimeoutRef.current);
+      controlsCloseTimeoutRef.current = null;
+    }
+    setControlsHovering(true);
+  };
+
+  const handleControlsPointerLeave = () => {
+    if (controlsCloseTimeoutRef.current) {
+      clearTimeout(controlsCloseTimeoutRef.current);
+    }
+    controlsCloseTimeoutRef.current = setTimeout(() => {
+      setControlsHovering(false);
+      controlsCloseTimeoutRef.current = null;
+    }, 180);
   };
 
   const exportPng = async () => {
@@ -155,8 +183,10 @@ export default function Present() {
 
   const controls = (
     <div
-      className={`presentation-controls-dock ${controlsOpen ? "presentation-controls-dock--open" : ""}`}
+      className={`presentation-controls-dock ${controlsOpen ? "presentation-controls-dock--open" : ""} ${controlsHovering ? "presentation-controls-dock--hovering" : ""}`}
       onFocusCapture={() => setControlsOpen(true)}
+      onPointerEnter={handleControlsPointerEnter}
+      onPointerLeave={handleControlsPointerLeave}
     >
       <button
         type="button"

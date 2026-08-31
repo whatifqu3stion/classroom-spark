@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, act } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { ActivityDraft } from "@/store/boardwork-context";
 import { PresentationCanvas } from "./presentation-canvas";
@@ -141,6 +141,52 @@ describe("PresentationCanvas timer visibility", () => {
       "true",
     );
     expect(document.getElementById("presentation-compact-timer-controls")).toBeInTheDocument();
+  });
+
+  it("reveals minimized timer controls on hover and tolerates a brief pointer gap", () => {
+    vi.useFakeTimers();
+    try {
+      render(
+        <PresentationCanvas
+          activity={activity}
+          timer={timer}
+          timerMinimized
+          timerControlsOpen={false}
+          onToggleTimerControls={() => undefined}
+          timerControls={<button type="button">Start timer</button>}
+        />,
+      );
+
+      const timerRegion = screen.getByTestId("present-time");
+      expect(screen.queryByRole("button", { name: "Start timer" })).not.toBeInTheDocument();
+
+      fireEvent.pointerEnter(timerRegion);
+      expect(screen.getByRole("button", { name: "Start timer" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Hide timer controls" })).toHaveAttribute(
+        "aria-expanded",
+        "true",
+      );
+
+      fireEvent.pointerLeave(timerRegion);
+      expect(screen.getByRole("button", { name: "Start timer" })).toBeInTheDocument();
+
+      act(() => {
+        vi.advanceTimersByTime(179);
+      });
+      expect(screen.getByRole("button", { name: "Start timer" })).toBeInTheDocument();
+
+      act(() => {
+        vi.advanceTimersByTime(1);
+      });
+      expect(screen.queryByRole("button", { name: "Start timer" })).not.toBeInTheDocument();
+
+      const compactToggle = screen.getByTestId("button-toggle-timer-controls");
+      fireEvent.focus(compactToggle);
+      expect(screen.getByRole("button", { name: "Start timer" })).toBeInTheDocument();
+      expect(compactToggle).toHaveAttribute("aria-expanded", "true");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("shows an active alarm to the teacher but omits it from exports", () => {
