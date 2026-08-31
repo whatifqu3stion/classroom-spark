@@ -153,3 +153,37 @@ test("keeps creation examples very faint compared with entered text", async ({ p
   expect(styles.placeholderColor).not.toBe(styles.textColor);
   expect(styles.placeholderLuminance).toBeGreaterThan(styles.textLuminance + 60);
 });
+
+test("keeps the empty editor preview visually quiet", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+
+  const emptyState = page.getByTestId("empty-editor-state");
+  await expect(emptyState).toBeVisible();
+  await expect(emptyState).toHaveClass(/border-dashed/);
+  await expect(emptyState).toHaveClass(/bg-muted\/20/);
+  await expect(
+    emptyState.getByRole("heading", { name: "No activity created yet" }),
+  ).toBeVisible();
+  await expect(
+    emptyState.getByText(
+      "Add a topic or goal on the left, then choose Create board. You can also start blank from the creation actions.",
+    ),
+  ).toBeVisible();
+  await expect(emptyState.locator("svg")).toHaveAttribute("aria-hidden", "true");
+
+  const styles = await emptyState.evaluate((element) => {
+    const computed = getComputedStyle(element);
+    return {
+      borderStyle: computed.borderStyle,
+      boxShadow: computed.boxShadow,
+      backgroundImage: computed.backgroundImage,
+    };
+  });
+
+  expect(styles.borderStyle).toBe("dashed");
+  expect(styles.boxShadow).toBe("none");
+  expect(styles.backgroundImage).toBe("none");
+  await expect(emptyState.locator(".board-editor-empty-state-card")).toHaveCount(0);
+  await expect(emptyState.locator(".board-editor-empty-state-outline-line")).toHaveCount(0);
+});

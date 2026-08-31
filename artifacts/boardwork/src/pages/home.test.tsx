@@ -509,6 +509,23 @@ describe("Home presentation defaults", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("keeps the empty editor preview quiet and secondary to setup controls", () => {
+    render(<Home />);
+
+    const emptyState = screen.getByTestId("empty-editor-state");
+    expect(emptyState).toHaveClass("border-dashed", "bg-muted/20");
+    expect(screen.getByRole("heading", { name: "No activity created yet" })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Add a topic or goal on the left, then choose Create board. You can also start blank from the creation actions.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Board preview")).not.toBeInTheDocument();
+    expect(screen.queryByText("Your board starts here")).not.toBeInTheDocument();
+    expect(screen.queryByText("A clear task for students")).not.toBeInTheDocument();
+    expect(emptyState.querySelector(".board-editor-empty-state-card")).toBeNull();
+  });
+
   it.each(creationViewports)(
     "keeps the creation workspace reachable without horizontal overflow at $name width",
     ({ width, height }) => {

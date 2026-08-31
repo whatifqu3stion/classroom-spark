@@ -1288,29 +1288,17 @@ export default function Home() {
                 )}
               />
             ) : (
-              <div className="board-editor-empty-state" data-testid="empty-editor-state">
-                <div className="board-editor-empty-state-card">
-                  <div className="board-editor-empty-state-mark" aria-hidden="true">
-                    <FilePlus className="h-6 w-6" />
-                  </div>
-                  <div className="space-y-2">
-                    <p className="board-editor-empty-state-eyebrow">Board preview</p>
-                    <h3 className="text-xl font-semibold tracking-tight text-foreground">
-                      Your board starts here
-                    </h3>
-                    <p className="text-sm leading-relaxed text-muted-foreground">
-                      Add a topic or goal on the left, then choose <strong className="font-medium text-foreground">Create board</strong>.
-                      Or choose <strong className="font-medium text-foreground">Start blank</strong> to write directly in this space.
-                    </p>
-                  </div>
-                  <div className="board-editor-empty-state-outline" aria-hidden="true">
-                    <span className="board-editor-empty-state-outline-label">A clear task for students</span>
-                    <span className="board-editor-empty-state-outline-line board-editor-empty-state-outline-line--long" />
-                    <span className="board-editor-empty-state-outline-line" />
-                    <span className="board-editor-empty-state-outline-label">Optional prompts</span>
-                    <span className="board-editor-empty-state-outline-line board-editor-empty-state-outline-line--short" />
-                  </div>
-                </div>
+              <div
+                className="h-full flex flex-col items-center justify-center border-2 border-dashed rounded-xl bg-muted/20 text-muted-foreground p-8 text-center"
+                data-testid="empty-editor-state"
+              >
+                <FilePlus className="w-12 h-12 mb-4 opacity-20" aria-hidden="true" />
+                <h3 className="text-lg font-medium text-foreground mb-2">
+                  No activity created yet
+                </h3>
+                <p className="max-w-sm mb-6">
+                  Add a topic or goal on the left, then choose Create board. You can also start blank from the creation actions.
+                </p>
               </div>
             )}
           </div>
