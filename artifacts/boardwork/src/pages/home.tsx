@@ -1289,14 +1289,14 @@ export default function Home() {
               />
             ) : (
               <div
-                className="h-full flex flex-col items-center justify-center border-2 border-dashed rounded-xl bg-muted/20 text-muted-foreground p-8 text-center"
+                className="board-editor-empty-state h-full flex flex-col items-center justify-center border-2 border-dashed rounded-xl bg-muted/20 text-muted-foreground p-8 text-center"
                 data-testid="empty-editor-state"
               >
                 <FilePlus className="w-12 h-12 mb-4 opacity-20" aria-hidden="true" />
-                <h3 className="text-lg font-medium text-foreground mb-2">
+                <h3 className="board-editor-empty-state-title text-lg font-medium text-foreground mb-2">
                   No activity created yet
                 </h3>
-                <p className="max-w-sm mb-6">
+                <p className="board-editor-empty-state-copy max-w-sm mb-6">
                   Add a topic or goal on the left, then choose Create board. You can also start blank from the creation actions.
                 </p>
               </div>

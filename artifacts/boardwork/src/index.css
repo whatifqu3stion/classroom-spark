@@ -1489,3 +1489,11 @@
   color: hsl(var(--muted-foreground) / 0.38);
   opacity: 1;
 }
+
+.board-editor-empty-state-title {
+  color: hsl(var(--foreground) / 0.55);
+}
+
+.board-editor-empty-state-copy {
+  color: hsl(var(--muted-foreground) / 0.55);
+}
