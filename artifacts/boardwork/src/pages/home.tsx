@@ -1001,7 +1001,7 @@ export default function Home() {
                             setDuration(Number(value) as Duration);
                           }
                         }}
-                        className="w-24 shrink-0"
+                        className="w-20 shrink-0"
                         aria-label="Custom duration in minutes"
                         aria-invalid={Boolean(durationError)}
                         data-testid="input-custom-activity-duration"
