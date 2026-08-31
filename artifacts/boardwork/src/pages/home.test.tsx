@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Home from "./home";
 import { useBoardwork } from "@/store/boardwork-context";
 import { rememberPresentationTheme } from "@/lib/presentation-theme";
@@ -173,6 +173,28 @@ const secondClassState = {
   ],
 } as unknown as AppState;
 
+const initialViewport = {
+  width: window.innerWidth,
+  height: window.innerHeight,
+};
+
+const creationViewports = [
+  { name: "desktop", width: 1280, height: 800 },
+  { name: "narrow", width: 390, height: 844 },
+] as const;
+
+const setViewport = (width: number, height: number) => {
+  Object.defineProperty(window, "innerWidth", {
+    configurable: true,
+    value: width,
+  });
+  Object.defineProperty(window, "innerHeight", {
+    configurable: true,
+    value: height,
+  });
+  window.dispatchEvent(new Event("resize"));
+};
+
 describe("Home presentation defaults", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -191,6 +213,10 @@ describe("Home presentation defaults", () => {
       accentId: "sage",
       typographyId: "clear",
     });
+  });
+
+  afterEach(() => {
+    setViewport(initialViewport.width, initialViewport.height);
   });
 
   it("carries the remembered appearance into a new blank activity", () => {
@@ -482,6 +508,51 @@ describe("Home presentation defaults", () => {
       screen.queryByText("What should students practice today?"),
     ).not.toBeInTheDocument();
   });
+
+  it.each(creationViewports)(
+    "keeps the creation workspace reachable without horizontal overflow at $name width",
+    ({ width, height }) => {
+      setViewport(width, height);
+      render(<Home />);
+
+      const workspace = screen.getByTestId("creation-workspace");
+      const controls = within(workspace).getByTestId("creation-controls");
+      const actions = within(workspace).getByTestId("creation-actions");
+
+      expect(window.innerWidth).toBe(width);
+      expect(window.innerHeight).toBe(height);
+      expect(
+        within(controls).getByRole("heading", {
+          name: "What are students working on today?",
+          level: 1,
+        }),
+      ).toBeVisible();
+      expect(
+        within(controls).getByText(
+          "Add a topic or goal. You can refine the board before presenting.",
+        ),
+      ).toBeVisible();
+
+      expect(within(controls).getByTestId("select-unit")).toBeVisible();
+      expect(within(controls).getByTestId("input-topic")).toBeVisible();
+      expect(within(controls).getByTestId("input-goal")).toBeVisible();
+      expect(within(actions).getByTestId("button-generate")).toBeVisible();
+      expect(within(actions).getByTestId("button-surprise")).toBeVisible();
+      expect(within(actions).getByTestId("button-blank")).toBeVisible();
+
+      for (const element of [
+        document.documentElement,
+        workspace,
+        controls,
+        actions,
+      ]) {
+        expect(
+          element.scrollWidth,
+          `${element.dataset.testid ?? element.tagName} should not overflow horizontally`,
+        ).toBeLessThanOrEqual(element.clientWidth);
+      }
+    },
+  );
 
   it("keeps example inputs scoped to the airier creation setup", () => {
     render(<Home />);

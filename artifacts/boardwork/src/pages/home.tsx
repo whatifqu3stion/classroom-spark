@@ -852,13 +852,17 @@ export default function Home() {
         </div>
 
         {/* Main Workspace */}
-        <div className="flex flex-col gap-6 lg:flex-1 lg:flex-row lg:gap-10 lg:min-h-0">
+        <div
+          className="flex flex-col gap-6 lg:flex-1 lg:flex-row lg:gap-10 lg:min-h-0"
+          data-testid="creation-workspace"
+        >
 
           {/* Left Column: Generator Controls */}
-          <div
-            className="board-creation-setup w-full flex flex-col gap-6 lg:w-[420px] xl:w-[500px] lg:overflow-y-auto lg:pl-1 lg:pr-2 pb-8"
-            data-testid="board-creation-setup"
-          >
+          <div className="w-full min-w-0 lg:w-auto" data-testid="creation-controls">
+            <div
+              className="board-creation-setup w-full flex flex-col gap-6 lg:w-[420px] xl:w-[500px] lg:overflow-y-auto lg:pl-1 lg:pr-2 pb-8"
+              data-testid="board-creation-setup"
+            >
             <div className="space-y-4 lg:space-y-5">
               <div>
                 <h1 className="text-xl font-semibold tracking-tight text-foreground">What are students working on today?</h1>
@@ -1192,7 +1196,10 @@ export default function Home() {
               </CollapsibleContent>
             </Collapsible>
 
-            <div className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-3 border-t bg-background/95 px-4 py-3 backdrop-blur-sm lg:static lg:mx-0 lg:border-t-0 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none">
+              <div
+                className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-3 border-t bg-background/95 px-4 py-3 backdrop-blur-sm lg:static lg:mx-0 lg:border-t-0 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none"
+                data-testid="creation-actions"
+              >
               <Button
                 size="lg"
                 className="w-full text-base font-semibold shadow-sm gap-2"
@@ -1253,6 +1260,7 @@ export default function Home() {
                   </div>
                 </div>
               )}
+              </div>
             </div>
           </div>
 
