@@ -1654,6 +1654,10 @@
   opacity: 1;
 }
 
+.dark .board-creation-setup input::placeholder {
+  color: hsl(var(--muted-foreground) / 0.88);
+}
+
 .board-editor-empty-state-title {
   color: hsl(var(--foreground) / 0.55);
 }

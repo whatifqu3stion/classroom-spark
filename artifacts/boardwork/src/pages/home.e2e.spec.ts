@@ -313,6 +313,104 @@ test("keeps creation examples very faint compared with entered text", async ({ p
   expect(styles.placeholderLuminance).toBeGreaterThan(styles.textLuminance + 60);
 });
 
+test("keeps creation examples readable in dark mode", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  await page.evaluate(() => {
+    document.documentElement.classList.add("dark");
+  });
+
+  await page.getByTestId("button-toggle-customize").click();
+  await page.getByTestId("segment-computer_available").click();
+
+  const placeholderInputs = [
+    page.getByTestId("input-topic"),
+    page.getByTestId("input-goal"),
+    page.getByTestId("input-student-output"),
+    page.getByTestId("input-resource-url"),
+    page.getByTestId("input-resource-note"),
+    page.getByTestId("input-custom-activity-duration"),
+  ];
+
+  for (const input of placeholderInputs) {
+    await expect(input).toBeVisible();
+  }
+
+  await page.getByTestId("input-topic").fill("Entered topic");
+
+  const styles = await page.getByTestId("input-goal").evaluate((element) => {
+    const placeholder = getComputedStyle(element, "::placeholder");
+    const input = getComputedStyle(element);
+    const label = getComputedStyle(document.querySelector('label[for="goal"]')!);
+    const control = getComputedStyle(document.querySelector('[data-testid="button-generate"]')!);
+    const parseColor = (value: string) => {
+      const channels = value.match(/[\d.]+/g)?.map(Number) ?? [];
+      return {
+        red: channels[0] ?? 0,
+        green: channels[1] ?? 0,
+        blue: channels[2] ?? 0,
+        alpha: channels[3] ?? 1,
+      };
+    };
+    const composite = (foreground: string, background: string) => {
+      const foregroundColor = parseColor(foreground);
+      const backgroundColor = parseColor(background);
+      return [foregroundColor.red, foregroundColor.green, foregroundColor.blue].map(
+        (channel, index) =>
+          channel * foregroundColor.alpha +
+          [backgroundColor.red, backgroundColor.green, backgroundColor.blue][index] *
+            (1 - foregroundColor.alpha),
+      );
+    };
+    const luminance = (color: number[]) => {
+      const channels = color.map((channel) => {
+        const normalized = channel / 255;
+        return normalized <= 0.03928
+          ? normalized / 12.92
+          : ((normalized + 0.055) / 1.055) ** 2.4;
+      });
+      return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+    };
+    const contrast = (foreground: number[], background: number[]) => {
+      const foregroundLuminance = luminance(foreground);
+      const backgroundLuminance = luminance(background);
+      const lighter = Math.max(foregroundLuminance, backgroundLuminance);
+      const darker = Math.min(foregroundLuminance, backgroundLuminance);
+      return (lighter + 0.05) / (darker + 0.05);
+    };
+
+    const background = composite(input.backgroundColor, input.backgroundColor);
+    const placeholderColor = composite(placeholder.color, input.backgroundColor);
+    const textColor = composite(input.color, input.backgroundColor);
+
+    return {
+      placeholderOpacity: placeholder.opacity,
+      placeholderContrast: contrast(placeholderColor, background),
+      textContrast: contrast(textColor, background),
+      placeholderLuminance: luminance(placeholderColor),
+      textLuminance: luminance(textColor),
+      backgroundLuminance: luminance(background),
+      inputBackground: input.backgroundColor,
+      inputText: input.color,
+      labelText: label.color,
+      controlBackground: control.backgroundColor,
+      controlText: control.color,
+    };
+  });
+
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  expect(styles.placeholderOpacity).toBe("1");
+  expect(styles.placeholderContrast).toBeGreaterThanOrEqual(4.5);
+  expect(styles.placeholderContrast).toBeLessThan(styles.textContrast);
+  expect(styles.placeholderLuminance).toBeGreaterThan(styles.backgroundLuminance);
+  expect(styles.placeholderLuminance).toBeLessThan(styles.textLuminance);
+  expect(styles.inputText).toBe(styles.labelText);
+  expect(styles.inputText).not.toBe(styles.inputBackground);
+  expect(styles.controlBackground).not.toBe(styles.inputBackground);
+  expect(styles.controlText).not.toBe(styles.controlBackground);
+  await expect(page.getByTestId("input-topic")).toHaveValue("Entered topic");
+});
+
 test("keeps the empty editor preview visually quiet", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
