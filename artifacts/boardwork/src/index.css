@@ -242,14 +242,43 @@
     outline-offset: 2px;
   }
 
+  .dark .presentation-theme-option {
+    background-color: color-mix(in srgb, var(--theme-control-color) 10%, hsl(var(--card)));
+    border-color: color-mix(in srgb, var(--theme-control-color) 34%, hsl(var(--border)));
+  }
+
+  .dark .presentation-theme-option:hover {
+    background-color: color-mix(in srgb, var(--theme-control-color) 18%, hsl(var(--card)));
+    border-color: color-mix(in srgb, var(--theme-control-color) 52%, hsl(var(--border)));
+  }
+
+  .dark .presentation-theme-option[aria-pressed="true"] {
+    background-color: color-mix(in srgb, var(--theme-control-color) 20%, hsl(var(--card)));
+    border-color: color-mix(in srgb, var(--theme-control-color) 78%, hsl(var(--foreground)));
+  }
+
+  .dark .presentation-theme-option:focus-visible {
+    outline-color: color-mix(in srgb, var(--theme-control-color) 72%, hsl(var(--ring)));
+  }
+
   .presentation-theme-swatch {
     border-color: color-mix(in srgb, var(--theme-control-color) 38%, hsl(var(--border)));
+  }
+
+  .dark .presentation-theme-swatch {
+    border-color: color-mix(in srgb, var(--theme-control-color) 32%, hsl(var(--foreground)));
   }
 
   .presentation-theme-option[aria-pressed="true"] .presentation-theme-swatch {
     box-shadow:
       0 0 0 2px hsl(var(--card)),
       0 0 0 3px color-mix(in srgb, var(--theme-control-color) 62%, hsl(var(--foreground)));
+  }
+
+  .dark .presentation-theme-option[aria-pressed="true"] .presentation-theme-swatch {
+    box-shadow:
+      0 0 0 2px hsl(var(--card)),
+      0 0 0 3px color-mix(in srgb, var(--theme-control-color) 70%, hsl(var(--foreground)));
   }
 
   .presentation-theme-check {

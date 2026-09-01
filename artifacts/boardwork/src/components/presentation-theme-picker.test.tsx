@@ -105,6 +105,51 @@ describe("PresentationThemePicker", () => {
     expect(screen.getByRole("button", { name: "Use Mint accent" })).not.toHaveAttribute("title");
   });
 
+  it("keeps palette cues and focus states clear in a dark editor", () => {
+    document.documentElement.classList.add("dark");
+
+    try {
+      render(
+        <PresentationThemePicker
+          onChange={vi.fn()}
+          value={{ kind: "curated", themeId: "midnight", accentId: "sage" }}
+        />,
+      );
+
+      const selectedSurface = screen.getByTestId("theme-option-midnight");
+      const unselectedSurface = screen.getByTestId("theme-option-boardwork");
+      const selectedAccent = screen.getByTestId("accent-option-sage");
+
+      expect(document.documentElement).toHaveClass("dark");
+      expect(selectedSurface).toHaveAttribute("aria-pressed", "true");
+      expect(unselectedSurface).toHaveAttribute("aria-pressed", "false");
+      expect(selectedAccent).toHaveAttribute("aria-pressed", "true");
+      expect(selectedSurface).toHaveClass(
+        "focus-visible:outline-none",
+        "focus-visible:ring-2",
+        "focus-visible:ring-ring",
+      );
+      expect(selectedAccent).toHaveClass(
+        "focus-visible:outline-none",
+        "focus-visible:ring-2",
+        "focus-visible:ring-ring",
+      );
+
+      expect(screen.getByRole("button", { name: "Use Mint accent" })).toBeVisible();
+      expect(screen.getByTestId("theme-swatch-color-boardwork")).toHaveStyle({
+        backgroundColor: "#FDFCF8",
+      });
+      expect(screen.getByTestId("theme-swatch-color-midnight")).toHaveStyle({
+        backgroundColor: "#0F172A",
+      });
+
+      selectedAccent.focus();
+      expect(document.activeElement).toBe(selectedAccent);
+    } finally {
+      document.documentElement.classList.remove("dark");
+    }
+  });
+
   it("reveals secondary presentation guidance when the help control receives focus", async () => {
     render(
       <TooltipProvider delayDuration={0}>
