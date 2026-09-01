@@ -411,6 +411,110 @@ test("keeps creation examples readable in dark mode", async ({ page }) => {
   await expect(page.getByTestId("input-topic")).toHaveValue("Entered topic");
 });
 
+test("lets keyboard users complete board setup without losing focus", async ({ page }) => {
+  const viewport = { width: 390, height: 844 };
+
+  await page.setViewportSize(viewport);
+  await page.goto("/");
+
+  const setup = page.getByTestId("board-creation-setup");
+  const actions = page.getByTestId("creation-actions");
+  const focusOrderBeforeDetails = [
+    "select-class",
+    "button-edit-class",
+    "button-new-class",
+    "select-unit",
+    "input-topic",
+    "input-goal",
+    "segment-no_computer",
+    "segment-computer_available",
+    "segment-computer_required",
+    "segment-3",
+    "segment-5",
+    "segment-7",
+    "input-custom-activity-duration",
+    "button-toggle-customize",
+  ];
+
+  await page.getByTestId(focusOrderBeforeDetails[0]).focus();
+
+  const tabTo = async (locator: Locator, label: string) => {
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+      if (await locator.evaluate((element) => element === document.activeElement)) {
+        return;
+      }
+      await page.keyboard.press("Tab");
+    }
+    throw new Error(`${label} was not reachable with Tab`);
+  };
+
+  for (const testId of focusOrderBeforeDetails) {
+    const control = page.getByTestId(testId);
+    await tabTo(control, testId);
+    await expect(control).toBeFocused();
+
+    const focusStyles = await control.evaluate((element) => {
+      const styles = getComputedStyle(element);
+      return {
+        outlineStyle: styles.outlineStyle,
+        outlineWidth: styles.outlineWidth,
+        boxShadow: styles.boxShadow,
+      };
+    });
+    expect(
+      focusStyles.outlineStyle !== "none" ||
+        focusStyles.outlineWidth !== "0px" ||
+        focusStyles.boxShadow !== "none",
+      `${testId} should have a visible keyboard focus indicator`,
+    ).toBe(true);
+
+    if (testId === "button-toggle-customize") {
+      await page.keyboard.press("Enter");
+      await expect(page.getByTestId("input-student-output")).toBeVisible();
+    }
+    await page.keyboard.press("Tab");
+  }
+
+  const focusOrderAfterDetails = [
+    "button-add-chip",
+    "input-student-output",
+    "select-work-mode",
+    "input-materials-available",
+    "input-completion-signal",
+    "select-activity-style",
+    "button-generate",
+    "button-surprise",
+    "button-blank",
+  ];
+
+  for (const testId of focusOrderAfterDetails) {
+    const control = page.getByTestId(testId);
+    await tabTo(control, testId);
+    await expect(control).toBeFocused();
+
+    const [controlBox, setupBox, actionsBox] = await Promise.all([
+      control.boundingBox(),
+      setup.boundingBox(),
+      actions.boundingBox(),
+    ]);
+    expect(controlBox, `${testId} should have geometry`).not.toBeNull();
+    expect(setupBox, "the setup scroll container should have geometry").not.toBeNull();
+    expect(actionsBox, "the sticky creation actions should have geometry").not.toBeNull();
+    if (testId !== "button-generate" && testId !== "button-surprise" && testId !== "button-blank") {
+      expect(
+        controlBox!.y,
+        `${testId} should stay inside the setup scroll container`,
+      ).toBeGreaterThanOrEqual(setupBox!.y);
+      expect(
+        controlBox!.y + controlBox!.height,
+        `${testId} should not be hidden below the sticky creation actions`,
+      ).toBeLessThanOrEqual(actionsBox!.y);
+    }
+
+    await page.keyboard.press("Tab");
+  }
+});
+
 test("keeps the empty editor preview visually quiet", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");

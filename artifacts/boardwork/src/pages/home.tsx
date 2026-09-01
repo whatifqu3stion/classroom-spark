@@ -828,7 +828,7 @@ export default function Home() {
             >
               <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
                 <Select value={activeClassId || ""} onValueChange={handleSetActiveClass}>
-                  <SelectTrigger className="-ml-2 h-auto min-w-0 flex-1 border-transparent bg-transparent px-2 py-2 text-lg font-semibold transition-colors hover:border-border hover:bg-muted/50 focus:ring-0 focus:ring-offset-0" data-testid="select-class">
+                  <SelectTrigger className="-ml-2 h-auto min-w-0 flex-1 border-transparent bg-transparent px-2 py-2 text-lg font-semibold transition-colors hover:border-border hover:bg-muted/50" data-testid="select-class">
                     {activeClass ? (
                       <div className="flex min-w-0 items-center gap-2">
                         <ClassColorDot color={activeClass.color || undefined} />
@@ -865,7 +865,7 @@ export default function Home() {
             </div>
 
             <div
-              className="board-creation-setup flex min-h-0 w-full flex-1 flex-col gap-6 overflow-y-auto overscroll-contain p-4 pb-8 lg:p-5"
+              className="board-creation-setup flex min-h-0 w-full flex-1 flex-col gap-6 overflow-y-auto overscroll-contain scroll-pb-36 p-4 pb-8 lg:scroll-pb-5 lg:p-5"
               data-testid="board-creation-setup"
             >
             <div className="space-y-5 lg:space-y-6">
