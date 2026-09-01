@@ -30,6 +30,8 @@ describe("PresentationCanvas timer visibility", () => {
     );
 
     expect(screen.getByText("5:00")).toBeInTheDocument();
+    expect(screen.queryByText("5 MIN")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("present-time")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Pause timer" })).toBeInTheDocument();
 
     rerender(
@@ -42,6 +44,7 @@ describe("PresentationCanvas timer visibility", () => {
     );
 
     expect(screen.queryByText("5:00")).not.toBeInTheDocument();
+    expect(screen.queryByText("5 MIN")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Show timer to students" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Start timer" })).not.toBeInTheDocument();
   });
@@ -490,6 +493,8 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.getByTestId("presentation-preview-surface")).toBeInTheDocument();
     expect(screen.getByTestId("present-arrival")).toHaveTextContent("Read this first.");
     expect(screen.getByTestId("present-title")).toHaveTextContent("Independent practice");
+    expect(screen.queryByText("5 MIN")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("present-time")).not.toBeInTheDocument();
     expect(screen.queryByText("Time remaining")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Pause timer" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Teacher controls" })).not.toBeInTheDocument();
@@ -638,21 +643,22 @@ describe("PresentationCanvas timer visibility", () => {
     expect(title.closest("header")).toBeInTheDocument();
     expect(title.closest("footer")).not.toBeInTheDocument();
     expect(title.closest(".presentation-header-copy")).toBeInTheDocument();
-    expect(header?.children).toHaveLength(2);
+    expect(header?.children).toHaveLength(1);
     expect(title).toHaveTextContent("Independent practice");
   });
 
-  it("keeps a no-eyebrow title in the left header stack", () => {
+  it("keeps a no-eyebrow title in the left header stack without a duration column", () => {
     render(<PresentationCanvas activity={activity} />);
 
     const header = screen.getByTestId("presentation-surface").querySelector(".presentation-header");
     const title = screen.getByTestId("present-title");
-    const time = screen.getByTestId("present-time");
 
     expect(screen.queryByTestId("present-eyebrow")).not.toBeInTheDocument();
+    expect(screen.queryByText("5 MIN")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("present-time")).not.toBeInTheDocument();
     expect(title.closest(".presentation-header-copy")).toBeInTheDocument();
     expect(header?.children[0]).toContainElement(title);
-    expect(header?.children[1]).toContainElement(time);
+    expect(header?.children).toHaveLength(1);
   });
 
   it("renders a formula-bearing title as an h1 in the header stack", () => {
@@ -736,6 +742,8 @@ describe("PresentationCanvas timer visibility", () => {
     );
 
     expect(exportSurface).toBeInTheDocument();
+    expect(exportSurface).not.toHaveTextContent("5 MIN");
+    expect(exportSurface?.querySelector(".presentation-time")).not.toBeInTheDocument();
     expect(eyebrow).toHaveAttribute("dir", "auto");
     expect(eyebrow).toHaveTextContent("العربية • עברית");
     expect(title).toHaveAttribute("dir", "auto");

@@ -73,6 +73,9 @@ export function PresentationCanvas({
   const showLargeTimer = Boolean(showTimer && !timerMinimized);
   const showCompactTimer =
     !exportLayout && !editorPreview && Boolean(timer?.visible && timerMinimized);
+  const showHiddenTimerRecovery =
+    !exportLayout && !editorPreview && Boolean(timer && !timer.visible && onShowTimer);
+  const showHeaderTimer = showCompactTimer || showHiddenTimerRecovery;
   const showTimerControls =
     !exportLayout &&
     !editorPreview &&
@@ -203,154 +206,146 @@ export function PresentationCanvas({
             </h1>
           )}
         </div>
-        <div
-          className={cn(
-            "presentation-time",
-            timer &&
-              !editorPreview &&
-              timer.visible &&
-              timerMinimized &&
-              "presentation-time--compact",
-            showCompactTimerControls && "presentation-time--compact-open",
-            timer &&
-              !editorPreview &&
-              !timer.visible &&
-              onShowTimer &&
-              "presentation-time--hidden",
-          )}
-          onPointerEnter={handleTimerPointerEnter}
-          onPointerLeave={handleTimerPointerLeave}
-          onPointerDown={(event) => {
-            timerPointerDownRef.current = true;
-            setTimerFocusWithin(false);
-            if (event.pointerType !== "mouse") {
-              if (timerPointerCloseTimeoutRef.current) {
-                clearTimeout(timerPointerCloseTimeoutRef.current);
-                timerPointerCloseTimeoutRef.current = null;
+        {showHeaderTimer && (
+          <div
+            className={cn(
+              "presentation-time",
+              showCompactTimer && "presentation-time--compact",
+              showCompactTimerControls && "presentation-time--compact-open",
+              showHiddenTimerRecovery && "presentation-time--hidden",
+            )}
+            onPointerEnter={handleTimerPointerEnter}
+            onPointerLeave={handleTimerPointerLeave}
+            onPointerDown={(event) => {
+              timerPointerDownRef.current = true;
+              setTimerFocusWithin(false);
+              if (event.pointerType !== "mouse") {
+                if (timerPointerCloseTimeoutRef.current) {
+                  clearTimeout(timerPointerCloseTimeoutRef.current);
+                  timerPointerCloseTimeoutRef.current = null;
+                }
+                setTimerPointerInside(false);
+              }
+            }}
+            onPointerUp={() => {
+              timerPointerDownRef.current = false;
+            }}
+            onPointerCancel={() => {
+              timerPointerDownRef.current = false;
+            }}
+            onFocusCapture={() => {
+              if (!timerPointerDownRef.current) {
+                setTimerFocusWithin(true);
+              }
+            }}
+            onBlurCapture={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                setTimerFocusWithin(false);
+              }
+            }}
+            onKeyDown={(event) => {
+              if (event.key !== "Escape" || !showCompactTimerControls) return;
+
+              event.preventDefault();
+              if (timerControlsOpen) {
+                onToggleTimerControls?.();
               }
               setTimerPointerInside(false);
-            }
-          }}
-          onPointerUp={() => {
-            timerPointerDownRef.current = false;
-          }}
-          onPointerCancel={() => {
-            timerPointerDownRef.current = false;
-          }}
-          onFocusCapture={() => {
-            if (!timerPointerDownRef.current) {
-              setTimerFocusWithin(true);
-            }
-          }}
-          onBlurCapture={(event) => {
-            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
               setTimerFocusWithin(false);
-            }
-          }}
-          onKeyDown={(event) => {
-            if (event.key !== "Escape" || !showCompactTimerControls) return;
-
-            event.preventDefault();
-            if (timerControlsOpen) {
-              onToggleTimerControls?.();
-            }
-            setTimerPointerInside(false);
-            setTimerFocusWithin(false);
-            (event.currentTarget.querySelector(
-              ".presentation-time-compact-toggle",
-            ) as HTMLButtonElement | null)?.focus();
-          }}
-          {...testId(includeTestIds, "present-time")}
-        >
-          {!editorPreview && timer && !timer.visible && onShowTimer ? (
-            <button
-              type="button"
-              className="presentation-time-toggle"
-              onClick={onShowTimer}
-              aria-label="Show timer to students"
-              title="Show timer to students"
-              data-testid={includeTestIds ? "button-show-timer" : undefined}
-            >
-              <Clock className="presentation-time-toggle-icon" aria-hidden="true" />
-            </button>
-          ) : timer && timer.visible && timerMinimized ? (
-            <div
-              className={cn(
-                "presentation-time-compact-shell",
-                timer.status === "idle" && "presentation-time-compact-shell--idle",
-                timer.status === "running" && "presentation-time-compact-shell--running",
-                timer.status === "paused" && "presentation-time-compact-shell--paused",
-                timer.status === "completed" && "presentation-time-compact-shell--completed",
-              )}
-              data-testid={includeTestIds ? "compact-timer-progress" : undefined}
-            >
-              <svg
-                className="presentation-time-compact-ring"
-                viewBox="0 0 52 52"
-                role="progressbar"
-                aria-label="Time remaining"
-                aria-valuemin={0}
-                aria-valuemax={compactTimerTotalSeconds}
-                aria-valuenow={compactTimerRemainingSeconds}
-                aria-valuetext={
-                  timer.status === "completed"
-                    ? "Time is up"
-                    : `${formatTimer(compactTimerRemainingSeconds)} remaining`
-                }
-              >
-                <circle
-                  className="presentation-time-compact-ring-track"
-                  cx="26"
-                  cy="26"
-                  r="22"
-                  pathLength="100"
-                />
-                <circle
-                  className="presentation-time-compact-ring-progress"
-                  cx="26"
-                  cy="26"
-                  r="22"
-                  pathLength="100"
-                  style={{ strokeDashoffset: compactTimerProgressOffset }}
-                />
-              </svg>
+              (event.currentTarget.querySelector(
+                ".presentation-time-compact-toggle",
+              ) as HTMLButtonElement | null)?.focus();
+            }}
+            {...testId(includeTestIds, "present-time")}
+          >
+            {showHiddenTimerRecovery ? (
               <button
                 type="button"
-                className="presentation-time-compact-toggle"
-                onClick={onToggleTimerControls}
-                aria-expanded={showCompactTimerControls}
-                aria-controls="presentation-compact-timer-controls"
-                aria-label={showCompactTimerControls ? "Hide timer controls" : "Show timer controls"}
-                title={showCompactTimerControls ? "Hide timer controls" : "Show timer controls"}
-                data-testid={includeTestIds ? "button-toggle-timer-controls" : undefined}
+                className="presentation-time-toggle"
+                onClick={onShowTimer}
+                aria-label="Show timer to students"
+                title="Show timer to students"
+                data-testid={includeTestIds ? "button-show-timer" : undefined}
               >
-                <span
-                  className="presentation-time-reading"
-                  aria-live="polite"
-                  aria-atomic="true"
-                  style={
-                    {
-                      "--presentation-time-reading-scale": compactTimerReadingScale,
-                    } as CSSProperties
+                <Clock className="presentation-time-toggle-icon" aria-hidden="true" />
+              </button>
+            ) : (
+              <div
+                className={cn(
+                  "presentation-time-compact-shell",
+                  timer?.status === "idle" && "presentation-time-compact-shell--idle",
+                  timer?.status === "running" && "presentation-time-compact-shell--running",
+                  timer?.status === "paused" && "presentation-time-compact-shell--paused",
+                  timer?.status === "completed" && "presentation-time-compact-shell--completed",
+                )}
+                data-testid={includeTestIds ? "compact-timer-progress" : undefined}
+              >
+                <svg
+                  className="presentation-time-compact-ring"
+                  viewBox="0 0 52 52"
+                  role="progressbar"
+                  aria-label="Time remaining"
+                  aria-valuemin={0}
+                  aria-valuemax={compactTimerTotalSeconds}
+                  aria-valuenow={compactTimerRemainingSeconds}
+                  aria-valuetext={
+                    timer?.status === "completed"
+                      ? "Time is up"
+                      : `${formatTimer(compactTimerRemainingSeconds)} remaining`
                   }
                 >
-                  {compactTimerReading}
-                </span>
-              </button>
-            </div>
-          ) : (
-            `${activity.durationMinutes} MIN`
-          )}
-          {showCompactTimer && showTimerControls && (
-            <div
-              id="presentation-compact-timer-controls"
-              className="presentation-time-compact-controls"
-              aria-hidden={!showCompactTimerControls}
-            >
-              {timerControls}
-            </div>
-          )}
-        </div>
+                  <circle
+                    className="presentation-time-compact-ring-track"
+                    cx="26"
+                    cy="26"
+                    r="22"
+                    pathLength="100"
+                  />
+                  <circle
+                    className="presentation-time-compact-ring-progress"
+                    cx="26"
+                    cy="26"
+                    r="22"
+                    pathLength="100"
+                    style={{ strokeDashoffset: compactTimerProgressOffset }}
+                  />
+                </svg>
+                <button
+                  type="button"
+                  className="presentation-time-compact-toggle"
+                  onClick={onToggleTimerControls}
+                  aria-expanded={showCompactTimerControls}
+                  aria-controls="presentation-compact-timer-controls"
+                  aria-label={showCompactTimerControls ? "Hide timer controls" : "Show timer controls"}
+                  title={showCompactTimerControls ? "Hide timer controls" : "Show timer controls"}
+                  data-testid={includeTestIds ? "button-toggle-timer-controls" : undefined}
+                >
+                  <span
+                    className="presentation-time-reading"
+                    aria-live="polite"
+                    aria-atomic="true"
+                    style={
+                      {
+                        "--presentation-time-reading-scale": compactTimerReadingScale,
+                      } as CSSProperties
+                    }
+                  >
+                    {compactTimerReading}
+                  </span>
+                </button>
+              </div>
+            )}
+            {showCompactTimer && showTimerControls && (
+              <div
+                id="presentation-compact-timer-controls"
+                className="presentation-time-compact-controls"
+                aria-hidden={!showCompactTimerControls}
+              >
+                {timerControls}
+              </div>
+            )}
+          </div>
+        )}
       </header>
 
       <main
