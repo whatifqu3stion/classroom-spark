@@ -62,6 +62,23 @@ const savedBoardAppState = {
   ],
 };
 
+const scaledSavedBoardAppState = {
+  ...savedBoardAppState,
+  activities: [
+    {
+      ...savedBoardAppState.activities[0],
+      eyebrow: "Evidence analysis warm-up",
+      title: "Explain how the evidence supports your scientific idea",
+      task: "Read the evidence, identify the strongest pattern, and write one connected explanation that links your claim to specific observations.",
+      prompts: [
+        "Describe the strongest pattern in the data and explain why it matters.",
+        "Use one observation from the evidence to support your explanation.",
+      ],
+      materials: ["Printed evidence packet", "Pencil", "Science notebook"],
+    },
+  ],
+};
+
 const viewports = [
   { name: "desktop", width: 1280, height: 800 },
   { name: "narrow", width: 390, height: 844 },
@@ -241,6 +258,61 @@ for (const viewport of viewports) {
     await expectElementFitsHorizontally(page, editor, viewport);
   });
 }
+
+test("keeps populated activity editing readable at 150% text scaling", async ({ page }) => {
+  await page.unroute("**/api/app-state");
+  await page.route("**/api/app-state", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify(scaledSavedBoardAppState),
+    }),
+  );
+  await page.setViewportSize({ width: 1024, height: 800 });
+  await page.goto("/activity/activity-saved-board");
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = "150%";
+  });
+
+  const editor = page.getByTestId("board-editor");
+  const header = page.getByTestId("board-editor-header");
+  const saveStatus = page.getByTestId("text-save-status");
+  const presentButton = page.getByTestId("button-present");
+  const title = page.getByRole("textbox", { name: "Enter a short title..." });
+  const task = page.getByRole("textbox", { name: "Describe the main task for students..." });
+  const prompts = page.getByRole("textbox", { name: "Enter prompt..." });
+  const materials = page.getByRole("textbox", { name: "Optional materials, separated by commas..." });
+
+  await expect(editor).toBeVisible();
+  await expect(header).toBeVisible();
+  await expect(saveStatus).toHaveText("Saved");
+  await expect(presentButton).toBeVisible();
+  await expect(title).toContainText("Explain how the evidence supports your scientific idea");
+  await expect(task).toContainText("identify the strongest pattern");
+  await expect(prompts).toHaveCount(2);
+  await expect(prompts.nth(0)).toContainText("Describe the strongest pattern in the data");
+  await expect(materials).toContainText("Printed evidence packet");
+
+  for (const control of [saveStatus, presentButton, title, task, prompts.nth(0), prompts.nth(1), materials]) {
+    await expect(control).toBeVisible();
+    await expectElementReachableInViewport(page, control, { width: 1024, height: 800 });
+    await expectElementFitsHorizontally(page, control, { width: 1024, height: 800 });
+  }
+
+  const [documentWidth, editorMetrics] = await Promise.all([
+    page.evaluate(() => document.documentElement.scrollWidth),
+    editor.evaluate((element) => ({
+      scrollWidth: element.scrollWidth,
+      clientWidth: element.clientWidth,
+    })),
+  ]);
+  expect(documentWidth, "the scaled populated editor should not overflow the document horizontally").toBeLessThanOrEqual(
+    1024,
+  );
+  expect(editorMetrics.scrollWidth, "the scaled populated editor should not overflow horizontally").toBeLessThanOrEqual(
+    editorMetrics.clientWidth,
+  );
+  await expectElementFitsHorizontally(page, editor, { width: 1024, height: 800 });
+});
 
 for (const viewport of viewports) {
   test(`keeps board creation readable and reachable at ${viewport.name} width`, async ({ page }) => {
