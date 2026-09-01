@@ -387,3 +387,107 @@ test("keeps Present disclosures reachable at zoom-equivalent viewport sizes", as
     await expect(page.getByTestId("button-fullscreen")).toBeVisible();
   }
 });
+
+test("keeps Present controls tappable in a short landscape tablet viewport", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    hasTouch: true,
+    isMobile: true,
+    viewport: { width: 1024, height: 600 },
+  });
+  const page = await context.newPage();
+
+  try {
+    const assertBrowserHealth = await reportBrowserHealth(page);
+
+    await page.route("**/api/auth/status", (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ passwordRequired: false, authenticated: true }),
+      }),
+    );
+    await page.route("**/api/app-state", (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          ...appState,
+          activities: [
+            {
+              ...longMixedDirectionActivity,
+              title: "Independent practice",
+              task: "Work quietly.",
+              prompts: ["Explain your thinking."],
+              durationMinutes: 5,
+            },
+          ],
+        }),
+      }),
+    );
+
+    await page.goto("/present/activity-long-mixed-direction");
+    await expect(page.getByTestId("present-title")).toHaveText("Independent practice");
+
+    await page.getByRole("button", { name: "Minimize timer" }).tap();
+    const timerToggle = page.getByTestId("button-toggle-timer-controls");
+    await expect(timerToggle).toBeVisible();
+    await timerToggle.tap();
+
+    const timerPanel = page.locator("#presentation-compact-timer-controls");
+    await expect(timerPanel).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Start or resume timer" }),
+    ).toBeVisible();
+
+    const viewport = page.viewportSize();
+    expect(viewport).toEqual({ width: 1024, height: 600 });
+    const timerPanelBox = await timerPanel.boundingBox();
+    expect(timerPanelBox).not.toBeNull();
+    expect(timerPanelBox!.x).toBeGreaterThanOrEqual(0);
+    expect(timerPanelBox!.y).toBeGreaterThanOrEqual(0);
+    expect(timerPanelBox!.x + timerPanelBox!.width).toBeLessThanOrEqual(viewport!.width);
+    expect(timerPanelBox!.y + timerPanelBox!.height).toBeLessThanOrEqual(viewport!.height);
+
+    await timerToggle.tap();
+    await expect(timerPanel).toBeHidden();
+    await expect(timerToggle).toHaveAttribute("aria-expanded", "false");
+
+    const teacherToggle = page.getByTestId("button-teacher-controls");
+    await teacherToggle.tap();
+    const teacherPanel = page.locator("#presentation-controls-panel");
+    await expect(teacherPanel).toBeVisible();
+
+    const teacherPanelBox = await teacherPanel.boundingBox();
+    expect(teacherPanelBox).not.toBeNull();
+    expect(teacherPanelBox!.x).toBeGreaterThanOrEqual(0);
+    expect(teacherPanelBox!.y).toBeGreaterThanOrEqual(0);
+    expect(teacherPanelBox!.x + teacherPanelBox!.width).toBeLessThanOrEqual(viewport!.width);
+    expect(teacherPanelBox!.y + teacherPanelBox!.height).toBeLessThanOrEqual(viewport!.height);
+
+    const exportAction = page.getByTestId("button-export-png");
+    await expect(exportAction).toBeVisible();
+    const exportActionBox = await exportAction.boundingBox();
+    expect(exportActionBox).not.toBeNull();
+    expect(exportActionBox!.x + exportActionBox!.width).toBeLessThanOrEqual(viewport!.width);
+    expect(exportActionBox!.y + exportActionBox!.height).toBeLessThanOrEqual(viewport!.height);
+
+    const downloadPromise = page.waitForEvent("download");
+    await exportAction.tap();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toMatch(/\.png$/);
+
+    await teacherToggle.tap();
+    await expect(teacherPanel).toBeHidden();
+    await expect(teacherToggle).toHaveAttribute("aria-expanded", "false");
+    await page.keyboard.press("Tab");
+    expect(
+      await page.evaluate(
+        () => document.activeElement?.closest("#presentation-controls-panel"),
+      ),
+    ).toBeNull();
+
+    assertBrowserHealth();
+  } finally {
+    await context.close();
+  }
+});
