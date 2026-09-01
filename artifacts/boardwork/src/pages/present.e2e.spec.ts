@@ -328,6 +328,9 @@ test("keeps Present disclosures reachable at zoom-equivalent viewport sizes", as
   ];
 
   for (const viewport of zoomViewports) {
+    await page.emulateMedia({
+      reducedMotion: viewport.zoom === "200%" ? "reduce" : "no-preference",
+    });
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
     await page.goto("/present/activity-long-mixed-direction");
 
@@ -343,12 +346,51 @@ test("keeps Present disclosures reachable at zoom-equivalent viewport sizes", as
     await page.getByRole("button", { name: "Minimize timer" }).click();
     await page.evaluate(() => window.scrollTo(0, 0));
     const timerToggle = page.getByTestId("button-toggle-timer-controls");
+    const timerProgress = page.getByRole("progressbar", { name: "Time remaining" });
     const teacherToggle = page.getByTestId("button-teacher-controls");
     await expect(timerToggle).toBeVisible();
+    await expect(timerProgress).toBeVisible();
     await expect(teacherToggle).toBeVisible();
+    await expect(timerProgress).toHaveAttribute("aria-valuemax", "420");
+    await expect(timerProgress).toHaveAttribute("aria-valuenow", "420");
+
+    const compactReading = page.locator(".presentation-time-reading");
+    const compactReadingFontSize = await compactReading.evaluate(
+      (element) => Number.parseFloat(getComputedStyle(element).fontSize),
+    );
+    expect(
+      compactReadingFontSize,
+      `${viewport.zoom} compact timer reading should include the 15% enlargement`,
+    ).toBeGreaterThanOrEqual(26.5);
+
+    const presentationColors = await page.getByTestId("presentation-surface").evaluate(
+      (surface) => ({
+        accent: surface.style.getPropertyValue("--presentation-accent"),
+        accentSoft: surface.style.getPropertyValue("--presentation-accent-soft"),
+      }),
+    );
+    expect(presentationColors).toEqual({
+      accent: "#334155",
+      accentSoft: "#DADCDC",
+    });
+    const ringTransitionDuration = await timerProgress
+      .locator(".presentation-time-compact-ring-progress")
+      .evaluate((element) => getComputedStyle(element).transitionDuration);
+    if (viewport.zoom === "200%") {
+      expect(
+        Number.parseFloat(ringTransitionDuration),
+        `${viewport.zoom} reduced-motion ring transition`,
+      ).toBeLessThan(0.001);
+    } else {
+      expect(
+        ringTransitionDuration,
+        `${viewport.zoom} ring transition`,
+      ).toBe("0.8s");
+    }
 
     for (const [name, locator] of [
       ["timer trigger", timerToggle],
+      ["timer progress ring", timerProgress],
       ["teacher controls trigger", teacherToggle],
     ] as const) {
       const box = await locator.boundingBox();
@@ -363,6 +405,24 @@ test("keeps Present disclosures reachable at zoom-equivalent viewport sizes", as
       );
     }
 
+    const readingBounds = await compactReading.evaluate((reading) => {
+      const readingBounds = reading.getBoundingClientRect();
+      const shellBounds = reading.closest(".presentation-time-compact-shell")!.getBoundingClientRect();
+      return {
+        documentWidth: document.documentElement.scrollWidth,
+        readingLeft: readingBounds.left,
+        readingRight: readingBounds.right,
+        shellLeft: shellBounds.left,
+        shellRight: shellBounds.right,
+      };
+    });
+    expect(
+      readingBounds.documentWidth,
+      `${viewport.zoom} should not overflow horizontally after minimizing`,
+    ).toBeLessThanOrEqual(pageMetrics.viewportWidth);
+    expect(readingBounds.readingLeft).toBeGreaterThanOrEqual(readingBounds.shellLeft);
+    expect(readingBounds.readingRight).toBeLessThanOrEqual(readingBounds.shellRight);
+
     await timerToggle.hover();
     const timerPanel = page.locator("#presentation-compact-timer-controls");
     await expect(timerPanel).toBeVisible();
@@ -372,6 +432,15 @@ test("keeps Present disclosures reachable at zoom-equivalent viewport sizes", as
     expect(timerPanelBox!.y).toBeGreaterThanOrEqual(0);
     expect(timerPanelBox!.x + timerPanelBox!.width).toBeLessThanOrEqual(pageMetrics.viewportWidth);
     expect(timerPanelBox!.y + timerPanelBox!.height).toBeLessThanOrEqual(pageMetrics.viewportHeight);
+
+    const initialProgress = Number(await timerProgress.getAttribute("aria-valuenow"));
+    await page.getByRole("button", { name: "Start or resume timer" }).click();
+    await expect
+      .poll(async () => Number(await timerProgress.getAttribute("aria-valuenow")), {
+        message: `${viewport.zoom} compact timer ring should update while running`,
+      })
+      .toBeLessThan(initialProgress);
+    await expect(timerProgress).toHaveAttribute("aria-valuetext", /remaining$/);
 
     await teacherToggle.hover();
     const teacherPanel = page.locator("#presentation-controls-panel");
@@ -386,6 +455,52 @@ test("keeps Present disclosures reachable at zoom-equivalent viewport sizes", as
     await expect(page.getByTestId("button-exit-present")).toBeVisible();
     await expect(page.getByTestId("button-fullscreen")).toBeVisible();
   }
+});
+
+test("keeps a multi-digit compact timer reading inside its themed ring", async ({ page }) => {
+  const assertBrowserHealth = await reportBrowserHealth(page);
+
+  await page.route("**/api/auth/status", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ passwordRequired: false, authenticated: true }),
+    }),
+  );
+  await page.route("**/api/app-state", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        ...appState,
+        activities: [{ ...longMixedDirectionActivity, durationMinutes: 100 }],
+      }),
+    }),
+  );
+
+  await page.setViewportSize({ width: 640, height: 400 });
+  await page.goto("/present/activity-long-mixed-direction");
+  await page.getByRole("button", { name: "Minimize timer" }).click();
+
+  const reading = page.locator(".presentation-time-reading");
+  await expect(reading).toHaveText("100:00");
+  const bounds = await reading.evaluate((element) => {
+    const readingBounds = element.getBoundingClientRect();
+    const shellBounds = element.closest(".presentation-time-compact-shell")!.getBoundingClientRect();
+    const toggleBounds = element.closest(".presentation-time-compact-shell")!.querySelector("button")!.getBoundingClientRect();
+    return {
+      documentWidth: document.documentElement.scrollWidth,
+      readingLeft: readingBounds.left,
+      readingRight: readingBounds.right,
+      shellLeft: shellBounds.left,
+      shellRight: shellBounds.right,
+      timerRight: toggleBounds.right,
+    };
+  });
+
+  expect(bounds.documentWidth).toBeLessThanOrEqual(640);
+  expect(bounds.readingLeft).toBeGreaterThanOrEqual(bounds.shellLeft);
+  expect(bounds.readingRight).toBeLessThanOrEqual(bounds.shellRight);
+  expect(bounds.timerRight).toBeLessThanOrEqual(640);
+  assertBrowserHealth();
 });
 
 test("keeps Present controls tappable in a short landscape tablet viewport", async ({

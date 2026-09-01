@@ -147,6 +147,88 @@ describe("PresentationCanvas timer visibility", () => {
     expect(document.getElementById("presentation-compact-timer-controls")).toBeInTheDocument();
   });
 
+  it("shows a semantic compact countdown ring using the configured duration", () => {
+    const { rerender } = render(
+      <PresentationCanvas
+        activity={{
+          ...activity,
+          presentationTheme: { kind: "curated", themeId: "midnight" },
+        }}
+        timer={{ ...timer, remainingSeconds: 150, status: "running" }}
+        timerMinimized
+      />,
+    );
+
+    const progress = screen.getByRole("progressbar", { name: "Time remaining" });
+    expect(progress).toHaveAttribute("aria-valuemin", "0");
+    expect(progress).toHaveAttribute("aria-valuemax", "300");
+    expect(progress).toHaveAttribute("aria-valuenow", "150");
+    expect(progress).toHaveAttribute("aria-valuetext", "2:30 remaining");
+    expect(screen.getByTestId("presentation-surface")).toHaveStyle({
+      "--presentation-accent": "#70B7DF",
+      "--presentation-accent-soft": "#1D2D43",
+    });
+    expect(
+      screen.getByTestId("compact-timer-progress").querySelector(
+        ".presentation-time-compact-ring-progress",
+      ),
+    ).toHaveStyle({ strokeDashoffset: "50" });
+
+    rerender(
+      <PresentationCanvas
+        activity={activity}
+        timer={{ ...timer, remainingSeconds: 0, status: "completed" }}
+        timerMinimized
+      />,
+    );
+
+    expect(progress).toHaveAttribute("aria-valuetext", "Time is up");
+    expect(screen.getByTestId("compact-timer-progress")).toHaveClass(
+      "presentation-time-compact-shell--completed",
+    );
+    expect(
+      screen.getByTestId("compact-timer-progress").querySelector(
+        ".presentation-time-compact-ring-progress",
+      ),
+    ).toHaveStyle({ strokeDashoffset: "100" });
+  });
+
+  it("keeps the compact ring and enlarged reading inside its presentation control", () => {
+    render(
+      <PresentationCanvas
+        activity={activity}
+        timer={{ ...timer, remainingSeconds: 42, status: "paused" }}
+        timerMinimized
+      />,
+    );
+
+    const shell = screen.getByTestId("compact-timer-progress");
+    const toggle = screen.getByTestId("button-toggle-timer-controls");
+    expect(shell).toContainElement(toggle);
+    expect(screen.getByText("0:42")).toHaveClass("presentation-time-reading");
+    expect(
+      shell.querySelector(".presentation-time-compact-ring"),
+    ).toHaveAttribute("role", "progressbar");
+  });
+
+  it("scales longer readings so unbounded durations remain inside the ring", () => {
+    render(
+      <PresentationCanvas
+        activity={{ ...activity, durationMinutes: 100 }}
+        timer={{ ...timer, remainingSeconds: 6000 }}
+        timerMinimized
+      />,
+    );
+
+    expect(screen.getByText("100:00")).toHaveStyle({
+      "--presentation-time-reading-scale": "0.6666666666666666",
+    });
+    expect(screen.getByRole("progressbar", { name: "Time remaining" })).toHaveAttribute(
+      "aria-valuemax",
+      "6000",
+    );
+  });
+
   it("reveals minimized timer controls on hover and tolerates a brief pointer gap", () => {
     vi.useFakeTimers();
     try {
