@@ -16,6 +16,35 @@ const draft: ActivityDraft = {
 };
 
 describe("BoardEditor presentation visual disclosure", () => {
+  it("uses a narrow-screen-safe header and content column", () => {
+    render(
+      <BoardEditor
+        draft={{ ...draft, id: "activity-1" }}
+        onChange={vi.fn()}
+        saveStatus="saved"
+      />,
+    );
+
+    expect(screen.getByTestId("board-editor")).toHaveClass("min-w-0");
+    expect(screen.getByTestId("board-editor-header")).toHaveClass(
+      "flex-col",
+      "sm:flex-row",
+    );
+    expect(screen.getByTestId("text-save-status")).toHaveTextContent("Saved");
+    expect(screen.getByTestId("button-present")).toHaveClass(
+      "w-full",
+      "sm:w-auto",
+    );
+    expect(
+      screen.getByRole("textbox", { name: "Enter a short title..." }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("textbox", {
+        name: "Describe the main task for students...",
+      }),
+    ).toBeVisible();
+  });
+
   it("starts collapsed and reveals visual controls without an embedded board preview", () => {
     render(<BoardEditor draft={draft} onChange={vi.fn()} />);
 

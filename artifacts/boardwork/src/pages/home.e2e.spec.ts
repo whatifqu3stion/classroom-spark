@@ -36,6 +36,32 @@ const longClassAppState = {
   ],
 };
 
+const savedBoardAppState = {
+  ...appState,
+  activities: [
+    {
+      id: "activity-saved-board",
+      classId: "class-1",
+      eyebrow: "Independent practice",
+      title: "Explain how the evidence supports your idea",
+      task: "Read the evidence and write one connected explanation.",
+      prompts: ["Describe the strongest pattern in the data."],
+      durationMinutes: 7,
+      deviceMode: "off",
+      technologyMode: "no_computer",
+      resourceUrl: null,
+      resourceNote: null,
+      visualUrl: null,
+      visualDescription: null,
+      materials: [],
+      teacherNote: null,
+      style: "Auto",
+      presentationTheme: { kind: "curated", themeId: "midnight", accentId: "sage" },
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    },
+  ],
+};
+
 const viewports = [
   { name: "desktop", width: 1280, height: 800 },
   { name: "narrow", width: 390, height: 844 },
@@ -165,6 +191,56 @@ test("keeps long class header controls separate at an intermediate scaled width"
     1024,
   );
 });
+
+for (const viewport of viewports) {
+  test(`keeps saved-board editor controls reachable at ${viewport.name} width`, async ({ page }) => {
+    await page.unroute("**/api/app-state");
+    await page.route("**/api/app-state", (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify(savedBoardAppState),
+      }),
+    );
+    await page.setViewportSize(viewport);
+    await page.goto("/activity/activity-saved-board");
+
+    const editor = page.getByTestId("board-editor");
+    const header = page.getByTestId("board-editor-header");
+    const saveStatus = page.getByTestId("text-save-status");
+    const presentButton = page.getByTestId("button-present");
+    const editingControls = [
+      page.getByRole("textbox", { name: "Enter a short title..." }),
+      page.getByRole("textbox", { name: "Describe the main task for students..." }),
+      page.getByRole("textbox", { name: "Enter prompt..." }),
+      page.getByTestId("button-toggle-presentation-visual"),
+    ];
+
+    await expect(editor).toBeVisible();
+    await expect(header).toBeVisible();
+    await expect(saveStatus).toHaveText("Saved");
+    await expect(presentButton).toBeVisible();
+
+    for (const control of [saveStatus, presentButton, ...editingControls]) {
+      await expect(control).toBeVisible();
+      await expectElementReachableInViewport(page, control, viewport);
+    }
+
+    const [documentWidth, editorMetrics] = await Promise.all([
+      page.evaluate(() => document.documentElement.scrollWidth),
+      editor.evaluate((element) => ({
+        scrollWidth: element.scrollWidth,
+        clientWidth: element.clientWidth,
+      })),
+    ]);
+    expect(documentWidth, "the saved-board editor should not overflow the document horizontally").toBeLessThanOrEqual(
+      viewport.width,
+    );
+    expect(editorMetrics.scrollWidth, "the saved-board editor should not overflow horizontally").toBeLessThanOrEqual(
+      editorMetrics.clientWidth,
+    );
+    await expectElementFitsHorizontally(page, editor, viewport);
+  });
+}
 
 for (const viewport of viewports) {
   test(`keeps board creation readable and reachable at ${viewport.name} width`, async ({ page }) => {
