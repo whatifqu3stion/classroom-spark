@@ -515,7 +515,10 @@ describe("Home presentation defaults", () => {
     render(<Home />);
 
     const emptyState = screen.getByTestId("empty-editor-state");
-    expect(emptyState).toHaveClass("border-dashed", "bg-muted/20");
+    const editorPanel = screen.getByTestId("editor-workspace-panel");
+    expect(emptyState).toHaveClass("bg-muted/20");
+    expect(emptyState).not.toHaveClass("border-dashed", "border-2", "rounded-xl");
+    expect(editorPanel).toHaveClass("boardwork-editor-panel", "rounded-xl", "border");
     expect(screen.getByRole("heading", { name: "No activity created yet" })).toBeInTheDocument();
     expect(
       screen.getByText(

@@ -519,10 +519,14 @@ test("keeps the empty editor preview visually quiet", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
 
+  const editorPanel = page.getByTestId("editor-workspace-panel");
   const emptyState = page.getByTestId("empty-editor-state");
   await expect(emptyState).toBeVisible();
-  await expect(emptyState).toHaveClass(/border-dashed/);
   await expect(emptyState).toHaveClass(/bg-muted\/20/);
+  await expect(emptyState).not.toHaveClass(/border-dashed/);
+  await expect(editorPanel).toHaveClass(/boardwork-editor-panel/);
+  await expect(editorPanel).toHaveClass(/rounded-xl/);
+  await expect(editorPanel).toHaveClass(/\bborder\b/);
   await expect(
     emptyState.getByRole("heading", { name: "No activity created yet" }),
   ).toBeVisible();
@@ -537,12 +541,14 @@ test("keeps the empty editor preview visually quiet", async ({ page }) => {
     const computed = getComputedStyle(element);
     return {
       borderStyle: computed.borderStyle,
+      borderWidth: computed.borderWidth,
       boxShadow: computed.boxShadow,
       backgroundImage: computed.backgroundImage,
     };
   });
 
-  expect(styles.borderStyle).toBe("dashed");
+  expect(styles.borderStyle).toBe("none");
+  expect(styles.borderWidth).toBe("0px");
   expect(styles.boxShadow).toBe("none");
   expect(styles.backgroundImage).toBe("none");
   await expect(emptyState.locator(".board-editor-empty-state-card")).toHaveCount(0);
@@ -559,9 +565,13 @@ test("keeps the empty editor preview contained when text is enlarged", async ({ 
   });
 
   const workspace = page.getByTestId("creation-workspace");
+  const editorPanel = page.getByTestId("editor-workspace-panel");
   const emptyState = page.getByTestId("empty-editor-state");
   await expect(emptyState).toBeVisible();
-  await expect(emptyState).toHaveClass(/border-dashed/);
+  await expect(emptyState).not.toHaveClass(/border-dashed/);
+  await expect(editorPanel).toHaveClass(/boardwork-editor-panel/);
+  await expect(editorPanel).toHaveClass(/rounded-xl/);
+  await expect(editorPanel).toHaveClass(/\bborder\b/);
 
   const bounds = await emptyState.evaluate((element) => {
     const container = element.getBoundingClientRect();

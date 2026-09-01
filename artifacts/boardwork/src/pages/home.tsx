@@ -1299,7 +1299,7 @@ export default function Home() {
               />
             ) : (
               <div
-                className="board-editor-empty-state h-full flex flex-col items-center justify-center border-2 border-dashed rounded-xl bg-muted/20 text-muted-foreground p-8 text-center"
+                className="board-editor-empty-state h-full flex flex-col items-center justify-center bg-muted/20 text-muted-foreground p-8 text-center"
                 data-testid="empty-editor-state"
               >
                 <FilePlus className="w-12 h-12 mb-4 opacity-20" aria-hidden="true" />
