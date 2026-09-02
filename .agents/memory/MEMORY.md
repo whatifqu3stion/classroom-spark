@@ -15,3 +15,4 @@
 - [Touch presentation controls](touch-presentation-controls.md) — Separate touch taps from hover/focus state, and give accessible floating-panel wrappers measurable geometry.
 - [Long text export layout](long-text-export-layout.md) — Fixed-size PNG exports need a full-width content-only mode so long mixed-direction text does not clip.
 - [Compact timer ring sizing](compact-timer-ring-sizing.md) — Size circular compact controls for enlarged timer text at zoomed widths, not just the nominal ring diameter.
+- [Computed border visibility](computed-border-visibility.md) — Assert zero border width for borderless Tailwind elements; reset styles may still report a solid border style.

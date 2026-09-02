@@ -130,6 +130,65 @@ async function expectElementFitsHorizontally(
   ).toBeLessThanOrEqual(viewport.width);
 }
 
+async function expectSingleEditorFrame(page: Page) {
+  const editorPanel = page.getByTestId("editor-workspace-panel");
+  const boardEditor = page.getByTestId("board-editor");
+  const frameMetrics = await page.evaluate(() => {
+    const outer = document.querySelector('[data-testid="editor-workspace-panel"]');
+    const inner = document.querySelector('[data-testid="board-editor"]');
+    if (!outer || !inner) return null;
+
+    const outerStyles = getComputedStyle(outer);
+    const innerStyles = getComputedStyle(inner);
+    const outerBounds = outer.getBoundingClientRect();
+    const innerBounds = inner.getBoundingClientRect();
+
+    return {
+      outerBorderStyle: outerStyles.borderStyle,
+      outerBorderWidth: outerStyles.borderWidth,
+      innerBorderStyle: innerStyles.borderStyle,
+      innerBorderWidth: innerStyles.borderWidth,
+      innerRadius: innerStyles.borderRadius,
+      outerBounds: {
+        left: outerBounds.left,
+        right: outerBounds.right,
+        top: outerBounds.top,
+        bottom: outerBounds.bottom,
+      },
+      innerBounds: {
+        left: innerBounds.left,
+        right: innerBounds.right,
+        top: innerBounds.top,
+        bottom: innerBounds.bottom,
+      },
+      outerScrollWidth: outer.scrollWidth,
+      outerClientWidth: outer.clientWidth,
+      innerScrollWidth: inner.scrollWidth,
+      innerClientWidth: inner.clientWidth,
+    };
+  });
+
+  expect(frameMetrics).not.toBeNull();
+  expect(frameMetrics!.outerBorderStyle).toBe("solid");
+  expect(frameMetrics!.outerBorderWidth).not.toBe("0px");
+  expect(frameMetrics!.innerBorderWidth).toBe("0px");
+  expect(frameMetrics!.innerRadius).toBe("0px");
+  expect(frameMetrics!.innerBounds.left).toBeGreaterThanOrEqual(frameMetrics!.outerBounds.left);
+  expect(frameMetrics!.innerBounds.right).toBeLessThanOrEqual(frameMetrics!.outerBounds.right);
+  expect(frameMetrics!.innerBounds.top).toBeGreaterThanOrEqual(frameMetrics!.outerBounds.top);
+  expect(frameMetrics!.innerBounds.bottom).toBeLessThanOrEqual(frameMetrics!.outerBounds.bottom);
+  expect(frameMetrics!.outerScrollWidth).toBeLessThanOrEqual(frameMetrics!.outerClientWidth);
+  expect(frameMetrics!.innerScrollWidth).toBeLessThanOrEqual(frameMetrics!.innerClientWidth);
+  await expectElementFitsHorizontally(page, editorPanel, {
+    width: await page.evaluate(() => window.innerWidth),
+    height: await page.evaluate(() => window.innerHeight),
+  });
+  await expectElementFitsHorizontally(page, boardEditor, {
+    width: await page.evaluate(() => window.innerWidth),
+    height: await page.evaluate(() => window.innerHeight),
+  });
+}
+
 async function expectHeaderControlsDoNotOverlap(page: Page) {
   const header = page.getByTestId("creation-class-header");
   const controls = [
@@ -236,6 +295,7 @@ for (const viewport of viewports) {
     await expect(header).toBeVisible();
     await expect(saveStatus).toHaveText("Saved");
     await expect(presentButton).toBeVisible();
+    await expectSingleEditorFrame(page);
 
     for (const control of [saveStatus, presentButton, ...editingControls]) {
       await expect(control).toBeVisible();
@@ -286,6 +346,7 @@ test("keeps populated activity editing readable at 150% text scaling", async ({ 
   await expect(header).toBeVisible();
   await expect(saveStatus).toHaveText("Saved");
   await expect(presentButton).toBeVisible();
+  await expectSingleEditorFrame(page);
   await expect(title).toContainText("Explain how the evidence supports your scientific idea");
   await expect(task).toContainText("identify the strongest pattern");
   await expect(prompts).toHaveCount(2);
@@ -593,7 +654,9 @@ test("keeps the empty editor preview visually quiet", async ({ page }) => {
 
   const editorPanel = page.getByTestId("editor-workspace-panel");
   const emptyState = page.getByTestId("empty-editor-state");
+  const emptyContent = page.getByTestId("empty-editor-content");
   await expect(emptyState).toBeVisible();
+  await expect(emptyContent).toBeVisible();
   await expect(emptyState).toHaveClass(/bg-muted\/20/);
   await expect(emptyState).not.toHaveClass(/border-dashed/);
   await expect(editorPanel).toHaveClass(/boardwork-editor-panel/);
@@ -609,6 +672,27 @@ test("keeps the empty editor preview visually quiet", async ({ page }) => {
   ).toBeVisible();
   await expect(emptyState.locator("svg")).toHaveAttribute("aria-hidden", "true");
 
+  const alignment = await emptyContent.evaluate((element) => {
+    const container = element.getBoundingClientRect();
+    const containerCenter = container.left + container.width / 2;
+    const childCenters = Array.from(element.children).map((child) => {
+      const bounds = child.getBoundingClientRect();
+      return bounds.left + bounds.width / 2;
+    });
+    return {
+      containerCenter,
+      childCenters,
+      top: container.top,
+      bottom: container.bottom,
+    };
+  });
+  for (const childCenter of alignment.childCenters) {
+    expect(
+      Math.abs(childCenter - alignment.containerCenter),
+      "empty editor content should share one centered axis",
+    ).toBeLessThanOrEqual(1);
+  }
+
   const styles = await emptyState.evaluate((element) => {
     const computed = getComputedStyle(element);
     return {
@@ -619,7 +703,6 @@ test("keeps the empty editor preview visually quiet", async ({ page }) => {
     };
   });
 
-  expect(styles.borderStyle).toBe("none");
   expect(styles.borderWidth).toBe("0px");
   expect(styles.boxShadow).toBe("none");
   expect(styles.backgroundImage).toBe("none");
@@ -639,7 +722,9 @@ test("keeps the empty editor preview contained when text is enlarged", async ({ 
   const workspace = page.getByTestId("creation-workspace");
   const editorPanel = page.getByTestId("editor-workspace-panel");
   const emptyState = page.getByTestId("empty-editor-state");
+  const emptyContent = page.getByTestId("empty-editor-content");
   await expect(emptyState).toBeVisible();
+  await expect(emptyContent).toBeVisible();
   await expect(emptyState).not.toHaveClass(/border-dashed/);
   await expect(editorPanel).toHaveClass(/boardwork-editor-panel/);
   await expect(editorPanel).toHaveClass(/rounded-xl/);
@@ -667,6 +752,24 @@ test("keeps the empty editor preview contained when text is enlarged", async ({ 
       content,
     };
   });
+
+  const contentAlignment = await emptyContent.evaluate((element) => {
+    const bounds = element.getBoundingClientRect();
+    return {
+      left: bounds.left,
+      right: bounds.right,
+      center: bounds.left + bounds.width / 2,
+    };
+  });
+  const emptyStateBounds = await emptyState.boundingBox();
+  expect(emptyStateBounds).not.toBeNull();
+  expect(
+    Math.abs(
+      contentAlignment.center -
+        (emptyStateBounds!.x + emptyStateBounds!.width / 2),
+    ),
+    "enlarged empty editor content should remain centered",
+  ).toBeLessThanOrEqual(1);
 
   for (const child of bounds.content) {
     expect(child.top, "empty preview content should stay inside its top edge").toBeGreaterThanOrEqual(
@@ -697,3 +800,115 @@ test("keeps the empty editor preview contained when text is enlarged", async ({ 
   );
   await expectElementFitsHorizontally(page, workspace, viewport);
 });
+
+for (const viewport of [
+  { name: "desktop", width: 1280, height: 800 },
+  { name: "narrow", width: 390, height: 844 },
+] as const) {
+  test(`keeps one editor frame when a blank board is created at ${viewport.name} width`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto("/");
+
+    const editorPanel = page.getByTestId("editor-workspace-panel");
+    const emptyState = page.getByTestId("empty-editor-state");
+    await expect(emptyState).toBeVisible();
+    await expect(editorPanel).toHaveClass(/rounded-xl/);
+    await expect(editorPanel).toHaveClass(/\bborder\b/);
+
+    const initialBounds = await editorPanel.boundingBox();
+    expect(initialBounds).not.toBeNull();
+
+    await page.getByTestId("button-blank").click();
+
+    await expect(page.getByTestId("board-editor")).toBeVisible();
+    await expect(page.getByTestId("empty-editor-state")).toHaveCount(0);
+    await expectSingleEditorFrame(page);
+
+    const populatedBounds = await editorPanel.boundingBox();
+    expect(populatedBounds).not.toBeNull();
+    expect(populatedBounds!.x).toBe(initialBounds!.x);
+    expect(populatedBounds!.width).toBe(initialBounds!.width);
+
+    const documentWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+    expect(documentWidth, "creating a blank board should not overflow horizontally").toBeLessThanOrEqual(
+      viewport.width,
+    );
+  });
+}
+
+test("keeps one editor frame when a blank board is created with enlarged text", async ({ page }) => {
+  const viewport = { width: 1024, height: 800 };
+  await page.setViewportSize(viewport);
+  await page.goto("/");
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = "150%";
+  });
+
+  const editorPanel = page.getByTestId("editor-workspace-panel");
+  const initialBounds = await editorPanel.boundingBox();
+  expect(initialBounds).not.toBeNull();
+
+  await page.getByTestId("button-blank").click();
+
+  await expect(page.getByTestId("board-editor")).toBeVisible();
+  await expectSingleEditorFrame(page);
+  const populatedBounds = await editorPanel.boundingBox();
+  expect(populatedBounds).not.toBeNull();
+  expect(populatedBounds!.x).toBe(initialBounds!.x);
+  expect(populatedBounds!.width).toBe(initialBounds!.width);
+
+  const documentWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+  expect(documentWidth, "creating a scaled blank board should not overflow horizontally").toBeLessThanOrEqual(
+    viewport.width,
+  );
+});
+
+for (const viewport of [
+  { name: "desktop", width: 1280, height: 800 },
+  { name: "narrow", width: 390, height: 844 },
+] as const) {
+  test(`keeps one editor frame when returning from a populated board at ${viewport.name} width`, async ({ page }) => {
+    await page.unroute("**/api/app-state");
+    await page.route("**/api/app-state", (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify(savedBoardAppState),
+      }),
+    );
+    await page.setViewportSize(viewport);
+    await page.goto("/activity/activity-saved-board");
+
+    const editorPanel = page.getByTestId("editor-workspace-panel");
+    await expect(page.getByTestId("board-editor")).toBeVisible();
+    await expectSingleEditorFrame(page);
+
+    const initialBounds = await editorPanel.boundingBox();
+    expect(initialBounds).not.toBeNull();
+
+    await page.getByRole("link", { name: "Workspace" }).click();
+
+    await expect(page.getByTestId("empty-editor-state")).toBeVisible();
+    await expect(page.getByTestId("board-editor")).toHaveCount(0);
+    await expect(editorPanel).toHaveClass(/rounded-xl/);
+    await expect(editorPanel).toHaveClass(/\bborder\b/);
+
+    const emptyBounds = await editorPanel.boundingBox();
+    expect(emptyBounds).not.toBeNull();
+    expect(emptyBounds!.x).toBe(initialBounds!.x);
+    expect(emptyBounds!.width).toBe(initialBounds!.width);
+
+    const [documentWidth, frameMetrics] = await Promise.all([
+      page.evaluate(() => document.documentElement.scrollWidth),
+      editorPanel.evaluate((element) => ({
+        scrollWidth: element.scrollWidth,
+        clientWidth: element.clientWidth,
+        borderWidth: getComputedStyle(element).borderWidth,
+      })),
+    ]);
+    expect(frameMetrics.borderWidth).not.toBe("0px");
+    expect(frameMetrics.scrollWidth).toBeLessThanOrEqual(frameMetrics.clientWidth);
+    expect(documentWidth, "returning to the empty editor should not overflow horizontally").toBeLessThanOrEqual(
+      viewport.width,
+    );
+  });
+}

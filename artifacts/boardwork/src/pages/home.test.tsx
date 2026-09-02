@@ -516,6 +516,12 @@ describe("Home presentation defaults", () => {
 
     const emptyState = screen.getByTestId("empty-editor-state");
     const editorPanel = screen.getByTestId("editor-workspace-panel");
+    expect(screen.getByTestId("empty-editor-content")).toHaveClass(
+      "w-full",
+      "max-w-md",
+      "items-center",
+      "text-center",
+    );
     expect(emptyState).toHaveClass("bg-muted/20");
     expect(emptyState).not.toHaveClass("border-dashed", "border-2", "rounded-xl");
     expect(editorPanel).toHaveClass("boardwork-editor-panel", "rounded-xl", "border");
@@ -529,6 +535,20 @@ describe("Home presentation defaults", () => {
     expect(screen.queryByText("Your board starts here")).not.toBeInTheDocument();
     expect(screen.queryByText("A clear task for students")).not.toBeInTheDocument();
     expect(emptyState.querySelector(".board-editor-empty-state-card")).toBeNull();
+  });
+
+  it("keeps the editor workspace frame stable when a board is created", () => {
+    render(<Home />);
+
+    const editorPanel = screen.getByTestId("editor-workspace-panel");
+    expect(editorPanel).toHaveClass("boardwork-editor-panel", "rounded-xl", "border");
+    expect(screen.getByTestId("empty-editor-state")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("button-blank"));
+
+    expect(screen.getByTestId("board-editor-draft")).toBeInTheDocument();
+    expect(screen.queryByTestId("empty-editor-state")).not.toBeInTheDocument();
+    expect(editorPanel).toHaveClass("boardwork-editor-panel", "rounded-xl", "border");
   });
 
   it.each(creationViewports)(

@@ -120,7 +120,7 @@ export function BoardEditor({
     : "Add a title or task before presenting.";
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border bg-background shadow-sm" data-testid="board-editor">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background" data-testid="board-editor">
       <div
         className="flex flex-col gap-3 border-b bg-muted/30 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4"
         data-testid="board-editor-header"
