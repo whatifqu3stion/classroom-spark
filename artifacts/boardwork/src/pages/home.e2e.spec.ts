@@ -446,6 +446,85 @@ test("keeps creation examples very faint compared with entered text", async ({ p
   expect(styles.placeholderLuminance).toBeGreaterThan(styles.textLuminance + 60);
 });
 
+test("keeps the workspace canvas warm while separating white panels", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  await expect(page.getByTestId("creation-controls")).toBeVisible();
+  await expect(page.getByTestId("editor-workspace-panel")).toBeVisible();
+
+  const colors = await page.evaluate(() => {
+    const parseColor = (value: string) => {
+      const channels = value.match(/[\d.]+/g)?.map(Number) ?? [];
+      if (value.includes("oklab")) {
+        const alpha = value.match(/\/\s*([\d.]+)\s*\)/)?.[1];
+        return {
+          red: 255,
+          green: 255,
+          blue: 255,
+          alpha: alpha ? Number(alpha) : 1,
+        };
+      }
+      const normalizedChannels = value.includes("color(srgb")
+        ? channels.slice(0, 3).map((channel) => channel * 255)
+        : channels;
+      return {
+        red: normalizedChannels[0] ?? 0,
+        green: normalizedChannels[1] ?? 0,
+        blue: normalizedChannels[2] ?? 0,
+        alpha: channels[3] ?? 1,
+      };
+    };
+    const composite = (foreground: string, background: string) => {
+      const foregroundColor = parseColor(foreground);
+      const backgroundColor = parseColor(background);
+      return [foregroundColor.red, foregroundColor.green, foregroundColor.blue].map(
+        (channel, index) =>
+          channel * foregroundColor.alpha +
+          [backgroundColor.red, backgroundColor.green, backgroundColor.blue][index] *
+            (1 - foregroundColor.alpha),
+      );
+    };
+    const luminance = (color: number[]) => {
+      const channels = color.map((channel) => {
+        const normalized = channel / 255;
+        return normalized <= 0.03928
+          ? normalized / 12.92
+          : ((normalized + 0.055) / 1.055) ** 2.4;
+      });
+      return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+    };
+
+    const canvas = parseColor(getComputedStyle(document.body).backgroundColor);
+    const creationPanel = document.querySelector('[data-testid="creation-controls"]');
+    const editorPanel = document.querySelector('[data-testid="editor-workspace-panel"]');
+    if (!creationPanel || !editorPanel) {
+      throw new Error("Workspace panels should be present");
+    }
+    const creationSurface = composite(
+      getComputedStyle(creationPanel).backgroundColor,
+      getComputedStyle(document.body).backgroundColor,
+    );
+    const editorSurface = composite(
+      getComputedStyle(editorPanel).backgroundColor,
+      getComputedStyle(document.body).backgroundColor,
+    );
+
+    return {
+      canvas,
+      creationSurface,
+      editorSurface,
+      canvasLuminance: luminance([canvas.red, canvas.green, canvas.blue]),
+      creationLuminance: luminance(creationSurface),
+      editorLuminance: luminance(editorSurface),
+    };
+  });
+
+  expect(colors.canvas).toMatchObject({ red: 249, green: 247, blue: 244, alpha: 1 });
+  expect(colors.canvas.red).toBeGreaterThan(colors.canvas.blue);
+  expect(colors.creationLuminance).toBeGreaterThan(colors.canvasLuminance + 0.015);
+  expect(colors.editorLuminance).toBeGreaterThan(colors.canvasLuminance + 0.008);
+});
+
 test("keeps creation examples readable in dark mode", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");

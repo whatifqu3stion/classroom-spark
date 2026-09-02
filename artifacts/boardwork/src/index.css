@@ -87,7 +87,7 @@
   --app-font-mono: Menlo, monospace;
   --radius: 0.5rem;
   
-  --background: 215 24% 96.5%; /* Soft slate-blue canvas to lift white panels */
+  --background: 40 28% 96.5%; /* Slightly stronger warm-white canvas to lift white panels */
   --foreground: 220 10% 15%; /* Charcoal */
   --border: 40 20% 90%; 
   --input: 40 20% 90%;
