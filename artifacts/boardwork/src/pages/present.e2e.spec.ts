@@ -19,6 +19,24 @@ const longMixedDirectionActivity = {
   technologyMode: "no_computer",
 };
 
+const localVisualUrl =
+  "data:image/svg+xml;charset=utf-8," +
+  encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="900" height="620" viewBox="0 0 900 620">
+      <rect width="900" height="620" rx="40" fill="#dbeafe"/>
+      <path d="M90 480 C190 150 330 520 450 220 S700 100 810 390" fill="none" stroke="#1d4ed8" stroke-width="26" stroke-linecap="round"/>
+      <circle cx="230" cy="300" r="54" fill="#f97316"/>
+      <circle cx="670" cy="280" r="72" fill="#16a34a"/>
+      <path d="M160 530 H740" stroke="#0f172a" stroke-width="12" stroke-linecap="round"/>
+    </svg>
+  `);
+
+const longMixedDirectionVisualActivity = {
+  ...longMixedDirectionActivity,
+  visualUrl: localVisualUrl,
+  visualDescription: "A local diagram showing a changing system.",
+};
+
 const appState = {
   activeClassId: "class-1",
   classes: [
@@ -39,6 +57,11 @@ const appState = {
   instructionalContexts: [],
   units: [],
   activities: [longMixedDirectionActivity],
+};
+
+const visualAppState = {
+  ...appState,
+  activities: [longMixedDirectionVisualActivity],
 };
 
 type Png = {
@@ -255,6 +278,97 @@ test("exports long mixed-direction board text as a complete local-font PNG", asy
       ["task", ".presentation-task"],
       ["prompt-one", ".presentation-prompt:nth-child(1)"],
       ["prompt-two", ".presentation-prompt:nth-child(2)"],
+    ] as const;
+
+    return selectors.map(([name, selector]) => {
+      const element = surface.querySelector<HTMLElement>(selector);
+      if (!element) throw new Error(`Missing export region: ${name}`);
+      const bounds = element.getBoundingClientRect();
+      return {
+        name,
+        x: bounds.left - surfaceBounds.left,
+        y: bounds.top - surfaceBounds.top,
+        width: bounds.width,
+        height: bounds.height,
+      };
+    });
+  });
+
+  for (const region of regions) {
+    expect(region.x, `${region.name} starts inside export bounds`).toBeGreaterThan(0);
+    expect(region.y, `${region.name} starts inside export bounds`).toBeGreaterThan(0);
+    expect(
+      region.x + region.width,
+      `${region.name} ends inside export bounds`,
+    ).toBeLessThan(1920);
+    expect(
+      region.y + region.height,
+      `${region.name} ends inside export bounds`,
+    ).toBeLessThan(1080);
+  }
+
+  await page.getByTestId("button-teacher-controls").click();
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByTestId("button-export-png").click();
+  const download = await downloadPromise;
+  const png = decodePng(await readFile(await download.path()!));
+
+  expect({ width: png.width, height: png.height }).toEqual({
+    width: 1920,
+    height: 1080,
+  });
+  expect(countNonBackgroundPixelsAtExportEdge(png)).toBe(0);
+  for (const region of regions) {
+    expect(
+      countVisiblePixels(png, region),
+      `${region.name} should contain visible exported pixels`,
+    ).toBeGreaterThan(20);
+  }
+
+  assertBrowserHealth();
+});
+
+test("exports long mixed-direction board text beside a visual without clipping", async ({
+  page,
+}) => {
+  const assertBrowserHealth = await reportBrowserHealth(page);
+
+  await page.route("**/api/auth/status", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ passwordRequired: false, authenticated: true }),
+    }),
+  );
+  await page.route("**/api/app-state", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify(visualAppState),
+    }),
+  );
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/present/activity-long-mixed-direction");
+  await expect(page.getByTestId("present-title")).toHaveText(
+    longMixedDirectionActivity.title,
+  );
+  await expect(page.getByTestId("present-task")).toHaveText(
+    longMixedDirectionActivity.task,
+  );
+  await expect(
+    page.getByTestId("presentation-surface").locator(".presentation-prompt"),
+  ).toHaveCount(2);
+  const visual = page.locator(".presentation-surface--export .presentation-visual img");
+  await expect(visual).toBeVisible();
+  await expect(visual).toHaveJSProperty("complete", true);
+
+  const regions = await page.locator(".presentation-surface--export").evaluate((surface) => {
+    const surfaceBounds = surface.getBoundingClientRect();
+    const selectors = [
+      ["title", ".presentation-header-title"],
+      ["task", ".presentation-task"],
+      ["prompt-one", ".presentation-prompt:nth-child(1)"],
+      ["prompt-two", ".presentation-prompt:nth-child(2)"],
+      ["visual", ".presentation-visual img"],
     ] as const;
 
     return selectors.map(([name, selector]) => {

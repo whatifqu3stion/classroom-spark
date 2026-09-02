@@ -516,6 +516,7 @@ describe("Home presentation defaults", () => {
 
     const emptyState = screen.getByTestId("empty-editor-state");
     const editorPanel = screen.getByTestId("editor-workspace-panel");
+    expect(emptyState).toHaveClass("min-w-0", "w-full", "flex-1");
     expect(screen.getByTestId("empty-editor-content")).toHaveClass(
       "w-full",
       "max-w-md",

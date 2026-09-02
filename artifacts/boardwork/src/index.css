@@ -1675,6 +1675,10 @@
     gap: 34px;
   }
 
+  .presentation-surface--export.presentation-surface--export-with-visual .presentation-content {
+    max-width: none;
+  }
+
   .presentation-surface--export .presentation-main--content-only .presentation-content {
     max-width: none;
   }

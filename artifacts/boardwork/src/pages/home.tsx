@@ -1299,7 +1299,7 @@ export default function Home() {
               />
             ) : (
               <div
-                className="board-editor-empty-state h-full flex flex-col items-center justify-center bg-muted/20 text-muted-foreground p-8 text-center"
+                className="board-editor-empty-state h-full min-w-0 w-full flex-1 flex flex-col items-center justify-center bg-muted/20 text-muted-foreground p-8 text-center"
                 data-testid="empty-editor-state"
               >
                 <div

@@ -144,6 +144,7 @@ export function PresentationCanvas({
       className={cn(
         "presentation-surface",
         exportLayout && "presentation-surface--export",
+        exportLayout && hasVisual && "presentation-surface--export-with-visual",
         editorPreview && "presentation-surface--editor-preview",
         contentIsDense && "presentation-surface--content-dense",
       )}

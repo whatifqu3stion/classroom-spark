@@ -672,6 +672,27 @@ test("keeps the empty editor preview visually quiet", async ({ page }) => {
   ).toBeVisible();
   await expect(emptyState.locator("svg")).toHaveAttribute("aria-hidden", "true");
 
+  const [editorBounds, emptyStateBounds] = await Promise.all([
+    editorPanel.boundingBox(),
+    emptyState.boundingBox(),
+  ]);
+  expect(editorBounds).not.toBeNull();
+  expect(emptyStateBounds).not.toBeNull();
+  const emptyContentBounds = await emptyContent.boundingBox();
+  expect(emptyContentBounds).not.toBeNull();
+  expect(emptyStateBounds!.x).toBeGreaterThanOrEqual(editorBounds!.x);
+  expect(emptyStateBounds!.x + emptyStateBounds!.width).toBeLessThanOrEqual(
+    editorBounds!.x + editorBounds!.width,
+  );
+  expect(
+    Math.abs(
+      emptyContentBounds!.x +
+        emptyContentBounds!.width / 2 -
+        (editorBounds!.x + editorBounds!.width / 2),
+    ),
+    "empty editor content should be centered in the full editor panel",
+  ).toBeLessThanOrEqual(1);
+
   const alignment = await emptyContent.evaluate((element) => {
     const container = element.getBoundingClientRect();
     const containerCenter = container.left + container.width / 2;
@@ -763,6 +784,15 @@ test("keeps the empty editor preview contained when text is enlarged", async ({ 
   });
   const emptyStateBounds = await emptyState.boundingBox();
   expect(emptyStateBounds).not.toBeNull();
+  const editorPanelBounds = await editorPanel.boundingBox();
+  expect(editorPanelBounds).not.toBeNull();
+  expect(
+    Math.abs(
+      contentAlignment.center -
+        (editorPanelBounds!.x + editorPanelBounds!.width / 2),
+    ),
+    "enlarged empty editor content should be centered in the full editor panel",
+  ).toBeLessThanOrEqual(1);
   expect(
     Math.abs(
       contentAlignment.center -
