@@ -37,6 +37,18 @@ interface PresentationCanvasProps {
 const testId = (enabled: boolean, value: string) =>
   enabled ? { "data-testid": value } : {};
 
+const DEFAULT_CONTENT_RATIO = 0.64;
+const MIN_CONTENT_RATIO = 0.42;
+const MAX_CONTENT_RATIO = 0.76;
+const LAYOUT_STEP = 0.04;
+const MIN_CONTENT_WIDTH = 280;
+const MIN_RAIL_WIDTH = 240;
+
+type LayoutRatioBounds = {
+  min: number;
+  max: number;
+};
+
 export function PresentationCanvas({
   activity,
   controls,
@@ -51,6 +63,13 @@ export function PresentationCanvas({
   surfaceRef,
   timer,
 }: PresentationCanvasProps) {
+  const [contentRatio, setContentRatio] = useState(DEFAULT_CONTENT_RATIO);
+  const [layoutBounds, setLayoutBounds] = useState<LayoutRatioBounds>({
+    min: MIN_CONTENT_RATIO,
+    max: MAX_CONTENT_RATIO,
+  });
+  const [isResizing, setIsResizing] = useState(false);
+  const mainRef = useRef<HTMLElement>(null);
   const [timerPointerInside, setTimerPointerInside] = useState(false);
   const [timerFocusWithin, setTimerFocusWithin] = useState(false);
   const timerPointerDownRef = useRef(false);
@@ -76,6 +95,12 @@ export function PresentationCanvas({
   const showHiddenTimerRecovery =
     !exportLayout && !editorPreview && Boolean(timer && !timer.visible && onShowTimer);
   const showHeaderTimer = showCompactTimer || showHiddenTimerRecovery;
+  const hasRightRail = hasVisual || showLargeTimer;
+  const showLayoutDivider = !exportLayout && hasRightRail;
+  const effectiveContentRatio = Math.max(
+    layoutBounds.min,
+    Math.min(layoutBounds.max, contentRatio),
+  );
   const showTimerControls =
     !exportLayout &&
     !editorPreview &&
@@ -114,6 +139,106 @@ export function PresentationCanvas({
     1,
     Number((presentationTimerReading.length * 0.55).toFixed(2)),
   );
+
+  const getLayoutRatioBounds = (): LayoutRatioBounds => {
+    const main = mainRef.current;
+    if (!main) {
+      return { min: MIN_CONTENT_RATIO, max: MAX_CONTENT_RATIO };
+    }
+
+    const bounds = main.getBoundingClientRect();
+    const styles = window.getComputedStyle(main);
+    const gap = Number.parseFloat(styles.columnGap || styles.gap || "0") || 0;
+    const availableWidth = bounds.width - gap * 2 - 1;
+    if (availableWidth <= MIN_CONTENT_WIDTH + MIN_RAIL_WIDTH) {
+      return { min: MIN_CONTENT_RATIO, max: MAX_CONTENT_RATIO };
+    }
+
+    const min = Math.max(MIN_CONTENT_RATIO, MIN_CONTENT_WIDTH / availableWidth);
+    const max = Math.min(MAX_CONTENT_RATIO, 1 - MIN_RAIL_WIDTH / availableWidth);
+    return min < max
+      ? { min, max }
+      : { min: MIN_CONTENT_RATIO, max: MAX_CONTENT_RATIO };
+  };
+
+  const clampContentRatio = (ratio: number, bounds = layoutBounds) =>
+    Math.max(bounds.min, Math.min(bounds.max, ratio));
+
+  const refreshLayoutBounds = () => {
+    const nextBounds = getLayoutRatioBounds();
+    setLayoutBounds(nextBounds);
+    setContentRatio((ratio) => clampContentRatio(ratio, nextBounds));
+  };
+
+  useEffect(() => {
+    if (!showLayoutDivider) return;
+    refreshLayoutBounds();
+    const main = mainRef.current;
+    if (!main) return;
+
+    const observer =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(refreshLayoutBounds)
+        : null;
+    observer?.observe(main);
+    window.addEventListener("resize", refreshLayoutBounds);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", refreshLayoutBounds);
+    };
+  }, [showLayoutDivider]);
+
+  const setRatioFromPointer = (clientX: number) => {
+    const main = mainRef.current;
+    if (!main) return;
+
+    const bounds = main.getBoundingClientRect();
+    const styles = window.getComputedStyle(main);
+    const gap = Number.parseFloat(styles.columnGap || styles.gap || "0") || 0;
+    const availableWidth = bounds.width - gap * 2 - 1;
+    if (availableWidth <= MIN_CONTENT_WIDTH + MIN_RAIL_WIDTH) return;
+
+    const contentWidth = clientX - bounds.left - gap;
+    const nextBounds = getLayoutRatioBounds();
+    setLayoutBounds(nextBounds);
+    setContentRatio(clampContentRatio(contentWidth / availableWidth, nextBounds));
+  };
+
+  const handleDividerKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+      event.preventDefault();
+      const direction = event.key === "ArrowRight" ? 1 : -1;
+      const nextBounds = getLayoutRatioBounds();
+      setLayoutBounds(nextBounds);
+      setContentRatio((ratio) =>
+        clampContentRatio(ratio + direction * LAYOUT_STEP, nextBounds),
+      );
+      return;
+    }
+
+    if (event.key === "Home") {
+      event.preventDefault();
+      const nextBounds = getLayoutRatioBounds();
+      setLayoutBounds(nextBounds);
+      setContentRatio(clampContentRatio(DEFAULT_CONTENT_RATIO, nextBounds));
+      return;
+    }
+
+    if (event.key === "End") {
+      event.preventDefault();
+      const nextBounds = getLayoutRatioBounds();
+      setLayoutBounds(nextBounds);
+      setContentRatio(nextBounds.max);
+      return;
+    }
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      const nextBounds = getLayoutRatioBounds();
+      setLayoutBounds(nextBounds);
+      setContentRatio(clampContentRatio(DEFAULT_CONTENT_RATIO, nextBounds));
+    }
+  };
 
   useEffect(() => {
     return () => {
@@ -154,6 +279,7 @@ export function PresentationCanvas({
         exportLayout && hasVisual && "presentation-surface--export-with-visual",
         editorPreview && "presentation-surface--editor-preview",
         contentIsDense && "presentation-surface--content-dense",
+        isResizing && "presentation-surface--resizing",
       )}
       style={{
         "--presentation-bg": themeColors.background,
@@ -171,6 +297,8 @@ export function PresentationCanvas({
         "--presentation-heading-letter-spacing":
           themeTypography.headingLetterSpacing,
         "--presentation-heading-scale": themeTypography.headingScale,
+        "--presentation-content-flex": `${effectiveContentRatio}fr`,
+        "--presentation-rail-flex": `${1 - effectiveContentRatio}fr`,
         backgroundColor: themeColors.background,
         color: themeColors.primaryText,
         fontFamily: themeTypography.body.family,
@@ -357,9 +485,11 @@ export function PresentationCanvas({
       </header>
 
       <main
+        ref={mainRef}
         className={cn(
           "presentation-main",
-          !hasVisual && !showLargeTimer && "presentation-main--content-only",
+          !hasRightRail && "presentation-main--content-only",
+          showLayoutDivider && "presentation-main--has-divider",
         )}
       >
         <div className="presentation-content">
@@ -427,6 +557,39 @@ export function PresentationCanvas({
             </div>
           )}
         </div>
+        {showLayoutDivider && (
+          <div
+            className="presentation-layout-divider"
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize student content and right rail"
+            aria-valuemin={Math.round(layoutBounds.min * 100)}
+            aria-valuemax={Math.round(layoutBounds.max * 100)}
+            aria-valuenow={Math.round(effectiveContentRatio * 100)}
+            aria-valuetext={`${Math.round(effectiveContentRatio * 100)}% student content, ${Math.round((1 - effectiveContentRatio) * 100)}% right rail`}
+            tabIndex={0}
+            onKeyDown={handleDividerKeyDown}
+            onDoubleClick={() => setContentRatio(DEFAULT_CONTENT_RATIO)}
+            onPointerDown={(event) => {
+              event.preventDefault();
+              setIsResizing(true);
+              setRatioFromPointer(event.clientX);
+              event.currentTarget.setPointerCapture?.(event.pointerId);
+            }}
+            onPointerMove={(event) => {
+              if (isResizing) setRatioFromPointer(event.clientX);
+            }}
+            onPointerUp={(event) => {
+              setIsResizing(false);
+              event.currentTarget.releasePointerCapture?.(event.pointerId);
+            }}
+            onPointerCancel={() => setIsResizing(false)}
+            onLostPointerCapture={() => setIsResizing(false)}
+            {...testId(includeTestIds, "presentation-layout-divider")}
+          >
+            <span className="presentation-layout-divider-grip" aria-hidden="true" />
+          </div>
+        )}
         {(hasVisual || showLargeTimer) && (
           <aside className={cn("presentation-rail", `presentation-rail--${railMode}`)}>
             {hasVisual && (

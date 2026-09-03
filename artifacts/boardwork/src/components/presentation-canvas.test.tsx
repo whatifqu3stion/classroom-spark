@@ -602,6 +602,128 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.getByText("A saved classroom image")).toBeInTheDocument();
   });
 
+  it("provides an ephemeral, bounded divider for live and editor surfaces", () => {
+    const imageActivity = {
+      ...activity,
+      visualUrl: "data:image/png;base64,saved-image",
+    };
+    const { rerender } = render(
+      <PresentationCanvas activity={imageActivity} />,
+    );
+
+    const divider = screen.getByRole("separator", {
+      name: "Resize student content and right rail",
+    });
+    expect(divider).toHaveAttribute("aria-orientation", "vertical");
+    expect(divider).toHaveAttribute("aria-valuemin", "42");
+    expect(divider).toHaveAttribute("aria-valuemax", "76");
+    expect(divider).toHaveAttribute("aria-valuenow", "64");
+    expect(divider).toHaveAttribute(
+      "aria-valuetext",
+      "64% student content, 36% right rail",
+    );
+    expect(divider).toHaveAttribute("tabindex", "0");
+    expect(screen.getByTestId("presentation-surface")).toHaveStyle({
+      "--presentation-content-flex": "0.64fr",
+      "--presentation-rail-flex": "0.36fr",
+    });
+
+    fireEvent.keyDown(divider, { key: "ArrowRight" });
+    expect(divider).toHaveAttribute("aria-valuenow", "68");
+    fireEvent.keyDown(divider, { key: "End" });
+    expect(divider).toHaveAttribute("aria-valuenow", "76");
+    fireEvent.keyDown(divider, { key: "Home" });
+    expect(divider).toHaveAttribute("aria-valuenow", "64");
+
+    rerender(<PresentationCanvas activity={imageActivity} editorPreview />);
+    expect(
+      screen.getByRole("separator", {
+        name: "Resize student content and right rail",
+      }),
+    ).toBeInTheDocument();
+
+    rerender(<PresentationCanvas activity={imageActivity} exportLayout />);
+    expect(screen.queryByRole("separator")).not.toBeInTheDocument();
+  });
+
+  it("updates the divider from pointer dragging without changing authored activity", () => {
+    const imageActivity = {
+      ...activity,
+      visualUrl: "data:image/png;base64,saved-image",
+    };
+    render(<PresentationCanvas activity={imageActivity} />);
+
+    const main = screen.getByTestId("presentation-surface").querySelector(
+      ".presentation-main",
+    ) as HTMLElement;
+    Object.defineProperty(main, "getBoundingClientRect", {
+      configurable: true,
+      value: () => ({
+        left: 0,
+        top: 0,
+        right: 1000,
+        bottom: 600,
+        width: 1000,
+        height: 600,
+      }),
+    });
+    const divider = screen.getByTestId("presentation-layout-divider");
+
+    fireEvent.pointerDown(divider, {
+      clientX: 500,
+      pointerId: 1,
+      pointerType: "touch",
+    });
+    fireEvent.pointerMove(divider, {
+      clientX: 700,
+      pointerId: 1,
+      pointerType: "touch",
+    });
+    fireEvent.pointerUp(divider, { pointerId: 1, pointerType: "touch" });
+
+    expect(divider).toHaveAttribute("aria-valuenow", "70");
+    expect(screen.getByTestId("present-title")).toHaveTextContent(
+      imageActivity.title,
+    );
+  });
+
+  it("keeps keyboard resizing inside measured pane minimums near the stacking breakpoint", () => {
+    const imageActivity = {
+      ...activity,
+      visualUrl: "data:image/png;base64,saved-image",
+    };
+    render(<PresentationCanvas activity={imageActivity} />);
+
+    const surface = screen.getByTestId("presentation-surface");
+    const main = surface.querySelector(".presentation-main") as HTMLElement;
+    Object.defineProperty(main, "getBoundingClientRect", {
+      configurable: true,
+      value: () => ({
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        width: 560,
+        height: 400,
+      }),
+    });
+    fireEvent(window, new Event("resize"));
+
+    const divider = screen.getByTestId("presentation-layout-divider");
+    expect(divider).toHaveAttribute("aria-valuemin", "50");
+    expect(divider).toHaveAttribute("aria-valuemax", "57");
+
+    fireEvent.keyDown(divider, { key: "End" });
+    expect(divider).toHaveAttribute("aria-valuenow", "57");
+    expect(divider).toHaveAttribute("aria-valuemax", "57");
+
+    fireEvent.keyDown(divider, { key: "ArrowRight" });
+    expect(divider).toHaveAttribute("aria-valuenow", "57");
+    expect(screen.getByTestId("present-title")).toHaveTextContent(
+      imageActivity.title,
+    );
+  });
+
   it("renders formulas in the student canvas", () => {
     render(
       <PresentationCanvas

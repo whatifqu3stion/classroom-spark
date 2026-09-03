@@ -63,7 +63,8 @@ describe("BoardEditor presentation visual disclosure", () => {
     expect(editor.firstElementChild).toHaveClass("space-y-6");
     expect(screen.queryByText("No image")).not.toBeInTheDocument();
     expect(screen.queryByText("Image added")).not.toBeInTheDocument();
-    expect(toggle).toHaveAccessibleName("Open visual presentation settings");
+    expect(toggle).toHaveAccessibleName("Open presentation settings");
+    expect(toggle).toHaveTextContent("Presentation settings");
     expect(screen.getByText("Visual presentation colors")).toBeInTheDocument();
 
     fireEvent.click(toggle);
@@ -76,7 +77,7 @@ describe("BoardEditor presentation visual disclosure", () => {
     expect(screen.getByTestId("presentation-theme-picker")).toBeInTheDocument();
     expect(screen.queryByTestId("presentation-preview")).not.toBeInTheDocument();
     expect(screen.queryByTestId("presentation-preview-surface")).not.toBeInTheDocument();
-    expect(toggle).toHaveAccessibleName("Close visual presentation settings");
+    expect(toggle).toHaveAccessibleName("Close presentation settings");
     expect(screen.queryByRole("button", { name: "Teacher controls" })).not.toBeInTheDocument();
     expect(
       screen.queryByPlaceholderText("Arrival instructions (optional footer)..."),
@@ -90,7 +91,7 @@ describe("BoardEditor presentation visual disclosure", () => {
 
     expect(toggle).toHaveClass("border-border/70", "shadow-xs");
 
-    fireEvent.focus(screen.getByRole("button", { name: "About visual presentation" }));
+    fireEvent.focus(screen.getByRole("button", { name: "About presentation settings" }));
 
     await waitFor(() => {
       expect(screen.getByRole("tooltip")).toHaveTextContent(

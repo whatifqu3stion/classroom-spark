@@ -349,23 +349,17 @@ export function BoardEditor({
           </div>
 
             <section className="presentation-visual-editor-section mt-8 border-t pt-6" data-testid="presentation-visual-section">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex min-w-0 items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  <span>Visual presentation</span>
-                  <HelpTooltip label="About visual presentation">
-                    Shape how this board appears in Present and PNG export: add a local image, choose presentation colors, and add a teacher note. Images are shown without cropping.
-                  </HelpTooltip>
-                </div>
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   className={cn(
-                    "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border/70 bg-background/70 text-muted-foreground shadow-xs transition-colors hover:border-border hover:bg-muted/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "inline-flex h-9 shrink-0 items-center justify-start gap-2 rounded-md border border-border/70 bg-background/70 px-3 text-sm font-semibold text-muted-foreground shadow-xs transition-colors hover:border-border hover:bg-muted/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     presentationVisualOpen && "border-border bg-muted/70 text-foreground",
                   )}
                   aria-label={
                     presentationVisualOpen
-                      ? "Close visual presentation settings"
-                      : "Open visual presentation settings"
+                      ? "Close presentation settings"
+                      : "Open presentation settings"
                   }
                   aria-expanded={presentationVisualOpen}
                   aria-controls="presentation-visual-editor"
@@ -373,7 +367,11 @@ export function BoardEditor({
                   data-testid="button-toggle-presentation-visual"
                 >
                   <Palette className="h-4 w-4" aria-hidden="true" />
+                  <span>Presentation settings</span>
                 </button>
+                <HelpTooltip label="About presentation settings">
+                  Shape how this board appears in Present and PNG export: add a local image, choose presentation colors, and add a teacher note. Images are shown without cropping.
+                </HelpTooltip>
               </div>
               <div
                 id="presentation-visual-editor"
