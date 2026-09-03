@@ -107,6 +107,13 @@ export function PresentationCanvas({
     1,
     4 / Math.max(1, compactTimerReading.length),
   );
+  const presentationTimerReading = timer
+    ? formatTimer(timer.remainingSeconds)
+    : "";
+  const presentationTimerReadingWidthFactor = Math.max(
+    1,
+    Number((presentationTimerReading.length * 0.55).toFixed(2)),
+  );
 
   useEffect(() => {
     return () => {
@@ -443,7 +450,15 @@ export function PresentationCanvas({
                 aria-atomic="true"
               >
                 <span className="presentation-timer-label">{timer.status === "completed" ? "Time is up" : "Time remaining"}</span>
-                <strong>{formatTimer(timer.remainingSeconds)}</strong>
+                <strong
+                  className="presentation-timer-reading"
+                  style={{
+                    "--presentation-timer-reading-width-factor":
+                      presentationTimerReadingWidthFactor,
+                  } as CSSProperties}
+                >
+                  {presentationTimerReading}
+                </strong>
                 <span className="presentation-timer-progress" aria-hidden="true"><span style={{ width: `${Math.max(0, Math.min(100, (timer.remainingSeconds / (activity.durationMinutes * 60)) * 100))}%` }} /></span>
                 {timer.alarmActive && (
                   <span className="presentation-timer-alarm-status" role="status">

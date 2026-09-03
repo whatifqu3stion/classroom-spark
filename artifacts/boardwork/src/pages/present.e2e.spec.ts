@@ -328,6 +328,102 @@ test("exports long mixed-direction board text as a complete local-font PNG", asy
   assertBrowserHealth();
 });
 
+test("keeps the large timer reading tight while card rows stay fluid", async ({
+  page,
+}) => {
+  const assertBrowserHealth = await reportBrowserHealth(page);
+
+  await page.route("**/api/auth/status", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ passwordRequired: false, authenticated: true }),
+    }),
+  );
+  await page.route("**/api/app-state", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify(visualAppState),
+    }),
+  );
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/present/activity-long-mixed-direction");
+
+  const splitGeometry = await page.locator(".presentation-timer").evaluate((timer) => {
+    const reading = timer.querySelector<HTMLElement>(".presentation-timer-reading");
+    const progress = timer.querySelector<HTMLElement>(".presentation-timer-progress");
+    const controls = timer.querySelector<HTMLElement>(".presentation-timer-controls");
+    if (!reading || !progress || !controls) throw new Error("Missing large timer row");
+
+    const timerBounds = timer.getBoundingClientRect();
+    const readingBounds = reading.getBoundingClientRect();
+    const progressBounds = progress.getBoundingClientRect();
+    const controlsBounds = controls.getBoundingClientRect();
+    return {
+      timerWidth: timerBounds.width,
+      readingWidth: readingBounds.width,
+      readingRight: readingBounds.right,
+      timerRight: timerBounds.right,
+      progressWidth: progressBounds.width,
+      controlsWidth: controlsBounds.width,
+      whiteSpace: getComputedStyle(reading).whiteSpace,
+    };
+  });
+
+  expect(splitGeometry.readingWidth).toBeLessThan(splitGeometry.timerWidth);
+  expect(splitGeometry.readingRight).toBeLessThanOrEqual(splitGeometry.timerRight);
+  expect(splitGeometry.progressWidth).toBeGreaterThan(splitGeometry.timerWidth * 0.8);
+  expect(splitGeometry.controlsWidth).toBeGreaterThan(splitGeometry.timerWidth * 0.8);
+  expect(splitGeometry.whiteSpace).toBe("nowrap");
+
+  await page.route("**/api/app-state", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        ...appState,
+        activities: [{ ...longMixedDirectionActivity, durationMinutes: 100 }],
+      }),
+    }),
+  );
+  for (const viewport of [
+    { width: 1024, height: 640, label: "projector" },
+    { width: 854, height: 534, label: "150% zoom equivalent" },
+    { width: 640, height: 400, label: "200% zoom equivalent" },
+  ]) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto("/present/activity-long-mixed-direction");
+
+    const timerOnlyReading = page.locator(".presentation-timer-reading");
+    await expect(timerOnlyReading).toHaveText("100:00");
+    const timerOnlyGeometry = await timerOnlyReading.evaluate((reading) => {
+      const readingBounds = reading.getBoundingClientRect();
+      const timer = reading.closest(".presentation-timer");
+      const timerBounds = timer?.getBoundingClientRect();
+      return {
+        documentWidth: document.documentElement.scrollWidth,
+        viewportWidth: window.innerWidth,
+        readingWidth: readingBounds.width,
+        readingRight: readingBounds.right,
+        timerRight: timerBounds?.right ?? 0,
+        whiteSpace: getComputedStyle(reading).whiteSpace,
+      };
+    });
+
+    expect(
+      timerOnlyGeometry.documentWidth,
+      `${viewport.label} should not overflow horizontally`,
+    ).toBeLessThanOrEqual(timerOnlyGeometry.viewportWidth);
+    expect(timerOnlyGeometry.readingWidth).toBeGreaterThan(0);
+    expect(
+      timerOnlyGeometry.readingRight,
+      `${viewport.label} timer reading should fit in its card`,
+    ).toBeLessThanOrEqual(timerOnlyGeometry.timerRight);
+    expect(timerOnlyGeometry.whiteSpace).toBe("nowrap");
+  }
+
+  assertBrowserHealth();
+});
+
 test("exports long mixed-direction board text beside a visual without clipping", async ({
   page,
 }) => {

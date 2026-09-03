@@ -797,6 +797,7 @@
   }
 
   .presentation-timer {
+    container-type: inline-size;
     display: grid;
     gap: 0.35rem;
     border: 1px solid color-mix(in srgb, var(--presentation-primary-text, #171717) 14%, transparent);
@@ -807,11 +808,25 @@
     box-shadow: 0 0.35rem 1rem color-mix(in srgb, var(--presentation-primary-text, #171717) 8%, transparent);
   }
 
-  .presentation-timer strong {
+  .presentation-timer-reading {
+    display: block;
+    inline-size: fit-content;
+    justify-self: start;
+    max-inline-size: 100%;
+    min-inline-size: 0;
     font-family: var(--font-mono);
     font-size: clamp(2.5rem, 6vw, 6rem);
+    font-size: min(
+      clamp(2.5rem, 6vw, 6rem),
+      calc(
+        (100cqw - 0.5rem) /
+          var(--presentation-timer-reading-width-factor, 3.3)
+      )
+    );
+    font-variant-numeric: tabular-nums;
     letter-spacing: -0.06em;
     line-height: 0.95;
+    white-space: nowrap;
   }
 
   .presentation-timer-label {
@@ -827,7 +842,7 @@
     background: color-mix(in srgb, var(--presentation-accent-soft, transparent) 42%, transparent);
   }
 
-  .presentation-timer--complete strong {
+  .presentation-timer--complete .presentation-timer-reading {
     color: var(--presentation-primary-text, #171717);
   }
 
@@ -882,6 +897,13 @@
 
   .presentation-rail--timer-only .presentation-timer strong {
     font-size: clamp(4rem, 10vw, 10rem);
+    font-size: min(
+      clamp(4rem, 10vw, 10rem),
+      calc(
+        (100cqw - 0.5rem) /
+          var(--presentation-timer-reading-width-factor, 3.3)
+      )
+    );
   }
 
   .presentation-rail--split {
