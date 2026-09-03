@@ -64,6 +64,60 @@ const visualAppState = {
   activities: [longMixedDirectionVisualActivity],
 };
 
+async function stubPresentationState(
+  page: Page,
+  state: typeof appState = appState,
+) {
+  await page.addInitScript(() => {
+    const frozenNow = 1_756_800_000_000;
+    Date.now = () => frozenNow;
+  });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.route("**/api/auth/status", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ passwordRequired: false, authenticated: true }),
+    }),
+  );
+  await page.route("**/api/app-state", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify(state),
+    }),
+  );
+}
+
+async function hideTimerFromStudents(page: Page) {
+  await page.getByRole("button", { name: "Adjust" }).click();
+  await page.getByRole("button", { name: "Hide timer from students" }).click();
+  await expect(page.getByTestId("button-show-timer")).toBeVisible();
+}
+
+async function settlePresentationSurface(page: Page) {
+  await expect(page.getByTestId("presentation-surface")).toBeVisible();
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await Promise.all(
+      Array.from(document.images).map((image) =>
+        image.complete
+          ? Promise.resolve()
+          : new Promise<void>((resolve) => {
+              image.addEventListener("load", () => resolve(), { once: true });
+              image.addEventListener("error", () => resolve(), { once: true });
+            }),
+      ),
+    );
+  });
+}
+
+async function assertExportSurfaceHasNoLiveDivider(page: Page) {
+  const exportSurface = page.locator(".presentation-surface--export");
+  await expect(exportSurface).toHaveCount(1);
+  await expect(exportSurface.locator(".presentation-layout-divider")).toHaveCount(0);
+  await expect(exportSurface).toHaveCSS("width", "1920px");
+  await expect(exportSurface).toHaveCSS("height", "1080px");
+}
+
 type Png = {
   width: number;
   height: number;
@@ -839,4 +893,96 @@ test("keeps Present controls tappable in a short landscape tablet viewport", asy
   } finally {
     await context.close();
   }
+});
+
+test("captures stable responsive Present compositions and keeps export surfaces clean", async ({
+  page,
+}) => {
+  const screenshotOptions = {
+    animations: "disabled" as const,
+    caret: "hide" as const,
+    scale: "css" as const,
+  };
+  const liveSurface = page.getByTestId("presentation-surface");
+
+  await stubPresentationState(page, visualAppState);
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await page.goto("/present/activity-long-mixed-direction");
+  await settlePresentationSurface(page);
+  await expect(liveSurface.getByTestId("presentation-layout-divider")).toBeVisible();
+  await expect(liveSurface.locator(".presentation-rail--split")).toBeVisible();
+  await assertExportSurfaceHasNoLiveDivider(page);
+  await expect(liveSurface).toHaveScreenshot(
+    "present-wide.png",
+    screenshotOptions,
+  );
+
+  await page.setViewportSize({ width: 640, height: 800 });
+  await page.goto("/present/activity-long-mixed-direction");
+  await settlePresentationSurface(page);
+  await expect(liveSurface.getByTestId("presentation-layout-divider")).toBeHidden();
+  const narrowGridTracks = await liveSurface
+    .locator(".presentation-main")
+    .evaluate((main) => getComputedStyle(main).gridTemplateColumns.trim().split(/\s+/));
+  expect(narrowGridTracks).toHaveLength(1);
+  await expect(liveSurface.locator(".presentation-rail--split")).toBeVisible();
+  await expect(liveSurface).toHaveScreenshot(
+    "present-narrow-single-column.png",
+    screenshotOptions,
+  );
+
+  await stubPresentationState(page, appState);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/present/activity-long-mixed-direction");
+  await settlePresentationSurface(page);
+  await hideTimerFromStudents(page);
+  await expect(liveSurface.locator(".presentation-main--content-only")).toBeVisible();
+  await expect(liveSurface.getByTestId("presentation-layout-divider")).toHaveCount(0);
+  await expect(liveSurface).toHaveScreenshot(
+    "present-content-only.png",
+    screenshotOptions,
+  );
+
+  await page.goto("/present/activity-long-mixed-direction");
+  await settlePresentationSurface(page);
+  await expect(liveSurface.locator(".presentation-rail--timer-only")).toBeVisible();
+  await expect(liveSurface.getByTestId("presentation-layout-divider")).toBeVisible();
+  await expect(liveSurface).toHaveScreenshot(
+    "present-timer-only.png",
+    screenshotOptions,
+  );
+
+  await stubPresentationState(page, visualAppState);
+  await page.goto("/present/activity-long-mixed-direction");
+  await settlePresentationSurface(page);
+  await hideTimerFromStudents(page);
+  await expect(liveSurface.locator(".presentation-rail--image-only")).toBeVisible();
+  await expect(liveSurface.getByTestId("presentation-layout-divider")).toBeVisible();
+  await expect(liveSurface).toHaveScreenshot(
+    "present-visual-only.png",
+    screenshotOptions,
+  );
+
+  await page.goto("/present/activity-long-mixed-direction");
+  await settlePresentationSurface(page);
+  await expect(liveSurface.locator(".presentation-rail--split")).toBeVisible();
+  await expect(liveSurface.getByTestId("presentation-layout-divider")).toBeVisible();
+  await expect(liveSurface).toHaveScreenshot(
+    "present-both-present.png",
+    screenshotOptions,
+  );
+
+  const surfaceBounds = await liveSurface.boundingBox();
+  expect(surfaceBounds).not.toBeNull();
+  const contentBounds = await liveSurface.locator(".presentation-content").boundingBox();
+  expect(contentBounds).not.toBeNull();
+  expect(contentBounds!.x).toBeGreaterThanOrEqual(surfaceBounds!.x);
+  expect(contentBounds!.y).toBeGreaterThanOrEqual(surfaceBounds!.y);
+  expect(contentBounds!.x + contentBounds!.width).toBeLessThanOrEqual(
+    surfaceBounds!.x + surfaceBounds!.width,
+  );
+  expect(contentBounds!.y + contentBounds!.height).toBeLessThanOrEqual(
+    surfaceBounds!.y + surfaceBounds!.height,
+  );
+  await assertExportSurfaceHasNoLiveDivider(page);
 });
