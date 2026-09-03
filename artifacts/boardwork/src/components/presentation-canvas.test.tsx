@@ -150,19 +150,19 @@ describe("PresentationCanvas timer visibility", () => {
     expect(document.getElementById("presentation-compact-timer-controls")).toBeInTheDocument();
   });
 
-  it("keeps the large reading intrinsic and single-line for long durations", () => {
+  it("keeps the large reading intrinsic and single-line for four-digit minute durations", () => {
     render(
       <PresentationCanvas
-        activity={{ ...activity, durationMinutes: 100 }}
-        timer={{ ...timer, remainingSeconds: 6000 }}
+        activity={{ ...activity, durationMinutes: 1000 }}
+        timer={{ ...timer, remainingSeconds: 60000 }}
         timerControls={<button type="button">Start timer</button>}
       />,
     );
 
-    const reading = screen.getByText("100:00");
+    const reading = screen.getByText("1000:00");
     expect(reading).toHaveClass("presentation-timer-reading");
     expect(reading).toHaveStyle({
-      "--presentation-timer-reading-width-factor": "3.3",
+      "--presentation-timer-reading-width-factor": "3.85",
     });
     expect(reading.closest(".presentation-timer")).toContainElement(
       screen.getByText("Time remaining"),

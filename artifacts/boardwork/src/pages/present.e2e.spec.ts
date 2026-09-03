@@ -381,7 +381,7 @@ test("keeps the large timer reading tight while card rows stay fluid", async ({
       contentType: "application/json",
       body: JSON.stringify({
         ...appState,
-        activities: [{ ...longMixedDirectionActivity, durationMinutes: 100 }],
+        activities: [{ ...longMixedDirectionActivity, durationMinutes: 1000 }],
       }),
     }),
   );
@@ -394,17 +394,28 @@ test("keeps the large timer reading tight while card rows stay fluid", async ({
     await page.goto("/present/activity-long-mixed-direction");
 
     const timerOnlyReading = page.locator(".presentation-timer-reading");
-    await expect(timerOnlyReading).toHaveText("100:00");
+    const timerProgress = page.locator(".presentation-timer-progress");
+    const timerControls = page.locator(".presentation-timer-controls");
+    const teacherControls = page.getByTestId("button-teacher-controls");
+    await expect(timerOnlyReading).toHaveText("1000:00");
+    await expect(timerProgress).toBeVisible();
+    await expect(timerControls).toBeVisible();
+    await expect(teacherControls).toBeVisible();
     const timerOnlyGeometry = await timerOnlyReading.evaluate((reading) => {
       const readingBounds = reading.getBoundingClientRect();
       const timer = reading.closest(".presentation-timer");
       const timerBounds = timer?.getBoundingClientRect();
+      const progressBounds = timer?.querySelector(".presentation-timer-progress")?.getBoundingClientRect();
+      const controlsBounds = timer?.querySelector(".presentation-timer-controls")?.getBoundingClientRect();
       return {
         documentWidth: document.documentElement.scrollWidth,
         viewportWidth: window.innerWidth,
+        timerWidth: timerBounds?.width ?? 0,
         readingWidth: readingBounds.width,
         readingRight: readingBounds.right,
         timerRight: timerBounds?.right ?? 0,
+        progressWidth: progressBounds?.width ?? 0,
+        controlsWidth: controlsBounds?.width ?? 0,
         whiteSpace: getComputedStyle(reading).whiteSpace,
       };
     });
@@ -419,6 +430,19 @@ test("keeps the large timer reading tight while card rows stay fluid", async ({
       `${viewport.label} timer reading should fit in its card`,
     ).toBeLessThanOrEqual(timerOnlyGeometry.timerRight);
     expect(timerOnlyGeometry.whiteSpace).toBe("nowrap");
+    expect(timerOnlyGeometry.progressWidth).toBeGreaterThan(timerOnlyGeometry.timerWidth * 0.8);
+    expect(timerOnlyGeometry.controlsWidth).toBeGreaterThan(timerOnlyGeometry.timerWidth * 0.8);
+
+    const teacherControlsBox = await teacherControls.boundingBox();
+    expect(teacherControlsBox).not.toBeNull();
+    expect(teacherControlsBox!.x).toBeGreaterThanOrEqual(0);
+    expect(teacherControlsBox!.y).toBeGreaterThanOrEqual(0);
+    expect(teacherControlsBox!.x + teacherControlsBox!.width).toBeLessThanOrEqual(
+      timerOnlyGeometry.viewportWidth,
+    );
+    expect(teacherControlsBox!.y + teacherControlsBox!.height).toBeLessThanOrEqual(
+      await page.evaluate(() => window.innerHeight),
+    );
   }
 
   assertBrowserHealth();
