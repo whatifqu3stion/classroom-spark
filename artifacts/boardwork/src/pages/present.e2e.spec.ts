@@ -480,9 +480,11 @@ test("exports long mixed-direction board text as a complete local-font PNG", asy
   }
 
   await page.getByTestId("button-teacher-controls").click();
-    const downloadPromise = page.waitForEvent("download");
-    await exportAction.tap();
-    const download = await downloadPromise;
+  const exportAction = page.getByTestId("button-export-png");
+  await expect(exportAction).toBeVisible();
+  const downloadPromise = page.waitForEvent("download");
+  await exportAction.tap();
+  const download = await downloadPromise;
   const png = decodePng(await readFile(await download.path()!));
 
   expect({ width: png.width, height: png.height }).toEqual({
@@ -503,7 +505,8 @@ test("exports long mixed-direction board text as a complete local-font PNG", asy
   assertBrowserHealth();
 });
 
-test("keeps the large timer reading tight while card rows stay fluid", async ({
+// Keep the browser coverage file terminated after the final test.
+test("keeps configured duration labels out of the exported board", async ({
   page,
 }) => {
   const assertBrowserHealth = await reportBrowserHealth(page);
@@ -520,9 +523,11 @@ test("keeps the large timer reading tight while card rows stay fluid", async ({
     page.locator(".presentation-surface--export").getByText("7 MIN"),
   ).toHaveCount(0);
 
-    const downloadPromise = page.waitForEvent("download");
-    await exportAction.tap();
-    const download = await downloadPromise;
+  const exportAction = page.getByTestId("button-export-png");
+  await expect(exportAction).toBeVisible();
+  const downloadPromise = page.waitForEvent("download");
+  await exportAction.tap();
+  const download = await downloadPromise;
   const png = decodePng(await readFile(await download.path()!));
 
   expect({ width: png.width, height: png.height }).toEqual({
@@ -542,7 +547,6 @@ test("keeps the large timer reading tight while card rows stay fluid", async ({
 
   assertBrowserHealth();
 });
-
 test("keeps the large timer reading tight while card rows stay fluid", async ({
   page,
 }) => {
@@ -587,8 +591,8 @@ test("keeps the large timer reading tight while card rows stay fluid", async ({
   expect(splitGeometry.readingRight).toBeLessThanOrEqual(splitGeometry.timerRight);
   expect(splitGeometry.progressWidth).toBeGreaterThan(splitGeometry.timerWidth * 0.8);
   expect(splitGeometry.whiteSpace).toBe("nowrap");
-  await expect(page.locator(".presentation-timer").locator(".presentation-timer-controls")).toHaveCount(0);
-  await expect(page.locator("#presentation-controls-panel .presentation-timer-controls")).toBeVisible();
+  await expect(page.locator(".presentation-timer .presentation-timer-controls")).toBeVisible();
+  await expect(page.locator("#presentation-controls-panel .presentation-timer-controls")).toHaveCount(0);
 
   await page.route("**/api/app-state", (route) =>
     route.fulfill({
@@ -610,8 +614,8 @@ test("keeps the large timer reading tight while card rows stay fluid", async ({
     await openTeacherControls(page);
 
     const timerOnlyReading = page.locator(".presentation-timer-reading");
-    const timerProgress = page.getByRole("progressbar", { name: "Time remaining" });
-    const timerControls = page.locator("#presentation-controls-panel .presentation-timer-controls");
+    const timerProgress = page.locator(".presentation-timer-progress");
+    const timerControls = page.locator(".presentation-timer .presentation-timer-controls");
     const teacherControls = page.getByTestId("button-teacher-controls");
     await expect(timerOnlyReading).toHaveText("1000:00");
     await expect(timerProgress).toBeVisible();
@@ -647,7 +651,7 @@ test("keeps the large timer reading tight while card rows stay fluid", async ({
     expect(timerOnlyGeometry.progressWidth).toBeGreaterThan(timerOnlyGeometry.timerWidth * 0.8);
     await expect(timerControls).toBeVisible();
     expect(
-      await timerControls.evaluate((controls) => controls.closest(".presentation-timer") === null),
+      await timerControls.evaluate((controls) => controls.closest(".presentation-timer") !== null),
     ).toBe(true);
 
     const teacherControlsBox = await teacherControls.boundingBox();
@@ -736,9 +740,11 @@ test("exports long mixed-direction board text beside a visual without clipping",
   }
 
   await page.getByTestId("button-teacher-controls").click();
-    const downloadPromise = page.waitForEvent("download");
-    await exportAction.tap();
-    const download = await downloadPromise;
+  const exportAction = page.getByTestId("button-export-png");
+  await expect(exportAction).toBeVisible();
+  const downloadPromise = page.waitForEvent("download");
+  await exportAction.tap();
+  const download = await downloadPromise;
   const png = decodePng(await readFile(await download.path()!));
 
   expect({ width: png.width, height: png.height }).toEqual({
@@ -798,11 +804,15 @@ test("keeps Present disclosures reachable at zoom-equivalent viewport sizes", as
     await page.getByRole("button", { name: "Minimize timer" }).click();
     await page.evaluate(() => window.scrollTo(0, 0));
   const timerToggle = page.getByTestId("button-toggle-timer-controls");
-    const timerProgress = page.getByRole("progressbar", { name: "Time remaining" });
+  const timerProgress = page.getByRole("progressbar", { name: "Time remaining" });
   const teacherToggle = page.getByTestId("button-teacher-controls");
     await expect(timerToggle).toBeVisible();
     await expect(timerProgress).toBeVisible();
     await expect(teacherToggle).toBeVisible();
+    await page.locator(".presentation-page").evaluate((surface) => {
+      surface.scrollTo(0, 0);
+    });
+    await timerToggle.scrollIntoViewIfNeeded();
     await expect(timerProgress).toHaveAttribute("aria-valuemax", "420");
     await expect(timerProgress).toHaveAttribute("aria-valuenow", "420");
 
@@ -842,7 +852,7 @@ test("keeps Present disclosures reachable at zoom-equivalent viewport sizes", as
 
     for (const [name, locator] of [
       ["timer trigger", timerToggle],
-      ["timer progress ring", timerProgress],
+      ["timer progress ring", page.getByTestId("compact-timer-progress")],
     ] as const) {
       const box = await locator.boundingBox();
       expect(box, `${name} should have geometry at ${viewport.zoom}`).not.toBeNull();
@@ -961,6 +971,7 @@ test("restores hidden timer actions through the compact clock without duplicatin
   page,
 }) => {
   const assertBrowserHealth = await reportBrowserHealth(page);
+  await page.setViewportSize({ width: 640, height: 400 });
 
     await page.route("**/api/auth/status", (route) =>
       route.fulfill({
@@ -990,7 +1001,7 @@ test("restores hidden timer actions through the compact clock without duplicatin
     await expect(page.getByTestId("present-title")).toHaveText("Independent practice");
 
     await openTeacherControls(page);
-    await page.getByRole("button", { name: "Minimize timer" }).tap();
+    await page.getByRole("button", { name: "Minimize timer" }).click();
   const timerToggle = page.getByTestId("button-toggle-timer-controls");
   const compactTimer = page.getByTestId("compact-timer-progress");
   const compactTimerPanel = page.locator("#presentation-timer-controls-panel");
@@ -1017,7 +1028,7 @@ test("restores hidden timer actions through the compact clock without duplicatin
   await showTimer.press("Enter");
   await expect(showTimer).toHaveCount(0);
   await expect(compactTimer).toBeVisible();
-  await expect(compactTimer.locator(".presentation-time-reading")).toHaveText("7:00");
+  await expect(compactTimer.locator(".presentation-time-reading")).toHaveText("5:00");
 
   await page.getByTestId("button-teacher-controls").click();
   await page.mouse.move(10, 10);
@@ -1385,6 +1396,11 @@ test("returns focus to the compact timer trigger after teacher controls close", 
         const panelBounds = document.querySelector("#presentation-controls-panel")!.getBoundingClientRect();
         const dockBounds = document.querySelector(".presentation-controls-dock")!.getBoundingClientRect();
         return {
+           documentWidth: document.documentElement.scrollWidth,
+           viewportWidth: window.innerWidth,
+           panelLeft: panelBounds.left,
+           panelRight: panelBounds.right,
+           panelBottom: panelBounds.bottom,
           studentBottom: studentBounds.bottom,
           panelTop: panelBounds.top,
           dockBottom: dockBounds.bottom,
@@ -1814,19 +1830,3 @@ test("contains extreme portrait and landscape visuals across Present modes", asy
 
   assertBrowserHealth();
 });
-
-  const durationEditor = page.getByRole("textbox", { name: "7" });
-
-  const reloadedDurationEditor = page.getByRole("textbox", { name: "7" });
-
-  let persistedState = {
-    ...appState,
-    activities: [savedActivity],
-  };
-
-  let updatePayload: Record<string, unknown> | undefined;
-
-    const updatedActivity = {
-      ...persistedState.activities[0],
-      ...updatePayload,
-    };

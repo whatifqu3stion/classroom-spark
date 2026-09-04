@@ -331,7 +331,7 @@ export default function Present() {
         className="presentation-controls"
         aria-label="Presentation controls"
       >
-        {(!timerMinimized || !timerVisible) && (
+        {!timerVisible && (
           <div className="presentation-controls-timer">
             {renderTimerControls()}
           </div>
@@ -451,6 +451,7 @@ export default function Present() {
           type="button"
           className="presentation-timer-options-trigger"
           onClick={() => setTimerOptionsOpen((value) => !value)}
+          aria-label="Adjust timer"
           aria-expanded={timerOptionsOpen}
           aria-controls="timer-options"
         >

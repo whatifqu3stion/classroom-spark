@@ -922,6 +922,7 @@
   .presentation-timer {
     container-type: inline-size;
     display: grid;
+    min-width: 0;
     gap: 0.35rem;
     border: 1px solid color-mix(in srgb, var(--presentation-primary-text, #171717) 14%, transparent);
     border-top: 0;
@@ -929,6 +930,11 @@
     background: var(--presentation-surface, #fafafa);
     padding: 1rem;
     box-shadow: 0 0.35rem 1rem color-mix(in srgb, var(--presentation-primary-text, #171717) 8%, transparent);
+  }
+
+  .presentation-timer > .presentation-timer-controls {
+    min-width: 0;
+    width: 100%;
   }
 
   .presentation-timer-reading {
@@ -1063,10 +1069,22 @@
 
   .presentation-timer-actions {
     display: flex;
+    min-width: 0;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 0.5rem;
+  }
+
+  .presentation-timer > .presentation-timer-controls .presentation-timer-actions {
+    flex-wrap: nowrap;
+    gap: 0.25rem;
+  }
+
+  .presentation-timer > .presentation-timer-controls .presentation-timer-actions > button {
+    flex: 1 1 0;
+    min-width: 0;
+    white-space: nowrap;
   }
 
   .presentation-timer-action,
@@ -1086,6 +1104,16 @@
     overflow-wrap: anywhere;
     text-align: center;
     transition: background-color 150ms ease, color 150ms ease;
+  }
+
+  @container (max-width: 32rem) {
+    .presentation-timer > .presentation-timer-controls .presentation-timer-actions > button > span {
+      display: none;
+    }
+
+    .presentation-timer > .presentation-timer-controls .presentation-timer-actions > button {
+      padding-inline: 0.3rem;
+    }
   }
 
   .presentation-timer-action:hover,

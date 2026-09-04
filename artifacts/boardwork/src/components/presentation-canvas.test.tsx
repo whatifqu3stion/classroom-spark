@@ -94,17 +94,20 @@ describe("PresentationCanvas timer visibility", () => {
 
   it("keeps the timer large by default and moves it with its controls when minimized", () => {
     const onToggleTimerControls = vi.fn();
+    const timerControls = <button type="button">Start timer</button>;
     const { rerender } = render(
       <PresentationCanvas
         activity={activity}
         timer={timer}
         controls={<button type="button">Minimize timer</button>}
-        timerControls={<button type="button">Start timer</button>}
+        timerControls={timerControls}
       />,
     );
 
     expect(screen.getByText("Time remaining")).toBeInTheDocument();
-    expect(screen.getByText("5:00").closest(".presentation-timer")).toBeInTheDocument();
+    const largeTimer = screen.getByText("5:00").closest(".presentation-timer");
+    expect(largeTimer).toBeInTheDocument();
+    expect(largeTimer).toContainElement(screen.getByRole("button", { name: "Start timer" }));
     expect(screen.getByRole("button", { name: "Minimize timer" })).toBeInTheDocument();
 
     rerender(
@@ -115,7 +118,7 @@ describe("PresentationCanvas timer visibility", () => {
         timerControlsOpen={false}
         onToggleTimerControls={onToggleTimerControls}
         controls={<button type="button">Expand timer</button>}
-        timerControls={<button type="button">Start timer</button>}
+        timerControls={timerControls}
       />,
     );
 
@@ -126,6 +129,11 @@ describe("PresentationCanvas timer visibility", () => {
     expect(
       screen.getByRole("button", { name: "Expand timer" }).closest(".presentation-timer"),
     ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Start timer", hidden: true }).closest(
+        ".presentation-time-compact-controls",
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Show timer controls" })).toHaveAttribute(
       "aria-expanded",
       "false",
