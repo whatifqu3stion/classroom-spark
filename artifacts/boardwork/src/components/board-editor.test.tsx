@@ -130,7 +130,7 @@ describe("BoardEditor presentation visual disclosure", () => {
     expect(screen.queryByTestId("presentation-preview-surface")).not.toBeInTheDocument();
   });
 
-  it("keeps invalid duration text out of the draft while allowing custom lengths", () => {
+  it("keeps invalid duration text out of the draft while allowing four-digit custom lengths", () => {
     const onChange = vi.fn();
     render(<BoardEditor draft={draft} onChange={onChange} />);
 
@@ -148,9 +148,9 @@ describe("BoardEditor presentation visual disclosure", () => {
     fireEvent.input(durationEditor);
     expect(onChange).not.toHaveBeenCalled();
 
-    durationEditor.textContent = "121";
+    durationEditor.textContent = "1000";
     fireEvent.input(durationEditor);
-    expect(onChange).toHaveBeenCalledWith({ durationMinutes: 121 });
+    expect(onChange).toHaveBeenCalledWith({ durationMinutes: 1000 });
     expect(screen.queryByTestId("duration-error")).not.toBeInTheDocument();
   });
 

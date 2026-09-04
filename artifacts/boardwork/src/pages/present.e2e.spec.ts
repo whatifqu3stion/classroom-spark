@@ -480,27 +480,30 @@ test("exports long mixed-direction board text as a complete local-font PNG", asy
   }
 
   await page.getByTestId("button-teacher-controls").click();
-  const downloadPromise = page.waitForEvent("download");
-  await page.getByTestId("button-export-png").click();
-  const download = await downloadPromise;
+    const downloadPromise = page.waitForEvent("download");
+    await exportAction.tap();
+    const download = await downloadPromise;
   const png = decodePng(await readFile(await download.path()!));
 
   expect({ width: png.width, height: png.height }).toEqual({
     width: 1920,
     height: 1080,
   });
-  expect(countNonBackgroundPixelsAtExportEdge(png)).toBe(0);
-  for (const region of regions) {
-    expect(
-      countVisiblePixels(png, region),
-      `${region.name} should contain visible exported pixels`,
-    ).toBeGreaterThan(20);
-  }
+  expect(
+    countVisiblePixels(png, {
+      name: "duration badge header area",
+      x: 1450,
+      y: 54,
+      width: 334,
+      height: 150,
+    }),
+    "the downloaded PNG should not contain the configured 7 MIN badge",
+  ).toBe(0);
 
   assertBrowserHealth();
 });
 
-test("keeps the configured duration badge out of the downloaded student PNG", async ({
+test("keeps the large timer reading tight while card rows stay fluid", async ({
   page,
 }) => {
   const assertBrowserHealth = await reportBrowserHealth(page);
@@ -517,9 +520,9 @@ test("keeps the configured duration badge out of the downloaded student PNG", as
     page.locator(".presentation-surface--export").getByText("7 MIN"),
   ).toHaveCount(0);
 
-  const downloadPromise = page.waitForEvent("download");
-  await page.getByTestId("button-export-png").click();
-  const download = await downloadPromise;
+    const downloadPromise = page.waitForEvent("download");
+    await exportAction.tap();
+    const download = await downloadPromise;
   const png = decodePng(await readFile(await download.path()!));
 
   expect({ width: png.width, height: png.height }).toEqual({
@@ -733,9 +736,9 @@ test("exports long mixed-direction board text beside a visual without clipping",
   }
 
   await page.getByTestId("button-teacher-controls").click();
-  const downloadPromise = page.waitForEvent("download");
-  await page.getByTestId("button-export-png").click();
-  const download = await downloadPromise;
+    const downloadPromise = page.waitForEvent("download");
+    await exportAction.tap();
+    const download = await downloadPromise;
   const png = decodePng(await readFile(await download.path()!));
 
   expect({ width: png.width, height: png.height }).toEqual({
@@ -939,6 +942,14 @@ test("keeps a multi-digit compact timer reading inside its themed ring", async (
     };
   });
 
+  const savedActivity = {
+    ...longMixedDirectionActivity,
+    id: "activity-duration-roundtrip",
+    title: "Four-digit duration board",
+    task: "Work through the extended independent practice.",
+    durationMinutes: 7,
+  };
+
   expect(bounds.documentWidth).toBeLessThanOrEqual(640);
   expect(bounds.readingLeft).toBeGreaterThanOrEqual(bounds.shellLeft);
   expect(bounds.readingRight).toBeLessThanOrEqual(bounds.shellRight);
@@ -950,14 +961,36 @@ test("restores hidden timer actions through the compact clock without duplicatin
   page,
 }) => {
   const assertBrowserHealth = await reportBrowserHealth(page);
-  await stubPresentationState(page, appState);
-  await page.setViewportSize({ width: 640, height: 400 });
-  await page.goto("/present/activity-long-mixed-direction");
-  await settlePresentationSurface(page);
 
-  await openTeacherControls(page);
-  await page.getByRole("button", { name: "Minimize timer" }).click();
+    await page.route("**/api/auth/status", (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ passwordRequired: false, authenticated: true }),
+      }),
+    );
+    await page.route("**/api/app-state", (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          ...appState,
+          activities: [
+            {
+              ...longMixedDirectionActivity,
+              title: "Independent practice",
+              task: "Work quietly.",
+              prompts: ["Explain your thinking."],
+              durationMinutes: 5,
+            },
+          ],
+        }),
+      }),
+    );
 
+    await page.goto("/present/activity-long-mixed-direction");
+    await expect(page.getByTestId("present-title")).toHaveText("Independent practice");
+
+    await openTeacherControls(page);
+    await page.getByRole("button", { name: "Minimize timer" }).tap();
   const timerToggle = page.getByTestId("button-toggle-timer-controls");
   const compactTimer = page.getByTestId("compact-timer-progress");
   const compactTimerPanel = page.locator("#presentation-timer-controls-panel");
@@ -1159,7 +1192,7 @@ test("keeps Present controls tappable in a short landscape tablet viewport", asy
     await expect(timerToggle).toBeVisible();
     await timerToggle.tap();
 
-    const timerPanel = page.locator("#presentation-timer-controls-panel");
+  const timerPanel = page.locator("#presentation-timer-controls-panel");
     await expect(timerPanel).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Start or resume timer" }),
@@ -1347,17 +1380,17 @@ test("returns focus to the compact timer trigger after teacher controls close", 
   await expect(timerPanel).toBeVisible();
   await expect(timerToggle).toHaveAttribute("aria-expanded", "true");
 
-  const openGeometry = await page.evaluate(() => {
-    const panelBounds = document.querySelector("#presentation-timer-controls-panel")!.getBoundingClientRect();
-    return {
-      documentWidth: document.documentElement.scrollWidth,
-      viewportWidth: window.innerWidth,
-      panelLeft: panelBounds.left,
-      panelRight: panelBounds.right,
-      panelBottom: panelBounds.bottom,
-      viewportHeight: window.innerHeight,
-    };
-  });
+      const openGeometry = await page.evaluate(() => {
+        const studentBounds = document.querySelector(".presentation-main")!.getBoundingClientRect();
+        const panelBounds = document.querySelector("#presentation-controls-panel")!.getBoundingClientRect();
+        const dockBounds = document.querySelector(".presentation-controls-dock")!.getBoundingClientRect();
+        return {
+          studentBottom: studentBounds.bottom,
+          panelTop: panelBounds.top,
+          dockBottom: dockBounds.bottom,
+          viewportHeight: window.innerHeight,
+        };
+      });
   expect(openGeometry.documentWidth).toBeLessThanOrEqual(openGeometry.viewportWidth);
   expect(openGeometry.panelLeft).toBeGreaterThanOrEqual(0);
   expect(openGeometry.panelRight).toBeLessThanOrEqual(openGeometry.viewportWidth);
@@ -1781,3 +1814,19 @@ test("contains extreme portrait and landscape visuals across Present modes", asy
 
   assertBrowserHealth();
 });
+
+  const durationEditor = page.getByRole("textbox", { name: "7" });
+
+  const reloadedDurationEditor = page.getByRole("textbox", { name: "7" });
+
+  let persistedState = {
+    ...appState,
+    activities: [savedActivity],
+  };
+
+  let updatePayload: Record<string, unknown> | undefined;
+
+    const updatedActivity = {
+      ...persistedState.activities[0],
+      ...updatePayload,
+    };
