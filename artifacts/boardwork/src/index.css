@@ -751,6 +751,7 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(15rem, 31%);
     gap: clamp(1.75rem, 5vw, 5.5rem);
+    align-items: stretch;
   }
 
   .presentation-main--has-divider {
@@ -769,6 +770,7 @@
     align-content: start;
     gap: clamp(1.25rem, 3.5vw, 2.5rem);
     min-width: 0;
+    width: 100%;
     max-width: none;
   }
 
@@ -863,7 +865,7 @@
     display: flex;
     min-width: 0;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-self: stretch;
     gap: clamp(1.25rem, 2vw, 2rem);
     border: 1px solid color-mix(
@@ -898,6 +900,7 @@
   .presentation-visual img {
     display: block;
     width: 100%;
+    max-width: 100%;
     max-height: min(42vh, 28rem);
     border-radius: 0.7rem;
     object-fit: contain;
@@ -1022,7 +1025,7 @@
   }
 
   .presentation-rail--split {
-    justify-content: space-between;
+    justify-content: flex-start;
   }
 
   .presentation-rail--timer-only,
@@ -1040,13 +1043,7 @@
       gap: clamp(1.5rem, 3.4cqw, 3rem);
     }
 
-    .presentation-main:not(.presentation-main--content-only) .presentation-prompts,
-    .presentation-main--content-only .presentation-prompts {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      column-gap: clamp(1.25rem, 3cqw, 3rem);
-    }
-
-    .presentation-surface--content-dense .presentation-prompts {
+    .presentation-prompts {
       grid-template-columns: minmax(0, 1fr);
     }
   }
@@ -1154,7 +1151,7 @@
     max-width: 48ch;
     color: var(--presentation-primary-text, rgb(23 23 23 / 88%));
     font-family: var(--presentation-font-body, var(--app-font-sans));
-    font-size: clamp(1.35rem, 3.4vw, 2.75rem);
+    font-size: clamp(1.4rem, 3.4vw, 2.75rem);
     font-weight: var(--presentation-body-weight, 500);
     line-height: 1.2;
     overflow-wrap: anywhere;
@@ -1162,6 +1159,7 @@
 
   .presentation-prompts {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: clamp(0.7rem, 1.8vw, 1.15rem);
     border-top: 2px solid var(--presentation-accent, hsl(var(--primary)));
     padding-top: clamp(0.75rem, 1.5vw, 1.25rem);
@@ -1171,10 +1169,10 @@
     display: flex;
     align-items: flex-start;
     gap: clamp(0.75rem, 2vw, 1.25rem);
-    max-width: 68ch;
+    max-width: 72ch;
     color: var(--presentation-primary-text, rgb(23 23 23 / 76%));
     font-family: var(--presentation-font-body, var(--app-font-sans));
-    font-size: clamp(1.125rem, 2.8vw, 1.75rem);
+    font-size: clamp(1.25rem, 2.8vw, 1.85rem);
     font-weight: var(--presentation-body-weight, 500);
     line-height: 1.3;
     overflow-wrap: anywhere;
@@ -1428,28 +1426,26 @@
   }
 
   .presentation-controls-dock {
-    position: fixed;
-    right: max(clamp(1rem, 4vw, 2rem), env(safe-area-inset-right));
-    bottom: max(1rem, env(safe-area-inset-bottom));
-    z-index: 20;
+    position: relative;
+    z-index: 2;
     display: grid;
+    grid-template-areas:
+      "panel"
+      "toggle";
     width: auto;
-    max-width: calc(100vw - 1rem - env(safe-area-inset-left) - env(safe-area-inset-right));
+    max-width: 100%;
     min-width: 0;
     justify-items: end;
+    padding-inline: max(0.25rem, env(safe-area-inset-right));
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .presentation-controls-dock::before {
-    position: absolute;
-    right: 0;
-    bottom: 100%;
-    width: min(36rem, calc(100dvw - 1rem - env(safe-area-inset-left) - env(safe-area-inset-right)));
-    height: 0.5rem;
-    content: "";
-    pointer-events: auto;
+    display: none;
   }
 
   .presentation-controls-toggle {
+    grid-area: toggle;
     display: inline-flex;
     min-height: 2.75rem;
     min-width: 2.75rem;
@@ -1476,14 +1472,12 @@
   }
 
   .presentation-controls {
-    position: absolute;
-    right: 0;
-    bottom: calc(100% + 0.5rem);
-    display: flex;
+    grid-area: panel;
+    display: none;
     box-sizing: border-box;
     width: max-content;
     max-width: min(36rem, calc(100dvw - 1rem - env(safe-area-inset-left) - env(safe-area-inset-right)));
-    max-height: calc(100dvh - 5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    max-height: min(32rem, calc(100dvh - 7rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
     overflow-y: auto;
     overscroll-behavior: contain;
     align-items: center;
@@ -1496,23 +1490,24 @@
     font-family: var(--presentation-font-body, var(--app-font-sans));
     box-shadow: 0 1px 3px color-mix(in srgb, var(--presentation-primary-text, #171717) 10%, transparent);
     outline: 1px solid color-mix(in srgb, var(--presentation-primary-text, #171717) 16%, transparent);
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(0.3rem);
-    visibility: hidden;
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+    visibility: visible;
     transition: opacity 180ms ease, transform 180ms ease, visibility 180ms ease;
   }
 
   .presentation-controls-dock--open .presentation-controls,
   .presentation-controls-dock--hovering .presentation-controls {
+    display: flex;
     opacity: 1;
     pointer-events: auto;
-    transform: translateY(0);
     visibility: visible;
   }
 
   @media (hover: hover) and (pointer: fine) {
     .presentation-controls-dock:hover .presentation-controls {
+      display: flex;
       opacity: 1;
       pointer-events: auto;
       transform: translateY(0);
@@ -1550,6 +1545,13 @@
   .presentation-control:focus-visible {
     outline: 2px solid var(--presentation-accent, hsl(var(--primary)));
     outline-offset: 2px;
+  }
+
+  .presentation-controls-timer {
+    flex: 1 1 100%;
+    min-width: min(18rem, 100%);
+    border-bottom: 1px solid color-mix(in srgb, var(--presentation-primary-text, #171717) 12%, transparent);
+    padding: 0.25rem 0.25rem 0.5rem;
   }
 
   @media (max-width: 520px) {

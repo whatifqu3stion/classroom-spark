@@ -1,6 +1,5 @@
-import { fireEvent, render, screen, act } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { useState } from "react";
 import type { ActivityDraft } from "@/store/boardwork-context";
 import { PresentationCanvas } from "./presentation-canvas";
 
@@ -25,7 +24,7 @@ describe("PresentationCanvas timer visibility", () => {
       <PresentationCanvas
         activity={activity}
         timer={timer}
-        timerControls={<button type="button">Pause timer</button>}
+        controls={<button type="button">Pause timer</button>}
       />,
     );
 
@@ -39,14 +38,16 @@ describe("PresentationCanvas timer visibility", () => {
         activity={activity}
         onShowTimer={() => undefined}
         timer={{ ...timer, visible: false }}
-        timerControls={<button type="button">Start timer</button>}
+        controls={<button type="button">Start timer</button>}
       />,
     );
 
     expect(screen.queryByText("5:00")).not.toBeInTheDocument();
     expect(screen.queryByText("5 MIN")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Show timer to students" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Start timer" })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Start timer" }).closest(".presentation-timer"),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps the hidden timer clock-only and restores the compact timer on request", () => {
@@ -56,14 +57,16 @@ describe("PresentationCanvas timer visibility", () => {
         activity={activity}
         onShowTimer={onShowTimer}
         timer={{ ...timer, visible: false, remainingSeconds: 42, status: "running" }}
-        timerControls={<button type="button">Start timer</button>}
+        controls={<button type="button">Start timer</button>}
       />,
     );
 
     expect(screen.queryByText("Time remaining")).not.toBeInTheDocument();
     expect(screen.queryByText("Timer hidden from students")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Show timer to students" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Start timer" })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Start timer" }).closest(".presentation-time"),
+    ).not.toBeInTheDocument();
 
     screen.getByRole("button", { name: "Show timer to students" }).click();
     expect(onShowTimer).toHaveBeenCalledOnce();
@@ -95,7 +98,7 @@ describe("PresentationCanvas timer visibility", () => {
       <PresentationCanvas
         activity={activity}
         timer={timer}
-        timerControls={<button type="button">Minimize timer</button>}
+        controls={<button type="button">Minimize timer</button>}
       />,
     );
 
@@ -110,7 +113,7 @@ describe("PresentationCanvas timer visibility", () => {
         timerMinimized
         timerControlsOpen={false}
         onToggleTimerControls={onToggleTimerControls}
-        timerControls={<button type="button">Expand timer</button>}
+        controls={<button type="button">Expand timer</button>}
       />,
     );
 
@@ -118,17 +121,15 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.getByTestId("present-time").querySelector(".presentation-time-reading")).toHaveTextContent(
       "5:00",
     );
-    expect(screen.queryByRole("button", { name: "Expand timer" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Show timer controls" })).toHaveAttribute(
+    expect(
+      screen.getByRole("button", { name: "Expand timer" }).closest(".presentation-timer"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show teacher controls" })).toHaveAttribute(
       "aria-expanded",
       "false",
     );
-    expect(document.getElementById("presentation-compact-timer-controls")).toHaveAttribute(
-      "aria-hidden",
-      "true",
-    );
 
-    screen.getByRole("button", { name: "Show timer controls" }).click();
+    screen.getByRole("button", { name: "Show teacher controls" }).click();
     expect(onToggleTimerControls).toHaveBeenCalledOnce();
 
     rerender(
@@ -138,16 +139,15 @@ describe("PresentationCanvas timer visibility", () => {
         timerMinimized
         timerControlsOpen
         onToggleTimerControls={onToggleTimerControls}
-        timerControls={<button type="button">Expand timer</button>}
+        controls={<button type="button">Expand timer</button>}
       />,
     );
 
     expect(screen.getByRole("button", { name: "Expand timer" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Hide timer controls" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Hide teacher controls" })).toHaveAttribute(
       "aria-expanded",
       "true",
     );
-    expect(document.getElementById("presentation-compact-timer-controls")).toBeInTheDocument();
   });
 
   it("keeps the large reading intrinsic and single-line for four-digit minute durations", () => {
@@ -155,7 +155,7 @@ describe("PresentationCanvas timer visibility", () => {
       <PresentationCanvas
         activity={{ ...activity, durationMinutes: 1000 }}
         timer={{ ...timer, remainingSeconds: 60000 }}
-        timerControls={<button type="button">Start timer</button>}
+        controls={<button type="button">Start timer</button>}
       />,
     );
 
@@ -254,110 +254,30 @@ describe("PresentationCanvas timer visibility", () => {
     );
   });
 
-  it("reveals minimized timer controls on hover and tolerates a brief pointer gap", () => {
-    vi.useFakeTimers();
-    try {
-      render(
-        <PresentationCanvas
-          activity={activity}
-          timer={timer}
-          timerMinimized
-          timerControlsOpen={false}
-          onToggleTimerControls={() => undefined}
-          timerControls={<button type="button">Start timer</button>}
-        />,
-      );
-
-      const timerRegion = screen.getByTestId("present-time");
-      expect(screen.queryByRole("button", { name: "Start timer" })).not.toBeInTheDocument();
-
-      fireEvent.pointerEnter(timerRegion);
-      expect(screen.getByRole("button", { name: "Start timer" })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Hide timer controls" })).toHaveAttribute(
-        "aria-expanded",
-        "true",
-      );
-
-      fireEvent.pointerLeave(timerRegion);
-      expect(screen.getByRole("button", { name: "Start timer" })).toBeInTheDocument();
-
-      act(() => {
-        vi.advanceTimersByTime(179);
-      });
-      expect(screen.getByRole("button", { name: "Start timer" })).toBeInTheDocument();
-
-      act(() => {
-        vi.advanceTimersByTime(1);
-      });
-      expect(screen.queryByRole("button", { name: "Start timer" })).not.toBeInTheDocument();
-      expect(document.getElementById("presentation-compact-timer-controls")).toHaveAttribute(
-        "aria-hidden",
-        "true",
-      );
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it("opens and closes minimized timer controls with touch taps instead of hover state", () => {
-    function TouchHarness() {
-      const [open, setOpen] = useState(false);
-
-      return (
-        <PresentationCanvas
-          activity={activity}
-          timer={timer}
-          timerMinimized
-          timerControlsOpen={open}
-          onToggleTimerControls={() => setOpen((value) => !value)}
-          timerControls={<button type="button">Start timer</button>}
-        />
-      );
-    }
-
-    render(<TouchHarness />);
-
-    const timerRegion = screen.getByTestId("present-time");
-    const compactToggle = screen.getByTestId("button-toggle-timer-controls");
-
-    fireEvent.pointerDown(compactToggle, { pointerType: "touch" });
-    fireEvent.pointerEnter(timerRegion, { pointerType: "touch" });
-    fireEvent.focus(compactToggle);
-    fireEvent.click(compactToggle);
-    expect(screen.getByRole("button", { name: "Start timer" })).toBeInTheDocument();
-
-    fireEvent.pointerLeave(timerRegion, { pointerType: "touch" });
-    fireEvent.pointerUp(compactToggle, { pointerType: "touch" });
-    fireEvent.pointerDown(compactToggle, { pointerType: "touch" });
-    fireEvent.focus(compactToggle);
-    fireEvent.click(compactToggle);
-    expect(screen.queryByRole("button", { name: "Start timer" })).not.toBeInTheDocument();
-  });
-
-  it("keeps compact timer controls in a viewport-safe disclosure panel", () => {
+  it("keeps compact timer actions out of the student canvas", () => {
+    const onToggleTimerControls = vi.fn();
     render(
       <PresentationCanvas
         activity={activity}
         timer={timer}
         timerMinimized
-        timerControlsOpen
-        onToggleTimerControls={() => undefined}
-        timerControls={
-          <>
-            <button type="button">Start timer</button>
-            <button type="button">Adjust timer</button>
-          </>
-        }
+        timerControlsOpen={false}
+        onToggleTimerControls={onToggleTimerControls}
+        controls={<button type="button">Start timer</button>}
       />,
     );
 
-    const panel = screen.getByRole("button", { name: "Start timer" }).closest(
-      "#presentation-compact-timer-controls",
-    );
+    const compactToggle = screen.getByTestId("button-toggle-timer-controls");
+    expect(compactToggle).toHaveAttribute("aria-controls", "presentation-controls-panel");
+    expect(
+      screen.getByRole("button", { name: "Start timer" }).closest(".presentation-time"),
+    ).not.toBeInTheDocument();
 
-    expect(panel).toBeInTheDocument();
-    expect(panel).toHaveClass("presentation-time-compact-controls");
-    expect(panel).toHaveAttribute("aria-hidden", "false");
+    fireEvent.click(compactToggle);
+    expect(onToggleTimerControls).toHaveBeenCalledOnce();
+    expect(
+      screen.getByRole("button", { name: "Start timer" }).closest(".presentation-time"),
+    ).not.toBeInTheDocument();
   });
 
   it("shows an active alarm to the teacher but omits it from exports", () => {
@@ -371,7 +291,7 @@ describe("PresentationCanvas timer visibility", () => {
       <PresentationCanvas
         activity={activity}
         timer={alarmTimer}
-        timerControls={<button type="button">Dismiss alarm</button>}
+        controls={<button type="button">Dismiss alarm</button>}
       />,
     );
 
@@ -386,7 +306,7 @@ describe("PresentationCanvas timer visibility", () => {
         activity={activity}
         exportLayout
         timer={alarmTimer}
-        timerControls={<button type="button">Dismiss alarm</button>}
+        controls={<button type="button">Dismiss alarm</button>}
       />,
     );
 
@@ -507,7 +427,6 @@ describe("PresentationCanvas timer visibility", () => {
         editorPreview
         timer={{ ...timer, visible: false }}
         onShowTimer={vi.fn()}
-        timerControls={<button type="button">Pause timer</button>}
         controls={<button type="button">Teacher controls</button>}
       />,
     );

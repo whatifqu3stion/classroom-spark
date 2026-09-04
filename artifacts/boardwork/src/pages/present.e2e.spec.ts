@@ -88,9 +88,17 @@ async function stubPresentationState(
 }
 
 async function hideTimerFromStudents(page: Page) {
+  await page.getByTestId("button-teacher-controls").click();
   await page.getByRole("button", { name: "Adjust" }).click();
   await page.getByRole("button", { name: "Hide timer from students" }).click();
   await expect(page.getByTestId("button-show-timer")).toBeVisible();
+}
+
+async function openTeacherControls(page: Page) {
+  const toggle = page.getByTestId("button-teacher-controls");
+  const panel = page.locator("#presentation-controls-panel");
+  if (!(await panel.isVisible())) await toggle.click();
+  await expect(panel).toBeVisible();
 }
 
 async function settlePresentationSurface(page: Page) {
@@ -402,24 +410,22 @@ test("keeps the large timer reading tight while card rows stay fluid", async ({
 
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/present/activity-long-mixed-direction");
+  await openTeacherControls(page);
 
   const splitGeometry = await page.locator(".presentation-timer").evaluate((timer) => {
     const reading = timer.querySelector<HTMLElement>(".presentation-timer-reading");
     const progress = timer.querySelector<HTMLElement>(".presentation-timer-progress");
-    const controls = timer.querySelector<HTMLElement>(".presentation-timer-controls");
-    if (!reading || !progress || !controls) throw new Error("Missing large timer row");
+    if (!reading || !progress) throw new Error("Missing large timer row");
 
     const timerBounds = timer.getBoundingClientRect();
     const readingBounds = reading.getBoundingClientRect();
     const progressBounds = progress.getBoundingClientRect();
-    const controlsBounds = controls.getBoundingClientRect();
     return {
       timerWidth: timerBounds.width,
       readingWidth: readingBounds.width,
       readingRight: readingBounds.right,
       timerRight: timerBounds.right,
       progressWidth: progressBounds.width,
-      controlsWidth: controlsBounds.width,
       whiteSpace: getComputedStyle(reading).whiteSpace,
     };
   });
@@ -427,8 +433,9 @@ test("keeps the large timer reading tight while card rows stay fluid", async ({
   expect(splitGeometry.readingWidth).toBeLessThan(splitGeometry.timerWidth);
   expect(splitGeometry.readingRight).toBeLessThanOrEqual(splitGeometry.timerRight);
   expect(splitGeometry.progressWidth).toBeGreaterThan(splitGeometry.timerWidth * 0.8);
-  expect(splitGeometry.controlsWidth).toBeGreaterThan(splitGeometry.timerWidth * 0.8);
   expect(splitGeometry.whiteSpace).toBe("nowrap");
+  await expect(page.locator(".presentation-timer").locator(".presentation-timer-controls")).toHaveCount(0);
+  await expect(page.locator("#presentation-controls-panel .presentation-timer-controls")).toBeVisible();
 
   await page.route("**/api/app-state", (route) =>
     route.fulfill({
@@ -446,10 +453,12 @@ test("keeps the large timer reading tight while card rows stay fluid", async ({
   ]) {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
     await page.goto("/present/activity-long-mixed-direction");
+    await openTeacherControls(page);
+    await openTeacherControls(page);
 
     const timerOnlyReading = page.locator(".presentation-timer-reading");
     const timerProgress = page.locator(".presentation-timer-progress");
-    const timerControls = page.locator(".presentation-timer-controls");
+    const timerControls = page.locator("#presentation-controls-panel .presentation-timer-controls");
     const teacherControls = page.getByTestId("button-teacher-controls");
     await expect(timerOnlyReading).toHaveText("1000:00");
     await expect(timerProgress).toBeVisible();
@@ -460,7 +469,6 @@ test("keeps the large timer reading tight while card rows stay fluid", async ({
       const timer = reading.closest(".presentation-timer");
       const timerBounds = timer?.getBoundingClientRect();
       const progressBounds = timer?.querySelector(".presentation-timer-progress")?.getBoundingClientRect();
-      const controlsBounds = timer?.querySelector(".presentation-timer-controls")?.getBoundingClientRect();
       return {
         documentWidth: document.documentElement.scrollWidth,
         viewportWidth: window.innerWidth,
@@ -469,7 +477,6 @@ test("keeps the large timer reading tight while card rows stay fluid", async ({
         readingRight: readingBounds.right,
         timerRight: timerBounds?.right ?? 0,
         progressWidth: progressBounds?.width ?? 0,
-        controlsWidth: controlsBounds?.width ?? 0,
         whiteSpace: getComputedStyle(reading).whiteSpace,
       };
     });
@@ -485,7 +492,10 @@ test("keeps the large timer reading tight while card rows stay fluid", async ({
     ).toBeLessThanOrEqual(timerOnlyGeometry.timerRight);
     expect(timerOnlyGeometry.whiteSpace).toBe("nowrap");
     expect(timerOnlyGeometry.progressWidth).toBeGreaterThan(timerOnlyGeometry.timerWidth * 0.8);
-    expect(timerOnlyGeometry.controlsWidth).toBeGreaterThan(timerOnlyGeometry.timerWidth * 0.8);
+    await expect(timerControls).toBeVisible();
+    expect(
+      await timerControls.evaluate((controls) => controls.closest(".presentation-timer") === null),
+    ).toBe(true);
 
     const teacherControlsBox = await teacherControls.boundingBox();
     expect(teacherControlsBox).not.toBeNull();
@@ -621,6 +631,7 @@ test("keeps Present disclosures reachable at zoom-equivalent viewport sizes", as
     });
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
     await page.goto("/present/activity-long-mixed-direction");
+    await openTeacherControls(page);
 
     const pageMetrics = await page.evaluate(() => ({
       viewportWidth: window.innerWidth,
@@ -679,7 +690,6 @@ test("keeps Present disclosures reachable at zoom-equivalent viewport sizes", as
     for (const [name, locator] of [
       ["timer trigger", timerToggle],
       ["timer progress ring", timerProgress],
-      ["teacher controls trigger", teacherToggle],
     ] as const) {
       const box = await locator.boundingBox();
       expect(box, `${name} should have geometry at ${viewport.zoom}`).not.toBeNull();
@@ -711,17 +721,9 @@ test("keeps Present disclosures reachable at zoom-equivalent viewport sizes", as
     expect(readingBounds.readingLeft).toBeGreaterThanOrEqual(readingBounds.shellLeft);
     expect(readingBounds.readingRight).toBeLessThanOrEqual(readingBounds.shellRight);
 
-    await timerToggle.hover();
-    const timerPanel = page.locator("#presentation-compact-timer-controls");
-    await expect(timerPanel).toBeVisible();
-    const timerPanelBox = await timerPanel.boundingBox();
-    expect(timerPanelBox, `timer panel should have geometry at ${viewport.zoom}`).not.toBeNull();
-    expect(timerPanelBox!.x).toBeGreaterThanOrEqual(0);
-    expect(timerPanelBox!.y).toBeGreaterThanOrEqual(0);
-    expect(timerPanelBox!.x + timerPanelBox!.width).toBeLessThanOrEqual(pageMetrics.viewportWidth);
-    expect(timerPanelBox!.y + timerPanelBox!.height).toBeLessThanOrEqual(pageMetrics.viewportHeight);
-
     const initialProgress = Number(await timerProgress.getAttribute("aria-valuenow"));
+    await timerToggle.click();
+    await expect(page.locator("#presentation-controls-panel")).toBeVisible();
     await page.getByRole("button", { name: "Start or resume timer" }).click();
     await expect
       .poll(async () => Number(await timerProgress.getAttribute("aria-valuenow")), {
@@ -766,6 +768,7 @@ test("keeps a multi-digit compact timer reading inside its themed ring", async (
 
   await page.setViewportSize({ width: 640, height: 400 });
   await page.goto("/present/activity-long-mixed-direction");
+  await openTeacherControls(page);
   await page.getByRole("button", { name: "Minimize timer" }).click();
 
   const reading = page.locator(".presentation-time-reading");
@@ -831,12 +834,13 @@ test("keeps Present controls tappable in a short landscape tablet viewport", asy
     await page.goto("/present/activity-long-mixed-direction");
     await expect(page.getByTestId("present-title")).toHaveText("Independent practice");
 
+    await openTeacherControls(page);
     await page.getByRole("button", { name: "Minimize timer" }).tap();
     const timerToggle = page.getByTestId("button-toggle-timer-controls");
     await expect(timerToggle).toBeVisible();
     await timerToggle.tap();
 
-    const timerPanel = page.locator("#presentation-compact-timer-controls");
+    const timerPanel = page.locator("#presentation-controls-panel");
     await expect(timerPanel).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Start or resume timer" }),
@@ -911,6 +915,10 @@ test("captures stable responsive Present compositions and keeps export surfaces 
   await settlePresentationSurface(page);
   await expect(liveSurface.getByTestId("presentation-layout-divider")).toBeVisible();
   await expect(liveSurface.locator(".presentation-rail--split")).toBeVisible();
+  const widePromptTracks = await liveSurface.locator(".presentation-prompts").evaluate(
+    (prompts) => getComputedStyle(prompts).gridTemplateColumns.trim().split(/\s+/),
+  );
+  expect(widePromptTracks).toHaveLength(1);
   await assertExportSurfaceHasNoLiveDivider(page);
   await expect(liveSurface).toHaveScreenshot(
     "present-wide.png",
@@ -926,6 +934,10 @@ test("captures stable responsive Present compositions and keeps export surfaces 
     .evaluate((main) => getComputedStyle(main).gridTemplateColumns.trim().split(/\s+/));
   expect(narrowGridTracks).toHaveLength(1);
   await expect(liveSurface.locator(".presentation-rail--split")).toBeVisible();
+  const narrowPromptTracks = await liveSurface.locator(".presentation-prompts").evaluate(
+    (prompts) => getComputedStyle(prompts).gridTemplateColumns.trim().split(/\s+/),
+  );
+  expect(narrowPromptTracks).toHaveLength(1);
   await expect(liveSurface).toHaveScreenshot(
     "present-narrow-single-column.png",
     screenshotOptions,

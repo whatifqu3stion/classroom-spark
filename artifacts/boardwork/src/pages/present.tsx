@@ -143,6 +143,7 @@ export default function Present() {
 
     event.preventDefault();
     setControlsOpen(false);
+    setTimerControlsOpen(false);
     setControlsHovering(false);
     event.currentTarget.querySelector<HTMLButtonElement>(".presentation-controls-toggle")?.focus();
   };
@@ -206,7 +207,7 @@ export default function Present() {
 
   const controls = (
     <div
-      className={`presentation-controls-dock ${controlsOpen ? "presentation-controls-dock--open" : ""} ${controlsHovering ? "presentation-controls-dock--hovering" : ""}`}
+      className={`presentation-controls-dock ${controlsOpen || timerControlsOpen ? "presentation-controls-dock--open" : ""} ${controlsHovering ? "presentation-controls-dock--hovering" : ""}`}
       onFocusCapture={(event) => {
         if (event.target !== event.currentTarget.querySelector(".presentation-controls-toggle")) {
           setControlsOpen(true);
@@ -220,10 +221,14 @@ export default function Present() {
       <button
         type="button"
         className="presentation-controls-toggle"
-        onClick={() => setControlsOpen((value) => !value)}
-        aria-expanded={controlsOpen || controlsHovering}
+        onClick={() => {
+          const nextOpen = !(controlsOpen || timerControlsOpen);
+          setControlsOpen(nextOpen);
+          setTimerControlsOpen(false);
+        }}
+        aria-expanded={controlsOpen || timerControlsOpen || controlsHovering}
         aria-controls="presentation-controls-panel"
-        title={controlsOpen ? "Hide teacher controls" : "Show teacher controls"}
+        title={controlsOpen || timerControlsOpen ? "Hide teacher controls" : "Show teacher controls"}
         data-testid="button-teacher-controls"
       >
         <Settings2 className="h-4 w-4" aria-hidden="true" />
@@ -234,6 +239,9 @@ export default function Present() {
         className="presentation-controls"
         aria-label="Presentation controls"
       >
+        <div className="presentation-controls-timer">
+          {renderTimerControls()}
+        </div>
         <Link
           href={activityId ? `/activity/${activityId}` : "/"}
           className="presentation-control"
@@ -288,7 +296,8 @@ export default function Present() {
       </nav>
     </div>
   );
-  const timerControls = (
+  function renderTimerControls() {
+    return (
     <div className="presentation-timer-controls" aria-label="Timer controls">
       <div className="presentation-timer-actions">
         <button
@@ -371,7 +380,8 @@ export default function Present() {
         </div>
       )}
     </div>
-  );
+    );
+  }
 
   return (
     <div
@@ -383,14 +393,19 @@ export default function Present() {
         activity={activeDraft}
         controls={controls}
         showResourceLink={false}
-        timerControls={timerControls}
         onShowTimer={() => {
           setTimerVisible(true);
           setTimerMinimized(true);
           setTimerControlsOpen(false);
         }}
         timerControlsOpen={timerControlsOpen}
-        onToggleTimerControls={() => setTimerControlsOpen((value) => !value)}
+        onToggleTimerControls={() => {
+          setTimerControlsOpen((value) => {
+            const nextOpen = !value;
+            setControlsOpen(nextOpen);
+            return nextOpen;
+          });
+        }}
         timerMinimized={timerMinimized}
         timer={{ visible: timerVisible, remainingSeconds, status: timerStatus, alarmActive }}
       />

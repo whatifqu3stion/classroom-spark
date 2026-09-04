@@ -81,7 +81,7 @@ export type PresentationAccentTheme = {
 };
 
 const SCRIPT_FONT_FALLBACK =
-  "'Noto Sans Arabic', 'Noto Sans Hebrew', 'Noto Sans Devanagari', 'Noto Sans JP', 'Noto Sans Symbols 2', 'Noto Sans', 'Noto Color Emoji', 'Segoe UI Symbol', 'Apple Color Emoji'";
+  "'Noto Sans Arabic', 'Noto Sans Hebrew', 'Noto Sans Devanagari', 'Noto Sans JP', 'Noto Sans Symbols 2', 'Noto Sans', 'DejaVu Sans', 'Noto Color Emoji', 'Segoe UI Symbol', 'Apple Color Emoji'";
 const SANS_SYSTEM_FALLBACK =
   "'Segoe UI', 'Helvetica Neue', Arial, system-ui, sans-serif";
 const sansFamily = (family: string) =>

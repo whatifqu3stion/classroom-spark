@@ -3,7 +3,6 @@ import {
   useRef,
   useState,
   type CSSProperties,
-  type PointerEvent,
   type ReactNode,
   type Ref,
 } from "react";
@@ -19,7 +18,6 @@ import type { CountdownTimerState } from "./countdown-timer";
 interface PresentationCanvasProps {
   activity: ActivityDraft;
   controls?: ReactNode;
-  timerControls?: ReactNode;
   onShowTimer?: () => void;
   timerControlsOpen?: boolean;
   onToggleTimerControls?: () => void;
@@ -52,7 +50,6 @@ type LayoutRatioBounds = {
 export function PresentationCanvas({
   activity,
   controls,
-  timerControls,
   onShowTimer,
   timerControlsOpen = false,
   onToggleTimerControls,
@@ -70,10 +67,6 @@ export function PresentationCanvas({
   });
   const [isResizing, setIsResizing] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
-  const [timerPointerInside, setTimerPointerInside] = useState(false);
-  const [timerFocusWithin, setTimerFocusWithin] = useState(false);
-  const timerPointerDownRef = useRef(false);
-  const timerPointerCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const arrivalInstruction = activity.arrivalInstructions?.trim();
   const safeResourceUrl = getSafeResourceUrl(activity.resourceUrl);
   const themeColors = getThemeColors(activity.presentationTheme);
@@ -100,15 +93,6 @@ export function PresentationCanvas({
   const effectiveContentRatio = Math.max(
     layoutBounds.min,
     Math.min(layoutBounds.max, contentRatio),
-  );
-  const showTimerControls =
-    !exportLayout &&
-    !editorPreview &&
-    Boolean(timerControls && (showLargeTimer || showCompactTimer));
-  const showCompactTimerControls = Boolean(
-    showCompactTimer &&
-      showTimerControls &&
-      (timerControlsOpen || timerPointerInside || timerFocusWithin),
   );
   const railMode = showLargeTimer
     ? hasVisual
@@ -240,36 +224,6 @@ export function PresentationCanvas({
     }
   };
 
-  useEffect(() => {
-    return () => {
-      if (timerPointerCloseTimeoutRef.current) {
-        clearTimeout(timerPointerCloseTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  const handleTimerPointerEnter = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === "touch") return;
-
-    if (timerPointerCloseTimeoutRef.current) {
-      clearTimeout(timerPointerCloseTimeoutRef.current);
-      timerPointerCloseTimeoutRef.current = null;
-    }
-    setTimerPointerInside(true);
-  };
-
-  const handleTimerPointerLeave = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === "touch") return;
-
-    if (timerPointerCloseTimeoutRef.current) {
-      clearTimeout(timerPointerCloseTimeoutRef.current);
-    }
-    timerPointerCloseTimeoutRef.current = setTimeout(() => {
-      setTimerPointerInside(false);
-      timerPointerCloseTimeoutRef.current = null;
-    }, 180);
-  };
-
   return (
     <div
       ref={surfaceRef}
@@ -347,51 +301,11 @@ export function PresentationCanvas({
             className={cn(
               "presentation-time",
               showCompactTimer && "presentation-time--compact",
-              showCompactTimerControls && "presentation-time--compact-open",
+              showCompactTimer &&
+                timerControlsOpen &&
+                "presentation-time--compact-open",
               showHiddenTimerRecovery && "presentation-time--hidden",
             )}
-            onPointerEnter={handleTimerPointerEnter}
-            onPointerLeave={handleTimerPointerLeave}
-            onPointerDown={(event) => {
-              timerPointerDownRef.current = true;
-              setTimerFocusWithin(false);
-              if (event.pointerType !== "mouse") {
-                if (timerPointerCloseTimeoutRef.current) {
-                  clearTimeout(timerPointerCloseTimeoutRef.current);
-                  timerPointerCloseTimeoutRef.current = null;
-                }
-                setTimerPointerInside(false);
-              }
-            }}
-            onPointerUp={() => {
-              timerPointerDownRef.current = false;
-            }}
-            onPointerCancel={() => {
-              timerPointerDownRef.current = false;
-            }}
-            onFocusCapture={() => {
-              if (!timerPointerDownRef.current) {
-                setTimerFocusWithin(true);
-              }
-            }}
-            onBlurCapture={(event) => {
-              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-                setTimerFocusWithin(false);
-              }
-            }}
-            onKeyDown={(event) => {
-              if (event.key !== "Escape" || !showCompactTimerControls) return;
-
-              event.preventDefault();
-              if (timerControlsOpen) {
-                onToggleTimerControls?.();
-              }
-              setTimerPointerInside(false);
-              setTimerFocusWithin(false);
-              (event.currentTarget.querySelector(
-                ".presentation-time-compact-toggle",
-              ) as HTMLButtonElement | null)?.focus();
-            }}
             {...testId(includeTestIds, "present-time")}
           >
             {showHiddenTimerRecovery ? (
@@ -450,10 +364,10 @@ export function PresentationCanvas({
                   type="button"
                   className="presentation-time-compact-toggle"
                   onClick={onToggleTimerControls}
-                  aria-expanded={showCompactTimerControls}
-                  aria-controls="presentation-compact-timer-controls"
-                  aria-label={showCompactTimerControls ? "Hide timer controls" : "Show timer controls"}
-                  title={showCompactTimerControls ? "Hide timer controls" : "Show timer controls"}
+                  aria-expanded={timerControlsOpen}
+                  aria-controls="presentation-controls-panel"
+                  aria-label={timerControlsOpen ? "Hide teacher controls" : "Show teacher controls"}
+                  title={timerControlsOpen ? "Hide teacher controls" : "Show teacher controls"}
                   data-testid={includeTestIds ? "button-toggle-timer-controls" : undefined}
                 >
                   <span
@@ -469,15 +383,6 @@ export function PresentationCanvas({
                     {compactTimerReading}
                   </span>
                 </button>
-              </div>
-            )}
-            {showCompactTimer && showTimerControls && (
-              <div
-                id="presentation-compact-timer-controls"
-                className="presentation-time-compact-controls"
-                aria-hidden={!showCompactTimerControls}
-              >
-                {timerControls}
               </div>
             )}
           </div>
@@ -628,7 +533,6 @@ export function PresentationCanvas({
                     Alarm active — dismiss when ready
                   </span>
                 )}
-                {showTimerControls && timerControls}
               </div>
             )}
           </aside>
