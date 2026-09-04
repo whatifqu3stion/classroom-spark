@@ -1549,6 +1549,39 @@
     outline-offset: 2px;
   }
 
+  .presentation-control-error {
+    flex: 1 1 100%;
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    border-top: 1px solid color-mix(in srgb, var(--presentation-primary-text, #171717) 12%, transparent);
+    padding: 0.5rem 0.5rem 0.25rem;
+    color: var(--presentation-secondary-text, rgb(23 23 23 / 72%));
+    font-size: 0.8rem;
+    line-height: 1.25;
+    text-align: right;
+  }
+
+  .presentation-control-error > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .presentation-control-error__retry {
+    flex: none;
+    color: var(--presentation-primary-text, #171717);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  .presentation-control-error__retry:focus-visible {
+    outline: 2px solid var(--presentation-accent, hsl(var(--primary)));
+    outline-offset: 2px;
+  }
+
   .presentation-controls-timer {
     flex: 1 1 100%;
     min-width: min(18rem, 100%);

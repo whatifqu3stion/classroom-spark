@@ -256,6 +256,57 @@ describe("Home presentation defaults", () => {
     );
   });
 
+  it("takes Surprise me directly to Present while keeping Create board in the editor", async () => {
+    mocks.generateActivity
+      .mockResolvedValueOnce({
+        id: "activity-surprise",
+        classId: "class-1",
+        title: "Surprise",
+        task: "Practice",
+        prompts: [],
+        durationMinutes: 7,
+        deviceMode: "off",
+      })
+      .mockResolvedValueOnce({
+        id: "activity-created",
+        classId: "class-1",
+        title: "Created",
+        task: "Practice",
+        prompts: [],
+        durationMinutes: 7,
+        deviceMode: "off",
+      });
+
+    render(<Home />);
+
+    fireEvent.click(screen.getByTestId("button-surprise"));
+    await waitFor(() =>
+      expect(mocks.setLocation).toHaveBeenCalledWith("/present/activity-surprise"),
+    );
+
+    fireEvent.click(screen.getByTestId("button-generate"));
+    await waitFor(() =>
+      expect(mocks.setLocation).toHaveBeenCalledWith("/activity/activity-created"),
+    );
+  });
+
+  it("keeps the creation workspace in place and offers retry after Surprise me fails", async () => {
+    mocks.generateActivity.mockRejectedValueOnce({
+      data: { error: "The generator is temporarily unavailable." },
+    });
+
+    render(<Home />);
+    fireEvent.click(screen.getByTestId("button-surprise"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("generation-error")).toHaveTextContent(
+        "The generator is temporarily unavailable.",
+      );
+    });
+    expect(mocks.setLocation).not.toHaveBeenCalled();
+    expect(screen.getByTestId("button-retry-generation")).toBeEnabled();
+  });
+
   it("reveals the teacher resource fields with Computer Available and sends them to generation", async () => {
     mocks.generateActivity.mockResolvedValue({
       id: "activity-1",

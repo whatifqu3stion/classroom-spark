@@ -99,6 +99,33 @@ const appState = {
   activities: [longMixedDirectionActivity],
 };
 
+const surprisePresentActivity = {
+  ...longMixedDirectionActivity,
+  id: "activity-present-source",
+  title: "Current live board",
+  classId: "class-1",
+  deviceMode: "on",
+  technologyMode: "computer_available",
+  durationMinutes: 12,
+  resourceUrl: "https://example.com/source-reading",
+  resourceNote: "Use the source reading for one comparison.",
+  sourceTopic: "Forces in a changing system",
+  sourceGoal: "Explain the strongest pattern with evidence",
+  sourceUnitId: "unit-forces",
+  sourceUnitName: "Forces and motion",
+  sourceChipIds: ["chip-evidence"],
+  presentationTheme: {
+    kind: "curated" as const,
+    themeId: "midnight" as const,
+    accentId: "sage" as const,
+  },
+};
+
+const surprisePresentAppState = {
+  ...appState,
+  activities: [surprisePresentActivity],
+};
+
 const contentTallAppState = {
   ...appState,
   activities: [contentTallActivity],
@@ -968,6 +995,112 @@ test("keeps Present controls tappable in a short landscape tablet viewport", asy
   } finally {
     await context.close();
   }
+});
+
+test("lets teachers replace a live board with a context-matched Surprise me result", async ({
+  page,
+}) => {
+  await stubPresentationState(page, surprisePresentAppState);
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  const generatedActivity = {
+    ...surprisePresentActivity,
+    id: "activity-present-surprise",
+    title: "Fresh surprise board",
+    task: "Compare the evidence and explain the new pattern.",
+  };
+  let requestPayload: Record<string, unknown> | undefined;
+  let releaseGeneration!: () => void;
+  const generationReleased = new Promise<void>((resolve) => {
+    releaseGeneration = resolve;
+  });
+
+  await page.route("**/api/generate", async (route) => {
+    requestPayload = route.request().postDataJSON() as Record<string, unknown>;
+    await generationReleased;
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify(generatedActivity),
+    });
+  });
+
+  await page.goto("/present/activity-present-source");
+  await expect(page.getByTestId("present-title")).toHaveText("Current live board");
+  await openTeacherControls(page);
+
+  const surpriseButton = page.getByTestId("button-present-surprise");
+  await expect(surpriseButton).toBeVisible();
+  const surpriseBounds = await surpriseButton.boundingBox();
+  expect(surpriseBounds).not.toBeNull();
+  expect(surpriseBounds!.x).toBeGreaterThanOrEqual(0);
+  expect(surpriseBounds!.x + surpriseBounds!.width).toBeLessThanOrEqual(390);
+  await expect(
+    page.locator(".presentation-surface--export").getByTestId("button-present-surprise"),
+  ).toHaveCount(0);
+
+  await surpriseButton.focus();
+  await page.keyboard.press("Enter");
+  await expect(surpriseButton).toBeDisabled();
+  await expect(surpriseButton).toContainText("Generating");
+  await expect(page.getByTestId("present-title")).toHaveText("Current live board");
+
+  await surpriseButton.click({ force: true });
+  await expect.poll(() => requestPayload).toBeTruthy();
+  releaseGeneration();
+
+  await expect(page).toHaveURL(/\/present\/activity-present-surprise$/);
+  await expect(page.getByTestId("present-title")).toHaveText("Fresh surprise board");
+  expect(requestPayload).toMatchObject({
+    classId: "class-1",
+    unitId: "unit-forces",
+    topic: "Forces in a changing system",
+    goal: "Explain the strongest pattern with evidence",
+    chipIds: ["chip-evidence"],
+    deviceMode: "on",
+    technologyMode: "computer_available",
+    durationMinutes: 12,
+    activityStyle: null,
+    presentationTheme: {
+      kind: "curated",
+      themeId: "midnight",
+      accentId: "sage",
+    },
+    teacherProvidedUrl: "https://example.com/source-reading",
+    teacherProvidedResourceNote: "Use the source reading for one comparison.",
+    surprise: true,
+  });
+});
+
+test("keeps the live board and offers a retry after Present Surprise me fails", async ({
+  page,
+}) => {
+  await stubPresentationState(page, surprisePresentAppState);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route("**/api/generate", async (route) => {
+    await route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({ error: "The generator is temporarily unavailable." }),
+    });
+  });
+
+  await page.goto("/present/activity-present-source");
+  await openTeacherControls(page);
+  const surpriseButton = page.getByTestId("button-present-surprise");
+  await surpriseButton.click();
+
+  await expect(page.getByTestId("present-generation-error")).toContainText(
+    "The generator is temporarily unavailable.",
+  );
+  await expect(page.getByRole("button", { name: "Retry" })).toBeVisible();
+  await expect(page.getByTestId("present-title")).toHaveText("Current live board");
+  await expect(page).toHaveURL(/\/present\/activity-present-source$/);
+
+  const errorBounds = await page.getByTestId("present-generation-error").boundingBox();
+  expect(errorBounds).not.toBeNull();
+  expect(errorBounds!.x).toBeGreaterThanOrEqual(0);
+  expect(errorBounds!.x + errorBounds!.width).toBeLessThanOrEqual(390);
+  expect(errorBounds!.y + errorBounds!.height).toBeLessThanOrEqual(844);
 });
 
 test("returns focus to the compact timer trigger after teacher controls close", async ({

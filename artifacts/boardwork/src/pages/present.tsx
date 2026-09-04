@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef, type CSSProperties, type PointerEvent } from "react";
 import { useBoardwork } from "@/store/boardwork-context";
-import { Link, useRoute } from "wouter";
+import { Link, useLocation, useRoute } from "wouter";
 import { toPng } from "html-to-image";
 import { useToast } from "@/hooks/use-toast";
 import { useCountdownTimer } from "@/components/countdown-timer";
 import { PresentationCanvas } from "@/components/presentation-canvas";
 import { getResolvedPresentationTheme } from "@/lib/presentation-theme";
 import { getSafeResourceUrl } from "@/lib/resource-url";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ChevronDown,
   ChevronLeft,
@@ -21,10 +22,16 @@ import {
   Play,
   Plus,
   RotateCcw,
+  Shuffle,
   Settings2,
   Volume2,
   VolumeX,
 } from "lucide-react";
+import {
+  getGetAppStateQueryKey,
+  useGenerateActivity,
+  type GenerateActivityInput,
+} from "@workspace/api-client-react";
 import {
   getPresentationExportOptions,
   waitForPresentationFonts,
@@ -45,8 +52,11 @@ const getExportFilename = (title: string) => {
 export default function Present() {
   const [, params] = useRoute("/present/:id");
   const activityId = params?.id;
+  const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
   const { appState } = useBoardwork();
   const { toast } = useToast();
+  const generateActivityMut = useGenerateActivity();
 
   const activeDraft = React.useMemo(() => {
     return appState?.activities.find(a => a.id === activityId);
@@ -61,6 +71,8 @@ export default function Present() {
   const [timerControlsOpen, setTimerControlsOpen] = useState(false);
   const [alarmEnabled, setAlarmEnabled] = useState(true);
   const [timerOptionsOpen, setTimerOptionsOpen] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
   const controlsDockRef = useRef<HTMLDivElement>(null);
@@ -109,6 +121,10 @@ export default function Present() {
       inline: "nearest",
     });
   }, [controlsOpen, controlsHovering]);
+
+  useEffect(() => {
+    setGenerationError(null);
+  }, [activityId]);
 
   const toggleFullscreen = async () => {
     if (!document.fullscreenElement && containerRef.current) {
@@ -190,6 +206,65 @@ export default function Present() {
       });
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleSurprise = async () => {
+    if (!activeDraft || isGenerating) return;
+
+    setGenerationError(null);
+    setIsGenerating(true);
+
+    const payload: GenerateActivityInput = {
+      classId: activeDraft.classId,
+      unitId: activeDraft.sourceUnitId ?? undefined,
+      topic: activeDraft.sourceTopic ?? undefined,
+      goal: activeDraft.sourceGoal ?? undefined,
+      chipIds: activeDraft.sourceChipIds ?? [],
+      deviceMode: activeDraft.deviceMode,
+      technologyMode: activeDraft.technologyMode,
+      durationMinutes: activeDraft.durationMinutes,
+      activityStyle: null,
+      presentationTheme: activeDraft.presentationTheme ?? null,
+      teacherProvidedUrl:
+        activeDraft.deviceMode === "on" ? activeDraft.resourceUrl ?? null : null,
+      teacherProvidedResourceNote:
+        activeDraft.deviceMode === "on" ? activeDraft.resourceNote ?? null : null,
+      surprise: true,
+    };
+
+    try {
+      const newActivity = await generateActivityMut.mutateAsync({ data: payload });
+      queryClient.setQueryData(getGetAppStateQueryKey(), (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          activities: [
+            newActivity,
+            ...old.activities.filter((activity: any) => activity.id !== newActivity.id),
+          ],
+        };
+      });
+      setLocation(`/present/${newActivity.id}`);
+    } catch (error) {
+      const message =
+        error &&
+        typeof error === "object" &&
+        "data" in error &&
+        error.data &&
+        typeof error.data === "object" &&
+        "error" in error.data &&
+        typeof error.data.error === "string"
+          ? error.data.error
+          : "Couldn’t generate a new activity. Try again.";
+      setGenerationError(message);
+      toast({
+        title: "Couldn’t generate activity",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -285,6 +360,21 @@ export default function Present() {
         )}
         <button
           type="button"
+          onClick={() => void handleSurprise()}
+          disabled={isGenerating}
+          className="presentation-control"
+          title={isGenerating ? "Generating a new activity" : "Generate a new activity"}
+          data-testid="button-present-surprise"
+        >
+          {isGenerating ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Shuffle className="h-4 w-4" aria-hidden="true" />
+          )}
+          <span>{isGenerating ? "Generating…" : "Surprise me"}</span>
+        </button>
+        <button
+          type="button"
           onClick={() => void exportPng()}
           disabled={isExporting}
           className="presentation-control"
@@ -312,6 +402,23 @@ export default function Present() {
           )}
           <span>{isFullscreen ? "Exit" : "Full screen"}</span>
         </button>
+        {generationError && (
+          <div
+            className="presentation-control-error"
+            role="alert"
+            data-testid="present-generation-error"
+          >
+            <span>{generationError}</span>
+            <button
+              type="button"
+              className="presentation-control-error__retry"
+              onClick={() => void handleSurprise()}
+              disabled={isGenerating}
+            >
+              Retry
+            </button>
+          </div>
+        )}
       </nav>
     </div>
   );

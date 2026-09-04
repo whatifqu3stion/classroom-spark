@@ -707,7 +707,9 @@ export default function Home() {
           ],
         };
       });
-      setLocation(`/activity/${newActivity.id}`);
+      setLocation(
+        surprise ? `/present/${newActivity.id}` : `/activity/${newActivity.id}`,
+      );
     } catch (error) {
       const message = getGenerationErrorMessage(error);
       setGenerationError(message);
