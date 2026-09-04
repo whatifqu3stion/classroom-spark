@@ -268,6 +268,38 @@ test("keeps long class header controls separate at an intermediate scaled width"
   );
 });
 
+test("keeps the Add image focus outline from being clipped", async ({ page }) => {
+  await page.unroute("**/api/app-state");
+  await page.route("**/api/app-state", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify(savedBoardAppState),
+    }),
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/activity/activity-saved-board");
+
+  await page.getByTestId("button-toggle-presentation-visual").click();
+  const addImage = page.locator("label").filter({ hasText: "Add image" });
+  const fileInput = page.locator('input[type="file"]').first();
+  const content = page.getByTestId("presentation-visual-editor-content");
+
+  await expect(addImage).toBeVisible();
+  await fileInput.focus();
+
+  const outlineState = await addImage.evaluate((label) => ({
+    hasFocusWithin: label.matches(":focus-within"),
+    boxShadow: getComputedStyle(label).boxShadow,
+  }));
+  const contentOverflow = await content.evaluate(
+    (element) => getComputedStyle(element).overflow,
+  );
+
+  expect(outlineState.hasFocusWithin).toBe(true);
+  expect(outlineState.boxShadow).not.toBe("none");
+  expect(contentOverflow).toBe("visible");
+});
+
 for (const viewport of viewports) {
   test(`keeps saved-board editor controls reachable at ${viewport.name} width`, async ({ page }) => {
     await page.unroute("**/api/app-state");

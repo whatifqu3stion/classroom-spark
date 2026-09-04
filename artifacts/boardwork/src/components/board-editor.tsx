@@ -384,7 +384,10 @@ export function BoardEditor({
                 inert={!presentationVisualOpen ? true : undefined}
                 data-testid="presentation-visual-editor"
               >
-                <div className="space-y-6 pt-5">
+                <div
+                  className="space-y-6 pt-5"
+                  data-testid="presentation-visual-editor-content"
+                >
                   <div className="space-y-4">
                     <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-medium hover:bg-muted/50 focus-within:ring-2 focus-within:ring-ring">
                       <ImagePlus className="h-4 w-4" aria-hidden="true" />

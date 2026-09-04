@@ -744,6 +744,10 @@
     opacity: 1;
   }
 
+  .presentation-visual-editor--open > div {
+    overflow: visible;
+  }
+
   .presentation-main {
     container-type: inline-size;
     min-width: 0;
