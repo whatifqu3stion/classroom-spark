@@ -99,6 +99,7 @@ describe("PresentationCanvas timer visibility", () => {
         activity={activity}
         timer={timer}
         controls={<button type="button">Minimize timer</button>}
+        timerControls={<button type="button">Start timer</button>}
       />,
     );
 
@@ -114,6 +115,7 @@ describe("PresentationCanvas timer visibility", () => {
         timerControlsOpen={false}
         onToggleTimerControls={onToggleTimerControls}
         controls={<button type="button">Expand timer</button>}
+        timerControls={<button type="button">Start timer</button>}
       />,
     );
 
@@ -124,12 +126,12 @@ describe("PresentationCanvas timer visibility", () => {
     expect(
       screen.getByRole("button", { name: "Expand timer" }).closest(".presentation-timer"),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Show teacher controls" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Show timer controls" })).toHaveAttribute(
       "aria-expanded",
       "false",
     );
 
-    screen.getByRole("button", { name: "Show teacher controls" }).click();
+    screen.getByRole("button", { name: "Show timer controls" }).click();
     expect(onToggleTimerControls).toHaveBeenCalledOnce();
 
     rerender(
@@ -140,11 +142,12 @@ describe("PresentationCanvas timer visibility", () => {
         timerControlsOpen
         onToggleTimerControls={onToggleTimerControls}
         controls={<button type="button">Expand timer</button>}
+        timerControls={<button type="button">Start timer</button>}
       />,
     );
 
     expect(screen.getByRole("button", { name: "Expand timer" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Hide teacher controls" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Hide timer controls" })).toHaveAttribute(
       "aria-expanded",
       "true",
     );
@@ -263,21 +266,67 @@ describe("PresentationCanvas timer visibility", () => {
         timerMinimized
         timerControlsOpen={false}
         onToggleTimerControls={onToggleTimerControls}
-        controls={<button type="button">Start timer</button>}
+        timerControls={<button type="button">Start timer</button>}
       />,
     );
 
     const compactToggle = screen.getByTestId("button-toggle-timer-controls");
-    expect(compactToggle).toHaveAttribute("aria-controls", "presentation-controls-panel");
+    expect(compactToggle).toHaveAttribute("aria-controls", "presentation-timer-controls-panel");
     expect(
-      screen.getByRole("button", { name: "Start timer" }).closest(".presentation-time"),
-    ).not.toBeInTheDocument();
+      screen.getByTestId("present-timer-controls-panel").closest(".presentation-time"),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("present-timer-controls-panel")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
 
     fireEvent.click(compactToggle);
     expect(onToggleTimerControls).toHaveBeenCalledOnce();
     expect(
-      screen.getByRole("button", { name: "Start timer" }).closest(".presentation-time"),
-    ).not.toBeInTheDocument();
+      screen.getByTestId("present-timer-controls-panel"),
+    ).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("keeps the compact timer disclosure independent from the teacher dock", () => {
+    const onCloseTimerControls = vi.fn();
+    const { rerender } = render(
+      <PresentationCanvas
+        activity={activity}
+        timer={timer}
+        timerMinimized
+        timerControlsOpen={false}
+        onToggleTimerControls={() => undefined}
+        onCloseTimerControls={onCloseTimerControls}
+        controls={<button type="button">Open resource</button>}
+        timerControls={<button type="button">Start timer</button>}
+      />,
+    );
+
+    const timerPanel = screen.getByTestId("present-timer-controls-panel");
+    expect(timerPanel).toHaveAttribute("id", "presentation-timer-controls-panel");
+    expect(timerPanel).toHaveAttribute("aria-hidden", "true");
+    expect(timerPanel).toContainElement(
+      screen.getByRole("button", { name: "Start timer", hidden: true }),
+    );
+    expect(screen.getByRole("button", { name: "Open resource" }).closest(".presentation-footer"))
+      .toBeInTheDocument();
+
+    rerender(
+      <PresentationCanvas
+        activity={activity}
+        timer={timer}
+        timerMinimized
+        timerControlsOpen
+        onToggleTimerControls={() => undefined}
+        onCloseTimerControls={onCloseTimerControls}
+        controls={<button type="button">Open resource</button>}
+        timerControls={<button type="button">Start timer</button>}
+      />,
+    );
+
+    expect(timerPanel).toHaveAttribute("aria-hidden", "false");
+    fireEvent.keyDown(timerPanel, { key: "Escape" });
+    expect(onCloseTimerControls).toHaveBeenCalledOnce();
   });
 
   it("shows an active alarm to the teacher but omits it from exports", () => {

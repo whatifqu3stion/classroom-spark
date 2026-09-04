@@ -18,10 +18,11 @@ import type { CountdownTimerState } from "./countdown-timer";
 interface PresentationCanvasProps {
   activity: ActivityDraft;
   controls?: ReactNode;
+  timerControls?: ReactNode;
   onShowTimer?: () => void;
   timerControlsOpen?: boolean;
   onToggleTimerControls?: () => void;
-  timerControlsToggleRef?: Ref<HTMLButtonElement>;
+  onCloseTimerControls?: () => void;
   timerMinimized?: boolean;
   exportLayout?: boolean;
   editorPreview?: boolean;
@@ -51,10 +52,11 @@ type LayoutRatioBounds = {
 export function PresentationCanvas({
   activity,
   controls,
+  timerControls,
   onShowTimer,
   timerControlsOpen = false,
   onToggleTimerControls,
-  timerControlsToggleRef,
+  onCloseTimerControls,
   timerMinimized = false,
   exportLayout = false,
   editorPreview = false,
@@ -364,13 +366,12 @@ export function PresentationCanvas({
                 </svg>
                 <button
                   type="button"
-                  ref={timerControlsToggleRef}
                   className="presentation-time-compact-toggle"
                   onClick={onToggleTimerControls}
                   aria-expanded={timerControlsOpen}
-                  aria-controls="presentation-controls-panel"
-                  aria-label={timerControlsOpen ? "Hide teacher controls" : "Show teacher controls"}
-                  title={timerControlsOpen ? "Hide teacher controls" : "Show teacher controls"}
+                  aria-controls={timerControls ? "presentation-timer-controls-panel" : undefined}
+                  aria-label={timerControlsOpen ? "Hide timer controls" : "Show timer controls"}
+                  title={timerControlsOpen ? "Hide timer controls" : "Show timer controls"}
                   data-testid={includeTestIds ? "button-toggle-timer-controls" : undefined}
                 >
                   <span
@@ -386,6 +387,35 @@ export function PresentationCanvas({
                     {compactTimerReading}
                   </span>
                 </button>
+                {timerControls && (
+                  <div
+                    id="presentation-timer-controls-panel"
+                    className={cn(
+                      "presentation-time-compact-controls",
+                      timerControlsOpen && "presentation-time-compact-controls--open",
+                    )}
+                    role="group"
+                    aria-label="Timer controls"
+                    aria-hidden={!timerControlsOpen}
+                    {...testId(includeTestIds, "present-timer-controls-panel")}
+                    onKeyDown={(event) => {
+                      if (event.key !== "Escape") return;
+
+                      event.preventDefault();
+                      onCloseTimerControls?.();
+                      if (!onCloseTimerControls) onToggleTimerControls?.();
+                      const compactPanel = event.currentTarget;
+                      requestAnimationFrame(() => {
+                        compactPanel
+                          .closest(".presentation-time")
+                          ?.querySelector<HTMLButtonElement>(".presentation-time-compact-toggle")
+                          ?.focus();
+                      });
+                    }}
+                  >
+                    {timerControls}
+                  </div>
+                )}
               </div>
             )}
           </div>

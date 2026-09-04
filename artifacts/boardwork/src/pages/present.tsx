@@ -65,8 +65,6 @@ export default function Present() {
   const exportRef = useRef<HTMLDivElement>(null);
   const controlsDockRef = useRef<HTMLDivElement>(null);
   const controlsToggleRef = useRef<HTMLButtonElement>(null);
-  const timerControlsToggleRef = useRef<HTMLButtonElement>(null);
-  const controlsTriggerRef = useRef<"dock" | "compact">("dock");
   const controlsCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
@@ -101,7 +99,7 @@ export default function Present() {
   }, []);
 
   useEffect(() => {
-    if (!controlsOpen && !timerControlsOpen && !controlsHovering) return;
+    if (!controlsOpen && !controlsHovering) return;
 
     const controlsDock = controlsDockRef.current;
     if (!controlsDock || typeof controlsDock.scrollIntoView !== "function") return;
@@ -110,7 +108,7 @@ export default function Present() {
       block: "nearest",
       inline: "nearest",
     });
-  }, [controlsOpen, controlsHovering, timerControlsOpen]);
+  }, [controlsOpen, controlsHovering]);
 
   const toggleFullscreen = async () => {
     if (!document.fullscreenElement && containerRef.current) {
@@ -154,27 +152,14 @@ export default function Present() {
     setControlsHovering(false);
   };
 
-  const focusControlsTrigger = () => {
-    const trigger =
-      controlsTriggerRef.current === "compact"
-        ? timerControlsToggleRef
-        : controlsToggleRef;
-    trigger.current?.focus();
-    trigger.current?.scrollIntoView({
-      block: "nearest",
-      inline: "nearest",
-    });
-  };
-
   const handleControlsKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== "Escape") return;
 
     event.preventDefault();
     setControlsOpen(false);
-    setTimerControlsOpen(false);
     setTimerOptionsOpen(false);
     setControlsHovering(false);
-    focusControlsTrigger();
+    controlsToggleRef.current?.focus();
   };
 
   const exportPng = async () => {
@@ -237,7 +222,7 @@ export default function Present() {
   const controls = (
     <div
       ref={controlsDockRef}
-      className={`presentation-controls-dock ${controlsOpen || timerControlsOpen ? "presentation-controls-dock--open" : ""} ${controlsHovering ? "presentation-controls-dock--hovering" : ""}`}
+      className={`presentation-controls-dock ${controlsOpen ? "presentation-controls-dock--open" : ""} ${controlsHovering ? "presentation-controls-dock--hovering" : ""}`}
       onFocusCapture={(event) => {
         if (event.target !== event.currentTarget.querySelector(".presentation-controls-toggle")) {
           setControlsOpen(true);
@@ -253,16 +238,14 @@ export default function Present() {
         ref={controlsToggleRef}
         className="presentation-controls-toggle"
         onClick={() => {
-          controlsTriggerRef.current = "dock";
-          const nextOpen = !(controlsOpen || timerControlsOpen);
+          const nextOpen = !controlsOpen;
           setControlsOpen(nextOpen);
-          setTimerControlsOpen(false);
           setTimerOptionsOpen(false);
-          if (!nextOpen) focusControlsTrigger();
+          if (!nextOpen) controlsToggleRef.current?.focus();
         }}
-        aria-expanded={controlsOpen || timerControlsOpen || controlsHovering}
+        aria-expanded={controlsOpen || controlsHovering}
         aria-controls="presentation-controls-panel"
-        title={controlsOpen || timerControlsOpen ? "Hide teacher controls" : "Show teacher controls"}
+        title={controlsOpen ? "Hide teacher controls" : "Show teacher controls"}
         data-testid="button-teacher-controls"
       >
         <Settings2 className="h-4 w-4" aria-hidden="true" />
@@ -273,9 +256,11 @@ export default function Present() {
         className="presentation-controls"
         aria-label="Presentation controls"
       >
-        <div className="presentation-controls-timer">
-          {renderTimerControls()}
-        </div>
+        {(!timerMinimized || !timerVisible) && (
+          <div className="presentation-controls-timer">
+            {renderTimerControls()}
+          </div>
+        )}
         <Link
           href={activityId ? `/activity/${activityId}` : "/"}
           className="presentation-control"
@@ -369,10 +354,11 @@ export default function Present() {
         <button
           type="button"
           className="presentation-timer-options-trigger"
-            onClick={() => {
-              setTimerMinimized((value) => !value);
-              setTimerControlsOpen(false);
-            }}
+          onClick={() => {
+            setTimerMinimized((value) => !value);
+            setTimerControlsOpen(false);
+            setTimerOptionsOpen(false);
+          }}
           aria-label={timerMinimized ? "Expand timer" : "Minimize timer"}
         >
           {timerMinimized ? (
@@ -426,6 +412,7 @@ export default function Present() {
       <PresentationCanvas
         activity={activeDraft}
         controls={controls}
+        timerControls={renderTimerControls()}
         showResourceLink={false}
         onShowTimer={() => {
           setTimerVisible(true);
@@ -434,14 +421,9 @@ export default function Present() {
         }}
         timerControlsOpen={timerControlsOpen}
         onToggleTimerControls={() => {
-          controlsTriggerRef.current = "compact";
-          const nextOpen = !timerControlsOpen;
-          setTimerControlsOpen(nextOpen);
-          setControlsOpen(nextOpen);
-          setTimerOptionsOpen(false);
-          if (!nextOpen) focusControlsTrigger();
+          setTimerControlsOpen((value) => !value);
         }}
-        timerControlsToggleRef={timerControlsToggleRef}
+        onCloseTimerControls={() => setTimerControlsOpen(false)}
         timerMinimized={timerMinimized}
         timer={{ visible: timerVisible, remainingSeconds, status: timerStatus, alarmActive }}
       />

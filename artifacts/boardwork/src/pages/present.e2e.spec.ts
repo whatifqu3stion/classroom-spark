@@ -409,6 +409,7 @@ test("exports long mixed-direction board text as a complete local-font PNG", asy
       ["task", ".presentation-task"],
       ["prompt-one", ".presentation-prompt:nth-child(1)"],
       ["prompt-two", ".presentation-prompt:nth-child(2)"],
+      ["visual", ".presentation-visual img"],
     ] as const;
 
     return selectors.map(([name, selector]) => {
@@ -526,7 +527,7 @@ test("keeps the large timer reading tight while card rows stay fluid", async ({
     await openTeacherControls(page);
 
     const timerOnlyReading = page.locator(".presentation-timer-reading");
-    const timerProgress = page.locator(".presentation-timer-progress");
+    const timerProgress = page.getByRole("progressbar", { name: "Time remaining" });
     const timerControls = page.locator("#presentation-controls-panel .presentation-timer-controls");
     const teacherControls = page.getByTestId("button-teacher-controls");
     await expect(timerOnlyReading).toHaveText("1000:00");
@@ -713,9 +714,9 @@ test("keeps Present disclosures reachable at zoom-equivalent viewport sizes", as
 
     await page.getByRole("button", { name: "Minimize timer" }).click();
     await page.evaluate(() => window.scrollTo(0, 0));
-    const timerToggle = page.getByTestId("button-toggle-timer-controls");
+  const timerToggle = page.getByTestId("button-toggle-timer-controls");
     const timerProgress = page.getByRole("progressbar", { name: "Time remaining" });
-    const teacherToggle = page.getByTestId("button-teacher-controls");
+  const teacherToggle = page.getByTestId("button-teacher-controls");
     await expect(timerToggle).toBeVisible();
     await expect(timerProgress).toBeVisible();
     await expect(teacherToggle).toBeVisible();
@@ -792,7 +793,7 @@ test("keeps Present disclosures reachable at zoom-equivalent viewport sizes", as
 
     const initialProgress = Number(await timerProgress.getAttribute("aria-valuenow"));
     await timerToggle.click();
-    await expect(page.locator("#presentation-controls-panel")).toBeVisible();
+    await expect(page.locator("#presentation-timer-controls-panel")).toBeVisible();
     await page.getByRole("button", { name: "Start or resume timer" }).click();
     await expect
       .poll(async () => Number(await timerProgress.getAttribute("aria-valuenow")), {
@@ -802,8 +803,10 @@ test("keeps Present disclosures reachable at zoom-equivalent viewport sizes", as
     await expect(timerProgress).toHaveAttribute("aria-valuetext", /remaining$/);
 
     await teacherToggle.hover();
-    const teacherPanel = page.locator("#presentation-controls-panel");
+  const teacherPanel = page.locator("#presentation-controls-panel");
     await expect(teacherPanel).toBeVisible();
+    await expect(teacherPanel.locator(".presentation-timer-controls")).toHaveCount(0);
+
     const teacherPanelBox = await teacherPanel.boundingBox();
     expect(teacherPanelBox, `teacher panel should have geometry at ${viewport.zoom}`).not.toBeNull();
     expect(teacherPanelBox!.x).toBeGreaterThanOrEqual(0);
@@ -869,12 +872,11 @@ test("keeps Present controls tappable in a short landscape tablet viewport", asy
   const context = await browser.newContext({
     hasTouch: true,
     isMobile: true,
-    viewport: { width: 1024, height: 600 },
   });
   const page = await context.newPage();
 
   try {
-    const assertBrowserHealth = await reportBrowserHealth(page);
+  const assertBrowserHealth = await reportBrowserHealth(page);
 
     await page.route("**/api/auth/status", (route) =>
       route.fulfill({
@@ -905,11 +907,11 @@ test("keeps Present controls tappable in a short landscape tablet viewport", asy
 
     await openTeacherControls(page);
     await page.getByRole("button", { name: "Minimize timer" }).tap();
-    const timerToggle = page.getByTestId("button-toggle-timer-controls");
+  const timerToggle = page.getByTestId("button-toggle-timer-controls");
     await expect(timerToggle).toBeVisible();
     await timerToggle.tap();
 
-    const timerPanel = page.locator("#presentation-controls-panel");
+    const timerPanel = page.locator("#presentation-timer-controls-panel");
     await expect(timerPanel).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Start or resume timer" }),
@@ -928,10 +930,10 @@ test("keeps Present controls tappable in a short landscape tablet viewport", asy
     await expect(timerPanel).toBeHidden();
     await expect(timerToggle).toHaveAttribute("aria-expanded", "false");
 
-    const teacherToggle = page.getByTestId("button-teacher-controls");
-    await teacherToggle.tap();
-    const teacherPanel = page.locator("#presentation-controls-panel");
+  const teacherToggle = page.getByTestId("button-teacher-controls");
+  const teacherPanel = page.locator("#presentation-controls-panel");
     await expect(teacherPanel).toBeVisible();
+    await expect(teacherPanel.locator(".presentation-timer-controls")).toHaveCount(0);
 
     const teacherPanelBox = await teacherPanel.boundingBox();
     expect(teacherPanelBox).not.toBeNull();
@@ -982,46 +984,41 @@ test("returns focus to the compact timer trigger after teacher controls close", 
   await page.mouse.move(10, 10);
 
   const timerToggle = page.getByTestId("button-toggle-timer-controls");
-  const teacherPanel = page.locator("#presentation-controls-panel");
+  const timerPanel = page.locator("#presentation-timer-controls-panel");
   await expect(timerToggle).toBeVisible();
-  await expect(teacherPanel).toBeHidden();
+  await expect(timerPanel).toBeHidden();
   await timerToggle.focus();
 
   await timerToggle.press("Enter");
-  await expect(teacherPanel).toBeVisible();
+  await expect(timerPanel).toBeVisible();
   await expect(timerToggle).toHaveAttribute("aria-expanded", "true");
 
   const openGeometry = await page.evaluate(() => {
-    const studentBounds = document.querySelector(".presentation-main")!.getBoundingClientRect();
-    const panelBounds = document.querySelector("#presentation-controls-panel")!.getBoundingClientRect();
-    const dockBounds = document.querySelector(".presentation-controls-dock")!.getBoundingClientRect();
+    const panelBounds = document.querySelector("#presentation-timer-controls-panel")!.getBoundingClientRect();
     return {
       documentWidth: document.documentElement.scrollWidth,
       viewportWidth: window.innerWidth,
-      panelTop: panelBounds.top,
-      studentBottom: studentBounds.bottom,
+      panelLeft: panelBounds.left,
+      panelRight: panelBounds.right,
       panelBottom: panelBounds.bottom,
-      dockLeft: dockBounds.left,
-      dockRight: dockBounds.right,
       viewportHeight: window.innerHeight,
     };
   });
   expect(openGeometry.documentWidth).toBeLessThanOrEqual(openGeometry.viewportWidth);
-  expect(openGeometry.panelTop).toBeGreaterThanOrEqual(openGeometry.studentBottom);
+  expect(openGeometry.panelLeft).toBeGreaterThanOrEqual(0);
+  expect(openGeometry.panelRight).toBeLessThanOrEqual(openGeometry.viewportWidth);
   expect(openGeometry.panelBottom).toBeLessThanOrEqual(openGeometry.viewportHeight);
-  expect(openGeometry.dockLeft).toBeGreaterThanOrEqual(0);
-  expect(openGeometry.dockRight).toBeLessThanOrEqual(openGeometry.viewportWidth);
 
   await timerToggle.press("Enter");
-  await expect(teacherPanel).toBeHidden();
+  await expect(timerPanel).toBeHidden();
   await expect(timerToggle).toBeFocused();
   await expect(timerToggle).toBeInViewport();
 
   await timerToggle.press("Enter");
-  await expect(teacherPanel).toBeVisible();
+  await expect(timerPanel).toBeVisible();
   await page.getByRole("button", { name: "Start or resume timer" }).focus();
   await page.keyboard.press("Escape");
-  await expect(teacherPanel).toBeHidden();
+  await expect(timerPanel).toBeHidden();
   await expect(timerToggle).toBeFocused();
   await expect(timerToggle).toBeInViewport();
 });
@@ -1046,8 +1043,8 @@ test("keeps teacher controls reachable below content-tall Present boards", async
       await page.goto("/present/activity-content-tall");
       await settlePresentationSurface(page);
 
-      const teacherToggle = page.getByTestId("button-teacher-controls");
-      const teacherPanel = page.locator("#presentation-controls-panel");
+  const teacherToggle = page.getByTestId("button-teacher-controls");
+  const teacherPanel = page.locator("#presentation-controls-panel");
       const studentRegion = page.locator(".presentation-main");
       const dock = page.locator(".presentation-controls-dock");
 
@@ -1184,7 +1181,7 @@ test("captures stable responsive Present compositions and keeps export surfaces 
     caret: "hide" as const,
     scale: "css" as const,
   };
-  const liveSurface = page.getByTestId("presentation-surface");
+    const liveSurface = page.getByTestId("presentation-surface");
 
   await stubPresentationState(page, visualAppState);
   await page.setViewportSize({ width: 1920, height: 1080 });

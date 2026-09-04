@@ -685,28 +685,20 @@
   .presentation-time--compact .presentation-time-compact-controls {
     position: absolute;
     top: calc(100% + 0.4rem);
-    right: 0;
+    right: max(0px, env(safe-area-inset-right));
     z-index: 4;
     display: block;
     width: min(18rem, calc(100dvw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right)));
     max-width: calc(100dvw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right));
-    max-height: calc(100dvh - 5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    max-height: calc(100dvh - 5.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   }
 
-  .presentation-time--compact.presentation-time--compact-open .presentation-time-compact-controls {
+  .presentation-time--compact.presentation-time--compact-open .presentation-time-compact-controls,
+  .presentation-time-compact-controls--open {
     opacity: 1;
     pointer-events: auto;
     transform: translateY(0);
     visibility: visible;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .presentation-time--compact:hover .presentation-time-compact-controls {
-      opacity: 1;
-      pointer-events: auto;
-      transform: translateY(0);
-      visibility: visible;
-    }
   }
 
   .presentation-time--compact .presentation-timer-controls {
