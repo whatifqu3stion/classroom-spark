@@ -655,6 +655,160 @@ test("keeps creation examples readable in dark mode", async ({ page }) => {
   await expect(page.getByTestId("input-topic")).toHaveValue("Entered topic");
 });
 
+for (const viewport of viewports) {
+  test(`keeps populated editor content readable in dark mode at ${viewport.name} width`, async ({
+    page,
+  }) => {
+    const mutationRequests: string[] = [];
+    page.on("request", (request) => {
+      if (["POST", "PATCH", "PUT", "DELETE"].includes(request.method())) {
+        mutationRequests.push(`${request.method()} ${request.url()}`);
+      }
+    });
+
+    await page.setViewportSize(viewport);
+    await page.unroute("**/api/app-state");
+    await page.route("**/api/app-state", (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify(scaledSavedBoardAppState),
+      }),
+    );
+    await page.goto("/activity/activity-saved-board");
+    await page.evaluate(() => {
+      document.documentElement.classList.add("dark");
+    });
+
+    const editor = page.getByTestId("board-editor");
+    const title = page.getByRole("textbox", { name: "Enter a short title..." });
+    const task = page.getByRole("textbox", {
+      name: "Describe the main task for students...",
+    });
+    const prompts = page.getByRole("textbox", { name: "Enter prompt..." });
+    const materials = page.getByRole("textbox", {
+      name: "Optional materials, separated by commas...",
+    });
+    const saveStatus = page.getByTestId("text-save-status");
+    const presentButton = page.getByTestId("button-present");
+    const materialsLabel = page.getByText("Materials", { exact: true });
+
+    await expect(page.locator("html")).toHaveClass(/dark/);
+    await expect(editor).toBeVisible();
+    await expect(title).toContainText(
+      "Explain how the evidence supports your scientific idea",
+    );
+    await expect(task).toContainText("identify the strongest pattern");
+    await expect(prompts).toHaveCount(2);
+    await expect(prompts.first()).toContainText(
+      "Describe the strongest pattern in the data and explain why it matters.",
+    );
+    await expect(materials).toContainText("Printed evidence packet");
+    await expect(saveStatus).toHaveText("Saved");
+    await expect(presentButton).toBeVisible();
+    await expect(materialsLabel).toBeVisible();
+
+    for (const control of [
+      title,
+      task,
+      prompts.first(),
+      materials,
+      saveStatus,
+      presentButton,
+    ]) {
+      await expect(control).toBeVisible();
+      await expectElementReachableInViewport(page, control, viewport);
+    }
+
+    const metrics = await page.evaluate(() => {
+      const boardEditor = document.querySelector<HTMLElement>('[data-testid="board-editor"]');
+      return {
+        documentWidth: document.documentElement.scrollWidth,
+        editorScrollWidth: boardEditor?.scrollWidth ?? 0,
+        editorClientWidth: boardEditor?.clientWidth ?? 0,
+      };
+    });
+    expect(
+      metrics.documentWidth,
+      `${viewport.name} dark editor should not overflow the document horizontally`,
+    ).toBeLessThanOrEqual(viewport.width);
+    expect(
+      metrics.editorScrollWidth,
+      `${viewport.name} dark editor should not overflow its panel horizontally`,
+    ).toBeLessThanOrEqual(metrics.editorClientWidth);
+
+    const contrast = await page.evaluate(() => {
+      const parseRgb = (value: string) => {
+        const channels = value.match(/[\d.]+/g)?.map(Number) ?? [];
+        return channels.slice(0, 3);
+      };
+      const luminance = (value: string) => {
+        const [red, green, blue] = parseRgb(value).map((channel) => channel / 255);
+        return [red, green, blue]
+          .map((channel) =>
+            channel <= 0.03928
+              ? channel / 12.92
+              : ((channel + 0.055) / 1.055) ** 2.4,
+          )
+          .reduce((total, channel, index) => total + channel * [0.2126, 0.7152, 0.0722][index], 0);
+      };
+      const ratio = (foreground: string, background: string) => {
+        const foregroundLuminance = luminance(foreground);
+        const backgroundLuminance = luminance(background);
+        const lighter = Math.max(foregroundLuminance, backgroundLuminance);
+        const darker = Math.min(foregroundLuminance, backgroundLuminance);
+        return (lighter + 0.05) / (darker + 0.05);
+      };
+      const stylesFor = (selector: string) => {
+        const element = document.querySelector<HTMLElement>(selector);
+        if (!element) throw new Error(`Missing contrast sample: ${selector}`);
+        const styles = getComputedStyle(element);
+        return {
+          color: styles.color,
+          background: styles.backgroundColor,
+        };
+      };
+      const stylesForExactText = (text: string) => {
+        const element = Array.from(document.querySelectorAll<HTMLElement>("div")).find(
+          (candidate) => candidate.textContent?.trim() === text,
+        );
+        if (!element) throw new Error(`Missing contrast sample text: ${text}`);
+        const styles = getComputedStyle(element);
+        return {
+          color: styles.color,
+          background: styles.backgroundColor,
+        };
+      };
+
+      const editor = stylesFor('[data-testid="board-editor"]');
+      const title = stylesFor('[aria-label="Enter a short title..."]');
+      const task = stylesFor('[aria-label="Describe the main task for students..."]');
+      const prompt = stylesFor('[aria-label="Enter prompt..."]');
+      const materials = stylesFor('[aria-label="Optional materials, separated by commas..."]');
+      const materialsLabel = stylesForExactText("Materials");
+      const saveStatus = stylesFor('[data-testid="text-save-status"]');
+      const present = stylesFor('[data-testid="button-present"]');
+
+      return {
+        editorSurface: editor.background,
+        title: ratio(title.color, editor.background),
+        task: ratio(task.color, editor.background),
+        prompt: ratio(prompt.color, editor.background),
+        materials: ratio(materials.color, editor.background),
+        materialsLabel: ratio(materialsLabel.color, editor.background),
+        saveStatus: ratio(saveStatus.color, editor.background),
+        present: ratio(present.color, present.background),
+      };
+    });
+
+    expect(contrast.editorSurface).not.toBe("rgba(0, 0, 0, 0)");
+    for (const [name, value] of Object.entries(contrast)) {
+      if (name === "editorSurface") continue;
+      expect(value, `${name} should remain readable in dark mode`).toBeGreaterThanOrEqual(4.5);
+    }
+    expect(mutationRequests).toEqual([]);
+  });
+}
+
 test("lets keyboard users complete board setup without losing focus", async ({ page }) => {
   const viewport = { width: 390, height: 844 };
 
