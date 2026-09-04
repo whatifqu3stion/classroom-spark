@@ -521,6 +521,43 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.getByText("A saved classroom image")).toBeInTheDocument();
   });
 
+  it("keeps extreme visual framing and captions in preview and export modes", () => {
+    const imageActivity = {
+      ...activity,
+      visualUrl: "data:image/svg+xml;charset=utf-8,portrait",
+      visualDescription: "A tall portrait classroom visual",
+    };
+    const { rerender } = render(
+      <PresentationCanvas activity={imageActivity} editorPreview />,
+    );
+
+    const previewFigure = screen
+      .getByRole("img", { name: imageActivity.visualDescription })
+      .closest("figure");
+    expect(previewFigure).toHaveClass("presentation-visual");
+    expect(previewFigure).toContainElement(
+      screen.getByText(imageActivity.visualDescription),
+    );
+    expect(previewFigure?.querySelector("img")).toHaveAttribute(
+      "src",
+      imageActivity.visualUrl,
+    );
+
+    rerender(<PresentationCanvas activity={imageActivity} exportLayout />);
+
+    const exportFigure = screen
+      .getByRole("img", { name: imageActivity.visualDescription })
+      .closest("figure");
+    expect(exportFigure).toHaveClass("presentation-visual");
+    expect(exportFigure).toContainElement(
+      screen.getByText(imageActivity.visualDescription),
+    );
+    expect(exportFigure?.querySelector("img")).toHaveAttribute(
+      "src",
+      imageActivity.visualUrl,
+    );
+  });
+
   it("provides an ephemeral, bounded divider for live and editor surfaces", () => {
     const imageActivity = {
       ...activity,

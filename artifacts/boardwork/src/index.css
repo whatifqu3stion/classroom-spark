@@ -895,11 +895,15 @@
     gap: 0.75rem;
     margin: 0;
     align-content: start;
+    min-width: 0;
+    width: 100%;
   }
 
   .presentation-visual img {
     display: block;
-    width: 100%;
+    justify-self: center;
+    height: auto;
+    width: auto;
     max-width: 100%;
     max-height: min(42vh, 28rem);
     border-radius: 0.7rem;

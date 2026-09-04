@@ -37,6 +37,28 @@ const longMixedDirectionVisualActivity = {
   visualDescription: "A local diagram showing a changing system.",
 };
 
+const portraitVisualUrl =
+  "data:image/svg+xml;charset=utf-8," +
+  encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="360" height="1200" viewBox="0 0 360 1200">
+      <rect width="360" height="1200" rx="24" fill="#fef3c7"/>
+      <rect x="42" y="72" width="276" height="1056" rx="18" fill="#f59e0b"/>
+      <circle cx="180" cy="330" r="92" fill="#1d4ed8"/>
+      <path d="M92 760h176M92 840h176M92 920h120" stroke="#fff7ed" stroke-width="24" stroke-linecap="round"/>
+    </svg>
+  `);
+
+const landscapeVisualUrl =
+  "data:image/svg+xml;charset=utf-8," +
+  encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="260" viewBox="0 0 1600 260">
+      <rect width="1600" height="260" rx="24" fill="#dcfce7"/>
+      <path d="M72 190 C280 32 438 218 652 88 S1064 36 1528 176" fill="none" stroke="#15803d" stroke-width="28" stroke-linecap="round"/>
+      <circle cx="360" cy="104" r="42" fill="#2563eb"/>
+      <circle cx="1230" cy="122" r="54" fill="#ea580c"/>
+    </svg>
+  `);
+
 const appState = {
   activeClassId: "class-1",
   classes: [
@@ -57,6 +79,30 @@ const appState = {
   instructionalContexts: [],
   units: [],
   activities: [longMixedDirectionActivity],
+};
+
+const extremeVisualActivities = {
+  ...appState,
+  activities: [
+    {
+      ...longMixedDirectionActivity,
+      id: "activity-portrait-visual",
+      title: "Portrait visual",
+      task: "Study the tall visual.",
+      prompts: ["Describe one detail you notice."],
+      visualUrl: portraitVisualUrl,
+      visualDescription: "A tall portrait classroom visual",
+    },
+    {
+      ...longMixedDirectionActivity,
+      id: "activity-landscape-visual",
+      title: "Landscape visual",
+      task: "Study the wide visual.",
+      prompts: ["Describe one pattern you notice."],
+      visualUrl: landscapeVisualUrl,
+      visualDescription: "A wide landscape classroom visual",
+    },
+  ],
 };
 
 const visualAppState = {
@@ -997,4 +1043,130 @@ test("captures stable responsive Present compositions and keeps export surfaces 
     surfaceBounds!.y + surfaceBounds!.height,
   );
   await assertExportSurfaceHasNoLiveDivider(page);
+});
+
+test("contains extreme portrait and landscape visuals across Present modes", async ({
+  page,
+}) => {
+  const assertBrowserHealth = await reportBrowserHealth(page);
+  await stubPresentationState(page, extremeVisualActivities);
+
+  const viewports = [
+    { width: 1920, height: 1080, label: "wide classroom" },
+    { width: 640, height: 800, label: "narrow classroom" },
+  ];
+
+  for (const viewport of viewports) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    const liveSurface = page.getByTestId("presentation-surface");
+
+    await page.goto("/present/activity-portrait-visual");
+    await settlePresentationSurface(page);
+    await hideTimerFromStudents(page);
+    await expect(liveSurface.locator(".presentation-rail--image-only")).toBeVisible();
+    await expect(
+      liveSurface.getByRole("img", { name: "A tall portrait classroom visual" }),
+    ).toBeVisible();
+    await expect(liveSurface.getByText("A tall portrait classroom visual")).toBeVisible();
+
+    const portraitGeometry = await liveSurface.locator(".presentation-rail--image-only").evaluate((rail) => {
+      const image = rail.querySelector<HTMLImageElement>(".presentation-visual img");
+      const caption = rail.querySelector<HTMLElement>(".presentation-visual figcaption");
+      if (!image || !caption) throw new Error("Missing portrait visual framing");
+      const railBounds = rail.getBoundingClientRect();
+      const imageBounds = image.getBoundingClientRect();
+      const captionBounds = caption.getBoundingClientRect();
+      return {
+        rail: railBounds.toJSON(),
+        image: imageBounds.toJSON(),
+        caption: captionBounds.toJSON(),
+      };
+    });
+
+    expect(portraitGeometry.image.width).toBeGreaterThan(0);
+    expect(portraitGeometry.image.height).toBeGreaterThan(portraitGeometry.image.width);
+    expect(portraitGeometry.image.x).toBeGreaterThanOrEqual(portraitGeometry.rail.x);
+    expect(portraitGeometry.image.x + portraitGeometry.image.width).toBeLessThanOrEqual(
+      portraitGeometry.rail.x + portraitGeometry.rail.width,
+    );
+    expect(portraitGeometry.image.x + portraitGeometry.image.width / 2).toBeCloseTo(
+      portraitGeometry.rail.x + portraitGeometry.rail.width / 2,
+      0,
+    );
+    expect(portraitGeometry.caption.width).toBeGreaterThan(0);
+    expect(portraitGeometry.caption.y).toBeGreaterThanOrEqual(
+      portraitGeometry.image.y + portraitGeometry.image.height,
+    );
+
+    await page.goto("/present/activity-landscape-visual");
+    await settlePresentationSurface(page);
+    await expect(liveSurface.locator(".presentation-rail--split")).toBeVisible();
+    await expect(
+      liveSurface.getByRole("img", { name: "A wide landscape classroom visual" }),
+    ).toBeVisible();
+    await expect(liveSurface.getByText("A wide landscape classroom visual")).toBeVisible();
+    await expect(liveSurface.getByText("Time remaining")).toBeVisible();
+
+    const landscapeGeometry = await liveSurface.locator(".presentation-rail--split").evaluate((rail) => {
+      const image = rail.querySelector<HTMLImageElement>(".presentation-visual img");
+      const caption = rail.querySelector<HTMLElement>(".presentation-visual figcaption");
+      const timer = rail.querySelector<HTMLElement>(".presentation-timer");
+      if (!image || !caption || !timer) throw new Error("Missing landscape split framing");
+      const railBounds = rail.getBoundingClientRect();
+      const imageBounds = image.getBoundingClientRect();
+      const captionBounds = caption.getBoundingClientRect();
+      const timerBounds = timer.getBoundingClientRect();
+      return {
+        rail: railBounds.toJSON(),
+        image: imageBounds.toJSON(),
+        caption: captionBounds.toJSON(),
+        timer: timerBounds.toJSON(),
+      };
+    });
+
+    expect(landscapeGeometry.image.width).toBeGreaterThan(landscapeGeometry.image.height);
+    expect(landscapeGeometry.image.x).toBeGreaterThanOrEqual(landscapeGeometry.rail.x);
+    expect(landscapeGeometry.image.x + landscapeGeometry.image.width).toBeLessThanOrEqual(
+      landscapeGeometry.rail.x + landscapeGeometry.rail.width,
+    );
+    expect(landscapeGeometry.caption.width).toBeGreaterThan(0);
+    expect(landscapeGeometry.caption.y).toBeGreaterThanOrEqual(
+      landscapeGeometry.image.y + landscapeGeometry.image.height,
+    );
+    expect(landscapeGeometry.timer.width).toBeGreaterThan(0);
+    expect(landscapeGeometry.timer.x + landscapeGeometry.timer.width).toBeLessThanOrEqual(
+      landscapeGeometry.rail.x + landscapeGeometry.rail.width,
+    );
+
+    const exportGeometry = await page.locator(".presentation-surface--export").evaluate((surface) => {
+      const image = surface.querySelector<HTMLImageElement>(".presentation-visual img");
+      const caption = surface.querySelector<HTMLElement>(".presentation-visual figcaption");
+      if (!image || !caption) throw new Error("Missing export visual framing");
+      const surfaceBounds = surface.getBoundingClientRect();
+      const imageBounds = image.getBoundingClientRect();
+      const captionBounds = caption.getBoundingClientRect();
+      return {
+        surface: surfaceBounds.toJSON(),
+        image: imageBounds.toJSON(),
+        caption: captionBounds.toJSON(),
+      };
+    });
+
+    expect(exportGeometry.surface.width).toBe(1920);
+    expect(exportGeometry.surface.height).toBe(1080);
+    expect(exportGeometry.image.x).toBeGreaterThan(exportGeometry.surface.x);
+    expect(exportGeometry.image.y).toBeGreaterThan(exportGeometry.surface.y);
+    expect(exportGeometry.image.x + exportGeometry.image.width).toBeLessThan(
+      exportGeometry.surface.x + exportGeometry.surface.width,
+    );
+    expect(exportGeometry.image.y + exportGeometry.image.height).toBeLessThan(
+      exportGeometry.surface.y + exportGeometry.surface.height,
+    );
+    expect(exportGeometry.caption.width).toBeGreaterThan(0);
+    expect(exportGeometry.caption.y).toBeGreaterThanOrEqual(
+      exportGeometry.image.y + exportGeometry.image.height,
+    );
+  }
+
+  assertBrowserHealth();
 });
