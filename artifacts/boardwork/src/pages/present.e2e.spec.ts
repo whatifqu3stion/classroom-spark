@@ -946,6 +946,83 @@ test("keeps a multi-digit compact timer reading inside its themed ring", async (
   assertBrowserHealth();
 });
 
+test("restores hidden timer actions through the compact clock without duplicating them in docks", async ({
+  page,
+}) => {
+  const assertBrowserHealth = await reportBrowserHealth(page);
+  await stubPresentationState(page, appState);
+  await page.setViewportSize({ width: 640, height: 400 });
+  await page.goto("/present/activity-long-mixed-direction");
+  await settlePresentationSurface(page);
+
+  await openTeacherControls(page);
+  await page.getByRole("button", { name: "Minimize timer" }).click();
+
+  const timerToggle = page.getByTestId("button-toggle-timer-controls");
+  const compactTimer = page.getByTestId("compact-timer-progress");
+  const compactTimerPanel = page.locator("#presentation-timer-controls-panel");
+  const teacherPanel = page.locator("#presentation-controls-panel");
+  await expect(timerToggle).toBeVisible();
+  await timerToggle.click();
+  await expect(compactTimerPanel).toBeVisible();
+  await page.getByRole("button", { name: "Adjust" }).click();
+  await page.getByRole("button", { name: "Hide timer from students" }).click();
+
+  const showTimer = page.getByTestId("button-show-timer");
+  await expect(showTimer).toBeVisible();
+  await expect(compactTimer).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Show timer controls" })).toHaveCount(0);
+
+  const recoveryBounds = await showTimer.boundingBox();
+  expect(recoveryBounds).not.toBeNull();
+  expect(recoveryBounds!.x).toBeGreaterThanOrEqual(0);
+  expect(recoveryBounds!.y).toBeGreaterThanOrEqual(0);
+  expect(recoveryBounds!.x + recoveryBounds!.width).toBeLessThanOrEqual(640);
+  expect(recoveryBounds!.y + recoveryBounds!.height).toBeLessThanOrEqual(400);
+
+  await showTimer.focus();
+  await showTimer.press("Enter");
+  await expect(showTimer).toHaveCount(0);
+  await expect(compactTimer).toBeVisible();
+  await expect(compactTimer.locator(".presentation-time-reading")).toHaveText("7:00");
+
+  await page.getByTestId("button-teacher-controls").click();
+  await page.mouse.move(10, 10);
+  await expect(teacherPanel).toBeHidden();
+  await expect(teacherPanel.locator(".presentation-timer-controls")).toHaveCount(0);
+  await expect(
+    page.locator(".presentation-export-stage .presentation-time"),
+  ).toHaveCount(0);
+  await expect(
+    page.locator(".presentation-export-stage .presentation-timer"),
+  ).toHaveCount(0);
+
+  await timerToggle.focus();
+  await timerToggle.press("Enter");
+  await expect(compactTimerPanel).toBeVisible();
+  await expect(
+    compactTimerPanel.getByRole("button", { name: "Start or resume timer" }),
+  ).toBeVisible();
+  await expect(
+    page.locator(".presentation-controls-dock .presentation-timer-controls"),
+  ).toHaveCount(0);
+
+  const panelBounds = await compactTimerPanel.boundingBox();
+  expect(panelBounds).not.toBeNull();
+  expect(panelBounds!.x).toBeGreaterThanOrEqual(0);
+  expect(panelBounds!.y).toBeGreaterThanOrEqual(0);
+  expect(panelBounds!.x + panelBounds!.width).toBeLessThanOrEqual(640);
+  expect(panelBounds!.y + panelBounds!.height).toBeLessThanOrEqual(400);
+
+  await page.getByRole("button", { name: "Start or resume timer" }).focus();
+  await page.keyboard.press("Escape");
+  await expect(compactTimerPanel).toBeHidden();
+  await expect(timerToggle).toBeFocused();
+  await expect(timerToggle).toBeInViewport();
+
+  assertBrowserHealth();
+});
+
 test("keeps Present controls tappable in a short landscape tablet viewport", async ({
   browser,
 }) => {
