@@ -37,6 +37,24 @@ const longMixedDirectionVisualActivity = {
   visualDescription: "A local diagram showing a changing system.",
 };
 
+const contentTallActivity = {
+  ...longMixedDirectionActivity,
+  id: "activity-content-tall",
+  title: "Content-tall board",
+  task:
+    "Read the full set of observations before choosing the evidence that best supports your explanation. Keep the reasoning visible while you compare each part of the system.",
+  prompts: Array.from(
+    { length: 12 },
+    (_, index) =>
+      `Observation ${index + 1}: record the pattern, name the evidence that supports it, and explain how a partner could check the same conclusion without skipping any of the intermediate reasoning.`,
+  ),
+  materials: [
+    "Observation notes",
+    "Evidence comparison sheet",
+    "Partner explanation checklist",
+  ],
+};
+
 const portraitVisualUrl =
   "data:image/svg+xml;charset=utf-8," +
   encodeURIComponent(`
@@ -79,6 +97,11 @@ const appState = {
   instructionalContexts: [],
   units: [],
   activities: [longMixedDirectionActivity],
+};
+
+const contentTallAppState = {
+  ...appState,
+  activities: [contentTallActivity],
 };
 
 const extremeVisualActivities = {
@@ -943,6 +966,156 @@ test("keeps Present controls tappable in a short landscape tablet viewport", asy
   } finally {
     await context.close();
   }
+});
+
+test("keeps teacher controls reachable below content-tall Present boards", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    hasTouch: true,
+    isMobile: true,
+  });
+  const page = await context.newPage();
+
+  try {
+    await stubPresentationState(page, contentTallAppState);
+
+    for (const viewport of [
+      { width: 854, height: 534, label: "150% zoom equivalent" },
+      { width: 640, height: 400, label: "200% zoom equivalent" },
+    ]) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await page.goto("/present/activity-content-tall");
+      await settlePresentationSurface(page);
+
+      const teacherToggle = page.getByTestId("button-teacher-controls");
+      const teacherPanel = page.locator("#presentation-controls-panel");
+      const studentRegion = page.locator(".presentation-main");
+      const dock = page.locator(".presentation-controls-dock");
+
+      const initialMetrics = await page.evaluate(() => ({
+        scrollHeight: document.documentElement.scrollHeight,
+        viewportHeight: window.innerHeight,
+        scrollY: window.scrollY,
+      }));
+      expect(
+        initialMetrics.scrollHeight,
+        `${viewport.label} should create a scrollable board`,
+      ).toBeGreaterThan(initialMetrics.viewportHeight);
+      expect(initialMetrics.scrollY).toBe(0);
+
+      await page.mouse.move(viewport.width / 2, viewport.height / 2);
+      await page.mouse.wheel(0, viewport.height);
+      await expect
+        .poll(() => page.evaluate(() => window.scrollY))
+        .toBeGreaterThan(0);
+
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      await expect(teacherToggle).toBeInViewport();
+
+      await teacherToggle.tap();
+      await expect(teacherPanel).toBeVisible();
+      await expect(teacherToggle).toBeInViewport();
+
+      const openGeometry = await page.evaluate(() => {
+        const studentBounds = document.querySelector(".presentation-main")!.getBoundingClientRect();
+        const panelBounds = document.querySelector("#presentation-controls-panel")!.getBoundingClientRect();
+        const dockBounds = document.querySelector(".presentation-controls-dock")!.getBoundingClientRect();
+        return {
+          studentBottom: studentBounds.bottom,
+          panelTop: panelBounds.top,
+          dockBottom: dockBounds.bottom,
+          viewportHeight: window.innerHeight,
+        };
+      });
+      expect(
+        openGeometry.panelTop,
+        `${viewport.label} teacher panel should stay below student content`,
+      ).toBeGreaterThanOrEqual(openGeometry.studentBottom);
+      expect(
+        openGeometry.dockBottom,
+        `${viewport.label} opened teacher dock should remain reachable`,
+      ).toBeLessThanOrEqual(openGeometry.viewportHeight);
+
+      await teacherToggle.tap();
+      await expect(teacherPanel).toBeHidden();
+      await expect(teacherToggle).toBeFocused();
+
+      await page.evaluate(() => {
+        window.scrollTo(0, 0);
+        document.body.tabIndex = 0;
+        document.body.focus();
+      });
+      let teacherToggleReached = false;
+      for (let tabCount = 0; tabCount < 8; tabCount += 1) {
+        await page.keyboard.press("Tab");
+        if (
+          await teacherToggle.evaluate(
+            (element) => element === document.activeElement,
+          )
+        ) {
+          teacherToggleReached = true;
+          break;
+        }
+      }
+      expect(teacherToggleReached).toBe(true);
+      expect(
+        await page.evaluate(() => window.scrollY),
+        `${viewport.label} keyboard focus should scroll to the dock`,
+      ).toBeGreaterThan(0);
+
+      await page.keyboard.press("Enter");
+      await expect(teacherPanel).toBeVisible();
+      await page.keyboard.press("Tab");
+      expect(
+        await page.evaluate(
+          () => document.activeElement?.closest("#presentation-controls-panel") !== null,
+        ),
+      ).toBe(true);
+      await page.keyboard.press("Escape");
+      await expect(teacherPanel).toBeHidden();
+      await expect(teacherToggle).toBeFocused();
+
+      const closedGeometry = await dock.boundingBox();
+      expect(closedGeometry).not.toBeNull();
+      expect(closedGeometry!.x).toBeGreaterThanOrEqual(0);
+      expect(closedGeometry!.x + closedGeometry!.width).toBeLessThanOrEqual(viewport.width);
+    }
+  } finally {
+    await context.close();
+  }
+});
+
+test("keeps hover-open teacher controls reachable below content-tall boards", async ({
+  page,
+}) => {
+  await stubPresentationState(page, contentTallAppState);
+  await page.setViewportSize({ width: 640, height: 400 });
+  await page.goto("/present/activity-content-tall");
+  await settlePresentationSurface(page);
+
+  const teacherToggle = page.getByTestId("button-teacher-controls");
+  const teacherPanel = page.locator("#presentation-controls-panel");
+
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await expect(teacherToggle).toBeInViewport();
+  await teacherToggle.hover();
+  await expect(teacherPanel).toBeVisible();
+  await expect(page.getByTestId("button-export-png")).toBeVisible();
+
+  const geometry = await page.evaluate(() => {
+    const studentBounds = document.querySelector(".presentation-main")!.getBoundingClientRect();
+    const panelBounds = document.querySelector("#presentation-controls-panel")!.getBoundingClientRect();
+    const dockBounds = document.querySelector(".presentation-controls-dock")!.getBoundingClientRect();
+    return {
+      studentBottom: studentBounds.bottom,
+      panelTop: panelBounds.top,
+      dockBottom: dockBounds.bottom,
+      viewportHeight: window.innerHeight,
+    };
+  });
+  expect(geometry.panelTop).toBeGreaterThanOrEqual(geometry.studentBottom);
+  expect(geometry.dockBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
 });
 
 test("captures stable responsive Present compositions and keeps export surfaces clean", async ({

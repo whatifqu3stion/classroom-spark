@@ -18,3 +18,4 @@
 - [Large timer reading sizing](large-timer-reading-sizing.md) — Keep the large Present reading intrinsic while scaling long values to the timer card’s available width.
 - [Computed border visibility](computed-border-visibility.md) — Assert zero border width for borderless Tailwind elements; reset styles may still report a solid border style.
 - [Extreme visual framing](extreme-visual-framing.md) — Preserve intrinsic image proportions in the presentation rail instead of forcing portrait assets to full width.
+- [Tall Present dock reachability](tall-present-dock-reachability.md) — Normal-flow teacher docks need scroll-to-open behavior and stable focus restoration on close.

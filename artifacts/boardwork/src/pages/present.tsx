@@ -63,6 +63,8 @@ export default function Present() {
   const [timerOptionsOpen, setTimerOptionsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
+  const controlsDockRef = useRef<HTMLDivElement>(null);
+  const controlsToggleRef = useRef<HTMLButtonElement>(null);
   const controlsCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
@@ -95,6 +97,18 @@ export default function Present() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!controlsOpen && !timerControlsOpen && !controlsHovering) return;
+
+    const controlsDock = controlsDockRef.current;
+    if (!controlsDock || typeof controlsDock.scrollIntoView !== "function") return;
+
+    controlsDock.scrollIntoView({
+      block: "nearest",
+      inline: "nearest",
+    });
+  }, [controlsOpen, controlsHovering, timerControlsOpen]);
 
   const toggleFullscreen = async () => {
     if (!document.fullscreenElement && containerRef.current) {
@@ -144,8 +158,9 @@ export default function Present() {
     event.preventDefault();
     setControlsOpen(false);
     setTimerControlsOpen(false);
+    setTimerOptionsOpen(false);
     setControlsHovering(false);
-    event.currentTarget.querySelector<HTMLButtonElement>(".presentation-controls-toggle")?.focus();
+    controlsToggleRef.current?.focus();
   };
 
   const exportPng = async () => {
@@ -207,6 +222,7 @@ export default function Present() {
 
   const controls = (
     <div
+      ref={controlsDockRef}
       className={`presentation-controls-dock ${controlsOpen || timerControlsOpen ? "presentation-controls-dock--open" : ""} ${controlsHovering ? "presentation-controls-dock--hovering" : ""}`}
       onFocusCapture={(event) => {
         if (event.target !== event.currentTarget.querySelector(".presentation-controls-toggle")) {
@@ -220,11 +236,14 @@ export default function Present() {
     >
       <button
         type="button"
+        ref={controlsToggleRef}
         className="presentation-controls-toggle"
         onClick={() => {
           const nextOpen = !(controlsOpen || timerControlsOpen);
           setControlsOpen(nextOpen);
           setTimerControlsOpen(false);
+          setTimerOptionsOpen(false);
+          if (!nextOpen) controlsToggleRef.current?.focus();
         }}
         aria-expanded={controlsOpen || timerControlsOpen || controlsHovering}
         aria-controls="presentation-controls-panel"

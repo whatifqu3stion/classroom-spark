@@ -1246,6 +1246,7 @@
     min-height: 0;
     border-top: 1px solid color-mix(in srgb, var(--presentation-primary-text, #171717) 16%, transparent);
     padding-top: clamp(1rem, 4vw, 1.5rem);
+    scroll-margin-block: 1rem;
   }
 
   .presentation-surface:not(.presentation-surface--export):not(.presentation-surface--editor-preview) > .presentation-footer {
@@ -1442,6 +1443,7 @@
     justify-items: end;
     padding-inline: max(0.25rem, env(safe-area-inset-right));
     padding-bottom: env(safe-area-inset-bottom);
+    scroll-margin-block: 1rem;
   }
 
   .presentation-controls-dock::before {
