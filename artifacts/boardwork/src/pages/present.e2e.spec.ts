@@ -37,6 +37,16 @@ const longMixedDirectionVisualActivity = {
   visualDescription: "A local diagram showing a changing system.",
 };
 
+const exportDurationActivity = {
+  ...longMixedDirectionActivity,
+  id: "activity-export-duration",
+  eyebrow: "Export check",
+  title: "Duration export check",
+  task: "Read the prompt and respond.",
+  prompts: ["Name one pattern you notice."],
+  durationMinutes: 7,
+};
+
 const contentTallActivity = {
   ...longMixedDirectionActivity,
   id: "activity-content-tall",
@@ -486,6 +496,46 @@ test("exports long mixed-direction board text as a complete local-font PNG", asy
       `${region.name} should contain visible exported pixels`,
     ).toBeGreaterThan(20);
   }
+
+  assertBrowserHealth();
+});
+
+test("keeps the configured duration badge out of the downloaded student PNG", async ({
+  page,
+}) => {
+  const assertBrowserHealth = await reportBrowserHealth(page);
+  await stubPresentationState(page, {
+    ...appState,
+    activities: [exportDurationActivity],
+  });
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/present/activity-export-duration");
+  await expect(page.getByTestId("present-title")).toHaveText("Duration export check");
+  await openTeacherControls(page);
+  await expect(
+    page.locator(".presentation-surface--export").getByText("7 MIN"),
+  ).toHaveCount(0);
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByTestId("button-export-png").click();
+  const download = await downloadPromise;
+  const png = decodePng(await readFile(await download.path()!));
+
+  expect({ width: png.width, height: png.height }).toEqual({
+    width: 1920,
+    height: 1080,
+  });
+  expect(
+    countVisiblePixels(png, {
+      name: "duration badge header area",
+      x: 1450,
+      y: 54,
+      width: 334,
+      height: 150,
+    }),
+    "the downloaded PNG should not contain the configured 7 MIN badge",
+  ).toBe(0);
 
   assertBrowserHealth();
 });
