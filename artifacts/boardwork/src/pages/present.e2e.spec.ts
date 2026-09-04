@@ -968,6 +968,64 @@ test("keeps Present controls tappable in a short landscape tablet viewport", asy
   }
 });
 
+test("returns focus to the compact timer trigger after teacher controls close", async ({
+  page,
+}) => {
+  await stubPresentationState(page, appState);
+  await page.setViewportSize({ width: 640, height: 400 });
+  await page.goto("/present/activity-long-mixed-direction");
+  await settlePresentationSurface(page);
+
+  await openTeacherControls(page);
+  await page.getByRole("button", { name: "Minimize timer" }).click();
+  await page.getByTestId("button-teacher-controls").click();
+  await page.mouse.move(10, 10);
+
+  const timerToggle = page.getByTestId("button-toggle-timer-controls");
+  const teacherPanel = page.locator("#presentation-controls-panel");
+  await expect(timerToggle).toBeVisible();
+  await expect(teacherPanel).toBeHidden();
+  await timerToggle.focus();
+
+  await timerToggle.press("Enter");
+  await expect(teacherPanel).toBeVisible();
+  await expect(timerToggle).toHaveAttribute("aria-expanded", "true");
+
+  const openGeometry = await page.evaluate(() => {
+    const studentBounds = document.querySelector(".presentation-main")!.getBoundingClientRect();
+    const panelBounds = document.querySelector("#presentation-controls-panel")!.getBoundingClientRect();
+    const dockBounds = document.querySelector(".presentation-controls-dock")!.getBoundingClientRect();
+    return {
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: window.innerWidth,
+      panelTop: panelBounds.top,
+      studentBottom: studentBounds.bottom,
+      panelBottom: panelBounds.bottom,
+      dockLeft: dockBounds.left,
+      dockRight: dockBounds.right,
+      viewportHeight: window.innerHeight,
+    };
+  });
+  expect(openGeometry.documentWidth).toBeLessThanOrEqual(openGeometry.viewportWidth);
+  expect(openGeometry.panelTop).toBeGreaterThanOrEqual(openGeometry.studentBottom);
+  expect(openGeometry.panelBottom).toBeLessThanOrEqual(openGeometry.viewportHeight);
+  expect(openGeometry.dockLeft).toBeGreaterThanOrEqual(0);
+  expect(openGeometry.dockRight).toBeLessThanOrEqual(openGeometry.viewportWidth);
+
+  await timerToggle.press("Enter");
+  await expect(teacherPanel).toBeHidden();
+  await expect(timerToggle).toBeFocused();
+  await expect(timerToggle).toBeInViewport();
+
+  await timerToggle.press("Enter");
+  await expect(teacherPanel).toBeVisible();
+  await page.getByRole("button", { name: "Start or resume timer" }).focus();
+  await page.keyboard.press("Escape");
+  await expect(teacherPanel).toBeHidden();
+  await expect(timerToggle).toBeFocused();
+  await expect(timerToggle).toBeInViewport();
+});
+
 test("keeps teacher controls reachable below content-tall Present boards", async ({
   browser,
 }) => {

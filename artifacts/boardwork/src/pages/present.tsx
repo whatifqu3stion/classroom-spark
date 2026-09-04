@@ -65,6 +65,8 @@ export default function Present() {
   const exportRef = useRef<HTMLDivElement>(null);
   const controlsDockRef = useRef<HTMLDivElement>(null);
   const controlsToggleRef = useRef<HTMLButtonElement>(null);
+  const timerControlsToggleRef = useRef<HTMLButtonElement>(null);
+  const controlsTriggerRef = useRef<"dock" | "compact">("dock");
   const controlsCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
@@ -152,6 +154,18 @@ export default function Present() {
     setControlsHovering(false);
   };
 
+  const focusControlsTrigger = () => {
+    const trigger =
+      controlsTriggerRef.current === "compact"
+        ? timerControlsToggleRef
+        : controlsToggleRef;
+    trigger.current?.focus();
+    trigger.current?.scrollIntoView({
+      block: "nearest",
+      inline: "nearest",
+    });
+  };
+
   const handleControlsKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== "Escape") return;
 
@@ -160,7 +174,7 @@ export default function Present() {
     setTimerControlsOpen(false);
     setTimerOptionsOpen(false);
     setControlsHovering(false);
-    controlsToggleRef.current?.focus();
+    focusControlsTrigger();
   };
 
   const exportPng = async () => {
@@ -239,11 +253,12 @@ export default function Present() {
         ref={controlsToggleRef}
         className="presentation-controls-toggle"
         onClick={() => {
+          controlsTriggerRef.current = "dock";
           const nextOpen = !(controlsOpen || timerControlsOpen);
           setControlsOpen(nextOpen);
           setTimerControlsOpen(false);
           setTimerOptionsOpen(false);
-          if (!nextOpen) controlsToggleRef.current?.focus();
+          if (!nextOpen) focusControlsTrigger();
         }}
         aria-expanded={controlsOpen || timerControlsOpen || controlsHovering}
         aria-controls="presentation-controls-panel"
@@ -419,12 +434,14 @@ export default function Present() {
         }}
         timerControlsOpen={timerControlsOpen}
         onToggleTimerControls={() => {
-          setTimerControlsOpen((value) => {
-            const nextOpen = !value;
-            setControlsOpen(nextOpen);
-            return nextOpen;
-          });
+          controlsTriggerRef.current = "compact";
+          const nextOpen = !timerControlsOpen;
+          setTimerControlsOpen(nextOpen);
+          setControlsOpen(nextOpen);
+          setTimerOptionsOpen(false);
+          if (!nextOpen) focusControlsTrigger();
         }}
+        timerControlsToggleRef={timerControlsToggleRef}
         timerMinimized={timerMinimized}
         timer={{ visible: timerVisible, remainingSeconds, status: timerStatus, alarmActive }}
       />

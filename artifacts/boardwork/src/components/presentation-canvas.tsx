@@ -21,6 +21,7 @@ interface PresentationCanvasProps {
   onShowTimer?: () => void;
   timerControlsOpen?: boolean;
   onToggleTimerControls?: () => void;
+  timerControlsToggleRef?: Ref<HTMLButtonElement>;
   timerMinimized?: boolean;
   exportLayout?: boolean;
   editorPreview?: boolean;
@@ -53,6 +54,7 @@ export function PresentationCanvas({
   onShowTimer,
   timerControlsOpen = false,
   onToggleTimerControls,
+  timerControlsToggleRef,
   timerMinimized = false,
   exportLayout = false,
   editorPreview = false,
@@ -362,6 +364,7 @@ export function PresentationCanvas({
                 </svg>
                 <button
                   type="button"
+                  ref={timerControlsToggleRef}
                   className="presentation-time-compact-toggle"
                   onClick={onToggleTimerControls}
                   aria-expanded={timerControlsOpen}
