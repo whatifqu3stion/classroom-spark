@@ -574,7 +574,8 @@ describe("PresentationCanvas timer visibility", () => {
     const imageActivity = {
       ...activity,
       visualUrl: "data:image/svg+xml;charset=utf-8,portrait",
-      visualDescription: "A tall portrait classroom visual",
+      visualDescription:
+        "A tall portrait classroom visual with a long teacher-authored explanation that should wrap below the image without changing the image containment or escaping the presentation rail.",
     };
     const { rerender } = render(
       <PresentationCanvas activity={imageActivity} editorPreview />,
@@ -584,6 +585,9 @@ describe("PresentationCanvas timer visibility", () => {
       .getByRole("img", { name: imageActivity.visualDescription })
       .closest("figure");
     expect(previewFigure).toHaveClass("presentation-visual");
+    expect(previewFigure?.querySelector("figcaption")).toHaveClass(
+      "presentation-visual-caption",
+    );
     expect(previewFigure).toContainElement(
       screen.getByText(imageActivity.visualDescription),
     );

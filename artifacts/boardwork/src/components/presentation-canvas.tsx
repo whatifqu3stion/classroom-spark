@@ -534,7 +534,10 @@ export function PresentationCanvas({
               <figure className="presentation-visual">
                 <img src={activity.visualUrl ?? ""} alt={activity.visualDescription ?? ""} />
                 {activity.visualDescription && (
-                  <figcaption className="boardwork-user-content" dir="auto">
+                  <figcaption
+                    className="presentation-visual-caption boardwork-user-content"
+                    dir="auto"
+                  >
                     {activity.visualDescription}
                   </figcaption>
                 )}

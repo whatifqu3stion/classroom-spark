@@ -909,9 +909,14 @@
   }
 
   .presentation-visual figcaption {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
     color: var(--presentation-secondary-text, rgb(23 23 23 / 58%));
     font-size: clamp(0.75rem, 1vw, 1rem);
     line-height: 1.35;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .presentation-timer {

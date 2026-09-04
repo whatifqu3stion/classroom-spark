@@ -77,6 +77,9 @@ const landscapeVisualUrl =
     </svg>
   `);
 
+const longVisualCaption =
+  "A teacher-authored visual explanation that stays readable below the image while students compare the evidence, name the pattern, and connect each observation to the larger classroom idea without clipping at the edge of the rail.";
+
 const appState = {
   activeClassId: "class-1",
   classes: [
@@ -141,7 +144,7 @@ const extremeVisualActivities = {
       task: "Study the tall visual.",
       prompts: ["Describe one detail you notice."],
       visualUrl: portraitVisualUrl,
-      visualDescription: "A tall portrait classroom visual",
+      visualDescription: `A tall portrait classroom visual. ${longVisualCaption}`,
     },
     {
       ...longMixedDirectionActivity,
@@ -150,7 +153,7 @@ const extremeVisualActivities = {
       task: "Study the wide visual.",
       prompts: ["Describe one pattern you notice."],
       visualUrl: landscapeVisualUrl,
-      visualDescription: "A wide landscape classroom visual",
+      visualDescription: `A wide landscape classroom visual. ${longVisualCaption}`,
     },
   ],
 };
@@ -1426,9 +1429,13 @@ test("contains extreme portrait and landscape visuals across Present modes", asy
     await hideTimerFromStudents(page);
     await expect(liveSurface.locator(".presentation-rail--image-only")).toBeVisible();
     await expect(
-      liveSurface.getByRole("img", { name: "A tall portrait classroom visual" }),
+      liveSurface.getByRole("img", {
+        name: `A tall portrait classroom visual. ${longVisualCaption}`,
+      }),
     ).toBeVisible();
-    await expect(liveSurface.getByText("A tall portrait classroom visual")).toBeVisible();
+    await expect(
+      liveSurface.getByText(`A tall portrait classroom visual. ${longVisualCaption}`),
+    ).toBeVisible();
 
     const portraitGeometry = await liveSurface.locator(".presentation-rail--image-only").evaluate((rail) => {
       const image = rail.querySelector<HTMLImageElement>(".presentation-visual img");
@@ -1458,14 +1465,25 @@ test("contains extreme portrait and landscape visuals across Present modes", asy
     expect(portraitGeometry.caption.y).toBeGreaterThanOrEqual(
       portraitGeometry.image.y + portraitGeometry.image.height,
     );
+    expect(portraitGeometry.caption.x).toBeGreaterThanOrEqual(portraitGeometry.rail.x);
+    expect(portraitGeometry.caption.x + portraitGeometry.caption.width).toBeLessThanOrEqual(
+      portraitGeometry.rail.x + portraitGeometry.rail.width,
+    );
+    expect(portraitGeometry.caption.y + portraitGeometry.caption.height).toBeLessThanOrEqual(
+      portraitGeometry.rail.y + portraitGeometry.rail.height,
+    );
 
     await page.goto("/present/activity-landscape-visual");
     await settlePresentationSurface(page);
     await expect(liveSurface.locator(".presentation-rail--split")).toBeVisible();
     await expect(
-      liveSurface.getByRole("img", { name: "A wide landscape classroom visual" }),
+      liveSurface.getByRole("img", {
+        name: `A wide landscape classroom visual. ${longVisualCaption}`,
+      }),
     ).toBeVisible();
-    await expect(liveSurface.getByText("A wide landscape classroom visual")).toBeVisible();
+    await expect(
+      liveSurface.getByText(`A wide landscape classroom visual. ${longVisualCaption}`),
+    ).toBeVisible();
     await expect(liveSurface.getByText("Time remaining")).toBeVisible();
 
     const landscapeGeometry = await liveSurface.locator(".presentation-rail--split").evaluate((rail) => {
@@ -1494,6 +1512,13 @@ test("contains extreme portrait and landscape visuals across Present modes", asy
     expect(landscapeGeometry.caption.y).toBeGreaterThanOrEqual(
       landscapeGeometry.image.y + landscapeGeometry.image.height,
     );
+    expect(landscapeGeometry.caption.x).toBeGreaterThanOrEqual(landscapeGeometry.rail.x);
+    expect(
+      landscapeGeometry.caption.x + landscapeGeometry.caption.width,
+    ).toBeLessThanOrEqual(landscapeGeometry.rail.x + landscapeGeometry.rail.width);
+    expect(
+      landscapeGeometry.caption.y + landscapeGeometry.caption.height,
+    ).toBeLessThanOrEqual(landscapeGeometry.rail.y + landscapeGeometry.rail.height);
     expect(landscapeGeometry.timer.width).toBeGreaterThan(0);
     expect(landscapeGeometry.timer.x + landscapeGeometry.timer.width).toBeLessThanOrEqual(
       landscapeGeometry.rail.x + landscapeGeometry.rail.width,
@@ -1526,6 +1551,13 @@ test("contains extreme portrait and landscape visuals across Present modes", asy
     expect(exportGeometry.caption.width).toBeGreaterThan(0);
     expect(exportGeometry.caption.y).toBeGreaterThanOrEqual(
       exportGeometry.image.y + exportGeometry.image.height,
+    );
+    expect(exportGeometry.caption.x).toBeGreaterThanOrEqual(exportGeometry.surface.x);
+    expect(exportGeometry.caption.x + exportGeometry.caption.width).toBeLessThanOrEqual(
+      exportGeometry.surface.x + exportGeometry.surface.width,
+    );
+    expect(exportGeometry.caption.y + exportGeometry.caption.height).toBeLessThanOrEqual(
+      exportGeometry.surface.y + exportGeometry.surface.height,
     );
   }
 
