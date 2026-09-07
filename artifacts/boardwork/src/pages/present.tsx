@@ -331,11 +331,11 @@ export default function Present() {
         className="presentation-controls"
         aria-label="Presentation controls"
       >
-        {!timerVisible && (
+        {!timerVisible || !timerMinimized ? (
           <div className="presentation-controls-timer">
             {renderTimerControls()}
           </div>
-        )}
+        ) : null}
         <Link
           href={activityId ? `/activity/${activityId}` : "/"}
           className="presentation-control"

@@ -547,123 +547,62 @@ test("keeps configured duration labels out of the exported board", async ({
 
   assertBrowserHealth();
 });
-test("keeps the large timer reading tight while card rows stay fluid", async ({
+test("keeps the student canvas cardless while timer actions stay teacher-only", async ({
   page,
 }) => {
   const assertBrowserHealth = await reportBrowserHealth(page);
 
-  await page.route("**/api/auth/status", (route) =>
-    route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({ passwordRequired: false, authenticated: true }),
-    }),
-  );
-  await page.route("**/api/app-state", (route) =>
-    route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify(visualAppState),
-    }),
-  );
-
+  await stubPresentationState(page, visualAppState);
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/present/activity-long-mixed-direction");
   await openTeacherControls(page);
 
-  const splitGeometry = await page.locator(".presentation-timer").evaluate((timer) => {
-    const reading = timer.querySelector<HTMLElement>(".presentation-timer-reading");
-    const progress = timer.querySelector<HTMLElement>(".presentation-timer-progress");
-    if (!reading || !progress) throw new Error("Missing large timer row");
-
-    const timerBounds = timer.getBoundingClientRect();
-    const readingBounds = reading.getBoundingClientRect();
-    const progressBounds = progress.getBoundingClientRect();
+  const liveSurface = page.getByTestId("presentation-surface");
+  await expect(liveSurface.locator(".presentation-timer")).toHaveCount(0);
+  await expect(liveSurface.locator(".presentation-rail--image-only")).toBeVisible();
+  await expect(liveSurface.locator(".presentation-layout-divider")).toBeVisible();
+  const railStyle = await liveSurface.locator(".presentation-rail").evaluate((rail) => {
+    const styles = getComputedStyle(rail);
     return {
-      timerWidth: timerBounds.width,
-      readingWidth: readingBounds.width,
-      readingRight: readingBounds.right,
-      timerRight: timerBounds.right,
-      progressWidth: progressBounds.width,
-      whiteSpace: getComputedStyle(reading).whiteSpace,
+      borderWidth: styles.borderWidth,
+      background: styles.backgroundColor,
+      padding: styles.padding,
     };
   });
+  expect(railStyle).toEqual({
+    borderWidth: "0px",
+    background: "rgba(0, 0, 0, 0)",
+    padding: "0px",
+  });
+  await expect(page.locator("#presentation-controls-panel .presentation-timer-controls")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Start or resume timer" })).toBeVisible();
+  await page.getByRole("button", { name: "Start or resume timer" }).click();
 
-  expect(splitGeometry.readingWidth).toBeLessThan(splitGeometry.timerWidth);
-  expect(splitGeometry.readingRight).toBeLessThanOrEqual(splitGeometry.timerRight);
-  expect(splitGeometry.progressWidth).toBeGreaterThan(splitGeometry.timerWidth * 0.8);
-  expect(splitGeometry.whiteSpace).toBe("nowrap");
-  await expect(page.locator(".presentation-timer .presentation-timer-controls")).toBeVisible();
+  await page.getByRole("button", { name: "Minimize timer" }).click();
+  await expect(liveSurface.locator(".presentation-timer")).toHaveCount(0);
+  await expect(page.getByTestId("compact-timer-progress")).toBeVisible();
   await expect(page.locator("#presentation-controls-panel .presentation-timer-controls")).toHaveCount(0);
+  await page.getByRole("button", { name: "Show timer controls" }).click();
+  await expect(page.locator("#presentation-timer-controls-panel")).toBeVisible();
+  await expect(
+    page.locator("#presentation-timer-controls-panel").getByRole("button", { name: "Pause timer" }),
+  ).toBeVisible();
 
-  await page.route("**/api/app-state", (route) =>
-    route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({
-        ...appState,
-        activities: [{ ...longMixedDirectionActivity, durationMinutes: 1000 }],
-      }),
-    }),
-  );
   for (const viewport of [
-    { width: 1024, height: 640, label: "projector" },
-    { width: 854, height: 534, label: "150% zoom equivalent" },
-    { width: 640, height: 400, label: "200% zoom equivalent" },
+    { width: 1024, height: 640 },
+    { width: 854, height: 534 },
+    { width: 640, height: 400 },
   ]) {
-    await page.setViewportSize({ width: viewport.width, height: viewport.height });
-    await page.goto("/present/activity-long-mixed-direction");
-    await openTeacherControls(page);
-    await openTeacherControls(page);
-
-    const timerOnlyReading = page.locator(".presentation-timer-reading");
-    const timerProgress = page.locator(".presentation-timer-progress");
-    const timerControls = page.locator(".presentation-timer .presentation-timer-controls");
-    const teacherControls = page.getByTestId("button-teacher-controls");
-    await expect(timerOnlyReading).toHaveText("1000:00");
-    await expect(timerProgress).toBeVisible();
-    await expect(timerControls).toBeVisible();
-    await expect(teacherControls).toBeVisible();
-    const timerOnlyGeometry = await timerOnlyReading.evaluate((reading) => {
-      const readingBounds = reading.getBoundingClientRect();
-      const timer = reading.closest(".presentation-timer");
-      const timerBounds = timer?.getBoundingClientRect();
-      const progressBounds = timer?.querySelector(".presentation-timer-progress")?.getBoundingClientRect();
-      return {
-        documentWidth: document.documentElement.scrollWidth,
-        viewportWidth: window.innerWidth,
-        timerWidth: timerBounds?.width ?? 0,
-        readingWidth: readingBounds.width,
-        readingRight: readingBounds.right,
-        timerRight: timerBounds?.right ?? 0,
-        progressWidth: progressBounds?.width ?? 0,
-        whiteSpace: getComputedStyle(reading).whiteSpace,
-      };
-    });
-
-    expect(
-      timerOnlyGeometry.documentWidth,
-      `${viewport.label} should not overflow horizontally`,
-    ).toBeLessThanOrEqual(timerOnlyGeometry.viewportWidth);
-    expect(timerOnlyGeometry.readingWidth).toBeGreaterThan(0);
-    expect(
-      timerOnlyGeometry.readingRight,
-      `${viewport.label} timer reading should fit in its card`,
-    ).toBeLessThanOrEqual(timerOnlyGeometry.timerRight);
-    expect(timerOnlyGeometry.whiteSpace).toBe("nowrap");
-    expect(timerOnlyGeometry.progressWidth).toBeGreaterThan(timerOnlyGeometry.timerWidth * 0.8);
-    await expect(timerControls).toBeVisible();
-    expect(
-      await timerControls.evaluate((controls) => controls.closest(".presentation-timer") !== null),
-    ).toBe(true);
-
-    const teacherControlsBox = await teacherControls.boundingBox();
-    expect(teacherControlsBox).not.toBeNull();
-    expect(teacherControlsBox!.x).toBeGreaterThanOrEqual(0);
-    expect(teacherControlsBox!.y).toBeGreaterThanOrEqual(0);
-    expect(teacherControlsBox!.x + teacherControlsBox!.width).toBeLessThanOrEqual(
-      timerOnlyGeometry.viewportWidth,
+    await page.setViewportSize(viewport);
+    const metrics = await page.evaluate(() => ({
+      width: document.documentElement.scrollWidth,
+      viewportWidth: window.innerWidth,
+      height: document.documentElement.scrollHeight,
+    }));
+    expect(metrics.width, `${viewport.width} should not overflow horizontally`).toBeLessThanOrEqual(
+      metrics.viewportWidth,
     );
-    expect(teacherControlsBox!.y + teacherControlsBox!.height).toBeLessThanOrEqual(
-      await page.evaluate(() => window.innerHeight),
-    );
+    await expect(liveSurface.locator(".presentation-timer")).toHaveCount(0);
   }
 
   assertBrowserHealth();
@@ -1591,7 +1530,7 @@ test("captures stable responsive Present compositions and keeps export surfaces 
   await page.goto("/present/activity-long-mixed-direction");
   await settlePresentationSurface(page);
   await expect(liveSurface.getByTestId("presentation-layout-divider")).toBeVisible();
-  await expect(liveSurface.locator(".presentation-rail--split")).toBeVisible();
+  await expect(liveSurface.locator(".presentation-rail--image-only")).toBeVisible();
   const widePromptTracks = await liveSurface.locator(".presentation-prompts").evaluate(
     (prompts) => getComputedStyle(prompts).gridTemplateColumns.trim().split(/\s+/),
   );
@@ -1610,7 +1549,7 @@ test("captures stable responsive Present compositions and keeps export surfaces 
     .locator(".presentation-main")
     .evaluate((main) => getComputedStyle(main).gridTemplateColumns.trim().split(/\s+/));
   expect(narrowGridTracks).toHaveLength(1);
-  await expect(liveSurface.locator(".presentation-rail--split")).toBeVisible();
+  await expect(liveSurface.locator(".presentation-rail--image-only")).toBeVisible();
   const narrowPromptTracks = await liveSurface.locator(".presentation-prompts").evaluate(
     (prompts) => getComputedStyle(prompts).gridTemplateColumns.trim().split(/\s+/),
   );
@@ -1634,8 +1573,9 @@ test("captures stable responsive Present compositions and keeps export surfaces 
 
   await page.goto("/present/activity-long-mixed-direction");
   await settlePresentationSurface(page);
-  await expect(liveSurface.locator(".presentation-rail--timer-only")).toBeVisible();
-  await expect(liveSurface.getByTestId("presentation-layout-divider")).toBeVisible();
+  await expect(liveSurface.locator(".presentation-rail")).toHaveCount(0);
+  await expect(liveSurface.locator(".presentation-main--content-only")).toBeVisible();
+  await expect(liveSurface.getByTestId("presentation-layout-divider")).toHaveCount(0);
   await expect(liveSurface).toHaveScreenshot(
     "present-timer-only.png",
     screenshotOptions,
@@ -1654,7 +1594,7 @@ test("captures stable responsive Present compositions and keeps export surfaces 
 
   await page.goto("/present/activity-long-mixed-direction");
   await settlePresentationSurface(page);
-  await expect(liveSurface.locator(".presentation-rail--split")).toBeVisible();
+  await expect(liveSurface.locator(".presentation-rail--image-only")).toBeVisible();
   await expect(liveSurface.getByTestId("presentation-layout-divider")).toBeVisible();
   await expect(liveSurface).toHaveScreenshot(
     "present-both-present.png",
@@ -1742,7 +1682,7 @@ test("contains extreme portrait and landscape visuals across Present modes", asy
 
     await page.goto("/present/activity-landscape-visual");
     await settlePresentationSurface(page);
-    await expect(liveSurface.locator(".presentation-rail--split")).toBeVisible();
+    await expect(liveSurface.locator(".presentation-rail--image-only")).toBeVisible();
     await expect(
       liveSurface.getByRole("img", {
         name: `A wide landscape classroom visual. ${longVisualCaption}`,
@@ -1751,22 +1691,19 @@ test("contains extreme portrait and landscape visuals across Present modes", asy
     await expect(
       liveSurface.getByText(`A wide landscape classroom visual. ${longVisualCaption}`),
     ).toBeVisible();
-    await expect(liveSurface.getByText("Time remaining")).toBeVisible();
+    await expect(liveSurface.getByText("Time remaining")).toHaveCount(0);
 
-    const landscapeGeometry = await liveSurface.locator(".presentation-rail--split").evaluate((rail) => {
+    const landscapeGeometry = await liveSurface.locator(".presentation-rail--image-only").evaluate((rail) => {
       const image = rail.querySelector<HTMLImageElement>(".presentation-visual img");
       const caption = rail.querySelector<HTMLElement>(".presentation-visual figcaption");
-      const timer = rail.querySelector<HTMLElement>(".presentation-timer");
-      if (!image || !caption || !timer) throw new Error("Missing landscape split framing");
+      if (!image || !caption) throw new Error("Missing landscape visual framing");
       const railBounds = rail.getBoundingClientRect();
       const imageBounds = image.getBoundingClientRect();
       const captionBounds = caption.getBoundingClientRect();
-      const timerBounds = timer.getBoundingClientRect();
       return {
         rail: railBounds.toJSON(),
         image: imageBounds.toJSON(),
         caption: captionBounds.toJSON(),
-        timer: timerBounds.toJSON(),
       };
     });
 
@@ -1786,11 +1723,6 @@ test("contains extreme portrait and landscape visuals across Present modes", asy
     expect(
       landscapeGeometry.caption.y + landscapeGeometry.caption.height,
     ).toBeLessThanOrEqual(landscapeGeometry.rail.y + landscapeGeometry.rail.height);
-    expect(landscapeGeometry.timer.width).toBeGreaterThan(0);
-    expect(landscapeGeometry.timer.x + landscapeGeometry.timer.width).toBeLessThanOrEqual(
-      landscapeGeometry.rail.x + landscapeGeometry.rail.width,
-    );
-
     const exportGeometry = await page.locator(".presentation-surface--export").evaluate((surface) => {
       const image = surface.querySelector<HTMLImageElement>(".presentation-visual img");
       const caption = surface.querySelector<HTMLElement>(".presentation-visual figcaption");

@@ -28,10 +28,12 @@ describe("PresentationCanvas timer visibility", () => {
       />,
     );
 
-    expect(screen.getByText("5:00")).toBeInTheDocument();
+    expect(screen.queryByText("5:00")).not.toBeInTheDocument();
     expect(screen.queryByText("5 MIN")).not.toBeInTheDocument();
     expect(screen.queryByTestId("present-time")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Pause timer" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pause timer" }).closest(".presentation-footer"))
+      .toBeInTheDocument();
 
     rerender(
       <PresentationCanvas
@@ -85,29 +87,36 @@ describe("PresentationCanvas timer visibility", () => {
       <PresentationCanvas
         activity={activity}
         timer={{ ...timer, remainingSeconds: 42, status: "running" }}
+        timerMinimized
       />,
     );
 
-    expect(screen.getByText("0:42").closest(".presentation-timer")).toBeInTheDocument();
-    expect(screen.getByText("Time remaining")).toBeInTheDocument();
+    expect(screen.getByText("0:42").closest(".presentation-time")).toBeInTheDocument();
+    expect(screen.queryByText("Time remaining")).not.toBeInTheDocument();
   });
 
-  it("keeps the timer large by default and moves it with its controls when minimized", () => {
+  it("keeps the right rail free of timer cards and provides the compact teacher path", () => {
     const onToggleTimerControls = vi.fn();
     const timerControls = <button type="button">Start timer</button>;
     const { rerender } = render(
       <PresentationCanvas
         activity={activity}
         timer={timer}
-        controls={<button type="button">Minimize timer</button>}
+        controls={
+          <div>
+            <button type="button">Start timer</button>
+            <button type="button">Minimize timer</button>
+          </div>
+        }
         timerControls={timerControls}
       />,
     );
 
-    expect(screen.getByText("Time remaining")).toBeInTheDocument();
-    const largeTimer = screen.getByText("5:00").closest(".presentation-timer");
-    expect(largeTimer).toBeInTheDocument();
-    expect(largeTimer).toContainElement(screen.getByRole("button", { name: "Start timer" }));
+    expect(screen.queryByText("Time remaining")).not.toBeInTheDocument();
+    expect(screen.queryByText("5:00")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("present-time")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start timer" }).closest(".presentation-footer"))
+      .toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Minimize timer" })).toBeInTheDocument();
 
     rerender(
@@ -126,9 +135,8 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.getByTestId("present-time").querySelector(".presentation-time-reading")).toHaveTextContent(
       "5:00",
     );
-    expect(
-      screen.getByRole("button", { name: "Expand timer" }).closest(".presentation-timer"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Expand timer" })).toBeInTheDocument();
+    expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Start timer", hidden: true }).closest(
         ".presentation-time-compact-controls",
@@ -161,23 +169,22 @@ describe("PresentationCanvas timer visibility", () => {
     );
   });
 
-  it("keeps the large reading intrinsic and single-line for four-digit minute durations", () => {
+  it("keeps a four-digit duration inside the compact teacher-facing affordance", () => {
     render(
       <PresentationCanvas
         activity={{ ...activity, durationMinutes: 1000 }}
         timer={{ ...timer, remainingSeconds: 60000 }}
+        timerMinimized
         controls={<button type="button">Start timer</button>}
       />,
     );
 
     const reading = screen.getByText("1000:00");
-    expect(reading).toHaveClass("presentation-timer-reading");
+    expect(reading).toHaveClass("presentation-time-reading");
     expect(reading).toHaveStyle({
-      "--presentation-timer-reading-width-factor": "3.85",
+      "--presentation-time-reading-scale": "0.5714285714285714",
     });
-    expect(reading.closest(".presentation-timer")).toContainElement(
-      screen.getByText("Time remaining"),
-    );
+    expect(reading.closest(".presentation-timer")).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Start timer" }),
     ).toBeInTheDocument();
@@ -352,11 +359,12 @@ describe("PresentationCanvas timer visibility", () => {
       />,
     );
 
-    expect(screen.getByText("Alarm active — dismiss when ready")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Dismiss alarm" })).toBeInTheDocument();
-    expect(screen.getByText("Alarm active — dismiss when ready").closest(".presentation-timer")).toHaveClass(
-      "presentation-timer--alerting",
+    expect(screen.getByRole("status", { name: "Timer alarm" })).toHaveTextContent(
+      "Alarm active — dismiss when ready",
     );
+    expect(screen.getByRole("status", { name: "Timer alarm" }).closest(".presentation-footer"))
+      .toBeInTheDocument();
 
     rerender(
       <PresentationCanvas
@@ -367,7 +375,7 @@ describe("PresentationCanvas timer visibility", () => {
       />,
     );
 
-    expect(screen.queryByText("Alarm active — dismiss when ready")).not.toBeInTheDocument();
+    expect(screen.queryByRole("status", { name: "Timer alarm" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Dismiss alarm" })).not.toBeInTheDocument();
   });
 
