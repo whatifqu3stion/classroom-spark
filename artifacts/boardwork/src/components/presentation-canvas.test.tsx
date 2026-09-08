@@ -28,7 +28,7 @@ describe("PresentationCanvas timer visibility", () => {
       />,
     );
 
-    expect(screen.queryByText("5:00")).not.toBeInTheDocument();
+    expect(screen.getByText("5:00")).toBeInTheDocument();
     expect(screen.queryByText("5 MIN")).not.toBeInTheDocument();
     expect(screen.queryByTestId("present-time")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Pause timer" })).toBeInTheDocument();
@@ -95,7 +95,7 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.queryByText("Time remaining")).not.toBeInTheDocument();
   });
 
-  it("keeps the right rail free of timer cards and provides the compact teacher path", () => {
+  it("keeps the large timer in the right rail and provides the compact teacher path when minimized", () => {
     const onToggleTimerControls = vi.fn();
     const timerControls = <button type="button">Start timer</button>;
     const { rerender } = render(
@@ -112,8 +112,8 @@ describe("PresentationCanvas timer visibility", () => {
       />,
     );
 
-    expect(screen.queryByText("Time remaining")).not.toBeInTheDocument();
-    expect(screen.queryByText("5:00")).not.toBeInTheDocument();
+    expect(screen.getByText("Time remaining")).toBeInTheDocument();
+    expect(screen.getByText("5:00").closest(".presentation-timer")).toBeInTheDocument();
     expect(screen.queryByTestId("present-time")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Start timer" }).closest(".presentation-footer"))
       .toBeInTheDocument();

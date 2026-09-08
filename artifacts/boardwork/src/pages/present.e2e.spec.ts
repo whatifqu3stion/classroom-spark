@@ -547,7 +547,7 @@ test("keeps configured duration labels out of the exported board", async ({
 
   assertBrowserHealth();
 });
-test("keeps the student canvas cardless while timer actions stay teacher-only", async ({
+test("keeps the large timer in the split rail while actions stay in teacher controls", async ({
   page,
 }) => {
   const assertBrowserHealth = await reportBrowserHealth(page);
@@ -558,8 +558,8 @@ test("keeps the student canvas cardless while timer actions stay teacher-only", 
   await openTeacherControls(page);
 
   const liveSurface = page.getByTestId("presentation-surface");
-  await expect(liveSurface.locator(".presentation-timer")).toHaveCount(0);
-  await expect(liveSurface.locator(".presentation-rail--image-only")).toBeVisible();
+  await expect(liveSurface.locator(".presentation-timer")).toBeVisible();
+  await expect(liveSurface.locator(".presentation-rail--split")).toBeVisible();
   await expect(liveSurface.locator(".presentation-layout-divider")).toBeVisible();
   const railStyle = await liveSurface.locator(".presentation-rail").evaluate((rail) => {
     const styles = getComputedStyle(rail);
@@ -569,11 +569,9 @@ test("keeps the student canvas cardless while timer actions stay teacher-only", 
       padding: styles.padding,
     };
   });
-  expect(railStyle).toEqual({
-    borderWidth: "0px",
-    background: "rgba(0, 0, 0, 0)",
-    padding: "0px",
-  });
+  expect(railStyle.borderWidth).toBe("1px");
+  expect(railStyle.background).not.toBe("rgba(0, 0, 0, 0)");
+  expect(railStyle.padding).not.toBe("0px");
   await expect(page.locator("#presentation-controls-panel .presentation-timer-controls")).toBeVisible();
   await expect(page.getByRole("button", { name: "Start or resume timer" })).toBeVisible();
   await page.getByRole("button", { name: "Start or resume timer" }).click();
@@ -1530,7 +1528,7 @@ test("captures stable responsive Present compositions and keeps export surfaces 
   await page.goto("/present/activity-long-mixed-direction");
   await settlePresentationSurface(page);
   await expect(liveSurface.getByTestId("presentation-layout-divider")).toBeVisible();
-  await expect(liveSurface.locator(".presentation-rail--image-only")).toBeVisible();
+  await expect(liveSurface.locator(".presentation-rail--split")).toBeVisible();
   const widePromptTracks = await liveSurface.locator(".presentation-prompts").evaluate(
     (prompts) => getComputedStyle(prompts).gridTemplateColumns.trim().split(/\s+/),
   );
@@ -1549,7 +1547,7 @@ test("captures stable responsive Present compositions and keeps export surfaces 
     .locator(".presentation-main")
     .evaluate((main) => getComputedStyle(main).gridTemplateColumns.trim().split(/\s+/));
   expect(narrowGridTracks).toHaveLength(1);
-  await expect(liveSurface.locator(".presentation-rail--image-only")).toBeVisible();
+  await expect(liveSurface.locator(".presentation-rail--split")).toBeVisible();
   const narrowPromptTracks = await liveSurface.locator(".presentation-prompts").evaluate(
     (prompts) => getComputedStyle(prompts).gridTemplateColumns.trim().split(/\s+/),
   );
@@ -1573,9 +1571,9 @@ test("captures stable responsive Present compositions and keeps export surfaces 
 
   await page.goto("/present/activity-long-mixed-direction");
   await settlePresentationSurface(page);
-  await expect(liveSurface.locator(".presentation-rail")).toHaveCount(0);
-  await expect(liveSurface.locator(".presentation-main--content-only")).toBeVisible();
-  await expect(liveSurface.getByTestId("presentation-layout-divider")).toHaveCount(0);
+  await expect(liveSurface.locator(".presentation-rail--timer-only")).toBeVisible();
+  await expect(liveSurface.locator(".presentation-main--content-only")).toHaveCount(0);
+  await expect(liveSurface.getByTestId("presentation-layout-divider")).toBeVisible();
   await expect(liveSurface).toHaveScreenshot(
     "present-timer-only.png",
     screenshotOptions,
@@ -1594,7 +1592,7 @@ test("captures stable responsive Present compositions and keeps export surfaces 
 
   await page.goto("/present/activity-long-mixed-direction");
   await settlePresentationSurface(page);
-  await expect(liveSurface.locator(".presentation-rail--image-only")).toBeVisible();
+  await expect(liveSurface.locator(".presentation-rail--split")).toBeVisible();
   await expect(liveSurface.getByTestId("presentation-layout-divider")).toBeVisible();
   await expect(liveSurface).toHaveScreenshot(
     "present-both-present.png",
@@ -1682,7 +1680,7 @@ test("contains extreme portrait and landscape visuals across Present modes", asy
 
     await page.goto("/present/activity-landscape-visual");
     await settlePresentationSurface(page);
-    await expect(liveSurface.locator(".presentation-rail--image-only")).toBeVisible();
+    await expect(liveSurface.locator(".presentation-rail--split")).toBeVisible();
     await expect(
       liveSurface.getByRole("img", {
         name: `A wide landscape classroom visual. ${longVisualCaption}`,
@@ -1691,9 +1689,9 @@ test("contains extreme portrait and landscape visuals across Present modes", asy
     await expect(
       liveSurface.getByText(`A wide landscape classroom visual. ${longVisualCaption}`),
     ).toBeVisible();
-    await expect(liveSurface.getByText("Time remaining")).toHaveCount(0);
+    await expect(liveSurface.getByText("Time remaining")).toBeVisible();
 
-    const landscapeGeometry = await liveSurface.locator(".presentation-rail--image-only").evaluate((rail) => {
+    const landscapeGeometry = await liveSurface.locator(".presentation-rail--split").evaluate((rail) => {
       const image = rail.querySelector<HTMLImageElement>(".presentation-visual img");
       const caption = rail.querySelector<HTMLElement>(".presentation-visual figcaption");
       if (!image || !caption) throw new Error("Missing landscape visual framing");

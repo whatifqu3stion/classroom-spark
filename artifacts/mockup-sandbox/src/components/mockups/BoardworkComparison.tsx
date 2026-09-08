@@ -79,7 +79,7 @@ function Board({
             <div className="visual-art" role="img" aria-label="Abstract reference visual" />
             <figcaption className="caption">Two ways to show the same relationship.</figcaption>
           </figure>}
-          {timer === "present" && !refined && <Timer running={running} onToggle={onTimerToggle} />}
+          {timer === "present" && <Timer running={running} onToggle={onTimerToggle} />}
         </aside>
       </main>
       <footer className="footer">
@@ -134,7 +134,7 @@ export function BoardworkComparison() {
       </div>
       <div className="annotations">
         <div className="annotation"><b>Current</b><br />Faithful to the source: arrival instruction, header, task stack, resource, visual rail, countdown, and footer controls follow the original reading order.</div>
-        <div className="annotation"><b>Refined</b><br />The same classroom content gets a stronger editorial title, quieter cardless visual framing, more natural vertical rhythm, and a calmer bottom edge that survives absent/present states.</div>
+        <div className="annotation"><b>Refined</b><br />The same classroom content gets a stronger editorial title, numbered prompts, a contained visual/timer rail, and a calmer bottom edge that survives absent/present states.</div>
       </div>
     </div>
   );

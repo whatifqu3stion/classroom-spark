@@ -85,12 +85,21 @@ export function PresentationCanvas({
   const contentIsDense =
     presentationContentLength > 420 ||
     activity.prompts.some((prompt) => prompt.trim().length > 170);
+  const showTimer = !exportLayout && !editorPreview && timer?.visible;
+  const showLargeTimer = Boolean(showTimer && !timerMinimized);
   const showCompactTimer =
     !exportLayout && !editorPreview && Boolean(timer?.visible && timerMinimized);
   const showHiddenTimerRecovery =
     !exportLayout && !editorPreview && Boolean(timer && !timer.visible && onShowTimer);
   const showHeaderTimer = showCompactTimer || showHiddenTimerRecovery;
-  const hasRightRail = hasVisual;
+  const hasRightRail = hasVisual || showLargeTimer;
+  const railMode = showLargeTimer
+    ? hasVisual
+      ? "split"
+      : "timer-only"
+    : hasVisual
+      ? "image-only"
+      : "empty";
   const showLayoutDivider = !exportLayout && hasRightRail;
   const effectiveContentRatio = Math.max(
     layoutBounds.min,
@@ -110,6 +119,13 @@ export function PresentationCanvas({
   const compactTimerReadingScale = Math.min(
     1,
     4 / Math.max(1, compactTimerReading.length),
+  );
+  const presentationTimerReading = timer
+    ? formatTimer(timer.remainingSeconds)
+    : "";
+  const presentationTimerReadingWidthFactor = Math.max(
+    1,
+    Number((presentationTimerReading.length * 0.55).toFixed(2)),
   );
   const getLayoutRatioBounds = (): LayoutRatioBounds => {
     const main = mainRef.current;
@@ -511,19 +527,49 @@ export function PresentationCanvas({
             <span className="presentation-layout-divider-grip" aria-hidden="true" />
           </div>
         )}
-        {hasVisual && (
-          <aside className="presentation-rail presentation-rail--image-only">
-            <figure className="presentation-visual">
-              <img src={activity.visualUrl ?? ""} alt={activity.visualDescription ?? ""} />
-              {activity.visualDescription && (
-                <figcaption
-                  className="presentation-visual-caption boardwork-user-content"
-                  dir="auto"
+        {(hasVisual || showLargeTimer) && (
+          <aside className={cn("presentation-rail", `presentation-rail--${railMode}`)}>
+            {hasVisual && (
+              <figure className="presentation-visual">
+                <img src={activity.visualUrl ?? ""} alt={activity.visualDescription ?? ""} />
+                {activity.visualDescription && (
+                  <figcaption
+                    className="presentation-visual-caption boardwork-user-content"
+                    dir="auto"
+                  >
+                    {activity.visualDescription}
+                  </figcaption>
+                )}
+              </figure>
+            )}
+            {showLargeTimer && timer && (
+              <div
+                className={cn(
+                  "presentation-timer",
+                  timer.status === "completed" && "presentation-timer--complete",
+                  timer.alarmActive && "presentation-timer--alerting",
+                )}
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                <span className="presentation-timer-label">{timer.status === "completed" ? "Time is up" : "Time remaining"}</span>
+                <strong
+                  className="presentation-timer-reading"
+                  style={{
+                    "--presentation-timer-reading-width-factor":
+                      presentationTimerReadingWidthFactor,
+                  } as CSSProperties}
                 >
-                  {activity.visualDescription}
-                </figcaption>
-              )}
-            </figure>
+                  {presentationTimerReading}
+                </strong>
+                <span className="presentation-timer-progress" aria-hidden="true"><span style={{ width: `${Math.max(0, Math.min(100, (timer.remainingSeconds / (activity.durationMinutes * 60)) * 100))}%` }} /></span>
+                {timer.alarmActive && (
+                  <span className="presentation-timer-alarm-status" role="status">
+                    Alarm active — dismiss when ready
+                  </span>
+                )}
+              </div>
+            )}
           </aside>
         )}
       </main>

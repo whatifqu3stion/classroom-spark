@@ -413,7 +413,8 @@
 
   .presentation-surface--editor-preview .presentation-rail {
     gap: clamp(0.5rem, 1.5vw, 1rem);
-    padding: 0;
+    border-radius: 0.65rem;
+    padding: clamp(0.5rem, 1.3vw, 0.9rem);
   }
 
   .presentation-surface--editor-preview .presentation-timer strong {
@@ -762,11 +763,11 @@
 
   .presentation-content {
     display: grid;
-    align-content: center;
+    align-content: start;
     gap: clamp(1.25rem, 3.5vw, 2.5rem);
     min-width: 0;
     width: 100%;
-    max-width: min(100%, 68rem);
+    max-width: none;
   }
 
   .presentation-layout-divider {
@@ -860,10 +861,21 @@
     display: flex;
     min-width: 0;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-self: stretch;
     gap: clamp(1.25rem, 2vw, 2rem);
-    padding: 0;
+    border: 1px solid color-mix(
+      in srgb,
+      var(--presentation-primary-text, #171717) 10%,
+      transparent
+    );
+    border-radius: 1rem;
+    background: color-mix(
+      in srgb,
+      var(--presentation-surface, #fafafa) 72%,
+      transparent
+    );
+    padding: clamp(0.85rem, 1.7vw, 1.5rem);
   }
 
   .presentation-main--has-divider .presentation-content {
@@ -892,8 +904,8 @@
     max-height: min(42vh, 28rem);
     border-radius: 0.7rem;
     object-fit: contain;
-    background: transparent;
-    padding: 0;
+    background: var(--presentation-accent-soft, rgb(23 23 23 / 4%));
+    padding: clamp(0.35rem, 1vw, 0.75rem);
   }
 
   .presentation-visual figcaption {
@@ -1012,6 +1024,22 @@
     background: var(--presentation-accent, hsl(var(--primary)));
   }
 
+  .presentation-rail--timer-only .presentation-timer strong {
+    font-size: clamp(4rem, 10vw, 10rem);
+    font-size: min(
+      clamp(4rem, 10vw, 10rem),
+      calc(
+        (100cqw - 0.5rem) /
+          var(--presentation-timer-reading-width-factor, 3.3)
+      )
+    );
+  }
+
+  .presentation-rail--split {
+    justify-content: flex-start;
+  }
+
+  .presentation-rail--timer-only,
   .presentation-rail--image-only {
     justify-content: center;
   }
@@ -1636,6 +1664,7 @@
       grid-column: 1;
     }
 
+    .presentation-rail--timer-only,
     .presentation-rail--image-only {
       grid-template-columns: minmax(0, 1fr);
     }
@@ -1665,8 +1694,8 @@
     }
 
     .presentation-content {
-      max-width: min(100%, 68rem);
-      align-content: center;
+      max-width: min(100%, 64rem);
+      align-content: start;
       gap: clamp(1.35rem, 3.1vh, 3rem);
     }
 
@@ -1686,7 +1715,6 @@
     }
 
     .presentation-surface--content-dense .presentation-content {
-      align-content: start;
       gap: clamp(0.9rem, 2vh, 1.6rem);
     }
 
@@ -1731,7 +1759,6 @@
     }
 
     .presentation-content {
-      align-content: center;
       gap: clamp(1rem, 2vh, 1.35rem);
     }
 
@@ -1750,7 +1777,6 @@
     }
 
     .presentation-surface--content-dense .presentation-content {
-      align-content: start;
       gap: 0.55rem;
     }
 
@@ -1892,7 +1918,8 @@
 
   .presentation-surface--export .presentation-rail {
     gap: 28px;
-    padding: 0;
+    border-radius: 18px;
+    padding: 26px;
   }
 
   .presentation-surface--export .presentation-timer {

@@ -83,9 +83,9 @@ button { cursor: pointer; }
 .refined .prompts li::before { content: "01"; font-family: var(--font-mono); color: var(--sage-dark); font-size: clamp(7px, .7vw, 10px); padding-top: 3px; }
 .refined .prompts li:nth-child(2)::before { content: "02"; }
 .refined .prompts li:nth-child(3)::before { content: "03"; }
-.refined .rail { border-left: 0; background: transparent; padding: 0; justify-content: center; }
-.refined .board-main { align-items: center; }
-.refined .board-main > section { align-self: center; }
+.refined .rail { border-left: 0; background: #ece9df; border-radius: 7px; padding: clamp(12px, 1.5vw, 22px); justify-content: space-between; }
+.refined .timer { border-left: 0; border-top: 3px solid var(--ochre); padding: 12px 0 0; }
+.refined .timer strong { font-size: clamp(30px, 4.5vw, 68px); }
 .refined .footer { display: flex; justify-content: space-between; align-items: center; }
 .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; background: var(--sage); margin-right: 5px; }
 .board[data-arrival="absent"] .arrival { visibility: hidden; }
