@@ -12,6 +12,11 @@ import { getSafeResourceUrl } from "@/lib/resource-url";
 import { cn } from "@/lib/utils";
 import { getThemeColors, getThemeTypography } from "@/lib/presentation-theme";
 import { getPresentationThemeAccentForeground } from "@workspace/api-zod";
+import {
+  getPresentationRailMode,
+  PRESENTATION_RAIL_CONTRACT,
+  PRESENTATION_RAIL_INVARIANTS,
+} from "@workspace/presentation-rail-contract";
 import { FormulaText } from "./formula-text";
 import type { CountdownTimerState } from "./countdown-timer";
 
@@ -93,13 +98,10 @@ export function PresentationCanvas({
     !exportLayout && !editorPreview && Boolean(timer && !timer.visible && onShowTimer);
   const showHeaderTimer = showCompactTimer || showHiddenTimerRecovery;
   const hasRightRail = hasVisual || showLargeTimer;
-  const railMode = showLargeTimer
-    ? hasVisual
-      ? "split"
-      : "timer-only"
-    : hasVisual
-      ? "image-only"
-      : "empty";
+  const railMode = getPresentationRailMode({
+    hasVisual,
+    hasLargeTimer: showLargeTimer,
+  });
   const showLayoutDivider = !exportLayout && hasRightRail;
   const effectiveContentRatio = Math.max(
     layoutBounds.min,
@@ -261,6 +263,7 @@ export function PresentationCanvas({
         fontFamily: themeTypography.body.family,
         fontWeight: themeTypography.body.weight,
       } as CSSProperties}
+      data-rail-contract={PRESENTATION_RAIL_CONTRACT}
        {...testId(
          includeTestIds,
          editorPreview ? "presentation-preview-surface" : "presentation-surface",
@@ -528,10 +531,21 @@ export function PresentationCanvas({
           </div>
         )}
         {(hasVisual || showLargeTimer) && (
-          <aside className={cn("presentation-rail", `presentation-rail--${railMode}`)}>
+          <aside
+            className={cn("presentation-rail", `presentation-rail--${railMode}`)}
+            data-rail-mode={railMode}
+            data-rail-invariants={`${PRESENTATION_RAIL_INVARIANTS.visualCard} ${PRESENTATION_RAIL_INVARIANTS.intrinsicImage} ${PRESENTATION_RAIL_INVARIANTS.largeTimer}`}
+          >
             {hasVisual && (
-              <figure className="presentation-visual">
-                <img src={activity.visualUrl ?? ""} alt={activity.visualDescription ?? ""} />
+              <figure
+                className="presentation-visual"
+                data-rail-surface={PRESENTATION_RAIL_INVARIANTS.visualCard}
+              >
+                <img
+                  src={activity.visualUrl ?? ""}
+                  alt={activity.visualDescription ?? ""}
+                  data-rail-surface={PRESENTATION_RAIL_INVARIANTS.intrinsicImage}
+                />
                 {activity.visualDescription && (
                   <figcaption
                     className="presentation-visual-caption boardwork-user-content"
@@ -549,6 +563,7 @@ export function PresentationCanvas({
                   timer.status === "completed" && "presentation-timer--complete",
                   timer.alarmActive && "presentation-timer--alerting",
                 )}
+                data-rail-surface={PRESENTATION_RAIL_INVARIANTS.largeTimer}
                 aria-live="polite"
                 aria-atomic="true"
               >

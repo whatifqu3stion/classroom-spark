@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { ExternalLink, Eye, EyeOff, Pause, Play, RotateCcw } from "lucide-react";
+import { ExternalLink, Eye, EyeOff, RotateCcw } from "lucide-react";
+import {
+  getPresentationRailMode,
+  PRESENTATION_RAIL_CONTRACT,
+  PRESENTATION_RAIL_INVARIANTS,
+} from "@workspace/presentation-rail-contract";
 
 type Presence = "present" | "absent";
 
@@ -17,20 +22,15 @@ const copy = {
   resourceNote: "Open the reference image when you are ready.",
 };
 
-function Timer({ running, onToggle }: { running: boolean; onToggle: () => void }) {
+const visualArtUrl =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 470'%3E%3Crect width='640' height='470' rx='28' fill='%23dce4dc'/%3E%3Cpath d='M52 392C112 174 222 462 316 216S516 74 594 304' fill='none' stroke='%23a6bcaa' stroke-width='74' stroke-linecap='round'/%3E%3Ctext x='470' y='365' fill='%233a4c48' font-family='Georgia,serif' font-size='68' transform='rotate(-8 470 365)'%3E∑ x²%3C/text%3E%3C/svg%3E";
+
+function Timer({ running }: { running: boolean }) {
   return (
     <div className="timer">
       <small>{running ? "Time remaining" : "Timer paused"}</small>
       <strong>08:42</strong>
       <div className="progress" aria-label="42 percent of timer remaining"><i /></div>
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-label={running ? "Pause timer" : "Start timer"}
-        style={{ marginTop: 9, border: 0, background: "transparent", color: "var(--ink-soft)", fontSize: 11, padding: 0 }}
-      >
-        {running ? <><Pause size={11} /> pause</> : <><Play size={11} /> start</>}
-      </button>
     </div>
   );
 }
@@ -50,8 +50,19 @@ function Board({
   running: boolean;
   onTimerToggle: () => void;
 }) {
+  const railMode = getPresentationRailMode({
+    hasVisual: visual === "present",
+    hasLargeTimer: timer === "present",
+  });
+
   return (
-    <article className={`board ${refined ? "refined" : "current"}`} data-arrival={arrival} data-visual={visual} data-timer={timer}>
+    <article
+      className={`board ${refined ? "refined" : "current"}`}
+      data-arrival={arrival}
+      data-visual={visual}
+      data-timer={timer}
+      data-rail-contract={PRESENTATION_RAIL_CONTRACT}
+    >
       <div className={`arrival ${arrival === "absent" ? "empty" : ""}`}>{copy.arrival}</div>
       <header className="board-header">
         <div>
@@ -60,7 +71,7 @@ function Board({
         </div>
         <div className="duration">{timer === "present" ? "12 MIN" : "12 MIN"}</div>
       </header>
-      <main className="board-main">
+      <main className={`board-main ${railMode === "empty" ? "board-main--content-only" : ""}`}>
         <section>
           <p className="task">{copy.task}</p>
           <ul className="prompts">
@@ -74,13 +85,28 @@ function Board({
             <div className="caption">{copy.resourceNote}</div>
           </div>
         </section>
-        <aside className="rail">
-          {visual === "present" && <figure className="visual">
-            <div className="visual-art" role="img" aria-label="Abstract reference visual" />
-            <figcaption className="caption">Two ways to show the same relationship.</figcaption>
-          </figure>}
-          {timer === "present" && <Timer running={running} onToggle={onTimerToggle} />}
-        </aside>
+        {railMode !== "empty" && (
+          <aside
+            className="rail"
+            data-rail-mode={railMode}
+            data-rail-invariants={`${PRESENTATION_RAIL_INVARIANTS.visualCard} ${PRESENTATION_RAIL_INVARIANTS.intrinsicImage} ${PRESENTATION_RAIL_INVARIANTS.largeTimer}`}
+          >
+            {visual === "present" && <figure className="visual" data-rail-surface={PRESENTATION_RAIL_INVARIANTS.visualCard}>
+              <img
+              className="visual-art"
+              data-rail-surface={PRESENTATION_RAIL_INVARIANTS.intrinsicImage}
+                src={visualArtUrl}
+                alt="Abstract reference visual"
+              />
+              <figcaption className="caption">Two ways to show the same relationship.</figcaption>
+            </figure>}
+            {timer === "present" && (
+              <div data-rail-surface={PRESENTATION_RAIL_INVARIANTS.largeTimer}>
+                <Timer running={running} />
+              </div>
+            )}
+          </aside>
+        )}
       </main>
       <footer className="footer">
         {refined ? <><span><span className="status-dot" />Ready for the room</span><span>Boardwork · 01</span></> : " " }
@@ -116,11 +142,22 @@ export function BoardworkComparison() {
         <div><div className="kicker">Boardwork · presentation study</div><h1>Make the room feel ready.</h1></div>
         <p>A side-by-side exploration of the existing classroom board and a quieter, clearer arrangement for projection.</p>
       </header>
-      <div className="toolbar">
+      <div
+        className="toolbar"
+        data-rail-teacher-controls={PRESENTATION_RAIL_INVARIANTS.teacherControls}
+      >
         {showControls ? <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <Toggle label="Arrival" value={arrival} setValue={setArrival} />
           <Toggle label="Visual" value={visual} setValue={setVisual} />
           <Toggle label="Timer" value={timer} setValue={setTimer} />
+          <button
+            type="button"
+            className="timer-control"
+            onClick={() => setRunning(!running)}
+            aria-label={running ? "Pause timer" : "Start timer"}
+          >
+            {running ? "Pause timer" : "Start timer"}
+          </button>
         </div> : <span className="toolbar-note">Click the eye to restore comparison controls</span>}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span className="toolbar-note">{showControls ? "Presence controls visible" : "Clean comparison view"}</span>

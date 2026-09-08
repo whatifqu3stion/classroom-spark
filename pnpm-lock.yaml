@@ -372,6 +372,9 @@ importers:
       '@workspace/api-zod':
         specifier: workspace:*
         version: link:../../lib/api-zod
+      '@workspace/presentation-rail-contract':
+        specifier: workspace:*
+        version: link:../../lib/presentation-rail-contract
       class-variance-authority:
         specifier: 'catalog:'
         version: 0.7.1
@@ -564,6 +567,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: 'catalog:'
         version: 5.2.0(vite@7.3.6(@types/node@25.9.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.1)(yaml@2.9.0))
+      '@workspace/presentation-rail-contract':
+        specifier: workspace:*
+        version: link:../../lib/presentation-rail-contract
       chokidar:
         specifier: ^4.0.3
         version: 4.0.3
@@ -692,6 +698,8 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 25.9.5
+
+  lib/presentation-rail-contract: {}
 
   scripts:
     devDependencies:

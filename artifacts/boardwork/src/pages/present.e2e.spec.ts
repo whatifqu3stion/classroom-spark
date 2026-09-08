@@ -1,6 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import { inflateSync } from "node:zlib";
 import { readFile } from "node:fs/promises";
+import {
+  PRESENTATION_RAIL_CONTRACT,
+  PRESENTATION_RAIL_INVARIANTS,
+} from "@workspace/presentation-rail-contract";
 
 const longMixedDirectionActivity = {
   id: "activity-long-mixed-direction",
@@ -208,6 +212,71 @@ async function openTeacherControls(page: Page) {
   const panel = page.locator("#presentation-controls-panel");
   if (!(await panel.isVisible())) await toggle.click();
   await expect(panel).toBeVisible();
+}
+
+async function assertRailModeInvariants(
+  page: Page,
+  mode: "split" | "image-only" | "timer-only" | "empty",
+) {
+  const surface = page.getByTestId("presentation-surface");
+  const rail = surface.locator(".presentation-rail");
+  const teacherControls = page.locator("#presentation-controls-panel");
+
+  await expect(surface).toHaveAttribute("data-rail-contract", PRESENTATION_RAIL_CONTRACT);
+  await expect(teacherControls).toHaveAttribute(
+    "data-rail-teacher-controls",
+    PRESENTATION_RAIL_INVARIANTS.teacherControls,
+  );
+  expect(await teacherControls.evaluate((controls) => controls.closest(".presentation-rail"))).toBeNull();
+  if (mode === "empty") {
+    await expect(rail).toHaveCount(0);
+    return;
+  }
+  await expect(rail).toHaveAttribute("data-rail-mode", mode);
+  await expect(rail).toHaveAttribute(
+    "data-rail-invariants",
+    `${PRESENTATION_RAIL_INVARIANTS.visualCard} ${PRESENTATION_RAIL_INVARIANTS.intrinsicImage} ${PRESENTATION_RAIL_INVARIANTS.largeTimer}`,
+  );
+  await expect(rail.locator(`[data-rail-surface="${PRESENTATION_RAIL_INVARIANTS.visualCard}"]`)).toHaveCount(
+    mode === "timer-only" ? 0 : 1,
+  );
+  await expect(rail.locator(`[data-rail-surface="${PRESENTATION_RAIL_INVARIANTS.largeTimer}"]`)).toHaveCount(
+    mode === "image-only" ? 0 : 1,
+  );
+  if (mode !== "timer-only") {
+    const visual = rail.locator(
+      `[data-rail-surface="${PRESENTATION_RAIL_INVARIANTS.visualCard}"]`,
+    );
+    const image = visual.locator(
+      `[data-rail-surface="${PRESENTATION_RAIL_INVARIANTS.intrinsicImage}"]`,
+    );
+    await expect(image).toHaveCount(1);
+    const geometry = await rail.evaluate((railElement) => {
+      const imageElement = railElement.querySelector<HTMLImageElement>(
+        '[data-rail-surface="intrinsic-image"]',
+      );
+      if (!imageElement) throw new Error("Missing intrinsic rail image");
+      const railBounds = railElement.getBoundingClientRect();
+      const imageBounds = imageElement.getBoundingClientRect();
+      const imageStyles = getComputedStyle(imageElement);
+      return {
+        rail: railBounds.toJSON(),
+        image: imageBounds.toJSON(),
+        maxWidth: imageStyles.maxWidth,
+        objectFit: imageStyles.objectFit,
+        naturalWidth: imageElement.naturalWidth,
+        naturalHeight: imageElement.naturalHeight,
+      };
+    });
+    expect(geometry.maxWidth).toBe("100%");
+    expect(geometry.objectFit).toBe("contain");
+    expect(geometry.naturalWidth).toBeGreaterThan(0);
+    expect(geometry.naturalHeight).toBeGreaterThan(0);
+    expect(geometry.image.x).toBeGreaterThanOrEqual(geometry.rail.x);
+    expect(geometry.image.x + geometry.image.width).toBeLessThanOrEqual(
+      geometry.rail.x + geometry.rail.width,
+    );
+  }
 }
 
 async function settlePresentationSurface(page: Page) {
@@ -558,6 +627,7 @@ test("keeps the large timer in the split rail while actions stay in teacher cont
   await openTeacherControls(page);
 
   const liveSurface = page.getByTestId("presentation-surface");
+  await assertRailModeInvariants(page, "split");
   await expect(liveSurface.locator(".presentation-timer")).toBeVisible();
   await expect(liveSurface.locator(".presentation-rail--split")).toBeVisible();
   await expect(liveSurface.locator(".presentation-layout-divider")).toBeVisible();
@@ -1562,6 +1632,7 @@ test("captures stable responsive Present compositions and keeps export surfaces 
   await page.goto("/present/activity-long-mixed-direction");
   await settlePresentationSurface(page);
   await hideTimerFromStudents(page);
+  await assertRailModeInvariants(page, "empty");
   await expect(liveSurface.locator(".presentation-main--content-only")).toBeVisible();
   await expect(liveSurface.getByTestId("presentation-layout-divider")).toHaveCount(0);
   await expect(liveSurface).toHaveScreenshot(
@@ -1571,6 +1642,7 @@ test("captures stable responsive Present compositions and keeps export surfaces 
 
   await page.goto("/present/activity-long-mixed-direction");
   await settlePresentationSurface(page);
+  await assertRailModeInvariants(page, "timer-only");
   await expect(liveSurface.locator(".presentation-rail--timer-only")).toBeVisible();
   await expect(liveSurface.locator(".presentation-main--content-only")).toHaveCount(0);
   await expect(liveSurface.getByTestId("presentation-layout-divider")).toBeVisible();
@@ -1583,6 +1655,7 @@ test("captures stable responsive Present compositions and keeps export surfaces 
   await page.goto("/present/activity-long-mixed-direction");
   await settlePresentationSurface(page);
   await hideTimerFromStudents(page);
+  await assertRailModeInvariants(page, "image-only");
   await expect(liveSurface.locator(".presentation-rail--image-only")).toBeVisible();
   await expect(liveSurface.getByTestId("presentation-layout-divider")).toBeVisible();
   await expect(liveSurface).toHaveScreenshot(
@@ -1592,6 +1665,7 @@ test("captures stable responsive Present compositions and keeps export surfaces 
 
   await page.goto("/present/activity-long-mixed-direction");
   await settlePresentationSurface(page);
+  await assertRailModeInvariants(page, "split");
   await expect(liveSurface.locator(".presentation-rail--split")).toBeVisible();
   await expect(liveSurface.getByTestId("presentation-layout-divider")).toBeVisible();
   await expect(liveSurface).toHaveScreenshot(

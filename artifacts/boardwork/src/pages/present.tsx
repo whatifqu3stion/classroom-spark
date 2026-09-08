@@ -36,6 +36,7 @@ import {
   getPresentationExportOptions,
   waitForPresentationFonts,
 } from "@/lib/presentation-fonts";
+import { PRESENTATION_RAIL_INVARIANTS } from "@workspace/presentation-rail-contract";
 
 const getExportFilename = (title: string) => {
   const slug = title
@@ -330,6 +331,7 @@ export default function Present() {
         id="presentation-controls-panel"
         className="presentation-controls"
         aria-label="Presentation controls"
+        data-rail-teacher-controls={PRESENTATION_RAIL_INVARIANTS.teacherControls}
       >
         {!timerVisible || !timerMinimized ? (
           <div className="presentation-controls-timer">
