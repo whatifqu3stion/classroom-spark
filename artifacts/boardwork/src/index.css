@@ -929,6 +929,27 @@
     padding: clamp(0.35rem, 1vw, 0.75rem);
   }
 
+  .presentation-surface:not(.presentation-surface--editor-preview):not(
+      .presentation-surface--export
+    )
+    .presentation-visual
+    img {
+    border: 1px solid color-mix(
+      in srgb,
+      var(--presentation-primary-text, #171717) 14%,
+      transparent
+    );
+    border-top: 0;
+    border-radius: 0.9rem;
+    background: var(--presentation-surface, #fafafa);
+    padding: 1rem;
+    box-shadow: 0 0.35rem 1rem color-mix(
+      in srgb,
+      var(--presentation-primary-text, #171717) 8%,
+      transparent
+    );
+  }
+
   .presentation-visual figcaption {
     box-sizing: border-box;
     min-width: 0;

@@ -177,6 +177,19 @@ const visualAppState = {
   activities: [longMixedDirectionVisualActivity],
 };
 
+const darkVisualAppState = {
+  ...appState,
+  activities: [
+    {
+      ...longMixedDirectionVisualActivity,
+      presentationTheme: {
+        kind: "curated" as const,
+        themeId: "midnight" as const,
+      },
+    },
+  ],
+};
+
 async function stubPresentationState(
   page: Page,
   state: typeof appState = appState,
@@ -302,10 +315,18 @@ async function assertLiveRailIsTransparent(
       visualGap: visual ? getComputedStyle(visual).gap : null,
       imageMaxWidth: image ? getComputedStyle(image).maxWidth : null,
       imageObjectFit: image ? getComputedStyle(image).objectFit : null,
+      imageBorderLeftWidth: image ? getComputedStyle(image).borderLeftWidth : null,
+      imageBorderTopWidth: image ? getComputedStyle(image).borderTopWidth : null,
+      imageBorderRadius: image ? getComputedStyle(image).borderRadius : null,
+      imageBackgroundColor: image ? getComputedStyle(image).backgroundColor : null,
       imagePadding: image ? getComputedStyle(image).padding : null,
+      imageBoxShadow: image ? getComputedStyle(image).boxShadow : null,
       timerBorderLeftWidth: timer ? getComputedStyle(timer).borderLeftWidth : null,
+      timerBorderTopWidth: timer ? getComputedStyle(timer).borderTopWidth : null,
+      timerBorderRadius: timer ? getComputedStyle(timer).borderRadius : null,
       timerBackgroundColor: timer ? getComputedStyle(timer).backgroundColor : null,
       timerPadding: timer ? getComputedStyle(timer).padding : null,
+      timerBoxShadow: timer ? getComputedStyle(timer).boxShadow : null,
     };
   });
 
@@ -323,13 +344,30 @@ async function assertLiveRailIsTransparent(
     expect(frame.visualGap).not.toBe("0px");
     expect(frame.imageMaxWidth).toBe("100%");
     expect(frame.imageObjectFit).toBe("contain");
+    expect(frame.imageBorderLeftWidth).toBe("1px");
+    expect(frame.imageBorderTopWidth).toBe("0px");
+    expect(frame.imageBorderRadius).not.toBe("0px");
+    expect(frame.imageBackgroundColor).not.toBe("rgba(0, 0, 0, 0)");
     expect(frame.imagePadding).not.toBe("0px");
+    expect(frame.imageBoxShadow).not.toBe("none");
   }
 
   if (mode !== "image-only") {
     expect(frame.timerBorderLeftWidth).toBe("1px");
+    expect(frame.timerBorderTopWidth).toBe("0px");
+    expect(frame.timerBorderRadius).not.toBe("0px");
     expect(frame.timerBackgroundColor).not.toBe("rgba(0, 0, 0, 0)");
     expect(frame.timerPadding).not.toBe("0px");
+    expect(frame.timerBoxShadow).not.toBe("none");
+  }
+
+  if (mode === "split") {
+    expect(frame.imageBorderLeftWidth).toBe(frame.timerBorderLeftWidth);
+    expect(frame.imageBorderTopWidth).toBe(frame.timerBorderTopWidth);
+    expect(frame.imageBorderRadius).toBe(frame.timerBorderRadius);
+    expect(frame.imageBackgroundColor).toBe(frame.timerBackgroundColor);
+    expect(frame.imagePadding).toBe(frame.timerPadding);
+    expect(frame.imageBoxShadow).toBe(frame.timerBoxShadow);
   }
 }
 
@@ -1865,6 +1903,32 @@ test("captures stable responsive Present compositions and keeps export surfaces 
     surfaceBounds!.y + surfaceBounds!.height,
   );
   await assertExportSurfaceHasNoLiveDivider(page);
+});
+
+test("matches visual and timer surfaces in dark Present themes", async ({ page }) => {
+  await stubPresentationState(page, darkVisualAppState);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/present/activity-long-mixed-direction");
+  await settlePresentationSurface(page);
+
+  await assertRailModeInvariants(page, "split");
+  await assertLiveRailIsTransparent(page, "split");
+
+  const surfaceColors = await page
+    .getByTestId("presentation-surface")
+    .locator(".presentation-rail--split")
+    .evaluate((rail) => {
+      const image = rail.querySelector<HTMLImageElement>(".presentation-visual img");
+      const timer = rail.querySelector<HTMLElement>(".presentation-timer");
+      if (!image || !timer) throw new Error("Missing themed visual surfaces");
+      return {
+        imageBackground: getComputedStyle(image).backgroundColor,
+        timerBackground: getComputedStyle(timer).backgroundColor,
+      };
+    });
+
+  expect(surfaceColors.imageBackground).not.toBe("rgba(0, 0, 0, 0)");
+  expect(surfaceColors.imageBackground).toBe(surfaceColors.timerBackground);
 });
 
 test("contains extreme portrait and landscape visuals across Present modes", async ({
