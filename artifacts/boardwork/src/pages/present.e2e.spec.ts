@@ -279,6 +279,60 @@ async function assertRailModeInvariants(
   }
 }
 
+async function assertLiveRailIsTransparent(
+  page: Page,
+  mode: "split" | "image-only" | "timer-only",
+) {
+  const rail = page.getByTestId("presentation-surface").locator(
+    `.presentation-rail--${mode}`,
+  );
+  const frame = await rail.evaluate((railElement) => {
+    const styles = getComputedStyle(railElement);
+    const visual = railElement.querySelector<HTMLElement>(".presentation-visual");
+    const image = railElement.querySelector<HTMLImageElement>(".presentation-visual img");
+    const timer = railElement.querySelector<HTMLElement>(".presentation-timer");
+    return {
+      borderTopWidth: styles.borderTopWidth,
+      borderRightWidth: styles.borderRightWidth,
+      borderBottomWidth: styles.borderBottomWidth,
+      borderLeftWidth: styles.borderLeftWidth,
+      borderRadius: styles.borderRadius,
+      backgroundColor: styles.backgroundColor,
+      padding: styles.padding,
+      visualGap: visual ? getComputedStyle(visual).gap : null,
+      imageMaxWidth: image ? getComputedStyle(image).maxWidth : null,
+      imageObjectFit: image ? getComputedStyle(image).objectFit : null,
+      imagePadding: image ? getComputedStyle(image).padding : null,
+      timerBorderLeftWidth: timer ? getComputedStyle(timer).borderLeftWidth : null,
+      timerBackgroundColor: timer ? getComputedStyle(timer).backgroundColor : null,
+      timerPadding: timer ? getComputedStyle(timer).padding : null,
+    };
+  });
+
+  expect(frame).toMatchObject({
+    borderTopWidth: "0px",
+    borderRightWidth: "0px",
+    borderBottomWidth: "0px",
+    borderLeftWidth: "0px",
+    borderRadius: "0px",
+    backgroundColor: "rgba(0, 0, 0, 0)",
+    padding: "0px",
+  });
+
+  if (mode !== "timer-only") {
+    expect(frame.visualGap).not.toBe("0px");
+    expect(frame.imageMaxWidth).toBe("100%");
+    expect(frame.imageObjectFit).toBe("contain");
+    expect(frame.imagePadding).not.toBe("0px");
+  }
+
+  if (mode !== "image-only") {
+    expect(frame.timerBorderLeftWidth).toBe("1px");
+    expect(frame.timerBackgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+    expect(frame.timerPadding).not.toBe("0px");
+  }
+}
+
 async function settlePresentationSurface(page: Page) {
   await expect(page.getByTestId("presentation-surface")).toBeVisible();
   await page.evaluate(async () => {
@@ -1599,6 +1653,7 @@ test("captures stable responsive Present compositions and keeps export surfaces 
   await settlePresentationSurface(page);
   await expect(liveSurface.getByTestId("presentation-layout-divider")).toBeVisible();
   await expect(liveSurface.locator(".presentation-rail--split")).toBeVisible();
+  await assertLiveRailIsTransparent(page, "split");
   const widePromptTracks = await liveSurface.locator(".presentation-prompts").evaluate(
     (prompts) => getComputedStyle(prompts).gridTemplateColumns.trim().split(/\s+/),
   );
@@ -1618,6 +1673,7 @@ test("captures stable responsive Present compositions and keeps export surfaces 
     .evaluate((main) => getComputedStyle(main).gridTemplateColumns.trim().split(/\s+/));
   expect(narrowGridTracks).toHaveLength(1);
   await expect(liveSurface.locator(".presentation-rail--split")).toBeVisible();
+  await assertLiveRailIsTransparent(page, "split");
   const narrowPromptTracks = await liveSurface.locator(".presentation-prompts").evaluate(
     (prompts) => getComputedStyle(prompts).gridTemplateColumns.trim().split(/\s+/),
   );
@@ -1644,6 +1700,7 @@ test("captures stable responsive Present compositions and keeps export surfaces 
   await settlePresentationSurface(page);
   await assertRailModeInvariants(page, "timer-only");
   await expect(liveSurface.locator(".presentation-rail--timer-only")).toBeVisible();
+  await assertLiveRailIsTransparent(page, "timer-only");
   await expect(liveSurface.locator(".presentation-main--content-only")).toHaveCount(0);
   await expect(liveSurface.getByTestId("presentation-layout-divider")).toBeVisible();
   await expect(liveSurface).toHaveScreenshot(
@@ -1657,6 +1714,7 @@ test("captures stable responsive Present compositions and keeps export surfaces 
   await hideTimerFromStudents(page);
   await assertRailModeInvariants(page, "image-only");
   await expect(liveSurface.locator(".presentation-rail--image-only")).toBeVisible();
+  await assertLiveRailIsTransparent(page, "image-only");
   await expect(liveSurface.getByTestId("presentation-layout-divider")).toBeVisible();
   await expect(liveSurface).toHaveScreenshot(
     "present-visual-only.png",
@@ -1667,6 +1725,7 @@ test("captures stable responsive Present compositions and keeps export surfaces 
   await settlePresentationSurface(page);
   await assertRailModeInvariants(page, "split");
   await expect(liveSurface.locator(".presentation-rail--split")).toBeVisible();
+  await assertLiveRailIsTransparent(page, "split");
   await expect(liveSurface.getByTestId("presentation-layout-divider")).toBeVisible();
   await expect(liveSurface).toHaveScreenshot(
     "present-both-present.png",

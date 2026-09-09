@@ -19,6 +19,46 @@ const timer = {
 };
 
 describe("PresentationCanvas timer visibility", () => {
+  it("keeps the live rail modes and child surfaces separate", () => {
+    const visualActivity = {
+      ...activity,
+      visualUrl: "data:image/png;base64,visual",
+      visualDescription: "A visual for the live board",
+    };
+    const { rerender } = render(
+      <PresentationCanvas activity={visualActivity} timer={timer} />,
+    );
+
+    const splitRail = screen.getByRole("complementary");
+    expect(splitRail).toHaveClass("presentation-rail--split");
+    expect(splitRail.querySelector(".presentation-visual")).toBeInTheDocument();
+    expect(splitRail.querySelector(".presentation-timer")).toBeInTheDocument();
+    expect(splitRail.querySelector(".presentation-visual img")).toHaveAttribute(
+      "src",
+      visualActivity.visualUrl,
+    );
+    expect(splitRail.querySelector(".presentation-visual-caption")).toHaveTextContent(
+      visualActivity.visualDescription,
+    );
+
+    rerender(
+      <PresentationCanvas
+        activity={visualActivity}
+        timer={{ ...timer, visible: false }}
+      />,
+    );
+    const imageOnlyRail = screen.getByRole("complementary");
+    expect(imageOnlyRail).toHaveClass("presentation-rail--image-only");
+    expect(imageOnlyRail.querySelector(".presentation-visual")).toBeInTheDocument();
+    expect(imageOnlyRail.querySelector(".presentation-timer")).not.toBeInTheDocument();
+
+    rerender(<PresentationCanvas activity={activity} timer={timer} />);
+    const timerOnlyRail = screen.getByRole("complementary");
+    expect(timerOnlyRail).toHaveClass("presentation-rail--timer-only");
+    expect(timerOnlyRail.querySelector(".presentation-visual")).not.toBeInTheDocument();
+    expect(timerOnlyRail.querySelector(".presentation-timer")).toBeInTheDocument();
+  });
+
   it("keeps teacher controls available when the student timer is hidden", () => {
     const { rerender } = render(
       <PresentationCanvas
