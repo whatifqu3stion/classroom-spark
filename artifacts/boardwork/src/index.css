@@ -722,6 +722,25 @@
     box-shadow: none;
   }
 
+  .presentation-time--compact .presentation-timer-actions {
+    flex-wrap: nowrap;
+    gap: 0.25rem;
+  }
+
+  .presentation-time--compact .presentation-timer-actions > button {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-inline: 0.25rem;
+    font-size: 0.7rem;
+    white-space: nowrap;
+  }
+
+  .presentation-time--compact .presentation-timer-actions > button > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .presentation-time--hidden .presentation-timer-controls,
   .presentation-time--compact .presentation-timer-controls {
     margin-top: 0;

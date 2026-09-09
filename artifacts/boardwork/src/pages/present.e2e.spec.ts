@@ -977,6 +977,108 @@ test("keeps Present disclosures reachable at zoom-equivalent viewport sizes", as
   }
 });
 
+test("keeps compact timer primary actions inline at narrow classroom sizes", async ({
+  page,
+}) => {
+  await stubPresentationState(page);
+
+  for (const viewport of [
+    { width: 1024, height: 640, label: "125% zoom equivalent" },
+    { width: 854, height: 534, label: "150% zoom equivalent" },
+    { width: 640, height: 400, label: "200% zoom equivalent" },
+  ]) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto("/present/activity-long-mixed-direction");
+    await openTeacherControls(page);
+    await page.getByRole("button", { name: "Minimize timer" }).click();
+
+    const timerToggle = page.getByTestId("button-toggle-timer-controls");
+    const timerPanel = page.locator("#presentation-timer-controls-panel");
+    await timerToggle.click();
+    await expect(timerPanel).toBeVisible();
+
+    const primaryActions = timerPanel.locator(
+      ".presentation-timer-actions > button",
+    );
+    await expect(primaryActions).toHaveCount(3);
+    await expect(primaryActions.nth(0)).toHaveAccessibleName("Start or resume timer");
+    await expect(primaryActions.nth(1)).toHaveAccessibleName("Adjust timer");
+    await expect(primaryActions.nth(2)).toHaveAccessibleName("Expand timer");
+
+    const geometry = await timerPanel.evaluate((panel) => {
+      const panelBounds = panel.getBoundingClientRect();
+      const actions = Array.from(
+        panel.querySelectorAll<HTMLElement>(".presentation-timer-actions > button"),
+      ).map((button) => {
+        const bounds = button.getBoundingClientRect();
+          const label = button.querySelector("span");
+        return {
+          top: bounds.top,
+          bottom: bounds.bottom,
+          left: bounds.left,
+          right: bounds.right,
+            labelText: label?.textContent ?? "",
+            labelWidth: label?.getBoundingClientRect().width ?? 0,
+            labelScrollWidth: label?.scrollWidth ?? 0,
+        };
+      });
+      return {
+        panel: {
+          top: panelBounds.top,
+          bottom: panelBounds.bottom,
+          left: panelBounds.left,
+          right: panelBounds.right,
+        },
+        actions,
+        documentWidth: document.documentElement.scrollWidth,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+      };
+    });
+
+    expect(
+      Math.max(...geometry.actions.map((action) => action.bottom)) -
+        Math.min(...geometry.actions.map((action) => action.top)),
+      `${viewport.label} compact actions should share one row`,
+    ).toBeLessThanOrEqual(32);
+    for (const [index, action] of geometry.actions.entries()) {
+      expect(action.labelText, `${viewport.label} action ${index} should keep its label`).not.toBe("");
+      expect(
+        action.labelScrollWidth,
+        `${viewport.label} action ${index} label should not be clipped`,
+      ).toBeLessThanOrEqual(action.labelWidth);
+      expect(
+        action.left,
+        `${viewport.label} action ${index} should stay inside the panel`,
+      ).toBeGreaterThanOrEqual(geometry.panel.left);
+      expect(
+        action.right,
+        `${viewport.label} action ${index} should stay inside the panel`,
+      ).toBeLessThanOrEqual(geometry.panel.right);
+    }
+    expect(
+      geometry.panel.right,
+      `${viewport.label} compact panel should stay inside the viewport`,
+    ).toBeLessThanOrEqual(geometry.viewportWidth);
+    expect(
+      geometry.panel.bottom,
+      `${viewport.label} compact panel should stay inside the viewport`,
+    ).toBeLessThanOrEqual(geometry.viewportHeight);
+    expect(
+      geometry.documentWidth,
+      `${viewport.label} should not gain horizontal page overflow`,
+    ).toBeLessThanOrEqual(geometry.viewportWidth);
+
+    await primaryActions.nth(0).click();
+    await expect(timerPanel.getByRole("button", { name: "Pause timer" })).toBeVisible();
+    await timerPanel.getByRole("button", { name: "Adjust timer" }).click();
+    await expect(timerPanel.locator("#timer-options")).toBeVisible();
+    await timerPanel.getByRole("button", { name: "Expand timer" }).click();
+    await expect(timerPanel).toBeHidden();
+    await expect(page.locator(".presentation-time-compact-shell")).toHaveCount(0);
+  }
+});
+
 test("keeps a multi-digit compact timer reading inside its themed ring", async ({ page }) => {
   const assertBrowserHealth = await reportBrowserHealth(page);
 
