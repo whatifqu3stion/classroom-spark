@@ -986,6 +986,8 @@ test("keeps compact timer primary actions inline at narrow classroom sizes", asy
     { width: 1024, height: 640, label: "125% zoom equivalent" },
     { width: 854, height: 534, label: "150% zoom equivalent" },
     { width: 640, height: 400, label: "200% zoom equivalent" },
+    { width: 390, height: 844, label: "390px portrait" },
+    { width: 287, height: 640, label: "287px portrait" },
   ]) {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
     await page.goto("/present/activity-long-mixed-direction");
@@ -1043,6 +1045,10 @@ test("keeps compact timer primary actions inline at narrow classroom sizes", asy
     ).toBeLessThanOrEqual(32);
     for (const [index, action] of geometry.actions.entries()) {
       expect(action.labelText, `${viewport.label} action ${index} should keep its label`).not.toBe("");
+      await expect(
+        primaryActions.nth(index).locator("span"),
+        `${viewport.label} action ${index} label should remain visible`,
+      ).toBeVisible();
       expect(
         action.labelScrollWidth,
         `${viewport.label} action ${index} label should not be clipped`,
@@ -1068,6 +1074,14 @@ test("keeps compact timer primary actions inline at narrow classroom sizes", asy
       geometry.documentWidth,
       `${viewport.label} should not gain horizontal page overflow`,
     ).toBeLessThanOrEqual(geometry.viewportWidth);
+
+    for (const [index, label] of ["Start", "Adjust", "Expand"].entries()) {
+      await primaryActions.nth(index).focus();
+      await expect(
+        primaryActions.nth(index),
+        `${viewport.label} ${label} action should be keyboard focusable`,
+      ).toBeFocused();
+    }
 
     await primaryActions.nth(0).click();
     await expect(timerPanel.getByRole("button", { name: "Pause timer" })).toBeVisible();

@@ -1695,6 +1695,17 @@
     }
   }
 
+  @media (max-width: 320px) {
+    .presentation-time--compact .presentation-timer-actions {
+      gap: 0.125rem;
+    }
+
+    .presentation-time--compact .presentation-timer-actions > button {
+      gap: 0.25rem;
+      padding-inline: 0.15rem;
+    }
+  }
+
   @media (min-aspect-ratio: 4 / 3) and (min-width: 700px) {
     .presentation-surface {
       grid-template-rows: auto auto minmax(min-content, 1fr) auto;
