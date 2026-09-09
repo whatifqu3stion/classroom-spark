@@ -333,7 +333,7 @@ export default function Present() {
         aria-label="Presentation controls"
         data-rail-teacher-controls={PRESENTATION_RAIL_INVARIANTS.teacherControls}
       >
-        {!timerVisible || !timerMinimized ? (
+        {!timerVisible ? (
           <div className="presentation-controls-timer">
             {renderTimerControls()}
           </div>

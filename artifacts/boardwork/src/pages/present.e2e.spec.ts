@@ -670,7 +670,7 @@ test("keeps configured duration labels out of the exported board", async ({
 
   assertBrowserHealth();
 });
-test("keeps the large timer in the split rail while actions stay in teacher controls", async ({
+test("keeps the large timer actions under the clock", async ({
   page,
 }) => {
   const assertBrowserHealth = await reportBrowserHealth(page);
@@ -693,12 +693,16 @@ test("keeps the large timer in the split rail while actions stay in teacher cont
       padding: styles.padding,
     };
   });
-  expect(railStyle.borderWidth).toBe("1px");
-  expect(railStyle.background).not.toBe("rgba(0, 0, 0, 0)");
-  expect(railStyle.padding).not.toBe("0px");
-  await expect(page.locator("#presentation-controls-panel .presentation-timer-controls")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Start or resume timer" })).toBeVisible();
-  await page.getByRole("button", { name: "Start or resume timer" }).click();
+  expect(railStyle.borderWidth).toBe("0px");
+  expect(railStyle.background).toBe("rgba(0, 0, 0, 0)");
+  expect(railStyle.padding).toBe("0px");
+  await expect(page.locator("#presentation-controls-panel .presentation-timer-controls")).toHaveCount(0);
+  const largeTimerControls = liveSurface.locator(".presentation-timer > .presentation-timer-controls");
+  await expect(largeTimerControls).toBeVisible();
+  await expect(
+    largeTimerControls.getByRole("button", { name: "Start or resume timer" }),
+  ).toBeVisible();
+  await largeTimerControls.getByRole("button", { name: "Start or resume timer" }).click();
 
   await page.getByRole("button", { name: "Minimize timer" }).click();
   await expect(liveSurface.locator(".presentation-timer")).toHaveCount(0);

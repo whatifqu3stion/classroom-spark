@@ -583,6 +583,7 @@ export function PresentationCanvas({
                     Alarm active — dismiss when ready
                   </span>
                 )}
+                {timerControls}
               </div>
             )}
           </aside>
