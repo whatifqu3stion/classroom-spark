@@ -82,11 +82,10 @@ export function PresentationCanvas({
   const themeTypography = getThemeTypography(activity.presentationTheme);
   const includeTestIds = !exportLayout;
   const hasVisual = Boolean(activity.visualUrl);
-  const presentationContentLength = [
-    activity.task,
-    ...activity.prompts,
-    activity.materials?.join(" "),
-  ].reduce((total, value) => total + (value?.trim().length ?? 0), 0);
+  const presentationContentLength = [activity.task, ...activity.prompts].reduce(
+    (total, value) => total + (value?.trim().length ?? 0),
+    0,
+  );
   const contentIsDense =
     presentationContentLength > 420 ||
     activity.prompts.some((prompt) => prompt.trim().length > 170);

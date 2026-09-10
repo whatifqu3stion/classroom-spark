@@ -179,6 +179,42 @@ const longFooterAppState = {
   activities: [longFooterActivity],
 };
 
+const promptSpacingActivity = {
+  ...longMixedDirectionActivity,
+  id: "activity-prompt-spacing",
+  title: "Prompt spacing baseline",
+  task: "Read the observations and explain the strongest pattern.",
+  prompts: [
+    "Name the evidence that supports your explanation.",
+    "Write one question a partner could investigate next.",
+  ],
+  materials: undefined,
+  resourceUrl: undefined,
+  resourceNote: undefined,
+};
+
+const promptSpacingMaterialsActivity = {
+  ...promptSpacingActivity,
+  id: "activity-prompt-spacing-materials",
+  materials: ["Observation notes", "Evidence comparison sheet"],
+};
+
+const promptSpacingResourceActivity = {
+  ...promptSpacingActivity,
+  id: "activity-prompt-spacing-resource",
+  resourceUrl: "https://example.com/prompt-spacing-reading",
+  resourceNote: "Use the linked reading after the discussion.",
+};
+
+const promptSpacingAppState = {
+  ...appState,
+  activities: [
+    promptSpacingActivity,
+    promptSpacingMaterialsActivity,
+    promptSpacingResourceActivity,
+  ],
+};
+
 const extremeVisualActivities = {
   ...appState,
   activities: [
@@ -2070,6 +2106,121 @@ test("wraps long footer materials and notes without blocking teacher controls", 
   }
 
   assertBrowserHealth();
+});
+
+test("keeps footer-only content from changing Present prompt spacing", async ({ page }) => {
+  await stubPresentationState(page, promptSpacingAppState);
+
+  const viewports = [
+    { width: 1280, height: 800, label: "wide" },
+    { width: 1280, height: 600, label: "short landscape" },
+    { width: 640, height: 800, label: "narrow" },
+  ];
+
+  const measurePromptLayout = async (
+    surfaceLocator = page.getByTestId("presentation-surface"),
+  ) =>
+    surfaceLocator.evaluate((surface) => {
+      const prompts = surface.querySelector<HTMLElement>(".presentation-prompts");
+      const firstPrompt = surface.querySelector<HTMLElement>(".presentation-prompt");
+      const promptRows = Array.from(
+        surface.querySelectorAll<HTMLElement>(".presentation-prompt"),
+      );
+      const main = surface.querySelector<HTMLElement>(".presentation-main");
+      const footer = surface.querySelector<HTMLElement>(".presentation-footer");
+      if (!prompts || !firstPrompt || !main || !footer) {
+        throw new Error("Missing prompt layout regions");
+      }
+      const promptBounds = prompts.getBoundingClientRect();
+      const firstPromptBounds = firstPrompt.getBoundingClientRect();
+      return {
+        dividerToFirstPrompt: firstPromptBounds.top - promptBounds.top - 2,
+        rowTops: promptRows.map((row) => row.getBoundingClientRect().top),
+        promptLineHeight: getComputedStyle(firstPrompt).lineHeight,
+        mainBottom: main.getBoundingClientRect().bottom,
+        footerTop: footer.getBoundingClientRect().top,
+        horizontalOverflow: surface.scrollWidth - surface.clientWidth,
+        dense: surface.classList.contains("presentation-surface--content-dense"),
+        contentOnly: surface.querySelector(".presentation-main--content-only") !== null,
+      };
+    });
+
+  for (const viewport of viewports) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    const measurements = [];
+
+    for (const activityId of [
+      "activity-prompt-spacing",
+      "activity-prompt-spacing-materials",
+      "activity-prompt-spacing-resource",
+    ]) {
+      await page.goto(`/present/${activityId}`);
+      await settlePresentationSurface(page);
+      measurements.push(await measurePromptLayout());
+    }
+
+    const [baseline, materials, resource] = measurements;
+    for (const withFooterOnlyContent of [materials, resource]) {
+      expect(
+        withFooterOnlyContent.dense,
+        `${viewport.label} footer-only content should not trigger dense mode`,
+      ).toBe(false);
+      expect(
+        withFooterOnlyContent.dividerToFirstPrompt,
+        `${viewport.label} divider-to-first-prompt spacing`,
+      ).toBeCloseTo(baseline.dividerToFirstPrompt, 1);
+      expect(
+        withFooterOnlyContent.rowTops,
+        `${viewport.label} prompt row spacing`,
+      ).toEqual(baseline.rowTops);
+      expect(withFooterOnlyContent.promptLineHeight).toBe(baseline.promptLineHeight);
+      expect(withFooterOnlyContent.horizontalOverflow).toBeLessThanOrEqual(0);
+      expect(withFooterOnlyContent.mainBottom).toBeLessThanOrEqual(
+        withFooterOnlyContent.footerTop + 1,
+      );
+    }
+  }
+
+  const contentOnlyMeasurements = [];
+  await page.setViewportSize({ width: 1280, height: 800 });
+  for (const activityId of [
+    "activity-prompt-spacing",
+    "activity-prompt-spacing-materials",
+  ]) {
+    await page.goto(`/present/${activityId}`);
+    await settlePresentationSurface(page);
+    await hideTimerFromStudents(page);
+    contentOnlyMeasurements.push(await measurePromptLayout());
+  }
+
+  expect(contentOnlyMeasurements[0].contentOnly).toBe(true);
+  expect(contentOnlyMeasurements[1].contentOnly).toBe(true);
+  expect(contentOnlyMeasurements[1].dividerToFirstPrompt).toBeCloseTo(
+    contentOnlyMeasurements[0].dividerToFirstPrompt,
+    1,
+  );
+  expect(contentOnlyMeasurements[1].rowTops).toEqual(contentOnlyMeasurements[0].rowTops);
+
+  const exportMeasurements = [];
+  for (const activityId of [
+    "activity-prompt-spacing",
+    "activity-prompt-spacing-materials",
+  ]) {
+    await page.goto(`/present/${activityId}`);
+    await settlePresentationSurface(page);
+    exportMeasurements.push(
+      await measurePromptLayout(page.locator(".presentation-surface--export")),
+    );
+  }
+
+  expect(exportMeasurements[0].dense).toBe(false);
+  expect(exportMeasurements[1].dense).toBe(false);
+  expect(exportMeasurements[1].dividerToFirstPrompt).toBeCloseTo(
+    exportMeasurements[0].dividerToFirstPrompt,
+    1,
+  );
+  expect(exportMeasurements[1].rowTops).toEqual(exportMeasurements[0].rowTops);
+  expect(exportMeasurements[1].horizontalOverflow).toBeLessThanOrEqual(0);
 });
 
 test("captures stable responsive Present compositions and keeps export surfaces clean", async ({

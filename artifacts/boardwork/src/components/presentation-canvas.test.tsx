@@ -879,6 +879,38 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.queryByText("03")).not.toBeInTheDocument();
   });
 
+  it("does not classify footer-only supporting content as dense student content", () => {
+    const supportingActivity = {
+      ...activity,
+      materials: ["Evidence sheet", "Partner notes"],
+      resourceUrl: "https://example.com/reading",
+      resourceNote: "Use the reading after the discussion.",
+    };
+
+    const { rerender } = render(<PresentationCanvas activity={activity} />);
+    const surface = screen.getByTestId("presentation-surface");
+    expect(surface).not.toHaveClass("presentation-surface--content-dense");
+
+    rerender(<PresentationCanvas activity={supportingActivity} />);
+    expect(surface).not.toHaveClass("presentation-surface--content-dense");
+  });
+
+  it("keeps genuinely long student content in the compact treatment", () => {
+    render(
+      <PresentationCanvas
+        activity={{
+          ...activity,
+          task: "A".repeat(220),
+          prompts: ["B".repeat(220)],
+        }}
+      />,
+    );
+
+    expect(screen.getByTestId("presentation-surface")).toHaveClass(
+      "presentation-surface--content-dense",
+    );
+  });
+
   it("puts arrival instructions first and the activity name in the header", () => {
     render(
       <PresentationCanvas
