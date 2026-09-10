@@ -207,7 +207,7 @@ export default function Home() {
   const [completionSignal, setCompletionSignal] = useState("");
   const [deviceMode, setDeviceMode] = useState<DeviceMode>("off");
   const [technologyMode, setTechnologyMode] = useState<TechnologyMode>("no_computer");
-  const [duration, setDuration] = useState<Duration>(7);
+  const [duration, setDuration] = useState<Duration>(5);
   const [customDurationInput, setCustomDurationInput] = useState("");
   const [resourceUrl, setResourceUrl] = useState("");
   const [resourceNote, setResourceNote] = useState("");

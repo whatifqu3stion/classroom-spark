@@ -1795,6 +1795,67 @@ test("keeps hover-open teacher controls reachable below content-tall boards", as
   expect(geometry.dockBottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
 });
 
+test("aligns supporting content with teacher controls on wide boards and stacks it narrowly", async ({
+  page,
+}) => {
+  const assertBrowserHealth = await reportBrowserHealth(page);
+  await stubPresentationState(page, contentTallAppState);
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/present/activity-content-tall");
+  await settlePresentationSurface(page);
+
+  const wideGeometry = await page.evaluate(() => {
+    const surface = document.querySelector(".presentation-surface")!;
+    const main = surface.querySelector(".presentation-main")!.getBoundingClientRect();
+    const footer = surface.querySelector(".presentation-footer")!.getBoundingClientRect();
+    const supporting = surface.querySelector(".presentation-supporting")!.getBoundingClientRect();
+    const controls = surface.querySelector(".presentation-footer-controls")!.getBoundingClientRect();
+    return {
+      footerColumns: getComputedStyle(surface.querySelector(".presentation-footer")!).gridTemplateColumns,
+      mainBottom: main.bottom,
+      footerTop: footer.top,
+      supportingTop: supporting.top,
+      supportingRight: supporting.right,
+      controlsLeft: controls.left,
+      controlsRight: controls.right,
+      footerRight: footer.right,
+    };
+  });
+
+  expect(wideGeometry.footerColumns.split(/\s+/)).toHaveLength(2);
+  expect(wideGeometry.mainBottom).toBeLessThanOrEqual(wideGeometry.footerTop);
+  expect(wideGeometry.supportingTop).toBeGreaterThanOrEqual(wideGeometry.footerTop);
+  expect(wideGeometry.supportingRight).toBeLessThanOrEqual(wideGeometry.controlsLeft);
+  expect(wideGeometry.controlsRight).toBeLessThanOrEqual(wideGeometry.footerRight);
+
+  await page.setViewportSize({ width: 640, height: 800 });
+  await page.goto("/present/activity-content-tall");
+  await settlePresentationSurface(page);
+
+  const narrowGeometry = await page.evaluate(() => {
+    const footer = document.querySelector(".presentation-footer")!.getBoundingClientRect();
+    const supporting = document.querySelector(".presentation-supporting")!.getBoundingClientRect();
+    const controls = document.querySelector(".presentation-footer-controls")!.getBoundingClientRect();
+    return {
+      footerColumns: getComputedStyle(document.querySelector(".presentation-footer")!).gridTemplateColumns,
+      footerRight: footer.right,
+      footerWidth: footer.width,
+      supportingLeft: supporting.left,
+      supportingRight: supporting.right,
+      controlsTop: controls.top,
+      supportingBottom: supporting.bottom,
+    };
+  });
+
+  expect(narrowGeometry.footerColumns.split(/\s+/)).toHaveLength(1);
+  expect(narrowGeometry.supportingLeft).toBeGreaterThanOrEqual(0);
+  expect(narrowGeometry.supportingRight).toBeLessThanOrEqual(narrowGeometry.footerRight);
+  expect(narrowGeometry.supportingBottom).toBeLessThanOrEqual(narrowGeometry.controlsTop);
+
+  assertBrowserHealth();
+});
+
 test("captures stable responsive Present compositions and keeps export surfaces clean", async ({
   page,
 }) => {

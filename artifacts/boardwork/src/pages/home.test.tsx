@@ -79,7 +79,7 @@ vi.mock("@/components/class-form-dialog", () => ({
               grade: initialData?.grade ?? "5",
               subject: initialData?.subject ?? "Science",
               defaultDeviceMode: "on",
-              defaultDuration: initialData?.defaultDuration ?? 7,
+              defaultDuration: initialData?.defaultDuration ?? 5,
             });
             onOpenChange(false);
           }}
@@ -93,7 +93,7 @@ vi.mock("@/components/class-form-dialog", () => ({
               grade: initialData?.grade ?? "5",
               subject: initialData?.subject ?? "Science",
               defaultDeviceMode: "off",
-              defaultDuration: initialData?.defaultDuration ?? 7,
+              defaultDuration: initialData?.defaultDuration ?? 5,
             });
             onOpenChange(false);
           }}
@@ -136,7 +136,7 @@ const appState = {
       name: "Science",
       subject: "Science",
       color: "#2563eb",
-      defaultDuration: 7,
+      defaultDuration: 5,
       defaultDeviceMode: "off" as const,
       arrivalRoutine: null,
     },
@@ -224,6 +224,9 @@ describe("Home presentation defaults", () => {
 
     fireEvent.click(screen.getByTestId("button-blank"));
 
+    expect(screen.getByTestId("board-editor-draft")).toHaveTextContent(
+      '"durationMinutes":5',
+    );
     expect(screen.getByTestId("board-editor-draft")).toHaveTextContent(
       '"presentationTheme":{"kind":"curated","themeId":"paper-v2","accentId":"sage"}',
     );

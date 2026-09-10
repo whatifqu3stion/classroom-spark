@@ -65,7 +65,7 @@ const getDefaultValues = (initialData?: ClassProfile | null): ClassProfileFormVa
   curriculumDetails: initialData?.curriculumDetails ?? "",
   generalContext: initialData?.generalContext ?? "",
   defaultDeviceMode: initialData?.defaultDeviceMode ?? "off",
-  defaultDuration: initialData?.defaultDuration ?? 7,
+  defaultDuration: initialData?.defaultDuration ?? 5,
   color: initialData?.color ?? "",
 });
 

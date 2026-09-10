@@ -607,6 +607,50 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.getByText("Use the linked reading for context.")).toBeInTheDocument();
   });
 
+  it("keeps supporting content in the footer lane without exporting teacher controls", () => {
+    const supportingActivity = {
+      ...activity,
+      materials: ["Observation notes", "Evidence sheet"],
+      resourceUrl: "https://example.com/resource",
+      resourceNote: "Use the linked reading for context.",
+    };
+    const controls = <button type="button">Teacher controls</button>;
+    const { rerender } = render(
+      <PresentationCanvas activity={supportingActivity} controls={controls} />,
+    );
+
+    const liveSurface = screen.getByTestId("presentation-surface");
+    expect(liveSurface.querySelector(".presentation-main .presentation-supporting")).not.toBeInTheDocument();
+    expect(liveSurface.querySelector(".presentation-footer .presentation-supporting")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("present-materials").closest(".presentation-footer"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Teacher controls" }).closest(".presentation-footer-controls"),
+    ).toBeInTheDocument();
+
+    rerender(
+      <PresentationCanvas
+        activity={supportingActivity}
+        controls={controls}
+        editorPreview
+      />,
+    );
+    expect(screen.getByTestId("present-materials").closest(".presentation-footer")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Teacher controls" })).not.toBeInTheDocument();
+
+    rerender(
+      <PresentationCanvas
+        activity={supportingActivity}
+        controls={controls}
+        exportLayout
+      />,
+    );
+    expect(screen.getByText("Materials: Observation notes, Evidence sheet")).toBeInTheDocument();
+    expect(screen.getByText("Use the linked reading for context.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Teacher controls" })).not.toBeInTheDocument();
+  });
+
   it("keeps a saved local image in both preview and export surfaces", () => {
     const imageActivity = {
       ...activity,

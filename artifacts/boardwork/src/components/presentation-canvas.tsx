@@ -458,44 +458,6 @@ export function PresentationCanvas({
             </ul>
           )}
 
-          {(activity.materials?.length || safeResourceUrl) && (
-            <div className="presentation-supporting">
-              {activity.materials && activity.materials.length > 0 && (
-                <p
-                  className="presentation-materials boardwork-user-content"
-                  dir="auto"
-                  {...testId(includeTestIds, "present-materials")}
-                >
-                  <FormulaText>{`Materials: ${activity.materials.join(", ")}`}</FormulaText>
-                </p>
-              )}
-
-              {safeResourceUrl && (
-                <div
-                  className="presentation-resource"
-                  {...testId(includeTestIds, "present-resource")}
-                >
-                  {showResourceLink && (
-                    <a
-                      href={safeResourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="presentation-resource-link"
-                      {...testId(includeTestIds, "present-resource-link")}
-                    >
-                      Open resource
-                      <ExternalLink className="h-[1em] w-[1em]" aria-hidden="true" />
-                    </a>
-                  )}
-                  {activity.resourceNote && (
-                    <p className="presentation-resource-note boardwork-user-content" dir="auto">
-                      <FormulaText>{activity.resourceNote}</FormulaText>
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
         </div>
         {showLayoutDivider && (
           <div
@@ -591,12 +553,54 @@ export function PresentationCanvas({
       </main>
 
       <footer className="presentation-footer">
-        {!editorPreview && !exportLayout && timer?.alarmActive && controls && (
-          <span className="presentation-timer-alarm-status" role="status" aria-label="Timer alarm">
-            Alarm active — dismiss when ready
-          </span>
+        {(activity.materials?.length || safeResourceUrl) && (
+          <div className="presentation-supporting">
+            {activity.materials && activity.materials.length > 0 && (
+              <p
+                className="presentation-materials boardwork-user-content"
+                dir="auto"
+                {...testId(includeTestIds, "present-materials")}
+              >
+                <FormulaText>{`Materials: ${activity.materials.join(", ")}`}</FormulaText>
+              </p>
+            )}
+
+            {safeResourceUrl && (
+              <div
+                className="presentation-resource"
+                {...testId(includeTestIds, "present-resource")}
+              >
+                {showResourceLink && (
+                  <a
+                    href={safeResourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="presentation-resource-link"
+                    {...testId(includeTestIds, "present-resource-link")}
+                  >
+                    Open resource
+                    <ExternalLink className="h-[1em] w-[1em]" aria-hidden="true" />
+                  </a>
+                )}
+                {activity.resourceNote && (
+                  <p className="presentation-resource-note boardwork-user-content" dir="auto">
+                    <FormulaText>{activity.resourceNote}</FormulaText>
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         )}
-        {!editorPreview && !exportLayout && controls}
+        {(!editorPreview && !exportLayout && (timer?.alarmActive || controls)) && (
+          <div className="presentation-footer-controls">
+            {timer?.alarmActive && controls && (
+              <span className="presentation-timer-alarm-status" role="status" aria-label="Timer alarm">
+                Alarm active — dismiss when ready
+              </span>
+            )}
+            {!editorPreview && !exportLayout && controls}
+          </div>
+        )}
       </footer>
     </div>
   );
