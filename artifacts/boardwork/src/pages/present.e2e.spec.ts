@@ -69,6 +69,22 @@ const contentTallActivity = {
   ],
 };
 
+const longFooterActivity = {
+  ...longMixedDirectionActivity,
+  id: "activity-long-footer",
+  title: "Long footer content board",
+  task: "Review the evidence and discuss the supporting materials.",
+  prompts: ["Name one observation you can test with a partner."],
+  materials: [
+    "A very long observation notes packet with the complete evidence record and partner discussion prompts",
+    "A cross-check worksheet for comparing claims, measurements, and explanations across several classroom groups",
+    "A reflection checklist for recording which evidence supports the final explanation and which questions remain open",
+  ],
+  resourceUrl: "https://example.com/long-footer-reading",
+  resourceNote:
+    "Use the linked reading after the group discussion. This note includes a long classroom-facing explanation about comparing evidence, revising an initial claim, and recording the reasoning clearly for the next group to review; keep every part readable even when the board is narrow. https://example.com/resources/this-is-an-intentionally-long-resource-note-segment-without-break-spaces",
+};
+
 const portraitVisualUrl =
   "data:image/svg+xml;charset=utf-8," +
   encodeURIComponent(`
@@ -156,6 +172,11 @@ const surprisePresentAppState = {
 const contentTallAppState = {
   ...appState,
   activities: [contentTallActivity],
+};
+
+const longFooterAppState = {
+  ...appState,
+  activities: [longFooterActivity],
 };
 
 const extremeVisualActivities = {
@@ -1964,6 +1985,89 @@ test("aligns supporting content with teacher controls on wide boards and stacks 
   expect(narrowGeometry.supportingLeft).toBeGreaterThanOrEqual(0);
   expect(narrowGeometry.supportingRight).toBeLessThanOrEqual(narrowGeometry.footerRight);
   expect(narrowGeometry.supportingBottom).toBeLessThanOrEqual(narrowGeometry.controlsTop);
+
+  assertBrowserHealth();
+});
+
+test("wraps long footer materials and notes without blocking teacher controls", async ({
+  page,
+}) => {
+  const assertBrowserHealth = await reportBrowserHealth(page);
+  await stubPresentationState(page, longFooterAppState);
+
+  for (const viewport of [
+    { label: "narrow", width: 640, height: 800 },
+    { label: "short landscape", width: 900, height: 600 },
+  ]) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto("/present/activity-long-footer");
+    await settlePresentationSurface(page);
+
+    const geometry = await page.evaluate(() => {
+      const footer = document.querySelector(".presentation-footer")!;
+      const supporting = document.querySelector(".presentation-supporting")!;
+      const materials = document.querySelector(".presentation-materials")!;
+      const resource = document.querySelector(".presentation-resource")!;
+      const resourceNote = document.querySelector(".presentation-resource-note")!;
+      const controls = document.querySelector(".presentation-footer-controls")!;
+      const teacherToggle = document.querySelector(".presentation-controls-toggle")!;
+      const bounds = (element: Element) => {
+        const rect = element.getBoundingClientRect();
+        return {
+          left: rect.left,
+          right: rect.right,
+          top: rect.top,
+          bottom: rect.bottom,
+          width: rect.width,
+          height: rect.height,
+        };
+      };
+
+      return {
+        footer: bounds(footer),
+        supporting: bounds(supporting),
+        materials: bounds(materials),
+        resource: bounds(resource),
+        resourceNote: bounds(resourceNote),
+        controls: bounds(controls),
+        teacherToggle: bounds(teacherToggle),
+        documentWidth: document.documentElement.scrollWidth,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+        footerColumns: getComputedStyle(footer).gridTemplateColumns,
+        materialsOverflowWrap: getComputedStyle(materials).overflowWrap,
+        resourceNoteOverflowWrap: getComputedStyle(resourceNote).overflowWrap,
+      };
+    });
+
+    expect(
+      geometry.documentWidth,
+      `${viewport.label} footer should not create horizontal page overflow`,
+    ).toBeLessThanOrEqual(geometry.viewportWidth);
+    expect(geometry.supporting.left).toBeGreaterThanOrEqual(geometry.footer.left);
+    expect(geometry.supporting.right).toBeLessThanOrEqual(geometry.footer.right + 1);
+    expect(geometry.materials.right).toBeLessThanOrEqual(geometry.supporting.right + 1);
+    expect(geometry.resource.right).toBeLessThanOrEqual(geometry.supporting.right + 1);
+    expect(geometry.resourceNote.right).toBeLessThanOrEqual(geometry.resource.right + 1);
+    expect(geometry.controls.left).toBeGreaterThanOrEqual(geometry.footer.left);
+    expect(geometry.controls.right).toBeLessThanOrEqual(geometry.footer.right + 1);
+    expect(geometry.teacherToggle.right).toBeLessThanOrEqual(geometry.footer.right + 1);
+    expect(geometry.teacherToggle.bottom).toBeLessThanOrEqual(
+      geometry.footer.bottom + 1,
+    );
+    expect(geometry.materialsOverflowWrap).toBe("anywhere");
+    expect(geometry.resourceNoteOverflowWrap).toBe("anywhere");
+    expect(geometry.materials.height).toBeGreaterThan(0);
+    expect(geometry.resourceNote.height).toBeGreaterThan(0);
+
+    if (viewport.label === "narrow") {
+      expect(geometry.footerColumns.split(/\s+/)).toHaveLength(1);
+      expect(geometry.supporting.bottom).toBeLessThanOrEqual(geometry.controls.top);
+    }
+
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await expect(page.getByTestId("button-teacher-controls")).toBeInViewport();
+  }
 
   assertBrowserHealth();
 });

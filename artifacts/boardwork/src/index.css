@@ -1270,19 +1270,25 @@
   .presentation-supporting {
     display: grid;
     gap: 0.8rem;
+    max-width: 100%;
     min-width: 0;
   }
 
   .presentation-materials {
     margin: 0;
+    max-width: 100%;
+    min-width: 0;
     color: var(--presentation-secondary-text, hsl(var(--muted-foreground)));
     font-family: var(--presentation-font-body, var(--app-font-sans));
     font-size: clamp(0.9rem, 1.4vw, 1.35rem);
     font-weight: var(--presentation-body-weight, 500);
+    overflow-wrap: anywhere;
   }
 
   .presentation-resource {
     display: grid;
+    max-width: 100%;
+    min-width: 0;
     justify-items: start;
     gap: 0.4rem;
     margin: 0;
@@ -1290,6 +1296,8 @@
 
   .presentation-resource-link {
     display: inline-flex;
+    max-width: 100%;
+    min-width: 0;
     align-items: center;
     gap: 0.5rem;
     border-radius: 0.5rem;
@@ -1300,6 +1308,7 @@
     font-size: clamp(0.9rem, 1.3vw, 1.2rem);
     font-weight: var(--presentation-body-weight, 500);
     box-shadow: var(--shadow-sm);
+    overflow-wrap: anywhere;
   }
 
   .presentation-resource-link:hover {
@@ -1308,8 +1317,11 @@
 
   .presentation-resource-note {
     margin-top: 0.5rem;
+    max-width: 100%;
+    min-width: 0;
     color: var(--presentation-secondary-text, hsl(var(--muted-foreground)));
     font-size: clamp(0.8rem, 1.1vw, 1rem);
+    overflow-wrap: anywhere;
   }
 
   .presentation-footer {
@@ -1326,6 +1338,7 @@
 
   .presentation-footer-controls {
     display: grid;
+    max-width: 100%;
     min-width: 0;
     justify-items: end;
     align-items: end;
