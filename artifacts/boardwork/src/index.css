@@ -674,7 +674,7 @@
   .presentation-time-compact-controls {
     display: none;
     box-sizing: border-box;
-    width: min(18rem, calc(100dvw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right)));
+    width: min(22rem, calc(100dvw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right)));
     max-width: calc(100dvw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right));
     max-height: calc(100vh - 5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
     overflow-y: auto;
@@ -698,7 +698,7 @@
     right: max(0px, env(safe-area-inset-right));
     z-index: 4;
     display: block;
-    width: min(18rem, calc(100dvw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right)));
+    width: min(22rem, calc(100dvw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right)));
     max-width: calc(100dvw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right));
     max-height: calc(100dvh - 5.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   }
@@ -728,11 +728,15 @@
   }
 
   .presentation-time--compact .presentation-timer-actions > button {
-    flex: 1 1 auto;
+    flex: 1 1 0;
     min-width: 0;
-    padding-inline: 0.25rem;
+    padding-inline: 0.2rem;
     font-size: 0.7rem;
     white-space: nowrap;
+  }
+
+  .presentation-time--compact .presentation-timer-actions > .presentation-timer-action--dismiss {
+    flex-grow: 1.5;
   }
 
   .presentation-time--compact .presentation-timer-actions > button > span {
@@ -1736,6 +1740,10 @@
     .presentation-time--compact .presentation-timer-actions > button {
       gap: 0.25rem;
       padding-inline: 0.15rem;
+    }
+
+    .presentation-time--compact .presentation-timer-actions > button > svg {
+      display: none;
     }
   }
 

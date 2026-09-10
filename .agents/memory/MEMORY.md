@@ -15,6 +15,7 @@
 - [Touch presentation controls](touch-presentation-controls.md) — Separate touch taps from hover/focus state, and give accessible floating-panel wrappers measurable geometry.
 - [Long text export layout](long-text-export-layout.md) — Fixed-size PNG exports need a full-width content-only mode so long mixed-direction text does not clip.
 - [Compact timer ring sizing](compact-timer-ring-sizing.md) — Size circular compact controls for enlarged timer text at zoomed widths, not just the nominal ring diameter.
+- [Compact alarm action sizing](compact-alarm-action-sizing.md) — Completion adds a fourth compact action, so reserve label space for Dismiss at narrow classroom widths.
 - [Large timer reading sizing](large-timer-reading-sizing.md) — Keep the large Present reading intrinsic while scaling long values to the timer card’s available width.
 - [Computed border visibility](computed-border-visibility.md) — Assert zero border width for borderless Tailwind elements; reset styles may still report a solid border style.
 - [Extreme visual framing](extreme-visual-framing.md) — Preserve intrinsic image proportions in the presentation rail instead of forcing portrait assets to full width.

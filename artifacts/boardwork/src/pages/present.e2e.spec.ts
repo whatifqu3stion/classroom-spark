@@ -116,6 +116,16 @@ const appState = {
   activities: [longMixedDirectionActivity],
 };
 
+const alarmAppState = {
+  ...appState,
+  activities: [
+    {
+      ...longMixedDirectionActivity,
+      durationMinutes: 1 / 60,
+    },
+  ],
+};
+
 const surprisePresentActivity = {
   ...longMixedDirectionActivity,
   id: "activity-present-source",
@@ -1128,6 +1138,108 @@ test("keeps compact timer primary actions inline at narrow classroom sizes", asy
     await timerPanel.getByRole("button", { name: "Expand timer" }).click();
     await expect(timerPanel).toBeHidden();
     await expect(page.locator(".presentation-time-compact-shell")).toHaveCount(0);
+  }
+});
+
+test("keeps compact timer dismiss usable after the alarm starts", async ({ page }) => {
+  await stubPresentationState(page, alarmAppState);
+
+  for (const viewport of [
+    { width: 1024, height: 640, label: "125% zoom equivalent" },
+    { width: 854, height: 534, label: "150% zoom equivalent" },
+    { width: 640, height: 400, label: "200% zoom equivalent" },
+    { width: 390, height: 844, label: "390px portrait" },
+    { width: 287, height: 640, label: "287px portrait" },
+  ]) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto("/present/activity-long-mixed-direction");
+    await openTeacherControls(page);
+    await page.getByRole("button", { name: "Minimize timer" }).click();
+
+    const timerToggle = page.getByTestId("button-toggle-timer-controls");
+    const timerPanel = page.locator("#presentation-timer-controls-panel");
+    const timerProgress = page.getByRole("progressbar", { name: "Time remaining" });
+    await timerToggle.click();
+    await expect(timerPanel).toBeVisible();
+    await timerPanel.getByRole("button", { name: "Start or resume timer" }).click();
+
+    await page.evaluate(() => {
+      const completedAt = 1_756_800_001_000;
+      Date.now = () => completedAt;
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await expect(timerProgress).toHaveAttribute("aria-valuetext", "Time is up");
+    await expect(timerPanel).toBeVisible();
+
+    const dismiss = timerPanel.getByRole("button", { name: "Dismiss alarm" });
+    await expect(dismiss).toBeVisible();
+    await expect(dismiss).toBeEnabled();
+    await expect(dismiss.locator("span")).toHaveText("Dismiss");
+
+    const geometry = await timerPanel.evaluate((panel) => {
+      const panelBounds = panel.getBoundingClientRect();
+      const dismissButton = panel.querySelector<HTMLButtonElement>(
+        'button[aria-label="Dismiss alarm"]',
+      );
+      const dismissLabel = dismissButton?.querySelector<HTMLElement>("span");
+      if (!dismissButton || !dismissLabel) {
+        throw new Error("Missing compact dismiss action");
+      }
+      const dismissBounds = dismissButton.getBoundingClientRect();
+      const labelBounds = dismissLabel.getBoundingClientRect();
+      return {
+        panel: panelBounds.toJSON(),
+        dismiss: dismissBounds.toJSON(),
+        label: {
+          width: labelBounds.width,
+          scrollWidth: dismissLabel.scrollWidth,
+        },
+        documentWidth: document.documentElement.scrollWidth,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+      };
+    });
+
+    expect(geometry.dismiss.top, `${viewport.label} Dismiss should stay in the action row`).toBeGreaterThanOrEqual(
+      geometry.panel.top,
+    );
+    expect(
+      geometry.dismiss.bottom,
+      `${viewport.label} Dismiss should stay in the action row`,
+    ).toBeLessThanOrEqual(geometry.panel.bottom);
+    expect(
+      geometry.dismiss.left,
+      `${viewport.label} Dismiss should stay inside the compact panel`,
+    ).toBeGreaterThanOrEqual(geometry.panel.left);
+    expect(
+      geometry.dismiss.right,
+      `${viewport.label} Dismiss should stay inside the compact panel`,
+    ).toBeLessThanOrEqual(geometry.panel.right);
+    expect(
+      geometry.label.scrollWidth,
+      `${viewport.label} Dismiss label should not be clipped`,
+    ).toBeLessThanOrEqual(Math.ceil(geometry.label.width));
+    expect(
+      geometry.panel.right,
+      `${viewport.label} compact panel should stay inside the viewport`,
+    ).toBeLessThanOrEqual(geometry.viewportWidth);
+    expect(
+      geometry.panel.bottom,
+      `${viewport.label} compact panel should stay inside the viewport`,
+    ).toBeLessThanOrEqual(geometry.viewportHeight);
+    expect(
+      geometry.documentWidth,
+      `${viewport.label} should not gain horizontal page overflow`,
+    ).toBeLessThanOrEqual(geometry.viewportWidth);
+
+    await dismiss.focus();
+    await expect(dismiss, `${viewport.label} Dismiss should be keyboard focusable`).toBeFocused();
+    await dismiss.click();
+    await expect(timerPanel.getByRole("button", { name: "Dismiss alarm" })).toHaveCount(0);
+    await expect(timerProgress).toHaveAttribute("aria-valuenow", "0");
+    await expect(timerProgress).toHaveAttribute("aria-valuetext", "Time is up");
+    await expect(timerPanel.getByRole("button", { name: "Adjust timer" })).toBeVisible();
+    await expect(timerPanel.getByRole("button", { name: "Expand timer" })).toBeVisible();
   }
 });
 
