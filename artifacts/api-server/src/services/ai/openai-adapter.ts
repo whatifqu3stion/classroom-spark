@@ -56,7 +56,6 @@ const ACTIVITY_JSON_SCHEMA = {
   additionalProperties: false,
   required: [
     "eyebrow",
-    "title",
     "task",
     "prompts",
     "durationMinutes",
@@ -73,7 +72,6 @@ const ACTIVITY_JSON_SCHEMA = {
       description:
         "Optional short activity label. Never include duration, minutes, or device mode.",
     },
-    title: { type: "string", minLength: 1, maxLength: 80 },
     task: { type: "string", minLength: 1, maxLength: 500 },
     prompts: {
       type: "array",

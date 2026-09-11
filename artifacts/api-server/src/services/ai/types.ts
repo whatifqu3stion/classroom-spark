@@ -5,7 +5,6 @@ export const generatedActivityStyles = generatedActivityStyleValues;
 
 export const generatedActivitySchema = z.object({
   eyebrow: z.string().trim().min(1).max(30).nullable(),
-  title: z.string().trim().min(1).max(80),
   task: z.string().trim().min(1).max(500),
   prompts: z.array(z.string().trim().min(1).max(160)).max(3),
   durationMinutes: z.number().int().min(1),
@@ -59,7 +58,7 @@ export interface BoardworkGenerationContext {
     surprise: boolean;
   };
   recentActivities: Array<{
-    title: string;
+    task: string;
     activityStyle: string | null;
   }>;
 }

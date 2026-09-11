@@ -13,7 +13,6 @@ import type { TechnologyMode } from './technologyMode';
 export interface ActivityUpdate {
   /** @nullable */
   eyebrow?: string | null;
-  title?: string;
   task?: string;
   prompts?: string[];
   durationMinutes?: Duration;

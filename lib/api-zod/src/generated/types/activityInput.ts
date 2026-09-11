@@ -14,7 +14,6 @@ export interface ActivityInput {
   classId: string;
   /** @nullable */
   eyebrow?: string | null;
-  title: string;
   task: string;
   prompts?: string[];
   durationMinutes: Duration;

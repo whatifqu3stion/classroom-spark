@@ -266,7 +266,6 @@ export interface ActivityInput {
   classId: string;
   /** @nullable */
   eyebrow?: string | null;
-  title: string;
   task: string;
   prompts?: string[];
   durationMinutes: Duration;
@@ -303,7 +302,6 @@ export interface ActivityInput {
 export interface ActivityUpdate {
   /** @nullable */
   eyebrow?: string | null;
-  title?: string;
   task?: string;
   prompts?: string[];
   durationMinutes?: Duration;

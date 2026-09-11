@@ -317,7 +317,6 @@ for (const viewport of viewports) {
     const saveStatus = page.getByTestId("text-save-status");
     const presentButton = page.getByTestId("button-present");
     const editingControls = [
-      page.getByRole("textbox", { name: "Enter a short title..." }),
       page.getByRole("textbox", { name: "Describe the main task for students..." }),
       page.getByRole("textbox", { name: "Enter prompt..." }),
       page.getByTestId("button-toggle-presentation-visual"),
@@ -369,7 +368,6 @@ test("keeps populated activity editing readable at 150% text scaling", async ({ 
   const header = page.getByTestId("board-editor-header");
   const saveStatus = page.getByTestId("text-save-status");
   const presentButton = page.getByTestId("button-present");
-  const title = page.getByRole("textbox", { name: "Enter a short title..." });
   const task = page.getByRole("textbox", { name: "Describe the main task for students..." });
   const prompts = page.getByRole("textbox", { name: "Enter prompt..." });
   const materials = page.getByRole("textbox", { name: "Optional materials, separated by commas..." });
@@ -379,13 +377,12 @@ test("keeps populated activity editing readable at 150% text scaling", async ({ 
   await expect(saveStatus).toHaveText("Saved");
   await expect(presentButton).toBeVisible();
   await expectSingleEditorFrame(page);
-  await expect(title).toContainText("Explain how the evidence supports your scientific idea");
   await expect(task).toContainText("identify the strongest pattern");
   await expect(prompts).toHaveCount(2);
   await expect(prompts.nth(0)).toContainText("Describe the strongest pattern in the data");
   await expect(materials).toContainText("Printed evidence packet");
 
-  for (const control of [saveStatus, presentButton, title, task, prompts.nth(0), prompts.nth(1), materials]) {
+  for (const control of [saveStatus, presentButton, task, prompts.nth(0), prompts.nth(1), materials]) {
     await expect(control).toBeVisible();
     await expectElementReachableInViewport(page, control, { width: 1024, height: 800 });
     await expectElementFitsHorizontally(page, control, { width: 1024, height: 800 });
@@ -680,7 +677,6 @@ for (const viewport of viewports) {
     });
 
     const editor = page.getByTestId("board-editor");
-    const title = page.getByRole("textbox", { name: "Enter a short title..." });
     const task = page.getByRole("textbox", {
       name: "Describe the main task for students...",
     });
@@ -694,9 +690,7 @@ for (const viewport of viewports) {
 
     await expect(page.locator("html")).toHaveClass(/dark/);
     await expect(editor).toBeVisible();
-    await expect(title).toContainText(
-      "Explain how the evidence supports your scientific idea",
-    );
+    await expect(page.getByRole("textbox", { name: "Enter a short title..." })).toHaveCount(0);
     await expect(task).toContainText("identify the strongest pattern");
     await expect(prompts).toHaveCount(2);
     await expect(prompts.first()).toContainText(
@@ -708,7 +702,6 @@ for (const viewport of viewports) {
     await expect(materialsLabel).toBeVisible();
 
     for (const control of [
-      title,
       task,
       prompts.first(),
       materials,
@@ -780,7 +773,6 @@ for (const viewport of viewports) {
       };
 
       const editor = stylesFor('[data-testid="board-editor"]');
-      const title = stylesFor('[aria-label="Enter a short title..."]');
       const task = stylesFor('[aria-label="Describe the main task for students..."]');
       const prompt = stylesFor('[aria-label="Enter prompt..."]');
       const materials = stylesFor('[aria-label="Optional materials, separated by commas..."]');
@@ -790,7 +782,6 @@ for (const viewport of viewports) {
 
       return {
         editorSurface: editor.background,
-        title: ratio(title.color, editor.background),
         task: ratio(task.color, editor.background),
         prompt: ratio(prompt.color, editor.background),
         materials: ratio(materials.color, editor.background),

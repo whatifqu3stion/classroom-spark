@@ -43,7 +43,7 @@ vi.mock("wouter", () => ({
   useLocation: () => ["/history", mocks.setLocation],
 }));
 
-const formulaTitle = "Quadratic \\(x^2 + y^2 = r^2\\)";
+const formulaTask = "Quadratic \\(x^2 + y^2 = r^2\\)";
 
 const appState = {
   activeClassId: "math",
@@ -57,9 +57,9 @@ const appState = {
     {
       id: "formula-activity",
       classId: "math",
-      title: formulaTitle,
+       title: "Legacy activity title",
       eyebrow: null,
-      task: "Explore a quadratic relationship.",
+       task: formulaTask,
       prompts: [],
       durationMinutes: 15,
       deviceMode: "off",
@@ -115,19 +115,20 @@ describe("History", () => {
     });
   });
 
-  it("renders formula titles in All while keeping action labels readable", () => {
+  it("uses task-derived labels instead of legacy activity titles", () => {
     render(<History />);
 
     const activity = screen.getByTestId("history-item-formula-activity");
     expect(activity.querySelector(".formula-rendered")).toBeInTheDocument();
     expect(activity).toHaveTextContent("Quadratic x2+y2=r2");
-    expect(screen.getByRole("button", { name: `Unfavorite ${formulaTitle}` })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: `Actions for ${formulaTitle}` })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: `Unfavorite ${formulaTask}` })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: `Actions for ${formulaTask}` })).toBeInTheDocument();
+    expect(activity).not.toHaveTextContent("Legacy activity title");
     expect(screen.getByTestId("history-view-all")).toHaveAttribute("aria-selected", "true");
     expect(screen.getByTestId("history-item-plain-activity")).toBeInTheDocument();
   });
 
-  it("keeps formula titles rendered when switching to Favorites", () => {
+  it("keeps task-derived labels rendered when switching to Favorites", () => {
     render(<History />);
 
     fireEvent.click(screen.getByTestId("history-view-favorites"));

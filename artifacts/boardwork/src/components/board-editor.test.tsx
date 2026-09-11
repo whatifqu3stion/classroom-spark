@@ -40,9 +40,7 @@ describe("BoardEditor presentation visual disclosure", () => {
       "w-full",
       "sm:w-auto",
     );
-    expect(
-      screen.getByRole("textbox", { name: "Enter a short title..." }),
-    ).toBeVisible();
+    expect(screen.queryByRole("textbox", { name: "Enter a short title..." })).not.toBeInTheDocument();
     expect(
       screen.getByRole("textbox", {
         name: "Describe the main task for students...",
@@ -116,13 +114,7 @@ describe("BoardEditor presentation visual disclosure", () => {
 
     render(<StatefulEditor />);
 
-    const titleEditor = screen.getByRole("textbox", {
-      name: "Enter a short title...",
-    });
-    titleEditor.textContent = "Unsaved board title";
-    fireEvent.input(titleEditor);
-
-    expect(titleEditor).toHaveTextContent("Unsaved board title");
+    expect(screen.queryByRole("textbox", { name: "Enter a short title..." })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId("button-toggle-presentation-visual"));
 
@@ -272,14 +264,14 @@ describe("BoardEditor Present Screen action", () => {
 
     const presentButton = screen.getByTestId("button-present-disabled");
     expect(presentButton).toHaveAccessibleName(
-      "Present Screen unavailable: Add a title or task before presenting.",
+      "Present Screen unavailable: Add a task before presenting.",
     );
     expect(presentButton).toHaveClass("h-10", "cursor-not-allowed", "opacity-50");
 
     fireEvent.focus(presentButton);
     await waitFor(() => {
       expect(screen.getByRole("tooltip")).toHaveTextContent(
-        "Add a title or task before presenting.",
+        "Add a task before presenting.",
       );
     });
   });

@@ -14,6 +14,7 @@ import {
   unitsTable,
   type Unit,
 } from "@workspace/db";
+import { getActivityCompatibilityTitle } from "./activity-title";
 
 const APP_STATE_KEY = "singleton";
 
@@ -240,7 +241,7 @@ export async function duplicateActivity(
     .values({
       classId: source.classId,
       eyebrow: source.eyebrow,
-      title: source.title,
+      title: getActivityCompatibilityTitle(source.task),
       task: source.task,
       prompts: source.prompts,
       durationMinutes: source.durationMinutes,

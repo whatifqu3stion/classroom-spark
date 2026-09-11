@@ -16,6 +16,7 @@ import {
   ActivityTechnologyValidationError,
   normalizeActivityTechnology,
 } from "../../lib/activity-technology";
+import { getActivityCompatibilityTitle } from "../../lib/activity-title";
 import {
   generatedActivitySchema,
   generatedActivityStyles,
@@ -133,7 +134,7 @@ async function buildGenerationContext(
         : Promise.resolve([]),
       db
         .select({
-          title: activitiesTable.title,
+          task: activitiesTable.task,
           activityStyle: activitiesTable.style,
         })
         .from(activitiesTable)
@@ -317,7 +318,7 @@ export async function generateAndSaveActivity(
     .values({
       classId: input.classId,
       eyebrow: generated.eyebrow,
-      title: generated.title,
+      title: getActivityCompatibilityTitle(generated.task),
       task: generated.task,
       prompts: generated.prompts,
       durationMinutes: generated.durationMinutes,

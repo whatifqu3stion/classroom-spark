@@ -64,13 +64,12 @@ const context: BoardworkGenerationContext = {
     surprise: false,
   },
   recentActivities: [
-    { title: "Sketch a Cell", activityStyle: "Draw / Sketch" },
+    { task: "Sketch a Cell", activityStyle: "Draw / Sketch" },
   ],
 };
 
 const activity: GeneratedActivity = {
   eyebrow: "THINK & SKETCH",
-  title: "Where Will the Water Move?",
   task: "Sketch two cells in different salt solutions. Add arrows to predict how water will move.",
   prompts: ["Label each solution.", "Explain one arrow."],
   durationMinutes: 7,
@@ -252,7 +251,6 @@ describe("Boardwork generation contract", () => {
     const generated = {
       ...activity,
       eyebrow: "Décrire",
-      title: "e\u0301lan del agua • الماء",
       task: "اقرأ النص ثم اشرح: 日本語の観察。",
       prompts: ["नमस्ते — اكتب دليلاً.", "¿Qué observas?"],
       materials: ["cahier", "鉛筆"],
@@ -398,8 +396,8 @@ describe("Boardwork generation contract", () => {
     const shaping = "م\u200dدرسة";
     const source = `${combining} ${shaping} 日本語\u0000\u202E`;
 
-    expect(sanitizeGeneratedActivity({ title: source })).toEqual({
-      title: `${combining} ${shaping} 日本語`,
+    expect(sanitizeGeneratedActivity({ task: source })).toEqual({
+      task: `${combining} ${shaping} 日本語`,
     });
     expect(sanitizeUnicodeText(source)).toContain(combining);
     expect(sanitizeUnicodeText(source)).toContain(shaping);

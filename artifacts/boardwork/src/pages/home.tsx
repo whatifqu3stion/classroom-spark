@@ -119,7 +119,6 @@ const isMeaningful = (
   const inheritedArrival = inheritedArrivalRoutine?.trim();
 
   return !!(
-    draft.title?.trim() ||
     draft.task?.trim() ||
     draft.eyebrow?.trim() ||
     draft.resourceUrl?.trim() ||
@@ -132,7 +131,6 @@ const isMeaningful = (
 };
 
 const activitySavePayload = (draft: ActivityDraft) => ({
-  title: draft.title,
   task: draft.task,
   prompts: draft.prompts,
   eyebrow: draft.eyebrow,

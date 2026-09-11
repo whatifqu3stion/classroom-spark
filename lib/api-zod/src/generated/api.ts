@@ -615,7 +615,6 @@ export const createActivityBodyPresentationThemeOneAnchorsAccentRegExp = new Reg
 export const CreateActivityBody = zod.object({
   "classId": zod.string(),
   "eyebrow": zod.string().nullish(),
-  "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()).optional(),
   "durationMinutes": zod.number().min(1).multipleOf(createActivityBodyDurationMinutesMultipleOf),
@@ -771,7 +770,6 @@ export const updateActivityBodyPresentationThemeOneAnchorsAccentRegExp = new Reg
 
 export const UpdateActivityBody = zod.object({
   "eyebrow": zod.string().nullish(),
-  "title": zod.string().optional(),
   "task": zod.string().optional(),
   "prompts": zod.array(zod.string()).optional(),
   "durationMinutes": zod.number().min(1).multipleOf(updateActivityBodyDurationMinutesMultipleOf).optional(),

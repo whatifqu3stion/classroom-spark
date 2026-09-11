@@ -543,7 +543,8 @@ describe("PresentationCanvas timer visibility", () => {
 
     expect(screen.getByTestId("presentation-preview-surface")).toBeInTheDocument();
     expect(screen.getByTestId("present-arrival")).toHaveTextContent("Read this first.");
-    expect(screen.getByTestId("present-title")).toHaveTextContent("Independent practice");
+    expect(screen.queryByTestId("present-title")).not.toBeInTheDocument();
+    expect(screen.getByTestId("present-task")).toHaveTextContent("Work quietly.");
     expect(screen.queryByText("5 MIN")).not.toBeInTheDocument();
     expect(screen.queryByTestId("present-time")).not.toBeInTheDocument();
     expect(screen.queryByText("Time remaining")).not.toBeInTheDocument();
@@ -796,9 +797,7 @@ describe("PresentationCanvas timer visibility", () => {
     fireEvent.pointerUp(divider, { pointerId: 1, pointerType: "touch" });
 
     expect(divider).toHaveAttribute("aria-valuenow", "70");
-    expect(screen.getByTestId("present-title")).toHaveTextContent(
-      imageActivity.title,
-    );
+    expect(screen.queryByTestId("present-title")).not.toBeInTheDocument();
   });
 
   it("keeps keyboard resizing inside measured pane minimums near the stacking breakpoint", () => {
@@ -833,9 +832,7 @@ describe("PresentationCanvas timer visibility", () => {
 
     fireEvent.keyDown(divider, { key: "ArrowRight" });
     expect(divider).toHaveAttribute("aria-valuenow", "57");
-    expect(screen.getByTestId("present-title")).toHaveTextContent(
-      imageActivity.title,
-    );
+    expect(screen.queryByTestId("present-title")).not.toBeInTheDocument();
   });
 
   it("renders formulas in the student canvas", () => {
@@ -911,11 +908,12 @@ describe("PresentationCanvas timer visibility", () => {
     );
   });
 
-  it("puts arrival instructions first and the activity name in the header", () => {
+  it("puts arrival instructions first and keeps the optional eyebrow in the header", () => {
     render(
       <PresentationCanvas
         activity={{
           ...activity,
+          eyebrow: "Pause & Notice",
           arrivalInstructions: "Start here: read this first.",
         }}
       />,
@@ -924,50 +922,46 @@ describe("PresentationCanvas timer visibility", () => {
     const surface = screen.getByTestId("presentation-surface");
     const arrival = screen.getByTestId("present-arrival");
     const header = screen.getByTestId("presentation-surface").querySelector(".presentation-header");
-    const title = screen.getByTestId("present-title");
+    const eyebrow = screen.getByTestId("present-eyebrow");
 
     expect(Array.from(surface.children).indexOf(arrival)).toBe(0);
     expect(Array.from(surface.children).indexOf(arrival)).toBeLessThan(
       Array.from(surface.children).indexOf(header as Element),
     );
-    expect(title.closest("header")).toBeInTheDocument();
-    expect(title.closest("footer")).not.toBeInTheDocument();
-    expect(title.closest(".presentation-header-copy")).toBeInTheDocument();
+    expect(eyebrow.closest("header")).toBeInTheDocument();
+    expect(eyebrow.closest("footer")).not.toBeInTheDocument();
+    expect(eyebrow.closest(".presentation-header-copy")).toBeInTheDocument();
+    expect(screen.queryByTestId("present-title")).not.toBeInTheDocument();
     expect(header?.children).toHaveLength(1);
-    expect(title).toHaveTextContent("Independent practice");
+    expect(eyebrow).toHaveTextContent("Pause & Notice");
   });
 
-  it("keeps a no-eyebrow title in the left header stack without a duration column", () => {
+  it("does not render a title-only header when no eyebrow or timer is present", () => {
     render(<PresentationCanvas activity={activity} />);
 
     const header = screen.getByTestId("presentation-surface").querySelector(".presentation-header");
-    const title = screen.getByTestId("present-title");
 
     expect(screen.queryByTestId("present-eyebrow")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("present-title")).not.toBeInTheDocument();
     expect(screen.queryByText("5 MIN")).not.toBeInTheDocument();
     expect(screen.queryByTestId("present-time")).not.toBeInTheDocument();
-    expect(title.closest(".presentation-header-copy")).toBeInTheDocument();
-    expect(header?.children[0]).toContainElement(title);
-    expect(header?.children).toHaveLength(1);
+    expect(header).not.toBeInTheDocument();
   });
 
-  it("renders a formula-bearing title as an h1 in the header stack", () => {
+  it("keeps formula-bearing task content as the primary student-facing block", () => {
     render(
       <PresentationCanvas
         activity={{
           ...activity,
           eyebrow: "Notice",
-          title: "Energy: \\(E = mc^2\\)",
+          task: "Energy: \\(E = mc^2\\)",
         }}
       />,
     );
 
-    const title = screen.getByTestId("present-title");
-
-    expect(title.tagName).toBe("H1");
-    expect(title.closest(".presentation-header-copy")).toBeInTheDocument();
-    expect(title.querySelector(".formula-rendered")).toBeInTheDocument();
-    expect(title).not.toHaveTextContent("\\(E = mc^2\\)");
+    const task = screen.getByTestId("present-task");
+    expect(task.querySelector(".formula-rendered")).toBeInTheDocument();
+    expect(task).not.toHaveTextContent("\\(E = mc^2\\)");
   });
 
   it("renders formulas in the materials line", () => {
@@ -993,16 +987,14 @@ describe("PresentationCanvas timer visibility", () => {
         activity={{
           ...activity,
           eyebrow: "Décrire • الصف ٦",
-          title: "e\u0301lan del agua • الماء",
           task: "اقرأ النص ثم اشرح: 日本語の観察。",
           prompts: ["नमस्ते — اكتب دليلاً."],
         }}
       />,
     );
 
-    expect(screen.getByTestId("present-title")).toHaveAttribute("dir", "auto");
+    expect(screen.queryByTestId("present-title")).not.toBeInTheDocument();
     expect(screen.getByTestId("present-task")).toHaveAttribute("dir", "auto");
-    expect(screen.getByTestId("present-title")).toHaveTextContent("e\u0301lan del agua • الماء");
     expect(screen.getByTestId("present-task")).toHaveTextContent("اقرأ النص ثم اشرح: 日本語の観察。");
     expect(screen.getByText("नमस्ते — اكتب دليلاً.").closest("[dir='auto']")).toBeTruthy();
   });
@@ -1013,7 +1005,6 @@ describe("PresentationCanvas timer visibility", () => {
         activity={{
           ...activity,
           eyebrow: "العربية • עברית",
-          title: "Multilingual classroom board",
           task: "اقرأ النص ثم اشرح.",
           prompts: ["שלום עולם", "नमस्ते दुनिया", "日本語の観察"],
         }}
@@ -1023,7 +1014,6 @@ describe("PresentationCanvas timer visibility", () => {
 
     const exportSurface = document.querySelector(".presentation-surface--export");
     const eyebrow = exportSurface?.querySelector(".presentation-eyebrow");
-    const title = exportSurface?.querySelector(".presentation-header-title");
     const task = exportSurface?.querySelector(".presentation-task");
     const promptRuns = Array.from(
       exportSurface?.querySelectorAll(
@@ -1036,8 +1026,7 @@ describe("PresentationCanvas timer visibility", () => {
     expect(exportSurface?.querySelector(".presentation-time")).not.toBeInTheDocument();
     expect(eyebrow).toHaveAttribute("dir", "auto");
     expect(eyebrow).toHaveTextContent("العربية • עברית");
-    expect(title).toHaveAttribute("dir", "auto");
-    expect(title).toHaveTextContent("Multilingual classroom board");
+    expect(exportSurface?.querySelector(".presentation-header-title")).not.toBeInTheDocument();
     expect(task).toHaveAttribute("dir", "auto");
     expect(task).toHaveTextContent("اقرأ النص ثم اشرح.");
     expect(promptRuns).toHaveLength(3);

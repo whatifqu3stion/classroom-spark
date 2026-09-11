@@ -20,7 +20,6 @@ import {
 
 const validActivity: GeneratedActivity = {
   eyebrow: "DO NOW",
-  title: "Use Evidence",
   task: "Study the adaptation described in the resource and explain how it helps the animal survive.",
   prompts: ["Name one detail.", "Explain what the detail shows."],
   durationMinutes: 7,
@@ -122,14 +121,14 @@ describe.sequential("generation persistence", () => {
     expect(capturedContext?.today.focusChips).toEqual([
       "explain with evidence • 根拠",
     ]);
-    expect(capturedContext?.recentActivities.map((item) => item.title)).toEqual([
-      "History 4",
-      "History 3",
-      "History 2",
+    expect(capturedContext?.recentActivities.map((item) => item.task)).toEqual([
+      "Historical task 4",
+      "Historical task 3",
+      "Historical task 2",
     ]);
     expect(created).toMatchObject({
       classId,
-      title: validActivity.title,
+      title: validActivity.task.slice(0, 80),
       resourceUrl: "https://example.com/adaptations",
       resourceNote: "An illustrated adaptation article.",
       materials: validActivity.materials,
@@ -219,7 +218,6 @@ describe.sequential("generation persistence", () => {
     const multilingual: GeneratedActivity = {
       ...validActivity,
       eyebrow: "Décrire • الصف ٥",
-      title: "e\u0301lan del agua • الماء",
       task: "اقرأ النص ثم اشرح: 日本語の観察。",
       prompts: ["नमस्ते — اكتب دليلاً.", "¿Qué observas?"],
       materials: ["cahier", "鉛筆"],
@@ -248,7 +246,7 @@ describe.sequential("generation persistence", () => {
     const copy = await duplicateActivity(created.id);
 
     expect(created).toMatchObject({
-      title: multilingual.title,
+      title: multilingual.task.slice(0, 80),
       task: multilingual.task,
       prompts: multilingual.prompts,
       materials: multilingual.materials,
@@ -258,7 +256,7 @@ describe.sequential("generation persistence", () => {
       resourceNote: "وصف المورد",
     });
     expect(copy).toMatchObject({
-      title: multilingual.title,
+      title: multilingual.task.slice(0, 80),
       task: multilingual.task,
       prompts: multilingual.prompts,
       materials: multilingual.materials,

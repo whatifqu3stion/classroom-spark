@@ -30,6 +30,7 @@ import {
   normalizeActivityResourceUrl,
 } from "../lib/activity-resource";
 import { normalizeActivityTechnology } from "../lib/activity-technology";
+import { getActivityCompatibilityTitle } from "../lib/activity-title";
 
 const router: IRouter = Router();
 
@@ -103,6 +104,7 @@ router.post("/activities", async (req, res): Promise<void> => {
     .insert(activitiesTable)
     .values({
       ...parsed.data,
+      title: getActivityCompatibilityTitle(parsed.data.task),
       deviceMode,
       resourceUrl,
       technologyMode,
@@ -194,7 +196,12 @@ router.patch("/activities/:activityId", async (req, res): Promise<void> => {
 
   const [updated] = await db
     .update(activitiesTable)
-    .set({ ...parsed.data, technologyMode, resourceUrl })
+    .set({
+      ...parsed.data,
+      title: getActivityCompatibilityTitle(parsed.data.task ?? existing.task),
+      technologyMode,
+      resourceUrl,
+    })
     .where(eq(activitiesTable.id, params.data.activityId))
     .returning();
 

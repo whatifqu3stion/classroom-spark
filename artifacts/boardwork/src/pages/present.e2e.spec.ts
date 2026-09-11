@@ -660,9 +660,7 @@ test("exports long mixed-direction board text as a complete local-font PNG", asy
 
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/present/activity-long-mixed-direction");
-  await expect(page.getByTestId("present-title")).toHaveText(
-    longMixedDirectionActivity.title,
-  );
+  await expect(page.getByTestId("present-title")).toHaveCount(0);
   await expect(page.getByTestId("present-task")).toHaveText(
     longMixedDirectionActivity.task,
   );
@@ -673,7 +671,6 @@ test("exports long mixed-direction board text as a complete local-font PNG", asy
   const regions = await page.locator(".presentation-surface--export").evaluate((surface) => {
     const surfaceBounds = surface.getBoundingClientRect();
     const selectors = [
-      ["title", ".presentation-header-title"],
       ["task", ".presentation-task"],
       ["prompt-one", ".presentation-prompt:nth-child(1)"],
       ["prompt-two", ".presentation-prompt:nth-child(2)"],
@@ -745,7 +742,7 @@ test("keeps configured duration labels out of the exported board", async ({
 
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/present/activity-export-duration");
-  await expect(page.getByTestId("present-title")).toHaveText("Duration export check");
+  await expect(page.getByTestId("present-title")).toHaveCount(0);
   await openTeacherControls(page);
   await expect(
     page.locator(".presentation-surface--export").getByText("7 MIN"),
@@ -859,9 +856,7 @@ test("exports long mixed-direction board text beside a visual without clipping",
 
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/present/activity-long-mixed-direction");
-  await expect(page.getByTestId("present-title")).toHaveText(
-    longMixedDirectionActivity.title,
-  );
+  await expect(page.getByTestId("present-title")).toHaveCount(0);
   await expect(page.getByTestId("present-task")).toHaveText(
     longMixedDirectionActivity.task,
   );
@@ -875,7 +870,6 @@ test("exports long mixed-direction board text beside a visual without clipping",
   const regions = await page.locator(".presentation-surface--export").evaluate((surface) => {
     const surfaceBounds = surface.getBoundingClientRect();
     const selectors = [
-      ["title", ".presentation-header-title"],
       ["task", ".presentation-task"],
       ["prompt-one", ".presentation-prompt:nth-child(1)"],
       ["prompt-two", ".presentation-prompt:nth-child(2)"],
@@ -1386,7 +1380,8 @@ test("restores hidden timer actions through the compact clock without duplicatin
     );
 
     await page.goto("/present/activity-long-mixed-direction");
-    await expect(page.getByTestId("present-title")).toHaveText("Independent practice");
+    await expect(page.getByTestId("present-title")).toHaveCount(0);
+    await expect(page.getByTestId("present-task")).toHaveText("Work quietly.");
 
     await openTeacherControls(page);
     await page.getByRole("button", { name: "Minimize timer" }).click();
@@ -1583,7 +1578,8 @@ test("keeps Present controls tappable in a short landscape tablet viewport", asy
     );
 
     await page.goto("/present/activity-long-mixed-direction");
-    await expect(page.getByTestId("present-title")).toHaveText("Independent practice");
+    await expect(page.getByTestId("present-title")).toHaveCount(0);
+    await expect(page.getByTestId("present-task")).toHaveText("Work quietly.");
 
     await openTeacherControls(page);
     await page.getByRole("button", { name: "Minimize timer" }).tap();
@@ -1678,7 +1674,10 @@ test("lets teachers replace a live board with a context-matched Surprise me resu
   });
 
   await page.goto("/present/activity-present-source");
-  await expect(page.getByTestId("present-title")).toHaveText("Current live board");
+  await expect(page.getByTestId("present-title")).toHaveCount(0);
+  await expect(page.getByTestId("present-task")).toHaveText(
+    surprisePresentActivity.task,
+  );
   await openTeacherControls(page);
 
   const surpriseButton = page.getByTestId("button-present-surprise");
@@ -1695,14 +1694,17 @@ test("lets teachers replace a live board with a context-matched Surprise me resu
   await page.keyboard.press("Enter");
   await expect(surpriseButton).toBeDisabled();
   await expect(surpriseButton).toContainText("Generating");
-  await expect(page.getByTestId("present-title")).toHaveText("Current live board");
+  await expect(page.getByTestId("present-title")).toHaveCount(0);
 
   await surpriseButton.click({ force: true });
   await expect.poll(() => requestPayload).toBeTruthy();
   releaseGeneration();
 
   await expect(page).toHaveURL(/\/present\/activity-present-surprise$/);
-  await expect(page.getByTestId("present-title")).toHaveText("Fresh surprise board");
+  await expect(page.getByTestId("present-title")).toHaveCount(0);
+  await expect(page.getByTestId("present-task")).toHaveText(
+    generatedActivity.task,
+  );
   expect(requestPayload).toMatchObject({
     classId: "class-1",
     unitId: "unit-forces",
@@ -1746,7 +1748,7 @@ test("keeps the live board and offers a retry after Present Surprise me fails", 
     "The generator is temporarily unavailable.",
   );
   await expect(page.getByRole("button", { name: "Retry" })).toBeVisible();
-  await expect(page.getByTestId("present-title")).toHaveText("Current live board");
+  await expect(page.getByTestId("present-title")).toHaveCount(0);
   await expect(page).toHaveURL(/\/present\/activity-present-source$/);
 
   const errorBounds = await page.getByTestId("present-generation-error").boundingBox();

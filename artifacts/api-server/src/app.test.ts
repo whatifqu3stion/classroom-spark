@@ -31,7 +31,6 @@ describe("API request body limits", () => {
 
     const response = await supertest(app).post("/api/activities").send({
       classId: "not-needed-for-image-validation",
-      title: "Image boundary test",
       task: "Keep the rest of the activity intact.",
       durationMinutes: 5,
       deviceMode: "off",

@@ -117,7 +117,7 @@ export function BoardEditor({
   const disablePresent = (!draft.id && !isMeaningful) || Boolean(durationError);
   const disabledPresentHint = durationError
     ? "Fix the duration before presenting."
-    : "Add a title or task before presenting.";
+    : "Add a task before presenting.";
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background" data-testid="board-editor">
@@ -244,13 +244,6 @@ export function BoardEditor({
               )}
             </div>
 
-            <EditableText
-              value={draft.title}
-              onChange={(val) => onChange({ title: val })}
-              placeholder="Enter a short title..."
-              className="text-3xl md:text-4xl font-bold tracking-tight text-foreground block w-full"
-            />
-            <FormulaPreview>{draft.title}</FormulaPreview>
           </div>
 
           <EditableText
@@ -258,7 +251,7 @@ export function BoardEditor({
             value={draft.task}
             onChange={(val) => onChange({ task: val })}
             placeholder="Describe the main task for students..."
-            className="text-lg md:text-xl leading-relaxed text-foreground block w-full"
+            className="text-xl md:text-2xl leading-relaxed text-foreground block w-full"
           />
           <FormulaPreview>{draft.task}</FormulaPreview>
 

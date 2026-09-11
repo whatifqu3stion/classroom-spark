@@ -38,8 +38,8 @@ import {
 } from "@/lib/presentation-fonts";
 import { PRESENTATION_RAIL_INVARIANTS } from "@workspace/presentation-rail-contract";
 
-const getExportFilename = (title: string) => {
-  const slug = title
+const getExportFilename = (task: string) => {
+  const slug = task
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLocaleLowerCase()
@@ -192,7 +192,7 @@ export default function Present() {
       });
 
       const download = document.createElement("a");
-      download.download = getExportFilename(activeDraft?.title ?? "");
+       download.download = getExportFilename(activeDraft?.task ?? "");
       download.href = dataUrl;
       download.click();
     } catch (error) {

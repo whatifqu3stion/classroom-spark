@@ -1059,7 +1059,6 @@ components:
       type: object
       required:
         - classId
-        - title
         - task
         - durationMinutes
         - deviceMode
@@ -1068,8 +1067,6 @@ components:
           type: string
         eyebrow:
           type: ["string", "null"]
-        title:
-          type: string
         task:
           type: string
         prompts:
@@ -1124,8 +1121,6 @@ components:
       properties:
         eyebrow:
           type: ["string", "null"]
-        title:
-          type: string
         task:
           type: string
         prompts:
