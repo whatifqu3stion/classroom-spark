@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef, type CSSProperties, type PointerEvent } from "react";
-import { useBoardwork } from "@/store/boardwork-context";
+import {
+  getPresentationVisuals,
+  useBoardwork,
+} from "@/store/boardwork-context";
 import { Link, useLocation, useRoute } from "wouter";
 import { toPng } from "html-to-image";
 import { useToast } from "@/hooks/use-toast";
@@ -62,6 +65,9 @@ export default function Present() {
   const activeDraft = React.useMemo(() => {
     return appState?.activities.find(a => a.id === activityId);
   }, [appState, activityId]);
+  const hasMultipleVisuals = Boolean(
+    activeDraft && getPresentationVisuals(activeDraft).length > 1,
+  );
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [controlsOpen, setControlsOpen] = useState(false);
@@ -126,6 +132,12 @@ export default function Present() {
   useEffect(() => {
     setGenerationError(null);
   }, [activityId]);
+
+  useEffect(() => {
+    setTimerMinimized(hasMultipleVisuals);
+    setTimerControlsOpen(false);
+    setTimerOptionsOpen(false);
+  }, [hasMultipleVisuals]);
 
   const toggleFullscreen = async () => {
     if (!document.fullscreenElement && containerRef.current) {
@@ -461,23 +473,25 @@ export default function Present() {
           <span>Adjust</span>
           <ChevronDown className={`h-3.5 w-3.5 transition-transform ${timerOptionsOpen ? "rotate-180" : ""}`} aria-hidden="true" />
         </button>
-        <button
-          type="button"
-          className="presentation-timer-options-trigger"
-          onClick={() => {
-            setTimerMinimized((value) => !value);
-            setTimerControlsOpen(false);
-            setTimerOptionsOpen(false);
-          }}
-          aria-label={timerMinimized ? "Expand timer" : "Minimize timer"}
-        >
-          {timerMinimized ? (
-            <Maximize className="h-3.5 w-3.5" aria-hidden="true" />
-          ) : (
-            <Minimize className="h-3.5 w-3.5" aria-hidden="true" />
-          )}
-          <span>{timerMinimized ? "Expand" : "Minimize"}</span>
-        </button>
+        {!hasMultipleVisuals && (
+          <button
+            type="button"
+            className="presentation-timer-options-trigger"
+            onClick={() => {
+              setTimerMinimized((value) => !value);
+              setTimerControlsOpen(false);
+              setTimerOptionsOpen(false);
+            }}
+            aria-label={timerMinimized ? "Expand timer" : "Minimize timer"}
+          >
+            {timerMinimized ? (
+              <Maximize className="h-3.5 w-3.5" aria-hidden="true" />
+            ) : (
+              <Minimize className="h-3.5 w-3.5" aria-hidden="true" />
+            )}
+            <span>{timerMinimized ? "Expand" : "Minimize"}</span>
+          </button>
+        )}
       </div>
       {timerOptionsOpen && (
         <div id="timer-options" className="presentation-timer-options">

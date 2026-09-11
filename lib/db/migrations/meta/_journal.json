@@ -43,6 +43,13 @@
       "when": 1787694354632,
       "tag": "0005_goofy_secret_warriors",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789154571822,
+      "tag": "0006_good_wolfsbane",
+      "breakpoints": true
     }
   ]
 }

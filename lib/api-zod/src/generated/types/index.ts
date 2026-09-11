@@ -32,6 +32,7 @@ export * from './listActivitiesParams';
 export * from './presentationThemeAnchors';
 export * from './presentationThemeSelection';
 export * from './presentationThemeSelectionKind';
+export * from './presentationVisual';
 export * from './technologyMode';
 export * from './unit';
 export * from './unitInput';

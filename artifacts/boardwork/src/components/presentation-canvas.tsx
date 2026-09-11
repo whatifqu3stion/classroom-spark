@@ -7,7 +7,10 @@ import {
   type Ref,
 } from "react";
 import { Clock, ExternalLink } from "lucide-react";
-import type { ActivityDraft } from "@/store/boardwork-context";
+import {
+  getPresentationVisuals,
+  type ActivityDraft,
+} from "@/store/boardwork-context";
 import { getSafeResourceUrl } from "@/lib/resource-url";
 import { cn } from "@/lib/utils";
 import { getThemeColors, getThemeTypography } from "@/lib/presentation-theme";
@@ -81,7 +84,9 @@ export function PresentationCanvas({
   const themeColors = getThemeColors(activity.presentationTheme);
   const themeTypography = getThemeTypography(activity.presentationTheme);
   const includeTestIds = !exportLayout;
-  const hasVisual = Boolean(activity.visualUrl);
+  const visuals = getPresentationVisuals(activity);
+  const hasVisual = visuals.length > 0;
+  const hasMultipleVisuals = visuals.length > 1;
   const presentationContentLength = [activity.task, ...activity.prompts].reduce(
     (total, value) => total + (value?.trim().length ?? 0),
     0,
@@ -90,9 +95,12 @@ export function PresentationCanvas({
     presentationContentLength > 420 ||
     activity.prompts.some((prompt) => prompt.trim().length > 170);
   const showTimer = !exportLayout && !editorPreview && timer?.visible;
-  const showLargeTimer = Boolean(showTimer && !timerMinimized);
+  const effectiveTimerMinimized = timerMinimized || hasMultipleVisuals;
+  const showLargeTimer = Boolean(showTimer && !effectiveTimerMinimized);
   const showCompactTimer =
-    !exportLayout && !editorPreview && Boolean(timer?.visible && timerMinimized);
+    !exportLayout &&
+    !editorPreview &&
+    Boolean(timer?.visible && effectiveTimerMinimized);
   const showHiddenTimerRecovery =
     !exportLayout && !editorPreview && Boolean(timer && !timer.visible && onShowTimer);
   const showHeaderTimer = showCompactTimer || showHiddenTimerRecovery;
@@ -491,24 +499,40 @@ export function PresentationCanvas({
             data-rail-invariants={`${PRESENTATION_RAIL_INVARIANTS.visualCard} ${PRESENTATION_RAIL_INVARIANTS.intrinsicImage} ${PRESENTATION_RAIL_INVARIANTS.largeTimer}`}
           >
             {hasVisual && (
-              <figure
-                className="presentation-visual"
-                data-rail-surface={PRESENTATION_RAIL_INVARIANTS.visualCard}
-              >
-                <img
-                  src={activity.visualUrl ?? ""}
-                  alt={activity.visualDescription ?? ""}
-                  data-rail-surface={PRESENTATION_RAIL_INVARIANTS.intrinsicImage}
-                />
-                {activity.visualDescription && (
-                  <figcaption
-                    className="presentation-visual-caption boardwork-user-content"
-                    dir="auto"
-                  >
-                    {activity.visualDescription}
-                  </figcaption>
+              <div
+                className={cn(
+                  "presentation-visuals",
+                  visuals.length > 1 && "presentation-visuals--multiple",
                 )}
-              </figure>
+                data-testid={includeTestIds ? "presentation-visuals" : undefined}
+              >
+                {visuals.map((visual, index) => (
+                  <figure
+                    key={`${index}-${visual.url.slice(0, 24)}`}
+                    className="presentation-visual"
+                    data-testid={
+                      includeTestIds
+                        ? `presentation-visual-${index + 1}`
+                        : undefined
+                    }
+                    data-rail-surface={PRESENTATION_RAIL_INVARIANTS.visualCard}
+                  >
+                    <img
+                      src={visual.url}
+                      alt={visual.description ?? ""}
+                      data-rail-surface={PRESENTATION_RAIL_INVARIANTS.intrinsicImage}
+                    />
+                    {visual.description && (
+                      <figcaption
+                        className="presentation-visual-caption boardwork-user-content"
+                        dir="auto"
+                      >
+                        {visual.description}
+                      </figcaption>
+                    )}
+                  </figure>
+                ))}
+              </div>
             )}
             {showLargeTimer && timer && (
               <div

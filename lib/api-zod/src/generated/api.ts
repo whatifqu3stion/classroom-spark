@@ -25,6 +25,9 @@ export const getAppStateResponseClassesItemDefaultDurationMultipleOf = 1;
 
 export const getAppStateResponseActivitiesItemDurationMinutesMultipleOf = 1;
 
+
+export const getAppStateResponseActivitiesItemVisualsMax = 2;
+
 export const getAppStateResponseActivitiesItemPresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getAppStateResponseActivitiesItemPresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getAppStateResponseActivitiesItemPresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -84,6 +87,10 @@ export const GetAppStateResponse = zod.object({
   "resourceNote": zod.string().nullish(),
   "visualUrl": zod.string().nullish(),
   "visualDescription": zod.string().nullish(),
+  "visuals": zod.array(zod.object({
+  "url": zod.string().min(1),
+  "description": zod.string().nullish()
+})).max(getAppStateResponseActivitiesItemVisualsMax).optional(),
   "materials": zod.array(zod.string()).optional(),
   "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
@@ -443,6 +450,9 @@ export const GenerateActivityBody = zod.object({
 
 export const generateActivityResponseDurationMinutesMultipleOf = 1;
 
+
+export const generateActivityResponseVisualsMax = 2;
+
 export const generateActivityResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const generateActivityResponsePresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const generateActivityResponsePresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -463,6 +473,10 @@ export const GenerateActivityResponse = zod.object({
   "resourceNote": zod.string().nullish(),
   "visualUrl": zod.string().nullish(),
   "visualDescription": zod.string().nullish(),
+  "visuals": zod.array(zod.object({
+  "url": zod.string().min(1),
+  "description": zod.string().nullish()
+})).max(generateActivityResponseVisualsMax).optional(),
   "materials": zod.array(zod.string()).optional(),
   "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
@@ -554,6 +568,9 @@ export const ListActivitiesQueryParams = zod.object({
 
 export const listActivitiesResponseDurationMinutesMultipleOf = 1;
 
+
+export const listActivitiesResponseVisualsMax = 2;
+
 export const listActivitiesResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const listActivitiesResponsePresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const listActivitiesResponsePresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -574,6 +591,10 @@ export const ListActivitiesResponseItem = zod.object({
   "resourceNote": zod.string().nullish(),
   "visualUrl": zod.string().nullish(),
   "visualDescription": zod.string().nullish(),
+  "visuals": zod.array(zod.object({
+  "url": zod.string().min(1),
+  "description": zod.string().nullish()
+})).max(listActivitiesResponseVisualsMax).optional(),
   "materials": zod.array(zod.string()).optional(),
   "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
@@ -607,6 +628,9 @@ export const ListActivitiesResponse = zod.array(ListActivitiesResponseItem)
  */
 export const createActivityBodyDurationMinutesMultipleOf = 1;
 
+
+export const createActivityBodyVisualsMax = 2;
+
 export const createActivityBodyPresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const createActivityBodyPresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const createActivityBodyPresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -625,6 +649,10 @@ export const CreateActivityBody = zod.object({
   "resourceNote": zod.string().nullish(),
   "visualUrl": zod.string().nullish(),
   "visualDescription": zod.string().nullish(),
+  "visuals": zod.array(zod.object({
+  "url": zod.string().min(1),
+  "description": zod.string().nullish()
+})).max(createActivityBodyVisualsMax).optional(),
   "materials": zod.array(zod.string()).optional(),
   "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
@@ -650,6 +678,9 @@ export const CreateActivityBody = zod.object({
 
 export const createActivityResponseDurationMinutesMultipleOf = 1;
 
+
+export const createActivityResponseVisualsMax = 2;
+
 export const createActivityResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const createActivityResponsePresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const createActivityResponsePresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -670,6 +701,10 @@ export const CreateActivityResponse = zod.object({
   "resourceNote": zod.string().nullish(),
   "visualUrl": zod.string().nullish(),
   "visualDescription": zod.string().nullish(),
+  "visuals": zod.array(zod.object({
+  "url": zod.string().min(1),
+  "description": zod.string().nullish()
+})).max(createActivityResponseVisualsMax).optional(),
   "materials": zod.array(zod.string()).optional(),
   "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
@@ -706,6 +741,9 @@ export const GetActivityParams = zod.object({
 
 export const getActivityResponseDurationMinutesMultipleOf = 1;
 
+
+export const getActivityResponseVisualsMax = 2;
+
 export const getActivityResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getActivityResponsePresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getActivityResponsePresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -726,6 +764,10 @@ export const GetActivityResponse = zod.object({
   "resourceNote": zod.string().nullish(),
   "visualUrl": zod.string().nullish(),
   "visualDescription": zod.string().nullish(),
+  "visuals": zod.array(zod.object({
+  "url": zod.string().min(1),
+  "description": zod.string().nullish()
+})).max(getActivityResponseVisualsMax).optional(),
   "materials": zod.array(zod.string()).optional(),
   "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
@@ -763,6 +805,9 @@ export const UpdateActivityParams = zod.object({
 
 export const updateActivityBodyDurationMinutesMultipleOf = 1;
 
+
+export const updateActivityBodyVisualsMax = 2;
+
 export const updateActivityBodyPresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const updateActivityBodyPresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const updateActivityBodyPresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -780,6 +825,10 @@ export const UpdateActivityBody = zod.object({
   "resourceNote": zod.string().nullish(),
   "visualUrl": zod.string().nullish(),
   "visualDescription": zod.string().nullish(),
+  "visuals": zod.array(zod.object({
+  "url": zod.string().min(1),
+  "description": zod.string().nullish()
+})).max(updateActivityBodyVisualsMax).optional(),
   "materials": zod.array(zod.string()).optional(),
   "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
@@ -805,6 +854,9 @@ export const UpdateActivityBody = zod.object({
 
 export const updateActivityResponseDurationMinutesMultipleOf = 1;
 
+
+export const updateActivityResponseVisualsMax = 2;
+
 export const updateActivityResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const updateActivityResponsePresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const updateActivityResponsePresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -825,6 +877,10 @@ export const UpdateActivityResponse = zod.object({
   "resourceNote": zod.string().nullish(),
   "visualUrl": zod.string().nullish(),
   "visualDescription": zod.string().nullish(),
+  "visuals": zod.array(zod.object({
+  "url": zod.string().min(1),
+  "description": zod.string().nullish()
+})).max(updateActivityResponseVisualsMax).optional(),
   "materials": zod.array(zod.string()).optional(),
   "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
@@ -881,6 +937,9 @@ export const DuplicateActivityParams = zod.object({
 
 export const duplicateActivityResponseDurationMinutesMultipleOf = 1;
 
+
+export const duplicateActivityResponseVisualsMax = 2;
+
 export const duplicateActivityResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const duplicateActivityResponsePresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const duplicateActivityResponsePresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -901,6 +960,10 @@ export const DuplicateActivityResponse = zod.object({
   "resourceNote": zod.string().nullish(),
   "visualUrl": zod.string().nullish(),
   "visualDescription": zod.string().nullish(),
+  "visuals": zod.array(zod.object({
+  "url": zod.string().min(1),
+  "description": zod.string().nullish()
+})).max(duplicateActivityResponseVisualsMax).optional(),
   "materials": zod.array(zod.string()).optional(),
   "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),
@@ -941,6 +1004,9 @@ export const SetActivityFavoriteBody = zod.object({
 
 export const setActivityFavoriteResponseDurationMinutesMultipleOf = 1;
 
+
+export const setActivityFavoriteResponseVisualsMax = 2;
+
 export const setActivityFavoriteResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const setActivityFavoriteResponsePresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const setActivityFavoriteResponsePresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -961,6 +1027,10 @@ export const SetActivityFavoriteResponse = zod.object({
   "resourceNote": zod.string().nullish(),
   "visualUrl": zod.string().nullish(),
   "visualDescription": zod.string().nullish(),
+  "visuals": zod.array(zod.object({
+  "url": zod.string().min(1),
+  "description": zod.string().nullish()
+})).max(setActivityFavoriteResponseVisualsMax).optional(),
   "materials": zod.array(zod.string()).optional(),
   "teacherNote": zod.string().nullish(),
   "sourceTopic": zod.string().nullish(),

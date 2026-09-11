@@ -1,7 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useLocation, useRoute } from "wouter";
 import { Shell } from "@/components/layout/shell";
-import { useBoardwork, DeviceMode, Duration, TechnologyMode, ClassProfile, ActivityDraft } from "@/store/boardwork-context";
+import {
+  useBoardwork,
+  DeviceMode,
+  Duration,
+  TechnologyMode,
+  ClassProfile,
+  ActivityDraft,
+  getPresentationVisuals,
+} from "@/store/boardwork-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -140,6 +148,7 @@ const activitySavePayload = (draft: ActivityDraft) => ({
   technologyMode: draft.technologyMode,
   resourceUrl: draft.resourceUrl,
   resourceNote: draft.resourceNote,
+  visuals: getPresentationVisuals(draft),
   visualUrl: draft.visualUrl,
   visualDescription: draft.visualDescription,
   materials: draft.materials,

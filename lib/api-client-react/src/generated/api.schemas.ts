@@ -84,6 +84,13 @@ export interface PresentationThemeSelection {
   anchors?: PresentationThemeAnchors;
 }
 
+export interface PresentationVisual {
+  /** @minLength 1 */
+  url: string;
+  /** @nullable */
+  description?: string | null;
+}
+
 export interface ClassProfile {
   id: string;
   name: string;
@@ -235,6 +242,8 @@ export interface Activity {
   visualUrl?: string | null;
   /** @nullable */
   visualDescription?: string | null;
+  /** @maxItems 2 */
+  visuals?: PresentationVisual[];
   materials?: string[];
   /** @nullable */
   teacherNote?: string | null;
@@ -281,6 +290,8 @@ export interface ActivityInput {
   visualUrl?: string | null;
   /** @nullable */
   visualDescription?: string | null;
+  /** @maxItems 2 */
+  visuals?: PresentationVisual[];
   materials?: string[];
   /** @nullable */
   teacherNote?: string | null;
@@ -317,6 +328,8 @@ export interface ActivityUpdate {
   visualUrl?: string | null;
   /** @nullable */
   visualDescription?: string | null;
+  /** @maxItems 2 */
+  visuals?: PresentationVisual[];
   materials?: string[];
   /** @nullable */
   teacherNote?: string | null;

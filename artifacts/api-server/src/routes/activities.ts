@@ -18,7 +18,6 @@ import {
   SetActivityFavoriteBody,
   SetActivityFavoriteResponse,
   ClearNonFavoriteActivitiesResponse,
-  getPresentationImagePayloadError,
   sanitizeUnicodeValue,
 } from "@workspace/api-zod";
 import {
@@ -31,6 +30,14 @@ import {
 } from "../lib/activity-resource";
 import { normalizeActivityTechnology } from "../lib/activity-technology";
 import { getActivityCompatibilityTitle } from "../lib/activity-title";
+import {
+  getCanonicalPresentationVisuals,
+  getLegacyPresentationVisualFields,
+  getPresentationVisualPayloadError,
+  mergeLegacyPresentationVisualPatch,
+  normalizePresentationVisuals,
+  withCanonicalPresentationVisuals,
+} from "../lib/presentation-visuals";
 
 const router: IRouter = Router();
 
@@ -49,7 +56,9 @@ router.get("/activities", async (req, res): Promise<void> => {
         .orderBy(activitiesTable.createdAt)
     : await db.select().from(activitiesTable).orderBy(activitiesTable.createdAt);
 
-  res.json(ListActivitiesResponse.parse(rows));
+  res.json(
+    ListActivitiesResponse.parse(rows.map(withCanonicalPresentationVisuals)),
+  );
 });
 
 router.post("/activities", async (req, res): Promise<void> => {
@@ -59,7 +68,12 @@ router.post("/activities", async (req, res): Promise<void> => {
     return;
   }
 
-  const visualError = getPresentationImagePayloadError(parsed.data.visualUrl);
+  const visuals = normalizePresentationVisuals(
+    parsed.data.visuals,
+    parsed.data.visualUrl,
+    parsed.data.visualDescription,
+  );
+  const visualError = getPresentationVisualPayloadError(visuals);
   if (visualError) {
     res.status(413).json({ error: visualError });
     return;
@@ -104,6 +118,8 @@ router.post("/activities", async (req, res): Promise<void> => {
     .insert(activitiesTable)
     .values({
       ...parsed.data,
+      visuals,
+      ...getLegacyPresentationVisualFields(visuals),
       title: getActivityCompatibilityTitle(parsed.data.task),
       deviceMode,
       resourceUrl,
@@ -131,7 +147,7 @@ router.get("/activities/:activityId", async (req, res): Promise<void> => {
     return;
   }
 
-  res.json(GetActivityResponse.parse(row));
+  res.json(GetActivityResponse.parse(withCanonicalPresentationVisuals(row)));
 });
 
 router.patch("/activities/:activityId", async (req, res): Promise<void> => {
@@ -146,12 +162,6 @@ router.patch("/activities/:activityId", async (req, res): Promise<void> => {
     return;
   }
 
-  const visualError = getPresentationImagePayloadError(parsed.data.visualUrl);
-  if (visualError) {
-    res.status(413).json({ error: visualError });
-    return;
-  }
-
   const [existing] = await db
     .select()
     .from(activitiesTable)
@@ -159,6 +169,30 @@ router.patch("/activities/:activityId", async (req, res): Promise<void> => {
 
   if (!existing) {
     res.status(404).json({ error: "Activity not found" });
+    return;
+  }
+
+  const shouldUpdateVisuals =
+    parsed.data.visuals !== undefined ||
+    parsed.data.visualUrl !== undefined ||
+    parsed.data.visualDescription !== undefined;
+  const existingVisuals = getCanonicalPresentationVisuals(existing);
+  const visuals = shouldUpdateVisuals
+    ? parsed.data.visuals !== undefined
+      ? normalizePresentationVisuals(parsed.data.visuals)
+      : mergeLegacyPresentationVisualPatch(
+          existingVisuals,
+          parsed.data.visualUrl,
+          parsed.data.visualDescription,
+          parsed.data.visualUrl !== undefined,
+          parsed.data.visualDescription !== undefined,
+        )
+    : undefined;
+  const visualError = visuals
+    ? getPresentationVisualPayloadError(visuals)
+    : null;
+  if (visualError) {
+    res.status(413).json({ error: visualError });
     return;
   }
 
@@ -198,6 +232,9 @@ router.patch("/activities/:activityId", async (req, res): Promise<void> => {
     .update(activitiesTable)
     .set({
       ...parsed.data,
+      ...(visuals
+        ? { visuals, ...getLegacyPresentationVisualFields(visuals) }
+        : {}),
       title: getActivityCompatibilityTitle(parsed.data.task ?? existing.task),
       technologyMode,
       resourceUrl,
@@ -205,7 +242,11 @@ router.patch("/activities/:activityId", async (req, res): Promise<void> => {
     .where(eq(activitiesTable.id, params.data.activityId))
     .returning();
 
-  res.json(UpdateActivityResponse.parse(updated));
+  res.json(
+    UpdateActivityResponse.parse(
+      updated ? withCanonicalPresentationVisuals(updated) : updated,
+    ),
+  );
 });
 
 router.delete("/activities/non-favorites", async (_req, res): Promise<void> => {

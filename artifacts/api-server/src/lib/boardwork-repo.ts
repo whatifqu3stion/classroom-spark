@@ -15,6 +15,10 @@ import {
   type Unit,
 } from "@workspace/db";
 import { getActivityCompatibilityTitle } from "./activity-title";
+import {
+  getCanonicalPresentationVisuals,
+  getLegacyPresentationVisualFields,
+} from "./presentation-visuals";
 
 const APP_STATE_KEY = "singleton";
 
@@ -236,6 +240,7 @@ export async function duplicateActivity(
     return null;
   }
 
+  const visuals = getCanonicalPresentationVisuals(source);
   const [copy] = await db
     .insert(activitiesTable)
     .values({
@@ -250,8 +255,8 @@ export async function duplicateActivity(
       arrivalInstructions: source.arrivalInstructions,
       resourceUrl: source.resourceUrl,
       resourceNote: source.resourceNote,
-      visualUrl: source.visualUrl,
-      visualDescription: source.visualDescription,
+      visuals,
+      ...getLegacyPresentationVisualFields(visuals),
       materials: source.materials,
       teacherNote: source.teacherNote,
       sourceTopic: source.sourceTopic,

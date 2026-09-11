@@ -895,6 +895,18 @@
     grid-column: 3;
   }
 
+  .presentation-visuals {
+    display: grid;
+    min-width: 0;
+    width: 100%;
+    gap: clamp(0.75rem, 1.5vw, 1.5rem);
+  }
+
+  .presentation-visuals--multiple {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
   .presentation-visual {
     display: grid;
     gap: 0.75rem;
@@ -915,6 +927,10 @@
     object-fit: contain;
     background: var(--presentation-accent-soft, rgb(23 23 23 / 4%));
     padding: clamp(0.35rem, 1vw, 0.75rem);
+  }
+
+  .presentation-visuals--multiple .presentation-visual img {
+    max-height: min(30vh, 20rem);
   }
 
   .presentation-surface:not(.presentation-surface--editor-preview):not(
@@ -1988,6 +2004,10 @@
 
   .presentation-surface--export .presentation-visual img {
     max-height: 430px;
+  }
+
+  .presentation-surface--export .presentation-visuals--multiple .presentation-visual img {
+    max-height: 190px;
   }
 
   .presentation-surface--export .presentation-rail {

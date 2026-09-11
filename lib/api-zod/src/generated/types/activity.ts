@@ -8,6 +8,7 @@
 import type { DeviceMode } from './deviceMode';
 import type { Duration } from './duration';
 import type { PresentationThemeSelection } from './presentationThemeSelection';
+import type { PresentationVisual } from './presentationVisual';
 import type { TechnologyMode } from './technologyMode';
 
 export interface Activity {
@@ -31,6 +32,8 @@ export interface Activity {
   visualUrl?: string | null;
   /** @nullable */
   visualDescription?: string | null;
+  /** @maxItems 2 */
+  visuals?: PresentationVisual[];
   materials?: string[];
   /** @nullable */
   teacherNote?: string | null;

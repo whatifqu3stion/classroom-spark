@@ -71,7 +71,8 @@ describe("BoardEditor presentation visual disclosure", () => {
     expect(editor).toHaveAttribute("data-state", "open");
     expect(editor).toHaveAttribute("aria-hidden", "false");
     expect(editor.children).toHaveLength(1);
-    expect(screen.getByText("Add image")).toBeInTheDocument();
+     expect(screen.getByText("Add image")).toBeInTheDocument();
+     expect(screen.getByText(/Add up to 2 local images/)).toBeInTheDocument();
     expect(screen.getByTestId("presentation-theme-picker")).toBeInTheDocument();
     expect(screen.queryByTestId("presentation-preview")).not.toBeInTheDocument();
     expect(screen.queryByTestId("presentation-preview-surface")).not.toBeInTheDocument();
@@ -93,7 +94,7 @@ describe("BoardEditor presentation visual disclosure", () => {
 
     await waitFor(() => {
       expect(screen.getByRole("tooltip")).toHaveTextContent(
-        "add a local image, choose presentation colors, and add a teacher note",
+        "add up to two local images, choose presentation colors, and add a teacher note",
       );
     });
   });
@@ -198,6 +199,69 @@ describe("BoardEditor presentation visual disclosure", () => {
     );
   });
 
+  it("adds, replaces, describes, and removes two ordered images", async () => {
+    function StatefulEditor() {
+      const [currentDraft, setCurrentDraft] = useState<ActivityDraft>(draft);
+
+      return (
+        <BoardEditor
+          draft={currentDraft}
+          onChange={(updates) =>
+            setCurrentDraft((previous) => ({ ...previous, ...updates }))
+          }
+        />
+      );
+    }
+
+    render(<StatefulEditor />);
+    fireEvent.click(screen.getByTestId("button-toggle-presentation-visual"));
+
+    fireEvent.change(screen.getByLabelText("Add image"), {
+      target: {
+        files: [new File(["first"], "first.png", { type: "image/png" })],
+      },
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId("visual-slot-1")).toBeInTheDocument(),
+    );
+
+    const firstDescription = screen.getByRole("textbox", {
+      name: "Visual description 1",
+    });
+    fireEvent.change(firstDescription, {
+      target: { value: "First classroom visual" },
+    });
+
+    fireEvent.change(screen.getByLabelText("Add second image"), {
+      target: {
+        files: [new File(["second"], "second.png", { type: "image/png" })],
+      },
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId("visual-slot-2")).toBeInTheDocument(),
+    );
+
+    expect(screen.getByTestId("presentation-visual-editor-content")).toHaveTextContent(
+      "Two images keep the timer small",
+    );
+    expect(screen.getByRole("textbox", { name: "Visual description 1" })).toHaveValue(
+      "First classroom visual",
+    );
+
+    fireEvent.change(screen.getByLabelText("Replace image 2"), {
+      target: {
+        files: [new File(["replacement"], "replacement.png", { type: "image/png" })],
+      },
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId("visual-slot-2")).toBeInTheDocument(),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove image 2" }));
+    expect(screen.queryByTestId("visual-slot-2")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Add second image")).toBeInTheDocument();
+  });
+
   it("keeps the image and retry recovery actions available after a save failure", () => {
     const onChange = vi.fn();
     const onRetrySave = vi.fn();
@@ -218,8 +282,9 @@ describe("BoardEditor presentation visual disclosure", () => {
     expect(onRetrySave).toHaveBeenCalledOnce();
 
     fireEvent.click(screen.getByTestId("button-toggle-presentation-visual"));
-    fireEvent.click(screen.getByRole("button", { name: "Remove image" }));
+     fireEvent.click(screen.getByRole("button", { name: "Remove image 1" }));
     expect(onChange).toHaveBeenCalledWith({
+      visuals: [],
       visualUrl: null,
       visualDescription: null,
     });

@@ -19,6 +19,40 @@ const timer = {
 };
 
 describe("PresentationCanvas timer visibility", () => {
+  it("renders two visuals and forces the timer into compact mode", () => {
+    const twoVisualActivity = {
+      ...activity,
+      visuals: [
+        { url: "data:image/png;base64,first", description: "First visual" },
+        { url: "data:image/png;base64,second", description: "Second visual" },
+      ],
+    };
+
+    const { rerender } = render(
+      <PresentationCanvas
+        activity={twoVisualActivity}
+        timer={timer}
+        timerMinimized={false}
+      />,
+    );
+
+    expect(screen.getAllByRole("img")).toHaveLength(2);
+    expect(screen.getByTestId("presentation-visual-1")).toHaveTextContent(
+      "First visual",
+    );
+    expect(screen.getByTestId("presentation-visual-2")).toHaveTextContent(
+      "Second visual",
+    );
+    expect(screen.getByTestId("compact-timer-progress")).toBeInTheDocument();
+    expect(screen.queryByTestId("presentation-timer")).not.toBeInTheDocument();
+
+    rerender(
+      <PresentationCanvas activity={twoVisualActivity} exportLayout />,
+    );
+    expect(screen.getAllByRole("img")).toHaveLength(2);
+    expect(screen.queryByTestId("compact-timer-progress")).not.toBeInTheDocument();
+  });
+
   it("keeps the live rail modes and child surfaces separate", () => {
     const visualActivity = {
       ...activity,

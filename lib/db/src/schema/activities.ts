@@ -21,6 +21,11 @@ export type PresentationThemeSelection = {
   anchors?: { background: string; text: string; accent: string };
 };
 
+export type PresentationVisual = {
+  url: string;
+  description?: string | null;
+};
+
 export const activitiesTable = pgTable("activities", {
   id: uuid("id").primaryKey().defaultRandom(),
   classId: uuid("class_id")
@@ -36,6 +41,10 @@ export const activitiesTable = pgTable("activities", {
   arrivalInstructions: text("arrival_instructions"),
   resourceUrl: text("resource_url"),
   resourceNote: text("resource_note"),
+  visuals: jsonb("visuals")
+    .$type<PresentationVisual[]>()
+    .notNull()
+    .default([]),
   visualUrl: text("visual_url"),
   visualDescription: text("visual_description"),
   materials: jsonb("materials").$type<string[]>().notNull().default([]),

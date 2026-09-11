@@ -1,11 +1,11 @@
 export const PRESENTATION_IMAGE_FILE_LIMIT_BYTES = 5 * 1024 * 1024;
-export const ACTIVITY_REQUEST_BODY_LIMIT_BYTES = 8 * 1024 * 1024;
+export const ACTIVITY_REQUEST_BODY_LIMIT_BYTES = 16 * 1024 * 1024;
 
-// Leave room for the rest of an activity payload so a supported image does not
-// consume the entire request budget.
+// Two supported 5 MB files encode to just under 14 MB as data URLs. Leave room
+// for the rest of an activity payload while keeping the per-image budget
+// aligned with the browser-side picker validation.
 export const ACTIVITY_NON_IMAGE_BUDGET_BYTES = 1 * 1024 * 1024;
-export const PRESENTATION_IMAGE_DATA_URL_LIMIT_BYTES =
-  ACTIVITY_REQUEST_BODY_LIMIT_BYTES - ACTIVITY_NON_IMAGE_BUDGET_BYTES;
+export const PRESENTATION_IMAGE_DATA_URL_LIMIT_BYTES = 7 * 1024 * 1024;
 
 export const PRESENTATION_IMAGE_SIZE_ERROR =
   "Image is too large to save. Choose an image no larger than 5 MB.";
@@ -40,7 +40,10 @@ function getUtf8ByteLength(value: string): number {
 export function getPresentationImagePayloadError(
   visualUrl: string | null | undefined,
 ): string | null {
-  if (!visualUrl) return null;
+  if (visualUrl == null) return null;
+  if (!visualUrl.trim()) {
+    return "This image could not be saved. Choose an image from the image picker.";
+  }
 
   const encodedBytes = getUtf8ByteLength(visualUrl);
   if (encodedBytes > PRESENTATION_IMAGE_DATA_URL_LIMIT_BYTES) {

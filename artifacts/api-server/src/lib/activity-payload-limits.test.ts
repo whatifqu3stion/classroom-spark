@@ -37,6 +37,17 @@ describe("activity payload image limits", () => {
     ).toBeNull();
   });
 
+  it("leaves enough request budget for two supported 5 MB images", () => {
+    const encodedBytes = estimatePresentationImageDataUrlBytes(
+      PRESENTATION_IMAGE_FILE_LIMIT_BYTES,
+      "image/png",
+    );
+
+    expect(
+      encodedBytes * 2 + 1 * 1024 * 1024,
+    ).toBeLessThanOrEqual(ACTIVITY_REQUEST_BODY_LIMIT_BYTES);
+  });
+
   it("rejects a data URL whose decoded image exceeds 5 MB", () => {
     const encodedLength = 4 * Math.ceil((PRESENTATION_IMAGE_FILE_LIMIT_BYTES + 1) / 3);
     const oversizedBase64 = "A".repeat(encodedLength);

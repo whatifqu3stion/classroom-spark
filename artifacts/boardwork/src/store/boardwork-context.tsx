@@ -6,6 +6,11 @@ export type DeviceMode = "off" | "on";
 export type TechnologyMode = "no_computer" | "computer_available" | "computer_required";
 export type Duration = number;
 
+export interface PresentationVisual {
+  url: string;
+  description?: string | null;
+}
+
 export interface Chip {
   id: string;
   classId: string;
@@ -47,6 +52,7 @@ export interface ActivityDraft {
   arrivalInstructions?: string | null;
   resourceUrl?: string | null;
   resourceNote?: string | null;
+  visuals?: PresentationVisual[] | null;
   visualUrl?: string | null;
   visualDescription?: string | null;
   materials?: string[];
@@ -59,6 +65,18 @@ export interface ActivityDraft {
   style?: string | null;
   presentationTheme?: PresentationThemeSelection | null;
   favorite?: boolean;
+}
+
+export function getPresentationVisuals(
+  activity: Pick<ActivityDraft, "visuals" | "visualUrl" | "visualDescription">,
+): PresentationVisual[] {
+  const visuals = Array.isArray(activity.visuals)
+    ? activity.visuals.filter((visual) => visual?.url).slice(0, 2)
+    : [];
+  if (visuals.length > 0) return visuals;
+  return activity.visualUrl
+    ? [{ url: activity.visualUrl, description: activity.visualDescription ?? null }]
+    : [];
 }
 
 interface BoardworkContextType {

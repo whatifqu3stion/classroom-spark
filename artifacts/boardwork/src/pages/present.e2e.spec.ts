@@ -35,10 +35,37 @@ const localVisualUrl =
     </svg>
   `);
 
+const secondLocalVisualUrl =
+  "data:image/svg+xml;charset=utf-8," +
+  encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="520" height="860" viewBox="0 0 520 860">
+      <rect width="520" height="860" rx="36" fill="#dcfce7"/>
+      <circle cx="260" cy="270" r="130" fill="#16a34a"/>
+      <path d="M110 600 H410 M160 680 H360" stroke="#14532d" stroke-width="24" stroke-linecap="round"/>
+    </svg>
+  `);
+
 const longMixedDirectionVisualActivity = {
   ...longMixedDirectionActivity,
   visualUrl: localVisualUrl,
   visualDescription: "A local diagram showing a changing system.",
+};
+
+const twoVisualActivity = {
+  ...longMixedDirectionActivity,
+  id: "activity-two-visuals",
+  visuals: [
+    {
+      url: localVisualUrl,
+      description: "First visual: a changing system diagram.",
+    },
+    {
+      url: secondLocalVisualUrl,
+      description: "Second visual: a portrait classroom reference.",
+    },
+  ],
+  visualUrl: localVisualUrl,
+  visualDescription: "First visual: a changing system diagram.",
 };
 
 const exportDurationActivity = {
@@ -242,6 +269,11 @@ const extremeVisualActivities = {
 const visualAppState = {
   ...appState,
   activities: [longMixedDirectionVisualActivity],
+};
+
+const twoVisualAppState = {
+  ...appState,
+  activities: [twoVisualActivity],
 };
 
 const darkVisualAppState = {
@@ -920,6 +952,80 @@ test("exports long mixed-direction board text beside a visual without clipping",
     expect(
       countVisiblePixels(png, region),
       `${region.name} should contain visible exported pixels`,
+    ).toBeGreaterThan(20);
+  }
+
+  assertBrowserHealth();
+});
+
+test("keeps two ordered visuals visible in Present and PNG export", async ({
+  page,
+}) => {
+  const assertBrowserHealth = await reportBrowserHealth(page);
+
+  await stubPresentationState(page, twoVisualAppState);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/present/activity-two-visuals");
+  await settlePresentationSurface(page);
+
+  const liveSurface = page.getByTestId("presentation-surface");
+  await expect(liveSurface.locator(".presentation-visuals--multiple")).toBeVisible();
+  await expect(
+    liveSurface.getByRole("img", {
+      name: "First visual: a changing system diagram.",
+    }),
+  ).toBeVisible();
+  await expect(
+    liveSurface.getByRole("img", {
+      name: "Second visual: a portrait classroom reference.",
+    }),
+  ).toBeVisible();
+  await expect(liveSurface.getByTestId("compact-timer-progress")).toBeVisible();
+
+  await openTeacherControls(page);
+  await expect(page.getByRole("button", { name: "Expand timer" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Minimize timer" })).toHaveCount(0);
+
+  const exportSurface = page.locator(".presentation-surface--export");
+  const exportImages = exportSurface.locator(".presentation-visual img");
+  await expect(exportImages).toHaveCount(2);
+  for (const image of await exportImages.all()) {
+    await expect(image).toHaveJSProperty("complete", true);
+  }
+
+  const regions = await exportSurface.evaluate((surface) => {
+    const surfaceBounds = surface.getBoundingClientRect();
+    return Array.from(
+      surface.querySelectorAll<HTMLElement>(".presentation-visual img"),
+    ).map((image) => {
+      const bounds = image.getBoundingClientRect();
+      return {
+        x: bounds.left - surfaceBounds.left,
+        y: bounds.top - surfaceBounds.top,
+        width: bounds.width,
+        height: bounds.height,
+      };
+    });
+  });
+  expect(regions).toHaveLength(2);
+  for (const region of regions) {
+    expect(region.x).toBeGreaterThan(0);
+    expect(region.y).toBeGreaterThan(0);
+    expect(region.x + region.width).toBeLessThan(1920);
+    expect(region.y + region.height).toBeLessThan(1080);
+  }
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByTestId("button-export-png").click();
+  const download = await downloadPromise;
+  const png = decodePng(await readFile(await download.path()!));
+  expect({ width: png.width, height: png.height }).toEqual({
+    width: 1920,
+    height: 1080,
+  });
+  for (const [index, region] of regions.entries()) {
+    expect(
+      countVisiblePixels(png, { name: `visual ${index + 1}`, ...region }),
     ).toBeGreaterThan(20);
   }
 
