@@ -1843,6 +1843,27 @@
 
   }
 
+  /*
+   * Tall classroom canvases have room for the student composition to breathe.
+   * Center only the authored stack and the rail contents; the main row still
+   * owns the available height, and the footer remains its own grid row.
+   */
+  @media (min-aspect-ratio: 4 / 3) and (min-width: 760px) and (min-height: 801px) {
+    .presentation-surface:not(.presentation-surface--export):not(
+        .presentation-surface--editor-preview
+      )
+      .presentation-content {
+      align-content: center;
+    }
+
+    .presentation-surface:not(.presentation-surface--export):not(
+        .presentation-surface--editor-preview
+      )
+      .presentation-rail {
+      justify-content: center;
+    }
+  }
+
   @media (orientation: landscape) and (min-width: 700px) and (max-height: 800px) {
     .presentation-surface {
       padding: 1.5rem clamp(4rem, 7vw, 5.5rem);
@@ -1854,6 +1875,11 @@
 
     .presentation-content {
       gap: clamp(1rem, 2vh, 1.35rem);
+      align-content: start;
+    }
+
+    .presentation-rail {
+      justify-content: flex-start;
     }
 
     .presentation-task {
@@ -1930,6 +1956,11 @@
 
     .presentation-content {
       gap: 0.75rem;
+      align-content: start;
+    }
+
+    .presentation-rail {
+      justify-content: flex-start;
     }
 
     .presentation-task {

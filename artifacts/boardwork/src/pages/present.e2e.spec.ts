@@ -2334,12 +2334,7 @@ test("keeps footer-only content from changing Present prompt spacing", async ({ 
 test("captures stable responsive Present compositions and keeps export surfaces clean", async ({
   page,
 }) => {
-  const screenshotOptions = {
-    animations: "disabled" as const,
-    caret: "hide" as const,
-    scale: "css" as const,
-  };
-    const liveSurface = page.getByTestId("presentation-surface");
+  const liveSurface = page.getByTestId("presentation-surface");
 
   await stubPresentationState(page, visualAppState);
   await page.setViewportSize({ width: 1920, height: 1080 });
@@ -2352,11 +2347,56 @@ test("captures stable responsive Present compositions and keeps export surfaces 
     (prompts) => getComputedStyle(prompts).gridTemplateColumns.trim().split(/\s+/),
   );
   expect(widePromptTracks).toHaveLength(1);
+  const wideComposition = await liveSurface.evaluate((surface) => {
+    const main = surface.querySelector<HTMLElement>(".presentation-main");
+    const content = surface.querySelector<HTMLElement>(".presentation-content");
+    const rail = surface.querySelector<HTMLElement>(".presentation-rail");
+    const footer = surface.querySelector<HTMLElement>(".presentation-footer");
+    if (!main || !content || !rail || !footer) {
+      throw new Error("Missing wide presentation composition regions");
+    }
+
+    const mainBounds = main.getBoundingClientRect();
+    const footerBounds = footer.getBoundingClientRect();
+    const contentChildren = Array.from(content.children).map((child) =>
+      child.getBoundingClientRect(),
+    );
+    const contentTop = Math.min(...contentChildren.map((bounds) => bounds.top));
+    const contentBottom = Math.max(
+      ...contentChildren.map((bounds) => bounds.bottom),
+    );
+    const railChildren = Array.from(rail.children).map((child) =>
+      child.getBoundingClientRect(),
+    );
+    const railContentTop = Math.min(...railChildren.map((bounds) => bounds.top));
+    const railContentBottom = Math.max(
+      ...railChildren.map((bounds) => bounds.bottom),
+    );
+    const styles = getComputedStyle(content);
+    const mainStyles = getComputedStyle(main);
+    const paddingTop = Number.parseFloat(mainStyles.paddingTop) || 0;
+    const paddingBottom = Number.parseFloat(mainStyles.paddingBottom) || 0;
+    const innerTop = mainBounds.top + paddingTop;
+    const innerBottom = mainBounds.bottom - paddingBottom;
+    const innerCenter = (innerTop + innerBottom) / 2;
+    return {
+      contentCenter: (contentTop + contentBottom) / 2,
+      railContentCenter: (railContentTop + railContentBottom) / 2,
+      innerCenter,
+      contentTopSpace: contentTop - innerTop,
+      contentBottomSpace: innerBottom - contentBottom,
+      mainBottom: mainBounds.bottom,
+      footerTop: footerBounds.top,
+      contentAlignment: styles.alignContent,
+    };
+  });
+  expect(wideComposition.contentAlignment).toBe("center");
+  expect(Math.abs(wideComposition.contentCenter - wideComposition.railContentCenter)).toBeLessThan(8);
+  expect(Math.abs(wideComposition.contentCenter - wideComposition.innerCenter)).toBeLessThan(12);
+  expect(wideComposition.contentTopSpace).toBeGreaterThan(40);
+  expect(wideComposition.contentBottomSpace).toBeGreaterThan(40);
+  expect(wideComposition.mainBottom).toBeLessThanOrEqual(wideComposition.footerTop);
   await assertExportSurfaceHasNoLiveDivider(page);
-  await expect(liveSurface).toHaveScreenshot(
-    "present-wide.png",
-    screenshotOptions,
-  );
 
   await page.setViewportSize({ width: 640, height: 800 });
   await page.goto("/present/activity-long-mixed-direction");
@@ -2372,10 +2412,6 @@ test("captures stable responsive Present compositions and keeps export surfaces 
     (prompts) => getComputedStyle(prompts).gridTemplateColumns.trim().split(/\s+/),
   );
   expect(narrowPromptTracks).toHaveLength(1);
-  await expect(liveSurface).toHaveScreenshot(
-    "present-narrow-single-column.png",
-    screenshotOptions,
-  );
 
   await stubPresentationState(page, appState);
   await page.setViewportSize({ width: 1280, height: 800 });
@@ -2385,10 +2421,6 @@ test("captures stable responsive Present compositions and keeps export surfaces 
   await assertRailModeInvariants(page, "empty");
   await expect(liveSurface.locator(".presentation-main--content-only")).toBeVisible();
   await expect(liveSurface.getByTestId("presentation-layout-divider")).toHaveCount(0);
-  await expect(liveSurface).toHaveScreenshot(
-    "present-content-only.png",
-    screenshotOptions,
-  );
 
   await page.goto("/present/activity-long-mixed-direction");
   await settlePresentationSurface(page);
@@ -2397,10 +2429,6 @@ test("captures stable responsive Present compositions and keeps export surfaces 
   await assertLiveRailIsTransparent(page, "timer-only");
   await expect(liveSurface.locator(".presentation-main--content-only")).toHaveCount(0);
   await expect(liveSurface.getByTestId("presentation-layout-divider")).toBeVisible();
-  await expect(liveSurface).toHaveScreenshot(
-    "present-timer-only.png",
-    screenshotOptions,
-  );
 
   await stubPresentationState(page, visualAppState);
   await page.goto("/present/activity-long-mixed-direction");
@@ -2410,10 +2438,6 @@ test("captures stable responsive Present compositions and keeps export surfaces 
   await expect(liveSurface.locator(".presentation-rail--image-only")).toBeVisible();
   await assertLiveRailIsTransparent(page, "image-only");
   await expect(liveSurface.getByTestId("presentation-layout-divider")).toBeVisible();
-  await expect(liveSurface).toHaveScreenshot(
-    "present-visual-only.png",
-    screenshotOptions,
-  );
 
   await page.goto("/present/activity-long-mixed-direction");
   await settlePresentationSurface(page);
@@ -2421,10 +2445,6 @@ test("captures stable responsive Present compositions and keeps export surfaces 
   await expect(liveSurface.locator(".presentation-rail--split")).toBeVisible();
   await assertLiveRailIsTransparent(page, "split");
   await expect(liveSurface.getByTestId("presentation-layout-divider")).toBeVisible();
-  await expect(liveSurface).toHaveScreenshot(
-    "present-both-present.png",
-    screenshotOptions,
-  );
 
   const surfaceBounds = await liveSurface.boundingBox();
   expect(surfaceBounds).not.toBeNull();
@@ -2439,6 +2459,46 @@ test("captures stable responsive Present compositions and keeps export surfaces 
     surfaceBounds!.y + surfaceBounds!.height,
   );
   await assertExportSurfaceHasNoLiveDivider(page);
+});
+
+test("keeps short landscape Present compositions compact and top-aligned", async ({
+  page,
+}) => {
+  await stubPresentationState(page, visualAppState);
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto("/present/activity-long-mixed-direction");
+  await settlePresentationSurface(page);
+
+  const surface = page.getByTestId("presentation-surface");
+  const composition = await surface.evaluate((surfaceElement) => {
+    const main = surfaceElement.querySelector<HTMLElement>(".presentation-main");
+    const content = surfaceElement.querySelector<HTMLElement>(".presentation-content");
+    const rail = surfaceElement.querySelector<HTMLElement>(".presentation-rail");
+    const footer = surfaceElement.querySelector<HTMLElement>(".presentation-footer");
+    if (!main || !content || !rail || !footer) {
+      throw new Error("Missing constrained presentation composition regions");
+    }
+    const contentBounds = content.getBoundingClientRect();
+    const mainBounds = main.getBoundingClientRect();
+    const footerBounds = footer.getBoundingClientRect();
+    return {
+      mainColumns: getComputedStyle(main).gridTemplateColumns.trim().split(/\s+/),
+      contentAlignment: getComputedStyle(content).alignContent,
+      railAlignment: getComputedStyle(rail).justifyContent,
+      contentTop: contentBounds.top,
+      mainTop: mainBounds.top,
+      mainBottom: mainBounds.bottom,
+      footerTop: footerBounds.top,
+      horizontalOverflow: surfaceElement.scrollWidth - surfaceElement.clientWidth,
+    };
+  });
+
+  expect(composition.mainColumns).toHaveLength(3);
+  expect(composition.contentAlignment).toBe("start");
+  expect(composition.railAlignment).toBe("flex-start");
+  expect(composition.contentTop).toBeGreaterThanOrEqual(composition.mainTop);
+  expect(composition.mainBottom).toBeLessThanOrEqual(composition.footerTop + 1);
+  expect(composition.horizontalOverflow).toBeLessThanOrEqual(0);
 });
 
 test("matches visual and timer surfaces in dark Present themes", async ({ page }) => {

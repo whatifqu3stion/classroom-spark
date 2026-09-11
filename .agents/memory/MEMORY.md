@@ -21,3 +21,4 @@
 - [Extreme visual framing](extreme-visual-framing.md) — Preserve intrinsic image proportions in the presentation rail instead of forcing portrait assets to full width.
 - [Tall Present dock reachability](tall-present-dock-reachability.md) — Normal-flow teacher docks need scroll-to-open behavior and stable focus restoration on close.
 - [Multi-visual payload compatibility](multi-visual-payloads.md) — Aggregate request limits and legacy normalization must evolve with ordered presentation media.
+- [Wide Present composition](wide-present-composition.md) — Center authored content and rail children only on tall wide boards; keep short and constrained layouts top-aligned.
