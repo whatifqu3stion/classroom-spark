@@ -242,6 +242,18 @@ const promptSpacingAppState = {
   ],
 };
 
+const roomyPromptActivity = {
+  ...promptSpacingActivity,
+  id: "activity-roomy-prompt",
+  title: "Roomy prompt board",
+  task: "Compare the observations and explain the strongest pattern.",
+};
+
+const roomyPromptAppState = {
+  ...appState,
+  activities: [roomyPromptActivity, contentTallActivity],
+};
+
 const extremeVisualActivities = {
   ...appState,
   activities: [
@@ -2220,6 +2232,7 @@ test("keeps footer-only content from changing Present prompt spacing", async ({ 
   await stubPresentationState(page, promptSpacingAppState);
 
   const viewports = [
+    { width: 1920, height: 1080, label: "roomy projector" },
     { width: 1280, height: 800, label: "wide" },
     { width: 1280, height: 600, label: "short landscape" },
     { width: 640, height: 800, label: "narrow" },
@@ -2249,6 +2262,7 @@ test("keeps footer-only content from changing Present prompt spacing", async ({ 
         footerTop: footer.getBoundingClientRect().top,
         horizontalOverflow: surface.scrollWidth - surface.clientWidth,
         dense: surface.classList.contains("presentation-surface--content-dense"),
+        roomState: surface.dataset.roomState,
         contentOnly: surface.querySelector(".presentation-main--content-only") !== null,
       };
     });
@@ -2273,6 +2287,10 @@ test("keeps footer-only content from changing Present prompt spacing", async ({ 
         withFooterOnlyContent.dense,
         `${viewport.label} footer-only content should not trigger dense mode`,
       ).toBe(false);
+      expect(
+        withFooterOnlyContent.roomState,
+        `${viewport.label} footer-only content should not change the room state`,
+      ).toBe(baseline.roomState);
       expect(
         withFooterOnlyContent.dividerToFirstPrompt,
         `${viewport.label} divider-to-first-prompt spacing`,
@@ -2329,6 +2347,135 @@ test("keeps footer-only content from changing Present prompt spacing", async ({ 
   );
   expect(exportMeasurements[1].rowTops).toEqual(exportMeasurements[0].rowTops);
   expect(exportMeasurements[1].horizontalOverflow).toBeLessThanOrEqual(0);
+});
+
+test("scales the live student hierarchy from constrained to roomy without centering it", async ({
+  page,
+}) => {
+  await stubPresentationState(page, roomyPromptAppState);
+
+  const measureHierarchy = async () =>
+    page.getByTestId("presentation-surface").evaluate((surface) => {
+      const content = surface.querySelector<HTMLElement>(".presentation-content");
+      const task = surface.querySelector<HTMLElement>(".presentation-task");
+      const prompts = surface.querySelector<HTMLElement>(".presentation-prompts");
+      const promptRows = Array.from(
+        surface.querySelectorAll<HTMLElement>(".presentation-prompt"),
+      );
+      const marker = surface.querySelector<HTMLElement>(
+        ".presentation-prompt-marker",
+      );
+      const footer = surface.querySelector<HTMLElement>(".presentation-footer");
+      if (
+        !content ||
+        !task ||
+        !prompts ||
+        promptRows.length < 2 ||
+        !marker ||
+        !footer
+      ) {
+        throw new Error("Missing adaptive hierarchy regions");
+      }
+
+      const taskBounds = task.getBoundingClientRect();
+      const promptsBounds = prompts.getBoundingClientRect();
+      const firstPromptBounds = promptRows[0].getBoundingClientRect();
+      const secondPromptBounds = promptRows[1].getBoundingClientRect();
+      const contentBounds = content.getBoundingClientRect();
+      return {
+        state: surface.dataset.roomState,
+        taskFontSize: Number.parseFloat(getComputedStyle(task).fontSize),
+        promptFontSize: Number.parseFloat(getComputedStyle(promptRows[0]).fontSize),
+        markerFontSize: Number.parseFloat(getComputedStyle(marker).fontSize),
+        taskToDivider: promptsBounds.top - taskBounds.bottom,
+        dividerToFirstPrompt: firstPromptBounds.top - promptsBounds.top - 2,
+        promptRowSpacing: secondPromptBounds.top - firstPromptBounds.bottom,
+        contentAlignment: getComputedStyle(content).alignContent,
+        contentTop: contentBounds.top,
+        contentBottom: contentBounds.bottom,
+        footerTop: footer.getBoundingClientRect().top,
+        horizontalOverflow: surface.scrollWidth - surface.clientWidth,
+      };
+    });
+
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto("/present/activity-roomy-prompt");
+  await settlePresentationSurface(page);
+  await expect(page.getByTestId("presentation-surface")).toHaveAttribute(
+    "data-room-state",
+    "constrained",
+  );
+  const constrained = await measureHierarchy();
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await expect(page.getByTestId("presentation-surface")).toHaveAttribute(
+    "data-room-state",
+    "comfortable",
+  );
+  const comfortable = await measureHierarchy();
+  const divider = page.getByTestId("presentation-layout-divider");
+  const dragTarget = await page.getByTestId("presentation-surface").evaluate(
+    (surface) => {
+      const main = surface.querySelector<HTMLElement>(".presentation-main");
+      if (!main) throw new Error("Missing presentation main");
+      const bounds = main.getBoundingClientRect();
+      const styles = getComputedStyle(main);
+      const gap = Number.parseFloat(styles.columnGap || styles.gap || "0") || 0;
+      const availableWidth = bounds.width - gap * 2 - 1;
+      return {
+        x: bounds.left + gap + availableWidth * 0.75,
+        y: bounds.top + bounds.height / 2,
+      };
+    },
+  );
+  const dividerBounds = await divider.boundingBox();
+  if (!dividerBounds) throw new Error("Missing presentation divider bounds");
+  await page.mouse.move(
+    dividerBounds.x + dividerBounds.width / 2,
+    dividerBounds.y + dividerBounds.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(dragTarget.x, dragTarget.y);
+  await page.mouse.up();
+  await expect(page.getByTestId("presentation-surface")).toHaveAttribute(
+    "data-room-state",
+    "roomy",
+  );
+  await divider.press("Home");
+  await expect(page.getByTestId("presentation-surface")).toHaveAttribute(
+    "data-room-state",
+    "comfortable",
+  );
+
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await expect(page.getByTestId("presentation-surface")).toHaveAttribute(
+    "data-room-state",
+    "roomy",
+  );
+  const roomy = await measureHierarchy();
+
+  expect(comfortable.taskFontSize).toBeGreaterThan(constrained.taskFontSize);
+  expect(comfortable.promptFontSize).toBeGreaterThan(constrained.promptFontSize);
+  expect(comfortable.markerFontSize).toBeGreaterThan(constrained.markerFontSize);
+  expect(roomy.taskFontSize).toBeGreaterThan(comfortable.taskFontSize);
+  expect(roomy.promptFontSize).toBeGreaterThan(comfortable.promptFontSize);
+  expect(roomy.markerFontSize).toBeGreaterThan(comfortable.markerFontSize);
+  expect(roomy.taskToDivider).toBeGreaterThan(constrained.taskToDivider);
+  expect(roomy.dividerToFirstPrompt).toBeGreaterThan(
+    constrained.dividerToFirstPrompt,
+  );
+  expect(roomy.promptRowSpacing).toBeGreaterThan(constrained.promptRowSpacing);
+  expect(roomy.contentAlignment).toBe("start");
+  expect(roomy.contentTop).toBeLessThan(roomy.footerTop);
+  expect(roomy.contentBottom).toBeLessThanOrEqual(roomy.footerTop);
+  expect(roomy.horizontalOverflow).toBeLessThanOrEqual(0);
+
+  await page.goto("/present/activity-content-tall");
+  await settlePresentationSurface(page);
+  await expect(page.getByTestId("presentation-surface")).toHaveAttribute(
+    "data-room-state",
+    "constrained",
+  );
 });
 
 test("captures stable responsive Present compositions and keeps export surfaces clean", async ({
@@ -2390,11 +2537,9 @@ test("captures stable responsive Present compositions and keeps export surfaces 
       contentAlignment: styles.alignContent,
     };
   });
-  expect(wideComposition.contentAlignment).toBe("center");
-  expect(Math.abs(wideComposition.contentCenter - wideComposition.railContentCenter)).toBeLessThan(8);
-  expect(Math.abs(wideComposition.contentCenter - wideComposition.innerCenter)).toBeLessThan(12);
-  expect(wideComposition.contentTopSpace).toBeGreaterThan(40);
-  expect(wideComposition.contentBottomSpace).toBeGreaterThan(40);
+  expect(wideComposition.contentAlignment).toBe("start");
+  expect(wideComposition.contentTopSpace).toBeLessThan(2);
+  expect(wideComposition.contentBottomSpace).toBeGreaterThanOrEqual(0);
   expect(wideComposition.mainBottom).toBeLessThanOrEqual(wideComposition.footerTop);
   await assertExportSurfaceHasNoLiveDivider(page);
 

@@ -910,6 +910,32 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.queryByText("03")).not.toBeInTheDocument();
   });
 
+  it("keeps adaptive room states live-only", () => {
+    const imageActivity = {
+      ...activity,
+      visualUrl: "data:image/png;base64,saved-image",
+    };
+    const { rerender } = render(
+      <PresentationCanvas activity={imageActivity} />,
+    );
+
+    expect(screen.getByTestId("presentation-surface")).toHaveAttribute(
+      "data-room-state",
+      "constrained",
+    );
+
+    rerender(<PresentationCanvas activity={imageActivity} editorPreview />);
+    expect(screen.getByTestId("presentation-preview-surface")).toHaveAttribute(
+      "data-room-state",
+      "constrained",
+    );
+
+    rerender(<PresentationCanvas activity={imageActivity} exportLayout />);
+    expect(
+      document.querySelector(".presentation-surface--export"),
+    ).toHaveAttribute("data-room-state", "constrained");
+  });
+
   it("does not classify footer-only supporting content as dense student content", () => {
     const supportingActivity = {
       ...activity,

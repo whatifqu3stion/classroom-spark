@@ -787,6 +787,88 @@
     max-width: none;
   }
 
+  /*
+   * Live Present measures the rendered authored stack before selecting either
+   * growth step. These caps enlarge the student hierarchy without changing
+   * editor preview or fixed export geometry.
+   */
+  .presentation-surface:not(.presentation-surface--export):not(
+      .presentation-surface--editor-preview
+    )[data-room-state="comfortable"]
+    .presentation-content {
+    gap: clamp(2.5rem, 4.5vh, 3rem);
+  }
+
+  .presentation-surface:not(.presentation-surface--export):not(
+      .presentation-surface--editor-preview
+    )[data-room-state="comfortable"]
+    .presentation-task {
+    font-size: clamp(3rem, 3.2vw, 3.5rem);
+  }
+
+  .presentation-surface:not(.presentation-surface--export):not(
+      .presentation-surface--editor-preview
+    )[data-room-state="comfortable"]
+    .presentation-prompts {
+    gap: clamp(1.25rem, 2.2vh, 1.5rem);
+    padding-top: clamp(1.25rem, 2.2vh, 1.5rem);
+  }
+
+  .presentation-surface:not(.presentation-surface--export):not(
+      .presentation-surface--editor-preview
+    )[data-room-state="comfortable"]
+    .presentation-prompt {
+    font-size: clamp(1.9rem, 2.25vw, 2.35rem);
+  }
+
+  .presentation-surface:not(.presentation-surface--export):not(
+      .presentation-surface--editor-preview
+    )[data-room-state="comfortable"]
+    .presentation-prompt-marker {
+    font-size: 1.12em;
+  }
+
+  .presentation-surface:not(.presentation-surface--export):not(
+      .presentation-surface--editor-preview
+    )[data-room-state="roomy"]
+    .presentation-content {
+    gap: clamp(3rem, 5.5vh, 3.75rem);
+  }
+
+  .presentation-surface:not(.presentation-surface--export):not(
+      .presentation-surface--editor-preview
+    )[data-room-state="roomy"]
+    .presentation-task {
+    max-width: 48ch;
+    font-size: clamp(3.5rem, 3.6vw, 4.25rem);
+    line-height: 1.16;
+  }
+
+  .presentation-surface:not(.presentation-surface--export):not(
+      .presentation-surface--editor-preview
+    )[data-room-state="roomy"]
+    .presentation-prompts {
+    gap: clamp(1.5rem, 2.7vh, 1.9rem);
+    padding-top: clamp(1.6rem, 2.8vh, 2rem);
+  }
+
+  .presentation-surface:not(.presentation-surface--export):not(
+      .presentation-surface--editor-preview
+    )[data-room-state="roomy"]
+    .presentation-prompt {
+    max-width: 64ch;
+    gap: clamp(1rem, 1.6vw, 1.6rem);
+    font-size: clamp(2.15rem, 2.45vw, 2.75rem);
+    line-height: 1.26;
+  }
+
+  .presentation-surface:not(.presentation-surface--export):not(
+      .presentation-surface--editor-preview
+    )[data-room-state="roomy"]
+    .presentation-prompt-marker {
+    font-size: 1.2em;
+  }
+
   .presentation-layout-divider {
     position: relative;
     z-index: 1;
@@ -1841,27 +1923,6 @@
       font-size: clamp(1.2rem, 2.1vw, 2rem);
     }
 
-  }
-
-  /*
-   * Tall classroom canvases have room for the student composition to breathe.
-   * Center only the authored stack and the rail contents; the main row still
-   * owns the available height, and the footer remains its own grid row.
-   */
-  @media (min-aspect-ratio: 4 / 3) and (min-width: 760px) and (min-height: 801px) {
-    .presentation-surface:not(.presentation-surface--export):not(
-        .presentation-surface--editor-preview
-      )
-      .presentation-content {
-      align-content: center;
-    }
-
-    .presentation-surface:not(.presentation-surface--export):not(
-        .presentation-surface--editor-preview
-      )
-      .presentation-rail {
-      justify-content: center;
-    }
   }
 
   @media (orientation: landscape) and (min-width: 700px) and (max-height: 800px) {
