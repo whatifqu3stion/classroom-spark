@@ -92,7 +92,7 @@ export function PasswordGate({ children }: Props) {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F8F7F4]">
-      <div className="w-full max-w-sm px-8 py-10 bg-white rounded-xl border border-[#E5E2DB] shadow-sm">
+      <div className="w-full max-w-sm px-8 py-10 bg-white rounded-xl border border-[#E5E2DB] shadow-teacher-card">
         <div className="mb-1 flex items-center gap-2">
           <BrandMark />
           <h1 className="text-2xl font-semibold tracking-tight text-[#1C1C1C]">

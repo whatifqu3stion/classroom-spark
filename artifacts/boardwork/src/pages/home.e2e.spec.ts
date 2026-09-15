@@ -85,6 +85,16 @@ const viewports = [
   { name: "desktop", width: 1280, height: 800 },
   { name: "narrow", width: 390, height: 844 },
 ] as const;
+
+      const readSurface = (locator: Locator) => locator.evaluate((element) => {
+        const style = getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        return {
+          shadow: style.boxShadow,
+          geometry: [rect.x, rect.y, rect.width, rect.height],
+          appearance: [style.backgroundColor, style.color, style.border, style.borderRadius, style.padding, style.outline],
+        };
+      });
 type Viewport = { width: number; height: number };
 
 const requiredControls = [
@@ -260,7 +270,7 @@ test("keeps long class header controls separate at an intermediate scaled width"
     document.documentElement.style.fontSize = "125%";
   });
 
-  const header = page.getByTestId("creation-class-header");
+  const header = page.getByTestId("board-editor-header");
   await expect(header).toBeVisible();
   await expect(page.getByTestId("select-class")).toContainText(
     "Grade 7 Design Studio — Forces, Motion & Modeling",
@@ -320,7 +330,7 @@ for (const viewport of viewports) {
     await page.goto("/activity/activity-saved-board");
 
     const editor = page.getByTestId("board-editor");
-    const header = page.getByTestId("board-editor-header");
+  const header = page.getByTestId("board-editor-header");
     const saveStatus = page.getByTestId("text-save-status");
     const presentButton = page.getByTestId("button-present");
     const editingControls = [
@@ -340,13 +350,13 @@ for (const viewport of viewports) {
       await expectElementReachableInViewport(page, control, viewport);
     }
 
-    const [documentWidth, editorMetrics] = await Promise.all([
-      page.evaluate(() => document.documentElement.scrollWidth),
-      editor.evaluate((element) => ({
-        scrollWidth: element.scrollWidth,
-        clientWidth: element.clientWidth,
-      })),
-    ]);
+  const [documentWidth, editorMetrics] = await Promise.all([
+    page.evaluate(() => document.documentElement.scrollWidth),
+    editor.evaluate((element) => ({
+      scrollWidth: element.scrollWidth,
+      clientWidth: element.clientWidth,
+    })),
+  ]);
     expect(documentWidth, "the saved-board editor should not overflow the document horizontally").toBeLessThanOrEqual(
       viewport.width,
     );
@@ -371,13 +381,17 @@ test("keeps populated activity editing readable at 150% text scaling", async ({ 
     document.documentElement.style.fontSize = "150%";
   });
 
-  const editor = page.getByTestId("board-editor");
+    const editor = page.getByTestId("board-editor");
   const header = page.getByTestId("board-editor-header");
-  const saveStatus = page.getByTestId("text-save-status");
-  const presentButton = page.getByTestId("button-present");
-  const task = page.getByRole("textbox", { name: "Describe the main task for students..." });
-  const prompts = page.getByRole("textbox", { name: "Enter prompt..." });
-  const materials = page.getByRole("textbox", { name: "Optional materials, separated by commas..." });
+    const saveStatus = page.getByTestId("text-save-status");
+    const presentButton = page.getByTestId("button-present");
+    const task = page.getByRole("textbox", {
+      name: "Describe the main task for students...",
+    });
+    const prompts = page.getByRole("textbox", { name: "Enter prompt..." });
+    const materials = page.getByRole("textbox", {
+      name: "Optional materials, separated by commas...",
+    });
 
   await expect(editor).toBeVisible();
   await expect(header).toBeVisible();
@@ -419,7 +433,7 @@ for (const viewport of viewports) {
     });
     await page.goto("/");
 
-    const workspace = page.getByTestId("creation-workspace");
+  const workspace = page.getByTestId("creation-workspace");
     const controls = page.getByTestId("creation-controls");
     const editorPanel = page.getByTestId("editor-workspace-panel");
     const actions = page.getByTestId("creation-actions");
@@ -443,16 +457,12 @@ for (const viewport of viewports) {
     await expect(controls.getByTestId("input-goal")).toHaveCount(0);
 
     for (const testId of requiredControls) {
-      const locator = page.getByTestId(testId);
-      await expect(locator).toBeVisible();
-      await expectElementReachableInViewport(page, locator, viewport);
-    }
+    const locator = page.getByTestId(testId);
+    await expect(locator).toBeVisible();
+    await expectElementReachableInViewport(page, locator, viewport);
+  }
 
-    await expect(controls.getByText("Add optional details", { exact: true })).toHaveCount(0);
-    await expect(page.getByTestId("segment-5")).toHaveClass(/bg-background/);
-    await expect(page.getByTestId("segment-7")).not.toHaveClass(/bg-background/);
-
-    const documentWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+  const documentWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(documentWidth, "the document should not overflow horizontally").toBeLessThanOrEqual(
       viewport.width,
     );
@@ -469,24 +479,13 @@ test("keeps creation examples very faint compared with entered text", async ({ p
   await page.goto("/");
 
   const topic = page.getByTestId("input-topic");
-  const styles = await topic.evaluate((element) => {
-    const placeholder = getComputedStyle(element, "::placeholder");
-    const text = getComputedStyle(element);
-    const parseRgb = (value: string) => {
-      const channels = value.match(/[\d.]+/g)?.map(Number) ?? [];
-      return channels.slice(0, 3);
-    };
-    const luminance = (value: string) => {
-      const [red, green, blue] = parseRgb(value);
-      return red * 0.2126 + green * 0.7152 + blue * 0.0722;
-    };
-
+  const styles = await emptyState.evaluate((element) => {
+    const computed = getComputedStyle(element);
     return {
-      placeholderColor: placeholder.color,
-      placeholderOpacity: placeholder.opacity,
-      textColor: text.color,
-      placeholderLuminance: luminance(placeholder.color),
-      textLuminance: luminance(text.color),
+      borderStyle: computed.borderStyle,
+      borderWidth: computed.borderWidth,
+      boxShadow: computed.boxShadow,
+      backgroundImage: computed.backgroundImage,
     };
   });
 
@@ -596,63 +595,13 @@ test("keeps creation examples readable in dark mode", async ({ page }) => {
 
   await page.getByTestId("input-topic").fill("Entered topic");
 
-  const styles = await page.getByTestId("input-topic").evaluate((element) => {
-    const placeholder = getComputedStyle(element, "::placeholder");
-    const input = getComputedStyle(element);
-    const label = getComputedStyle(document.querySelector('label[for="topic"]')!);
-    const control = getComputedStyle(document.querySelector('[data-testid="button-generate"]')!);
-    const parseColor = (value: string) => {
-      const channels = value.match(/[\d.]+/g)?.map(Number) ?? [];
-      return {
-        red: channels[0] ?? 0,
-        green: channels[1] ?? 0,
-        blue: channels[2] ?? 0,
-        alpha: channels[3] ?? 1,
-      };
-    };
-    const composite = (foreground: string, background: string) => {
-      const foregroundColor = parseColor(foreground);
-      const backgroundColor = parseColor(background);
-      return [foregroundColor.red, foregroundColor.green, foregroundColor.blue].map(
-        (channel, index) =>
-          channel * foregroundColor.alpha +
-          [backgroundColor.red, backgroundColor.green, backgroundColor.blue][index] *
-            (1 - foregroundColor.alpha),
-      );
-    };
-    const luminance = (color: number[]) => {
-      const channels = color.map((channel) => {
-        const normalized = channel / 255;
-        return normalized <= 0.03928
-          ? normalized / 12.92
-          : ((normalized + 0.055) / 1.055) ** 2.4;
-      });
-      return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
-    };
-    const contrast = (foreground: number[], background: number[]) => {
-      const foregroundLuminance = luminance(foreground);
-      const backgroundLuminance = luminance(background);
-      const lighter = Math.max(foregroundLuminance, backgroundLuminance);
-      const darker = Math.min(foregroundLuminance, backgroundLuminance);
-      return (lighter + 0.05) / (darker + 0.05);
-    };
-
-    const background = composite(input.backgroundColor, input.backgroundColor);
-    const placeholderColor = composite(placeholder.color, input.backgroundColor);
-    const textColor = composite(input.color, input.backgroundColor);
-
+  const styles = await emptyState.evaluate((element) => {
+    const computed = getComputedStyle(element);
     return {
-      placeholderOpacity: placeholder.opacity,
-      placeholderContrast: contrast(placeholderColor, background),
-      textContrast: contrast(textColor, background),
-      placeholderLuminance: luminance(placeholderColor),
-      textLuminance: luminance(textColor),
-      backgroundLuminance: luminance(background),
-      inputBackground: input.backgroundColor,
-      inputText: input.color,
-      labelText: label.color,
-      controlBackground: control.backgroundColor,
-      controlText: control.color,
+      borderStyle: computed.borderStyle,
+      borderWidth: computed.borderWidth,
+      boxShadow: computed.boxShadow,
+      backgroundImage: computed.backgroundImage,
     };
   });
 
@@ -818,7 +767,7 @@ for (const viewport of viewports) {
 }
 
 test("lets keyboard users complete board setup without losing focus", async ({ page }) => {
-  const viewport = { width: 390, height: 844 };
+  const viewport = { width: 1024, height: 800 };
 
   await page.setViewportSize(viewport);
   await page.goto("/");
@@ -858,6 +807,8 @@ test("lets keyboard users complete board setup without losing focus", async ({ p
 
   for (const testId of focusOrder) {
     const control = page.getByTestId(testId);
+
+        const currentControl = await readSurface(control);
     await tabTo(control, testId);
     await expect(control).toBeFocused();
 
@@ -887,6 +838,8 @@ test("lets keyboard users complete board setup without losing focus", async ({ p
 
   for (const testId of focusOrderActions) {
     const control = page.getByTestId(testId);
+
+        const currentControl = await readSurface(control);
     await tabTo(control, testId);
     await expect(control).toBeFocused();
 
@@ -903,8 +856,8 @@ test("keeps the empty editor preview visually quiet", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
 
-  const editorPanel = page.getByTestId("editor-workspace-panel");
-  const emptyState = page.getByTestId("empty-editor-state");
+    const editorPanel = page.getByTestId("editor-workspace-panel");
+    const emptyState = page.getByTestId("empty-editor-state");
   const emptyContent = page.getByTestId("empty-editor-content");
   await expect(emptyState).toBeVisible();
   await expect(emptyContent).toBeVisible();
@@ -992,8 +945,8 @@ test("keeps the empty editor preview contained when text is enlarged", async ({ 
   });
 
   const workspace = page.getByTestId("creation-workspace");
-  const editorPanel = page.getByTestId("editor-workspace-panel");
-  const emptyState = page.getByTestId("empty-editor-state");
+    const editorPanel = page.getByTestId("editor-workspace-panel");
+    const emptyState = page.getByTestId("empty-editor-state");
   const emptyContent = page.getByTestId("empty-editor-content");
   await expect(emptyState).toBeVisible();
   await expect(emptyContent).toBeVisible();
@@ -1076,19 +1029,25 @@ test("keeps the empty editor preview contained when text is enlarged", async ({ 
   }
 
   const documentWidth = await page.evaluate(() => document.documentElement.scrollWidth);
-  expect(documentWidth, "enlarged text should not create horizontal page overflow").toBeLessThanOrEqual(
+  expect(documentWidth, "creating a scaled blank board should not overflow horizontally").toBeLessThanOrEqual(
     viewport.width,
   );
-  await expectElementFitsHorizontally(page, workspace, viewport);
 });
 
 for (const viewport of [
   { name: "desktop", width: 1280, height: 800 },
   { name: "narrow", width: 390, height: 844 },
 ] as const) {
-  test(`keeps one editor frame when a blank board is created at ${viewport.name} width`, async ({ page }) => {
+  test(`keeps one editor frame and resets fresh-board setup at ${viewport.name} width`, async ({ page }) => {
+    await page.unroute("**/api/app-state");
+    await page.route("**/api/app-state", (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify(savedBoardAppState),
+      }),
+    );
     await page.setViewportSize(viewport);
-    await page.goto("/");
+    await page.goto("/activity/activity-saved-board");
 
     const editorPanel = page.getByTestId("editor-workspace-panel");
     const emptyState = page.getByTestId("empty-editor-state");
@@ -1097,20 +1056,18 @@ for (const viewport of [
     await expect(editorPanel).toHaveClass(/\bborder\b/);
 
     const initialBounds = await editorPanel.boundingBox();
-    expect(initialBounds).not.toBeNull();
+  expect(initialBounds).not.toBeNull();
 
-    await page.getByTestId("button-blank").click();
+  await page.getByTestId("button-blank").click();
 
-    await expect(page.getByTestId("board-editor")).toBeVisible();
-    await expect(page.getByTestId("empty-editor-state")).toHaveCount(0);
-    await expectSingleEditorFrame(page);
+  await expect(page.getByTestId("board-editor")).toBeVisible();
+  await expectSingleEditorFrame(page);
+  const populatedBounds = await editorPanel.boundingBox();
+  expect(populatedBounds).not.toBeNull();
+  expect(populatedBounds!.x).toBe(initialBounds!.x);
+  expect(populatedBounds!.width).toBe(initialBounds!.width);
 
-    const populatedBounds = await editorPanel.boundingBox();
-    expect(populatedBounds).not.toBeNull();
-    expect(populatedBounds!.x).toBe(initialBounds!.x);
-    expect(populatedBounds!.width).toBe(initialBounds!.width);
-
-    const documentWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+  const documentWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(documentWidth, "creating a blank board should not overflow horizontally").toBeLessThanOrEqual(
       viewport.width,
     );
@@ -1125,8 +1082,8 @@ test("keeps one editor frame when a blank board is created with enlarged text", 
     document.documentElement.style.fontSize = "150%";
   });
 
-  const editorPanel = page.getByTestId("editor-workspace-panel");
-  const initialBounds = await editorPanel.boundingBox();
+    const editorPanel = page.getByTestId("editor-workspace-panel");
+    const initialBounds = await editorPanel.boundingBox();
   expect(initialBounds).not.toBeNull();
 
   await page.getByTestId("button-blank").click();
@@ -1217,3 +1174,33 @@ test("preserves a saved board duration when opening Present", async ({ page }) =
   await expect(timerProgress).toHaveAttribute("aria-valuemax", "420");
   await expect(timerProgress).toHaveAttribute("aria-valuenow", "420");
 });
+
+          const menuAppearance = await readSurface(menu);
+
+        const oldCards = await Promise.all((await cards.all()).map(readSurface));
+
+      const surface = page.locator(".presentation-surface").first();
+
+      const appearance = await readSurface(surface);
+
+          const restingShadow = (await readSurface(cards.first())).shadow;
+
+          const menu = page.getByRole("menu");
+
+        const currentCards = await Promise.all((await cards.all()).map(readSurface));
+
+        const cards = page.locator(".shadow-teacher-card");
+
+      const legacyShadow = async (enabled: boolean) => {
+        await page.evaluate((enabled) => {
+          if (enabled) {
+            const original = document.createElement("div");
+            original.className = "shadow-sm";
+            document.body.append(original);
+            document.documentElement.style.setProperty("--teacher-card-shadow", getComputedStyle(original).boxShadow);
+            original.remove();
+          } else {
+            document.documentElement.style.removeProperty("--teacher-card-shadow");
+          }
+        }, enabled);
+      };

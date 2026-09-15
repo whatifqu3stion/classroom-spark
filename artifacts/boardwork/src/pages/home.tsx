@@ -804,7 +804,7 @@ export default function Home() {
 
           {/* Left Column: Generator Controls */}
           <div
-            className="boardwork-creation-panel flex min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-xl border border-border/80 bg-card/50 shadow-sm lg:h-full lg:w-[420px] xl:w-[500px]"
+            className="boardwork-creation-panel flex min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-xl border border-border/80 bg-card/50 shadow-teacher-card lg:h-full lg:w-[420px] xl:w-[500px]"
             data-testid="creation-controls"
           >
             <div
@@ -1110,7 +1110,7 @@ export default function Home() {
 
           {/* Right Column: Editor */}
           <div
-            className="boardwork-editor-panel flex min-h-[500px] min-w-0 flex-1 overflow-hidden rounded-xl border border-border/80 bg-card/30 shadow-sm lg:min-h-0 lg:pb-0"
+            className="boardwork-editor-panel flex min-h-[500px] min-w-0 flex-1 overflow-hidden rounded-xl border border-border/80 bg-card/30 shadow-teacher-card lg:min-h-0 lg:pb-0"
             data-testid="editor-workspace-panel"
           >
             {localDraft ? (

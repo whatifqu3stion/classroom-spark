@@ -704,28 +704,25 @@ describe("Home presentation defaults", () => {
   it("keeps a custom choice when the class profile is saved or refreshed", async () => {
     const { rerender } = render(<Home />);
     fireEvent.change(screen.getByTestId("input-custom-activity-duration"), {
-      target: { value: "23" },
+      target: { value: "21" },
     });
-    fireEvent.click(screen.getByTestId("button-edit-class"));
-    fireEvent.click(screen.getByTestId("mock-set-default-device-on"));
-    await waitFor(() => expect(screen.getByTestId("input-custom-activity-duration")).toHaveValue("23"));
-    vi.mocked(useBoardwork).mockReturnValue({
-      appState: { ...appState, classes: [{ ...appState.classes[0], defaultDuration: 30 }] },
-      isLoading: false, activeClassId: "class-1", selectedChipIds: [],
-      toggleChipSelection: vi.fn(), clearChipSelection: vi.fn(),
-    });
+    mocks.activityId = "saved";
     rerender(<Home />);
-    expect(screen.getByTestId("input-custom-activity-duration")).toHaveValue("23");
+    expect(JSON.parse(screen.getByTestId("board-editor-draft").textContent!)).toEqual(saved);
+    mocks.activityId = undefined;
+    rerender(<Home />);
+    expect(screen.queryByTestId("board-editor-draft")).not.toBeInTheDocument();
+    expect(screen.getByTestId("segment-5")).toHaveClass("bg-background");
+    expect(screen.getByTestId("input-custom-activity-duration")).toHaveValue("");
     fireEvent.click(screen.getByTestId("button-blank"));
-    expect(screen.getByTestId("board-editor-draft")).toHaveTextContent('"durationMinutes":23');
+    expect(screen.getByTestId("board-editor-draft")).toHaveTextContent('"durationMinutes":5');
   });
 
-  it("preserves a saved board and resets to 5 when returning to fresh setup", () => {
+  it("keeps legacy source context intact when saving an edited older board", async () => {
     const saved = {
-      id: "saved", classId: "class-1", title: "Saved", task: "Keep this task",
-      prompts: ["Keep this prompt"], durationMinutes: 17, deviceMode: "off" as const,
-      materials: ["Notebook"], style: "Quick Write", sourceTopic: "Legacy topic",
-      sourceGoal: "Legacy goal", sourceChipIds: ["saved-chip"],
+      id: "saved", classId: "class-1", title: "Saved", task: "Original task",
+      prompts: [], durationMinutes: 5, deviceMode: "off" as const,
+      sourceTopic: "Legacy topic", sourceGoal: "Legacy goal",
     };
     vi.mocked(useBoardwork).mockReturnValue({
       appState: { ...appState, activities: [saved] } as unknown as AppState,
@@ -922,7 +919,7 @@ describe("Home presentation defaults", () => {
     render(<Home />);
 
     const emptyState = screen.getByTestId("empty-editor-state");
-    const editorPanel = screen.getByTestId("editor-workspace-panel");
+      const editorPanel = within(workspace).getByTestId("editor-workspace-panel");
     expect(emptyState).toHaveClass("min-w-0", "w-full", "flex-1");
     expect(screen.getByTestId("empty-editor-content")).toHaveClass(
       "w-full",
@@ -933,6 +930,9 @@ describe("Home presentation defaults", () => {
     expect(emptyState).toHaveClass("bg-muted/20");
     expect(emptyState).not.toHaveClass("border-dashed", "border-2", "rounded-xl");
     expect(editorPanel).toHaveClass("boardwork-editor-panel", "rounded-xl", "border");
+    expect(editorPanel).toHaveClass("shadow-teacher-card");
+    expect(screen.getByTestId("creation-controls")).toHaveClass("shadow-teacher-card");
+    expect(screen.getByTestId("button-generate")).toHaveClass("shadow-sm");
     expect(screen.getByRole("heading", { name: "No activity created yet" })).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -948,7 +948,7 @@ describe("Home presentation defaults", () => {
   it("keeps the editor workspace frame stable when a board is created", () => {
     render(<Home />);
 
-    const editorPanel = screen.getByTestId("editor-workspace-panel");
+      const editorPanel = within(workspace).getByTestId("editor-workspace-panel");
     expect(editorPanel).toHaveClass("boardwork-editor-panel", "rounded-xl", "border");
     expect(screen.getByTestId("empty-editor-state")).toBeInTheDocument();
 

@@ -25,3 +25,4 @@
 - [Adaptive Present measurement](adaptive-present-measurement.md) — Measure candidate typography offscreen in the real container hierarchy to avoid live-state oscillation.
 - [Nested automatic direction](nested-auto-direction.md) — Assert resolved bidi direction on the innermost auto-direction boundary that owns the text.
 - [Conditional dialog focus](conditional-dialog-focus.md) — Restore focus to the current opener when selection replaces the button that opened a dialog.
+- [Tailwind shadow baselines](tailwind-shadow-baselines.md) — Compare rendered shadow utilities, not similarly named root variables, when tuning elevation.

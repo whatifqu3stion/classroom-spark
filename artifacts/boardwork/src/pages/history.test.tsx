@@ -119,6 +119,8 @@ describe("History", () => {
     render(<History />);
 
     const activity = screen.getByTestId("history-item-formula-activity");
+    expect(activity).toHaveClass("shadow-teacher-card");
+    expect(screen.getByTestId("history-view-all")).toHaveClass("shadow-sm");
     expect(activity.querySelector(".formula-rendered")).toBeInTheDocument();
     expect(activity).toHaveTextContent("Quadratic x2+y2=r2");
     expect(screen.getByRole("button", { name: `Unfavorite ${formulaTask}` })).toBeInTheDocument();
@@ -134,6 +136,7 @@ describe("History", () => {
     fireEvent.click(screen.getByTestId("history-view-favorites"));
 
     expect(screen.getByTestId("history-view-favorites")).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByTestId("history-item-formula-activity")).toHaveClass("shadow-teacher-card");
     expect(screen.getByTestId("history-item-formula-activity").querySelector(".formula-rendered")).toBeInTheDocument();
     expect(screen.queryByTestId("history-item-plain-activity")).not.toBeInTheDocument();
   });
