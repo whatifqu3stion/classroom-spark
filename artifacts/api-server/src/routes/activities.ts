@@ -1,6 +1,11 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
-import { db, activitiesTable, classesTable } from "@workspace/db";
+import { eq, inArray } from "drizzle-orm";
+import {
+  db,
+  activitiesTable,
+  classesTable,
+  savedContextsTable,
+} from "@workspace/db";
 import {
   ListActivitiesQueryParams,
   ListActivitiesResponse,
@@ -38,6 +43,11 @@ import {
   normalizePresentationVisuals,
   withCanonicalPresentationVisuals,
 } from "../lib/presentation-visuals";
+import {
+  resolveSavedContextSnapshots,
+  SavedContextError,
+  type SavedContextSnapshot,
+} from "../lib/saved-context";
 
 const router: IRouter = Router();
 
@@ -79,6 +89,24 @@ router.post("/activities", async (req, res): Promise<void> => {
     return;
   }
 
+  let savedContextSnapshot: SavedContextSnapshot[] = [];
+  try {
+    savedContextSnapshot = (
+      await resolveSavedContextSnapshots(
+        parsed.data.classId,
+        parsed.data.savedContextIds ?? [],
+      )
+    ).snapshots;
+  } catch (error) {
+    if (error instanceof SavedContextError) {
+      res
+        .status(error.code === "not_found" ? 404 : 400)
+        .json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
+
   const [existing] = await db
     .select({ id: classesTable.id })
     .from(classesTable)
@@ -114,18 +142,30 @@ router.post("/activities", async (req, res): Promise<void> => {
     throw error;
   }
 
-  const [created] = await db
-    .insert(activitiesTable)
-    .values({
-      ...parsed.data,
-      visuals,
-      ...getLegacyPresentationVisualFields(visuals),
-      title: getActivityCompatibilityTitle(parsed.data.task),
-      deviceMode,
-      resourceUrl,
-      technologyMode,
-    })
-    .returning();
+  const { savedContextIds: _savedContextIds, ...activityInput } = parsed.data;
+  const created = await db.transaction(async (tx) => {
+    const [activity] = await tx
+      .insert(activitiesTable)
+      .values({
+        ...activityInput,
+        visuals,
+        savedContextSnapshot,
+        ...getLegacyPresentationVisualFields(visuals),
+        title: getActivityCompatibilityTitle(parsed.data.task),
+        deviceMode,
+        resourceUrl,
+        technologyMode,
+      })
+      .returning();
+
+    if (_savedContextIds?.length) {
+      await tx
+        .update(savedContextsTable)
+        .set({ lastUsedAt: new Date() })
+        .where(inArray(savedContextsTable.id, _savedContextIds));
+    }
+    return activity;
+  });
 
   res.status(201).json(CreateActivityResponse.parse(created));
 });

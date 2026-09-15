@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import {
   db,
   classesTable,
@@ -13,6 +13,7 @@ import {
   type InsertClass,
   unitsTable,
   type Unit,
+  savedContextsTable,
 } from "@workspace/db";
 import { getActivityCompatibilityTitle } from "./activity-title";
 import {
@@ -186,6 +187,19 @@ export async function deleteClassCascade(classId: string): Promise<boolean> {
       return false;
     }
 
+    // Keep class-scoped saved context referentially safe without promoting it
+    // to global context. Archived rows retain their class id for history and
+    // are excluded from normal picker/generation resolution.
+    await tx
+      .update(savedContextsTable)
+      .set({ archived: true, updatedAt: new Date() })
+      .where(
+        and(
+          eq(savedContextsTable.classId, classId),
+          eq(savedContextsTable.scope, "class"),
+        ),
+      );
+
     const [state] = await tx
       .insert(appStateTable)
       .values({ singletonKey: APP_STATE_KEY })
@@ -264,6 +278,8 @@ export async function duplicateActivity(
       sourceUnitId: source.sourceUnitId,
       sourceUnitName: source.sourceUnitName,
       sourceChipIds: source.sourceChipIds,
+      sourceActivityId: source.sourceActivityId ?? source.id,
+      savedContextSnapshot: source.savedContextSnapshot,
       style: source.style,
       presentationTheme: source.presentationTheme,
       favorite: false,

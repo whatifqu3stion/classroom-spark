@@ -234,6 +234,7 @@ export default function Present() {
       topic: activeDraft.sourceTopic ?? undefined,
       goal: activeDraft.sourceGoal ?? undefined,
       chipIds: activeDraft.sourceChipIds ?? [],
+      sourceActivityId: activeDraft.id,
       deviceMode: activeDraft.deviceMode,
       technologyMode: activeDraft.technologyMode,
       durationMinutes: activeDraft.durationMinutes,

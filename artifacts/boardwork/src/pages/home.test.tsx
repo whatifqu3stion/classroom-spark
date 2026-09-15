@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Home from "./home";
 import { useBoardwork } from "@/store/boardwork-context";
@@ -44,11 +44,31 @@ vi.mock("@/components/layout/shell", () => ({
 }));
 
 vi.mock("@/components/board-editor", () => ({
-  BoardEditor: ({ draft, onChange }: { draft: ActivityDraft; onChange: (draft: Partial<ActivityDraft>) => void }) => (
+  BoardEditor: ({ draft, onChange, onRetrySave, saveStatus }: { draft: ActivityDraft; onChange: (draft: Partial<ActivityDraft>) => void; onRetrySave?: () => void; saveStatus?: string }) => (
     <>
       <output data-testid="board-editor-draft">{JSON.stringify(draft)}</output>
       <button onClick={() => onChange({ task: "Edited task" })}>Edit test board</button>
+      <button onClick={onRetrySave}>Retry test save</button>
+      <output data-testid="mock-save-status">{saveStatus}</output>
     </>
+  ),
+}));
+
+vi.mock("@/components/saved-context/saved-context-control", () => ({
+  SavedContextControl: ({
+    selectedIds,
+    onSelectionChange,
+  }: {
+    selectedIds: string[];
+    onSelectionChange: (ids: string[]) => void;
+  }) => (
+    <button
+      type="button"
+      data-testid="mock-context-selection"
+      onClick={() => onSelectionChange(selectedIds.length ? [] : ["context-1"])}
+    >
+      {selectedIds.length ? "Remove saved context" : "Select saved context"}
+    </button>
   ),
 }));
 
@@ -126,6 +146,7 @@ vi.mock("@workspace/api-client-react", () => ({
   useUpdateUnit: () => ({ mutate: vi.fn() }),
   useDeleteUnit: () => ({ mutate: vi.fn() }),
   getGetAppStateQueryKey: () => ["app-state"],
+  getListSavedContextsQueryKey: () => ["saved-context"],
 }));
 
 const appState = {
@@ -765,6 +786,88 @@ describe("Home presentation defaults", () => {
       sourceTopic: "Fractions\nExplain equivalent values.",
       sourceGoal: undefined,
     });
+  });
+
+  it("sends selected context separately and keeps it available after generation failure", async () => {
+    mocks.generateActivity.mockRejectedValueOnce({
+      data: { error: "Please try again." },
+    });
+    mocks.generateActivity.mockResolvedValueOnce({
+      id: "context-board", classId: "class-1", task: "Sketch first",
+      prompts: [], durationMinutes: 5, deviceMode: "off",
+    });
+    render(<Home />);
+    fireEvent.change(screen.getByTestId("input-topic"), { target: { value: "Symmetry" } });
+    fireEvent.click(screen.getByTestId("mock-context-selection"));
+    fireEvent.click(screen.getByTestId("button-generate"));
+    await waitFor(() => expect(screen.getByTestId("generation-error")).toBeVisible());
+    expect(screen.getByTestId("mock-context-selection")).toHaveTextContent("Remove saved context");
+    fireEvent.click(screen.getByTestId("button-generate"));
+    await waitFor(() => expect(mocks.generateActivity).toHaveBeenCalledTimes(2));
+    for (const [request] of mocks.generateActivity.mock.calls) {
+      expect(request.data).toMatchObject({ topic: "Symmetry", savedContextIds: ["context-1"] });
+      expect(request.data).not.toHaveProperty("savedContextSnapshot");
+    }
+  });
+
+  it("clears saved context on class switch", () => {
+    const { rerender } = render(<Home />);
+    fireEvent.click(screen.getByTestId("mock-context-selection"));
+    vi.mocked(useBoardwork).mockReturnValue({
+      appState: secondClassState, isLoading: false, activeClassId: "class-2",
+      selectedChipIds: [], toggleChipSelection: vi.fn(), clearChipSelection: vi.fn(),
+    });
+    rerender(<Home />);
+    expect(screen.getByTestId("mock-context-selection")).toHaveTextContent("Select saved context");
+  });
+
+  it("saves authored context IDs and retains the server snapshot without sending it in edits", async () => {
+    const snapshot = [{ contextId: "context-1", label: "Sketch first", category: "Routine", details: "Draw before explaining." }];
+    mocks.createActivity.mockResolvedValue({
+      id: "authored-context", classId: "class-1", savedContextSnapshot: snapshot,
+    });
+    mocks.updateActivity.mockResolvedValue({});
+    render(<Home />);
+    fireEvent.click(screen.getByTestId("mock-context-selection"));
+    fireEvent.click(screen.getByTestId("button-blank"));
+    fireEvent.click(screen.getByText("Edit test board"));
+    await waitFor(() => expect(mocks.createActivity).toHaveBeenCalled(), { timeout: 2500 });
+    expect(mocks.createActivity.mock.calls[0][0].data).toMatchObject({ savedContextIds: ["context-1"] });
+    await waitFor(() => {
+      const draft = JSON.parse(screen.getByTestId("board-editor-draft").textContent!);
+      expect(draft.savedContextSnapshot).toEqual(snapshot);
+      expect(draft.savedContextIds).toBeUndefined();
+    });
+    expect(mocks.createActivity.mock.calls[0][0].data).not.toHaveProperty("savedContextSnapshot");
+  });
+
+  it("lets removing context recover an unsaved blank board before its first save", async () => {
+    mocks.createActivity.mockResolvedValue({ id: "without-context", classId: "class-1", savedContextSnapshot: [] });
+    render(<Home />);
+    fireEvent.click(screen.getByTestId("mock-context-selection"));
+    fireEvent.click(screen.getByTestId("button-blank"));
+    fireEvent.click(screen.getByTestId("mock-context-selection"));
+    fireEvent.click(screen.getByText("Edit test board"));
+    await waitFor(() => expect(mocks.createActivity).toHaveBeenCalled(), { timeout: 2500 });
+    expect(mocks.createActivity.mock.calls[0][0].data.savedContextIds).toEqual([]);
+  });
+
+  it("retries a failed in-flight first save with the latest context selection", async () => {
+    let rejectSave!: (reason: unknown) => void;
+    mocks.createActivity.mockImplementationOnce(() => new Promise((_resolve, reject) => { rejectSave = reject; }));
+    mocks.createActivity.mockResolvedValueOnce({ id: "retried-blank", classId: "class-1", savedContextSnapshot: [] });
+    render(<Home />);
+    fireEvent.click(screen.getByTestId("mock-context-selection"));
+    fireEvent.click(screen.getByTestId("button-blank"));
+    fireEvent.click(screen.getByText("Edit test board"));
+    await waitFor(() => expect(mocks.createActivity).toHaveBeenCalledTimes(1), { timeout: 2500 });
+    expect(mocks.createActivity.mock.calls[0][0].data.savedContextIds).toEqual(["context-1"]);
+    fireEvent.click(screen.getByTestId("mock-context-selection"));
+    await act(async () => rejectSave({ data: { error: "Context was archived." } }));
+    await waitFor(() => expect(screen.getByTestId("mock-save-status")).toHaveTextContent("error"));
+    fireEvent.click(screen.getByText("Retry test save"));
+    await waitFor(() => expect(mocks.createActivity).toHaveBeenCalledTimes(2), { timeout: 2500 });
+    expect(mocks.createActivity.mock.calls[1][0].data.savedContextIds).toEqual([]);
   });
 
   it.each(["0", "-1", "1.5", "abc"])("rejects invalid custom minutes %s for all creation actions", (value) => {

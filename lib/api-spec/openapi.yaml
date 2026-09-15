@@ -20,6 +20,8 @@ tags:
     description: Reusable teacher unit operations
   - name: chips
     description: Class chip operations
+  - name: saved-context
+    description: Reusable saved context and category operations
   - name: activities
     description: Activity/history operations
   - name: generation
@@ -444,6 +446,138 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /saved-context:
+    get:
+      operationId: listSavedContexts
+      tags: [saved-context]
+      summary: List available saved context
+      description: Returns active saved context visible to a class (class-scoped records for the requested class plus global records) and all active categories.
+      parameters:
+        - $ref: "#/components/parameters/ClassIdQueryParam"
+      responses:
+        "200":
+          description: Saved context library
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavedContextLibrary"
+        "400":
+          description: Invalid class
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Class not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      operationId: createSavedContext
+      tags: [saved-context]
+      summary: Create saved context
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SavedContextInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavedContext"
+        "400":
+          description: Invalid request or scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /saved-context/{contextId}:
+    patch:
+      operationId: updateSavedContext
+      tags: [saved-context]
+      summary: Fully edit saved context
+      description: Replaces all editable fields. Archived records cannot be edited.
+      parameters:
+        - $ref: "#/components/parameters/SavedContextIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SavedContextUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavedContext"
+        "400":
+          description: Invalid request or scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /saved-context/{contextId}/archive:
+    post:
+      operationId: archiveSavedContext
+      tags: [saved-context]
+      summary: Archive saved context
+      description: Archives a saved context without removing historical activity snapshots.
+      parameters:
+        - $ref: "#/components/parameters/SavedContextIdParam"
+      responses:
+        "200":
+          description: Archived
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavedContext"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /context-categories:
+    post:
+      operationId: createContextCategory
+      tags: [saved-context]
+      summary: Create a saved context category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContextCategoryInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContextCategory"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /activities:
     get:
       operationId: listActivities
@@ -649,6 +783,18 @@ components:
     UnitIdParam:
       name: unitId
       in: path
+      required: true
+      schema:
+        type: string
+    SavedContextIdParam:
+      name: contextId
+      in: path
+      required: true
+      schema:
+        type: string
+    ClassIdQueryParam:
+      name: classId
+      in: query
       required: true
       schema:
         type: string
@@ -978,6 +1124,163 @@ components:
           type: string
           minLength: 1
 
+    ContextCategory:
+      type: object
+      required:
+        - id
+        - name
+        - archived
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          minLength: 1
+          maxLength: 40
+        archived:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ContextCategoryInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 40
+
+    SavedContext:
+      type: object
+      required:
+        - id
+        - label
+        - details
+        - categoryId
+        - categoryName
+        - scope
+        - classId
+        - archived
+        - createdAt
+        - updatedAt
+        - lastUsedAt
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+          minLength: 1
+          maxLength: 50
+        details:
+          type: ["string", "null"]
+          maxLength: 300
+        categoryId:
+          type: ["string", "null"]
+        categoryName:
+          type: ["string", "null"]
+        scope:
+          type: string
+          enum: [class, global]
+        classId:
+          type: ["string", "null"]
+        archived:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        lastUsedAt:
+          type: ["string", "null"]
+          format: date-time
+
+    SavedContextInput:
+      type: object
+      required:
+        - label
+        - scope
+      properties:
+        label:
+          type: string
+          minLength: 1
+          maxLength: 50
+        details:
+          type: ["string", "null"]
+          maxLength: 300
+        categoryId:
+          type: ["string", "null"]
+        scope:
+          type: string
+          enum: [class, global]
+        classId:
+          type: ["string", "null"]
+
+    SavedContextUpdate:
+      type: object
+      required:
+        - label
+        - scope
+        - details
+        - categoryId
+        - classId
+      properties:
+        label:
+          type: string
+          minLength: 1
+          maxLength: 50
+        details:
+          type: ["string", "null"]
+          maxLength: 300
+        categoryId:
+          type: ["string", "null"]
+        scope:
+          type: string
+          enum: [class, global]
+        classId:
+          type: ["string", "null"]
+
+    SavedContextLibrary:
+      type: object
+      required:
+        - items
+        - categories
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SavedContext"
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContextCategory"
+
+    SavedContextSnapshot:
+      type: object
+      required:
+        - label
+      properties:
+        contextId:
+          type: ["string", "null"]
+        label:
+          type: string
+          minLength: 1
+          maxLength: 50
+        category:
+          type: ["string", "null"]
+          maxLength: 40
+        details:
+          type: ["string", "null"]
+          maxLength: 300
+
     Activity:
       type: object
       required:
@@ -1045,6 +1348,12 @@ components:
           type: array
           items:
             type: string
+        sourceActivityId:
+          type: ["string", "null"]
+        savedContextSnapshot:
+          type: array
+          items:
+            $ref: "#/components/schemas/SavedContextSnapshot"
         style:
           type: ["string", "null"]
         presentationTheme:
@@ -1128,6 +1437,13 @@ components:
           type: array
           items:
             type: string
+        savedContextIds:
+          type: array
+          maxItems: 20
+          uniqueItems: true
+          items:
+            type: string
+          description: Saved context ids resolved by the server into an immutable response snapshot.
         style:
           type: ["string", "null"]
         presentationTheme:
@@ -1231,8 +1547,19 @@ components:
         chipIds:
           type: array
           maxItems: 20
+          uniqueItems: true
           items:
             type: string
+        savedContextIds:
+          type: array
+          maxItems: 20
+          uniqueItems: true
+          items:
+            type: string
+          description: Selected saved context ids. Mutually exclusive with a non-empty sourceActivityId.
+        sourceActivityId:
+          type: string
+          description: Resolve and reuse the immutable saved context snapshot from this activity. Mutually exclusive with non-empty savedContextIds.
         deviceMode:
           $ref: "#/components/schemas/DeviceMode"
         technologyMode:

@@ -11,6 +11,7 @@ import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { getSafeResourceUrl } from "@/lib/resource-url";
 import { PresentationThemePicker } from "@/components/presentation-theme-picker";
+import { SavedContextSnapshotDetails } from "@/components/saved-context/saved-context-snapshot-details";
 import { FormulaPreview, FormulaText } from "@/components/formula-text";
 import { HelpTooltip, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -399,6 +400,11 @@ export function BoardEditor({
             />
             <FormulaPreview>{(draft.materials ?? []).join(", ")}</FormulaPreview>
           </div>
+
+          <SavedContextSnapshotDetails
+            key={draft.id ?? "unsaved"}
+            snapshot={draft.savedContextSnapshot}
+          />
 
             <section className="presentation-visual-editor-section mt-8 border-t pt-6" data-testid="presentation-visual-section">
               <div className="flex items-center gap-2">

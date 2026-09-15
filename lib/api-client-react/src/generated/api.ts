@@ -32,6 +32,8 @@ import type {
   ClassProfile,
   ClassProfileInput,
   ClassProfileUpdate,
+  ContextCategory,
+  ContextCategoryInput,
   Error,
   FavoriteInput,
   GenerateActivityInput,
@@ -39,6 +41,11 @@ import type {
   InstructionalContext,
   InstructionalContextInput,
   ListActivitiesParams,
+  ListSavedContextsParams,
+  SavedContext,
+  SavedContextInput,
+  SavedContextLibrary,
+  SavedContextUpdate,
   Unit,
   UnitInput,
   UnitUpdate
@@ -1317,6 +1324,378 @@ export const useDeleteChip = <TError = ErrorType<Error>,
         TContext
       > => {
       return useMutation(getDeleteChipMutationOptions(options));
+    }
+
+export const getListSavedContextsUrl = (params: ListSavedContextsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/saved-context?${stringifiedParams}` : `/api/saved-context`
+}
+
+/**
+ * Returns active saved context visible to a class (class-scoped records for the requested class plus global records) and all active categories.
+ * @summary List available saved context
+ */
+export const listSavedContexts = async (params: ListSavedContextsParams, options?: Parameters<typeof customFetch>[1]): Promise<SavedContextLibrary> => {
+
+  return customFetch<SavedContextLibrary>(getListSavedContextsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSavedContextsQueryKey = (params?: ListSavedContextsParams,) => {
+    return [
+    `/api/saved-context`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListSavedContextsQueryOptions = <TData = Awaited<ReturnType<typeof listSavedContexts>>, TError = ErrorType<Error>>(params: ListSavedContextsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSavedContexts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSavedContextsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSavedContexts>>> = ({ signal }) => listSavedContexts(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSavedContexts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSavedContextsQueryResult = NonNullable<Awaited<ReturnType<typeof listSavedContexts>>>
+export type ListSavedContextsQueryError = ErrorType<Error>
+
+
+/**
+ * @summary List available saved context
+ */
+
+export function useListSavedContexts<TData = Awaited<ReturnType<typeof listSavedContexts>>, TError = ErrorType<Error>>(
+ params: ListSavedContextsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSavedContexts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSavedContextsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateSavedContextUrl = () => {
+
+
+
+
+  return `/api/saved-context`
+}
+
+/**
+ * @summary Create saved context
+ */
+export const createSavedContext = async (savedContextInput: SavedContextInput, options?: Parameters<typeof customFetch>[1]): Promise<SavedContext> => {
+
+  return customFetch<SavedContext>(getCreateSavedContextUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(savedContextInput)
+  }
+);}
+
+
+
+
+
+export const getCreateSavedContextMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSavedContext>>, TError,{data: BodyType<SavedContextInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createSavedContext>>, TError,{data: BodyType<SavedContextInput>}, TContext> => {
+
+const mutationKey = ['createSavedContext'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createSavedContext>>, {data: BodyType<SavedContextInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createSavedContext(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateSavedContextMutationResult = NonNullable<Awaited<ReturnType<typeof createSavedContext>>>
+    export type CreateSavedContextMutationBody = BodyType<SavedContextInput>
+    export type CreateSavedContextMutationError = ErrorType<Error>
+
+    /**
+ * @summary Create saved context
+ */
+export const useCreateSavedContext = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSavedContext>>, TError,{data: BodyType<SavedContextInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createSavedContext>>,
+        TError,
+        {data: BodyType<SavedContextInput>},
+        TContext
+      > => {
+      return useMutation(getCreateSavedContextMutationOptions(options));
+    }
+
+export const getUpdateSavedContextUrl = (contextId: string,) => {
+
+
+
+
+  return `/api/saved-context/${contextId}`
+}
+
+/**
+ * Replaces all editable fields. Archived records cannot be edited.
+ * @summary Fully edit saved context
+ */
+export const updateSavedContext = async (contextId: string,
+    savedContextUpdate: SavedContextUpdate, options?: Parameters<typeof customFetch>[1]): Promise<SavedContext> => {
+
+  return customFetch<SavedContext>(getUpdateSavedContextUrl(contextId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(savedContextUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateSavedContextMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSavedContext>>, TError,{contextId: string;data: BodyType<SavedContextUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateSavedContext>>, TError,{contextId: string;data: BodyType<SavedContextUpdate>}, TContext> => {
+
+const mutationKey = ['updateSavedContext'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateSavedContext>>, {contextId: string;data: BodyType<SavedContextUpdate>}> = (props) => {
+          const {contextId,data} = props ?? {};
+
+          return  updateSavedContext(contextId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateSavedContextMutationResult = NonNullable<Awaited<ReturnType<typeof updateSavedContext>>>
+    export type UpdateSavedContextMutationBody = BodyType<SavedContextUpdate>
+    export type UpdateSavedContextMutationError = ErrorType<Error>
+
+    /**
+ * @summary Fully edit saved context
+ */
+export const useUpdateSavedContext = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSavedContext>>, TError,{contextId: string;data: BodyType<SavedContextUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateSavedContext>>,
+        TError,
+        {contextId: string;data: BodyType<SavedContextUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateSavedContextMutationOptions(options));
+    }
+
+export const getArchiveSavedContextUrl = (contextId: string,) => {
+
+
+
+
+  return `/api/saved-context/${contextId}/archive`
+}
+
+/**
+ * Archives a saved context without removing historical activity snapshots.
+ * @summary Archive saved context
+ */
+export const archiveSavedContext = async (contextId: string, options?: Parameters<typeof customFetch>[1]): Promise<SavedContext> => {
+
+  return customFetch<SavedContext>(getArchiveSavedContextUrl(contextId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getArchiveSavedContextMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveSavedContext>>, TError,{contextId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof archiveSavedContext>>, TError,{contextId: string}, TContext> => {
+
+const mutationKey = ['archiveSavedContext'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof archiveSavedContext>>, {contextId: string}> = (props) => {
+          const {contextId} = props ?? {};
+
+          return  archiveSavedContext(contextId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArchiveSavedContextMutationResult = NonNullable<Awaited<ReturnType<typeof archiveSavedContext>>>
+
+    export type ArchiveSavedContextMutationError = ErrorType<Error>
+
+    /**
+ * @summary Archive saved context
+ */
+export const useArchiveSavedContext = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveSavedContext>>, TError,{contextId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof archiveSavedContext>>,
+        TError,
+        {contextId: string},
+        TContext
+      > => {
+      return useMutation(getArchiveSavedContextMutationOptions(options));
+    }
+
+export const getCreateContextCategoryUrl = () => {
+
+
+
+
+  return `/api/context-categories`
+}
+
+/**
+ * @summary Create a saved context category
+ */
+export const createContextCategory = async (contextCategoryInput: ContextCategoryInput, options?: Parameters<typeof customFetch>[1]): Promise<ContextCategory> => {
+
+  return customFetch<ContextCategory>(getCreateContextCategoryUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(contextCategoryInput)
+  }
+);}
+
+
+
+
+
+export const getCreateContextCategoryMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createContextCategory>>, TError,{data: BodyType<ContextCategoryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createContextCategory>>, TError,{data: BodyType<ContextCategoryInput>}, TContext> => {
+
+const mutationKey = ['createContextCategory'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createContextCategory>>, {data: BodyType<ContextCategoryInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createContextCategory(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateContextCategoryMutationResult = NonNullable<Awaited<ReturnType<typeof createContextCategory>>>
+    export type CreateContextCategoryMutationBody = BodyType<ContextCategoryInput>
+    export type CreateContextCategoryMutationError = ErrorType<Error>
+
+    /**
+ * @summary Create a saved context category
+ */
+export const useCreateContextCategory = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createContextCategory>>, TError,{data: BodyType<ContextCategoryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createContextCategory>>,
+        TError,
+        {data: BodyType<ContextCategoryInput>},
+        TContext
+      > => {
+      return useMutation(getCreateContextCategoryMutationOptions(options));
     }
 
 export const getListActivitiesUrl = (params?: ListActivitiesParams,) => {

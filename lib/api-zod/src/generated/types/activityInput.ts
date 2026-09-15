@@ -44,6 +44,11 @@ export interface ActivityInput {
   /** @nullable */
   sourceUnitName?: string | null;
   sourceChipIds?: string[];
+  /**
+     * Saved context ids resolved by the server into an immutable response snapshot.
+     * @maxItems 20
+     */
+  savedContextIds?: string[];
   /** @nullable */
   style?: string | null;
   presentationTheme?: PresentationThemeSelection | null;

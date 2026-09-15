@@ -26,6 +26,7 @@ import { BoardEditor } from "@/components/board-editor";
 import { getLastUsedPresentationTheme } from "@/lib/presentation-theme";
 import { ClassFormDialog } from "@/components/class-form-dialog";
 import { UnitFormDialog, UnitFormValues } from "@/components/unit-form-dialog";
+import { SavedContextControl } from "@/components/saved-context/saved-context-control";
 import { ClassColorDot } from "@/components/class-color-dot";
 import { HelpTooltip } from "@/components/ui/tooltip";
 import { Settings, Plus, Play, Shuffle, FilePlus, MonitorOff, MonitorSmartphone, Loader2, AlertCircle } from "lucide-react";
@@ -44,6 +45,7 @@ import {
   useUpdateUnit,
   useDeleteUnit,
   getGetAppStateQueryKey,
+  getListSavedContextsQueryKey,
   ActivityInput,
   GenerateActivityInput,
 } from "@workspace/api-client-react";
@@ -184,6 +186,7 @@ export default function Home() {
 
   // Local UI State
   const [boardworkContext, setBoardworkContext] = useState("");
+  const [selectedContextIds, setSelectedContextIds] = useState<string[]>([]);
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
   const [deviceMode, setDeviceMode] = useState<DeviceMode>("off");
   const [technologyMode, setTechnologyMode] = useState<TechnologyMode>("no_computer");
@@ -244,6 +247,7 @@ export default function Home() {
 
   const resetGeneratorState = (classProfile: ClassProfile | undefined) => {
     setBoardworkContext("");
+    setSelectedContextIds([]);
     setSelectedUnitId(null);
     setResourceUrl("");
     setResourceNote("");
@@ -378,6 +382,7 @@ export default function Home() {
         sourceTopic: (draft.sourceTopic ?? boardworkContext.trim()) || undefined,
         sourceGoal: draft.sourceGoal || undefined,
         sourceChipIds: draft.sourceChipIds ?? [],
+        savedContextIds: draft.savedContextIds ?? [],
       };
 
       try {
@@ -385,6 +390,7 @@ export default function Home() {
         setSaveStatus("saving");
         setSaveError(null);
         const newActivity = await createActivityMut.mutateAsync({ data: payload });
+        void queryClient.invalidateQueries({ queryKey: getListSavedContextsQueryKey() });
         lastSavedRef.current = currentString;
         queryClient.setQueryData(getGetAppStateQueryKey(), (old: any) => {
           if (!old) return old;
@@ -396,6 +402,8 @@ export default function Home() {
           ...latestDraft,
           id: newActivity.id,
           classId: newActivity.classId,
+          savedContextSnapshot: newActivity.savedContextSnapshot,
+          savedContextIds: undefined,
         };
         initializedForId.current = newActivity.id;
         latestDraftRef.current = persistedDraft;
@@ -643,6 +651,7 @@ export default function Home() {
         unitId: selectedUnitId || undefined,
         topic: boardworkContext.trim() || undefined,
         chipIds: [],
+        savedContextIds: selectedContextIds,
         deviceMode,
         technologyMode,
         durationMinutes: duration,
@@ -656,6 +665,7 @@ export default function Home() {
       };
 
       const newActivity = await generateActivityMut.mutateAsync({ data: payload });
+      void queryClient.invalidateQueries({ queryKey: getListSavedContextsQueryKey() });
       queryClient.setQueryData(getGetAppStateQueryKey(), (old: any) => {
         if (!old) return old;
         return {
@@ -693,6 +703,8 @@ export default function Home() {
       deviceMode,
       technologyMode,
       arrivalInstructions: activeClass.arrivalRoutine,
+      sourceTopic: boardworkContext.trim(),
+      savedContextIds: [...selectedContextIds],
       presentationTheme: getLastUsedPresentationTheme(),
     };
 
@@ -703,6 +715,18 @@ export default function Home() {
     setSaveError(null);
     isCreatingRef.current = false;
     pendingPresentRef.current = false;
+  };
+
+  const handleContextSelectionChange = (ids: string[]) => {
+    setSelectedContextIds(ids);
+    // Unsaved boards can recover from an archived/unavailable selection before
+    // their first save. Once saved, the server snapshot must stay immutable.
+    setLocalDraft((draft) => {
+      if (!draft || draft.id || draft.classId !== activeClassId) return draft;
+      const next = { ...draft, savedContextIds: [...ids] };
+      latestDraftRef.current = next;
+      return next;
+    });
   };
 
   const handlePresent = async (e: React.MouseEvent) => {
@@ -896,6 +920,16 @@ export default function Home() {
                 </div>
               </div>
             </div>
+
+            {activeClassId && (
+              <SavedContextControl
+                key={activeClassId}
+                classId={activeClassId}
+                selectedIds={selectedContextIds}
+                onSelectionChange={handleContextSelectionChange}
+                disabled={isGenerating}
+              />
+            )}
 
             <div className="space-y-5 border-b border-border/70 pb-6">
                <div>

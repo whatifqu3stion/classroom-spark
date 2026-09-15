@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useMemo, ReactNode } from "react";
-import { useGetAppState, AppState, type PresentationThemeSelection } from "@workspace/api-client-react";
+import { useGetAppState, AppState, type Activity, type PresentationThemeSelection } from "@workspace/api-client-react";
 import { Loader2 } from "lucide-react";
 
 export type DeviceMode = "off" | "on";
@@ -62,6 +62,9 @@ export interface ActivityDraft {
   sourceUnitId?: string | null;
   sourceUnitName?: string | null;
   sourceChipIds?: string[];
+  /** Captured setup IDs used only when creating an unsaved board. */
+  savedContextIds?: string[];
+  savedContextSnapshot?: Activity["savedContextSnapshot"];
   style?: string | null;
   presentationTheme?: PresentationThemeSelection | null;
   favorite?: boolean;

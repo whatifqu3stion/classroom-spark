@@ -1846,6 +1846,7 @@ test("lets teachers replace a live board with a context-matched Surprise me resu
     topic: "Forces in a changing system",
     goal: "Explain the strongest pattern with evidence",
     chipIds: ["chip-evidence"],
+    sourceActivityId: surprisePresentActivity.id,
     deviceMode: "on",
     technologyMode: "computer_available",
     durationMinutes: 12,

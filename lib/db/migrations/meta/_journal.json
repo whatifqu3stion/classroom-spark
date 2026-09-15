@@ -50,6 +50,13 @@
       "when": 1789154571822,
       "tag": "0006_good_wolfsbane",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789497995510,
+      "tag": "0007_dear_elektra",
+      "breakpoints": true
     }
   ]
 }

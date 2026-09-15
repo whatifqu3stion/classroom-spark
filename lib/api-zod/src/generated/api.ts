@@ -28,6 +28,12 @@ export const getAppStateResponseActivitiesItemDurationMinutesMultipleOf = 1;
 
 export const getAppStateResponseActivitiesItemVisualsMax = 2;
 
+export const getAppStateResponseActivitiesItemSavedContextSnapshotItemLabelMax = 50;
+
+export const getAppStateResponseActivitiesItemSavedContextSnapshotItemCategoryMax = 40;
+
+export const getAppStateResponseActivitiesItemSavedContextSnapshotItemDetailsMax = 300;
+
 export const getAppStateResponseActivitiesItemPresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getAppStateResponseActivitiesItemPresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getAppStateResponseActivitiesItemPresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -98,6 +104,13 @@ export const GetAppStateResponse = zod.object({
   "sourceUnitId": zod.string().nullish(),
   "sourceUnitName": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
+  "sourceActivityId": zod.string().nullish(),
+  "savedContextSnapshot": zod.array(zod.object({
+  "contextId": zod.string().nullish(),
+  "label": zod.string().min(1).max(getAppStateResponseActivitiesItemSavedContextSnapshotItemLabelMax),
+  "category": zod.string().max(getAppStateResponseActivitiesItemSavedContextSnapshotItemCategoryMax).nullish(),
+  "details": zod.string().max(getAppStateResponseActivitiesItemSavedContextSnapshotItemDetailsMax).nullish()
+})).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
@@ -406,6 +419,8 @@ export const generateActivityBodyGoalMax = 1000;
 
 export const generateActivityBodyChipIdsMax = 20;
 
+export const generateActivityBodySavedContextIdsMax = 20;
+
 export const generateActivityBodyDurationMinutesMultipleOf = 1;
 
 export const generateActivityBodyPresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -427,6 +442,8 @@ export const GenerateActivityBody = zod.object({
   "topic": zod.string().max(generateActivityBodyTopicMax).optional(),
   "goal": zod.string().max(generateActivityBodyGoalMax).optional(),
   "chipIds": zod.array(zod.string()).max(generateActivityBodyChipIdsMax),
+  "savedContextIds": zod.array(zod.string()).max(generateActivityBodySavedContextIdsMax).optional().describe('Selected saved context ids. Mutually exclusive with a non-empty sourceActivityId.'),
+  "sourceActivityId": zod.string().optional().describe('Resolve and reuse the immutable saved context snapshot from this activity. Mutually exclusive with non-empty savedContextIds.'),
   "deviceMode": zod.enum(['off', 'on']),
   "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
   "durationMinutes": zod.number().min(1).multipleOf(generateActivityBodyDurationMinutesMultipleOf),
@@ -452,6 +469,12 @@ export const generateActivityResponseDurationMinutesMultipleOf = 1;
 
 
 export const generateActivityResponseVisualsMax = 2;
+
+export const generateActivityResponseSavedContextSnapshotItemLabelMax = 50;
+
+export const generateActivityResponseSavedContextSnapshotItemCategoryMax = 40;
+
+export const generateActivityResponseSavedContextSnapshotItemDetailsMax = 300;
 
 export const generateActivityResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const generateActivityResponsePresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -484,6 +507,13 @@ export const GenerateActivityResponse = zod.object({
   "sourceUnitId": zod.string().nullish(),
   "sourceUnitName": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
+  "sourceActivityId": zod.string().nullish(),
+  "savedContextSnapshot": zod.array(zod.object({
+  "contextId": zod.string().nullish(),
+  "label": zod.string().min(1).max(generateActivityResponseSavedContextSnapshotItemLabelMax),
+  "category": zod.string().max(generateActivityResponseSavedContextSnapshotItemCategoryMax).nullish(),
+  "details": zod.string().max(generateActivityResponseSavedContextSnapshotItemDetailsMax).nullish()
+})).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
@@ -559,6 +589,180 @@ export const DeleteChipResponse = zod.void()
 
 
 /**
+ * Returns active saved context visible to a class (class-scoped records for the requested class plus global records) and all active categories.
+ * @summary List available saved context
+ */
+export const ListSavedContextsQueryParams = zod.object({
+  "classId": zod.coerce.string()
+})
+
+export const listSavedContextsResponseItemsItemLabelMax = 50;
+
+export const listSavedContextsResponseItemsItemDetailsMax = 300;
+
+export const listSavedContextsResponseCategoriesItemNameMax = 40;
+
+
+
+export const ListSavedContextsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.string(),
+  "label": zod.string().min(1).max(listSavedContextsResponseItemsItemLabelMax),
+  "details": zod.string().max(listSavedContextsResponseItemsItemDetailsMax).nullable(),
+  "categoryId": zod.string().nullable(),
+  "categoryName": zod.string().nullable(),
+  "scope": zod.enum(['class', 'global']),
+  "classId": zod.string().nullable(),
+  "archived": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "lastUsedAt": zod.coerce.date().nullable()
+})),
+  "categories": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string().min(1).max(listSavedContextsResponseCategoriesItemNameMax),
+  "archived": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Create saved context
+ */
+export const createSavedContextBodyLabelMax = 50;
+
+export const createSavedContextBodyDetailsMax = 300;
+
+
+
+export const CreateSavedContextBody = zod.object({
+  "label": zod.string().min(1).max(createSavedContextBodyLabelMax),
+  "details": zod.string().max(createSavedContextBodyDetailsMax).nullish(),
+  "categoryId": zod.string().nullish(),
+  "scope": zod.enum(['class', 'global']),
+  "classId": zod.string().nullish()
+})
+
+export const createSavedContextResponseLabelMax = 50;
+
+export const createSavedContextResponseDetailsMax = 300;
+
+
+
+export const CreateSavedContextResponse = zod.object({
+  "id": zod.string(),
+  "label": zod.string().min(1).max(createSavedContextResponseLabelMax),
+  "details": zod.string().max(createSavedContextResponseDetailsMax).nullable(),
+  "categoryId": zod.string().nullable(),
+  "categoryName": zod.string().nullable(),
+  "scope": zod.enum(['class', 'global']),
+  "classId": zod.string().nullable(),
+  "archived": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "lastUsedAt": zod.coerce.date().nullable()
+})
+
+
+/**
+ * Replaces all editable fields. Archived records cannot be edited.
+ * @summary Fully edit saved context
+ */
+export const UpdateSavedContextParams = zod.object({
+  "contextId": zod.coerce.string()
+})
+
+export const updateSavedContextBodyLabelMax = 50;
+
+export const updateSavedContextBodyDetailsMax = 300;
+
+
+
+export const UpdateSavedContextBody = zod.object({
+  "label": zod.string().min(1).max(updateSavedContextBodyLabelMax),
+  "details": zod.string().max(updateSavedContextBodyDetailsMax).nullable(),
+  "categoryId": zod.string().nullable(),
+  "scope": zod.enum(['class', 'global']),
+  "classId": zod.string().nullable()
+})
+
+export const updateSavedContextResponseLabelMax = 50;
+
+export const updateSavedContextResponseDetailsMax = 300;
+
+
+
+export const UpdateSavedContextResponse = zod.object({
+  "id": zod.string(),
+  "label": zod.string().min(1).max(updateSavedContextResponseLabelMax),
+  "details": zod.string().max(updateSavedContextResponseDetailsMax).nullable(),
+  "categoryId": zod.string().nullable(),
+  "categoryName": zod.string().nullable(),
+  "scope": zod.enum(['class', 'global']),
+  "classId": zod.string().nullable(),
+  "archived": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "lastUsedAt": zod.coerce.date().nullable()
+})
+
+
+/**
+ * Archives a saved context without removing historical activity snapshots.
+ * @summary Archive saved context
+ */
+export const ArchiveSavedContextParams = zod.object({
+  "contextId": zod.coerce.string()
+})
+
+export const archiveSavedContextResponseLabelMax = 50;
+
+export const archiveSavedContextResponseDetailsMax = 300;
+
+
+
+export const ArchiveSavedContextResponse = zod.object({
+  "id": zod.string(),
+  "label": zod.string().min(1).max(archiveSavedContextResponseLabelMax),
+  "details": zod.string().max(archiveSavedContextResponseDetailsMax).nullable(),
+  "categoryId": zod.string().nullable(),
+  "categoryName": zod.string().nullable(),
+  "scope": zod.enum(['class', 'global']),
+  "classId": zod.string().nullable(),
+  "archived": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "lastUsedAt": zod.coerce.date().nullable()
+})
+
+
+/**
+ * @summary Create a saved context category
+ */
+export const createContextCategoryBodyNameMax = 40;
+
+
+
+export const CreateContextCategoryBody = zod.object({
+  "name": zod.string().min(1).max(createContextCategoryBodyNameMax)
+})
+
+export const createContextCategoryResponseNameMax = 40;
+
+
+
+export const CreateContextCategoryResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string().min(1).max(createContextCategoryResponseNameMax),
+  "archived": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
  * Lists activities, optionally filtered by class.
  * @summary List activities
  */
@@ -570,6 +774,12 @@ export const listActivitiesResponseDurationMinutesMultipleOf = 1;
 
 
 export const listActivitiesResponseVisualsMax = 2;
+
+export const listActivitiesResponseSavedContextSnapshotItemLabelMax = 50;
+
+export const listActivitiesResponseSavedContextSnapshotItemCategoryMax = 40;
+
+export const listActivitiesResponseSavedContextSnapshotItemDetailsMax = 300;
 
 export const listActivitiesResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const listActivitiesResponsePresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -602,6 +812,13 @@ export const ListActivitiesResponseItem = zod.object({
   "sourceUnitId": zod.string().nullish(),
   "sourceUnitName": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
+  "sourceActivityId": zod.string().nullish(),
+  "savedContextSnapshot": zod.array(zod.object({
+  "contextId": zod.string().nullish(),
+  "label": zod.string().min(1).max(listActivitiesResponseSavedContextSnapshotItemLabelMax),
+  "category": zod.string().max(listActivitiesResponseSavedContextSnapshotItemCategoryMax).nullish(),
+  "details": zod.string().max(listActivitiesResponseSavedContextSnapshotItemDetailsMax).nullish()
+})).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
@@ -630,6 +847,8 @@ export const createActivityBodyDurationMinutesMultipleOf = 1;
 
 
 export const createActivityBodyVisualsMax = 2;
+
+export const createActivityBodySavedContextIdsMax = 20;
 
 export const createActivityBodyPresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const createActivityBodyPresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -660,6 +879,7 @@ export const CreateActivityBody = zod.object({
   "sourceUnitId": zod.string().nullish(),
   "sourceUnitName": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
+  "savedContextIds": zod.array(zod.string()).max(createActivityBodySavedContextIdsMax).optional().describe('Saved context ids resolved by the server into an immutable response snapshot.'),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
@@ -680,6 +900,12 @@ export const createActivityResponseDurationMinutesMultipleOf = 1;
 
 
 export const createActivityResponseVisualsMax = 2;
+
+export const createActivityResponseSavedContextSnapshotItemLabelMax = 50;
+
+export const createActivityResponseSavedContextSnapshotItemCategoryMax = 40;
+
+export const createActivityResponseSavedContextSnapshotItemDetailsMax = 300;
 
 export const createActivityResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const createActivityResponsePresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -712,6 +938,13 @@ export const CreateActivityResponse = zod.object({
   "sourceUnitId": zod.string().nullish(),
   "sourceUnitName": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
+  "sourceActivityId": zod.string().nullish(),
+  "savedContextSnapshot": zod.array(zod.object({
+  "contextId": zod.string().nullish(),
+  "label": zod.string().min(1).max(createActivityResponseSavedContextSnapshotItemLabelMax),
+  "category": zod.string().max(createActivityResponseSavedContextSnapshotItemCategoryMax).nullish(),
+  "details": zod.string().max(createActivityResponseSavedContextSnapshotItemDetailsMax).nullish()
+})).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
@@ -744,6 +977,12 @@ export const getActivityResponseDurationMinutesMultipleOf = 1;
 
 export const getActivityResponseVisualsMax = 2;
 
+export const getActivityResponseSavedContextSnapshotItemLabelMax = 50;
+
+export const getActivityResponseSavedContextSnapshotItemCategoryMax = 40;
+
+export const getActivityResponseSavedContextSnapshotItemDetailsMax = 300;
+
 export const getActivityResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getActivityResponsePresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getActivityResponsePresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -775,6 +1014,13 @@ export const GetActivityResponse = zod.object({
   "sourceUnitId": zod.string().nullish(),
   "sourceUnitName": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
+  "sourceActivityId": zod.string().nullish(),
+  "savedContextSnapshot": zod.array(zod.object({
+  "contextId": zod.string().nullish(),
+  "label": zod.string().min(1).max(getActivityResponseSavedContextSnapshotItemLabelMax),
+  "category": zod.string().max(getActivityResponseSavedContextSnapshotItemCategoryMax).nullish(),
+  "details": zod.string().max(getActivityResponseSavedContextSnapshotItemDetailsMax).nullish()
+})).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
@@ -857,6 +1103,12 @@ export const updateActivityResponseDurationMinutesMultipleOf = 1;
 
 export const updateActivityResponseVisualsMax = 2;
 
+export const updateActivityResponseSavedContextSnapshotItemLabelMax = 50;
+
+export const updateActivityResponseSavedContextSnapshotItemCategoryMax = 40;
+
+export const updateActivityResponseSavedContextSnapshotItemDetailsMax = 300;
+
 export const updateActivityResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const updateActivityResponsePresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const updateActivityResponsePresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -888,6 +1140,13 @@ export const UpdateActivityResponse = zod.object({
   "sourceUnitId": zod.string().nullish(),
   "sourceUnitName": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
+  "sourceActivityId": zod.string().nullish(),
+  "savedContextSnapshot": zod.array(zod.object({
+  "contextId": zod.string().nullish(),
+  "label": zod.string().min(1).max(updateActivityResponseSavedContextSnapshotItemLabelMax),
+  "category": zod.string().max(updateActivityResponseSavedContextSnapshotItemCategoryMax).nullish(),
+  "details": zod.string().max(updateActivityResponseSavedContextSnapshotItemDetailsMax).nullish()
+})).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
@@ -940,6 +1199,12 @@ export const duplicateActivityResponseDurationMinutesMultipleOf = 1;
 
 export const duplicateActivityResponseVisualsMax = 2;
 
+export const duplicateActivityResponseSavedContextSnapshotItemLabelMax = 50;
+
+export const duplicateActivityResponseSavedContextSnapshotItemCategoryMax = 40;
+
+export const duplicateActivityResponseSavedContextSnapshotItemDetailsMax = 300;
+
 export const duplicateActivityResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const duplicateActivityResponsePresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const duplicateActivityResponsePresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -971,6 +1236,13 @@ export const DuplicateActivityResponse = zod.object({
   "sourceUnitId": zod.string().nullish(),
   "sourceUnitName": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
+  "sourceActivityId": zod.string().nullish(),
+  "savedContextSnapshot": zod.array(zod.object({
+  "contextId": zod.string().nullish(),
+  "label": zod.string().min(1).max(duplicateActivityResponseSavedContextSnapshotItemLabelMax),
+  "category": zod.string().max(duplicateActivityResponseSavedContextSnapshotItemCategoryMax).nullish(),
+  "details": zod.string().max(duplicateActivityResponseSavedContextSnapshotItemDetailsMax).nullish()
+})).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
@@ -1007,6 +1279,12 @@ export const setActivityFavoriteResponseDurationMinutesMultipleOf = 1;
 
 export const setActivityFavoriteResponseVisualsMax = 2;
 
+export const setActivityFavoriteResponseSavedContextSnapshotItemLabelMax = 50;
+
+export const setActivityFavoriteResponseSavedContextSnapshotItemCategoryMax = 40;
+
+export const setActivityFavoriteResponseSavedContextSnapshotItemDetailsMax = 300;
+
 export const setActivityFavoriteResponsePresentationThemeOneAnchorsBackgroundRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const setActivityFavoriteResponsePresentationThemeOneAnchorsTextRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const setActivityFavoriteResponsePresentationThemeOneAnchorsAccentRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -1038,6 +1316,13 @@ export const SetActivityFavoriteResponse = zod.object({
   "sourceUnitId": zod.string().nullish(),
   "sourceUnitName": zod.string().nullish(),
   "sourceChipIds": zod.array(zod.string()).optional(),
+  "sourceActivityId": zod.string().nullish(),
+  "savedContextSnapshot": zod.array(zod.object({
+  "contextId": zod.string().nullish(),
+  "label": zod.string().min(1).max(setActivityFavoriteResponseSavedContextSnapshotItemLabelMax),
+  "category": zod.string().max(setActivityFavoriteResponseSavedContextSnapshotItemCategoryMax).nullish(),
+  "details": zod.string().max(setActivityFavoriteResponseSavedContextSnapshotItemDetailsMax).nullish()
+})).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),

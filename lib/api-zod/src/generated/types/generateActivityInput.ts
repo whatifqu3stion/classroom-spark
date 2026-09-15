@@ -31,6 +31,13 @@ export interface GenerateActivityInput {
   goal?: string;
   /** @maxItems 20 */
   chipIds: string[];
+  /**
+     * Selected saved context ids. Mutually exclusive with a non-empty sourceActivityId.
+     * @maxItems 20
+     */
+  savedContextIds?: string[];
+  /** Resolve and reuse the immutable saved context snapshot from this activity. Mutually exclusive with non-empty savedContextIds. */
+  sourceActivityId?: string;
   deviceMode: DeviceMode;
   technologyMode?: TechnologyMode;
   durationMinutes: Duration;

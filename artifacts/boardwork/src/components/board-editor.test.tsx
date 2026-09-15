@@ -16,6 +16,23 @@ const draft: ActivityDraft = {
 };
 
 describe("BoardEditor presentation visual disclosure", () => {
+  it("exposes the saved context snapshot without opening presentation settings", async () => {
+    const label = "A".repeat(50);
+    const details = "Original context: draw before explaining.";
+    render(<BoardEditor draft={{
+      ...draft,
+      id: "snapshot-board",
+      savedContextSnapshot: [{ label, details, category: "Routine" }],
+    }} onChange={vi.fn()} />);
+    const inspector = screen.getByTestId("saved-context-snapshot-details");
+    expect(inspector.closest("[inert]")).toBeNull();
+    expect(inspector.closest('[aria-hidden="true"]')).toBeNull();
+    fireEvent.click(screen.getByTestId("button-toggle-snapshot"));
+    await waitFor(() => expect(screen.getByText(details)).toBeVisible());
+    expect(screen.getByText(label)).not.toHaveClass("truncate");
+    expect(screen.getByTestId("button-toggle-presentation-visual")).toHaveAttribute("aria-expanded", "false");
+  });
+
   it("uses a narrow-screen-safe header and content column", () => {
     render(
       <BoardEditor

@@ -5,6 +5,7 @@ import {
   classesTable,
   db,
   instructionalContextsTable,
+  savedContextsTable,
   unitsTable,
 } from "@workspace/db";
 import type { GenerateActivityInput } from "@workspace/api-zod";
@@ -25,6 +26,11 @@ import {
   type BoardworkGenerationProvider,
   type GeneratedActivity,
 } from "./types";
+import {
+  resolveSavedContextSnapshots,
+  SavedContextError,
+  type SavedContextSnapshot,
+} from "../../lib/saved-context";
 
 function optionalText(value: string | null | undefined): string | null {
   const trimmed = value?.trim();
@@ -74,6 +80,9 @@ async function buildGenerationContext(
 ): Promise<{
   context: BoardworkGenerationContext;
   chipIds: string[];
+  savedContextIds: string[];
+  savedContextSnapshot: SavedContextSnapshot[];
+  sourceActivityId: string | null;
   teacherProvidedUrl: string | null;
   selectedUnit: {
     id: string;
@@ -84,6 +93,20 @@ async function buildGenerationContext(
   } | null;
 }> {
   const chipIds = [...new Set(input.chipIds)];
+  const savedContextIds = input.savedContextIds ?? [];
+  const sourceActivityId = input.sourceActivityId?.trim() || null;
+  if (sourceActivityId && savedContextIds.length > 0) {
+    throw new GenerationError(
+      "invalid_request",
+      "Choose saved context or a historical activity, not both.",
+    );
+  }
+  if (new Set(savedContextIds).size !== savedContextIds.length) {
+    throw new GenerationError(
+      "invalid_request",
+      "Saved context selections must not contain duplicate ids.",
+    );
+  }
   let effectiveDeviceMode: "off" | "on";
   let technologyMode: "no_computer" | "computer_available" | "computer_required";
   try {
@@ -102,7 +125,7 @@ async function buildGenerationContext(
     effectiveDeviceMode,
   );
 
-  const [classProfile, instructionalContext, selectedUnit, selectedChips, recentActivities] =
+  const [classProfile, instructionalContext, selectedUnit, selectedChips, recentActivities, sourceActivity] =
     await Promise.all([
       db
         .select()
@@ -141,6 +164,13 @@ async function buildGenerationContext(
         .where(eq(activitiesTable.classId, input.classId))
         .orderBy(desc(activitiesTable.createdAt))
         .limit(3),
+      sourceActivityId
+        ? db
+            .select()
+            .from(activitiesTable)
+            .where(eq(activitiesTable.id, sourceActivityId))
+            .then((rows) => rows[0])
+        : Promise.resolve(undefined),
     ]);
 
   if (!classProfile) {
@@ -155,9 +185,39 @@ async function buildGenerationContext(
   if (input.unitId && !selectedUnit) {
     throw new GenerationError("not_found", "Selected unit not found.");
   }
+  if (sourceActivityId && (!sourceActivity || sourceActivity.classId !== input.classId)) {
+    throw new GenerationError(
+      "not_found",
+      "Historical activity not found for this class.",
+    );
+  }
+
+  let savedContextSnapshot: SavedContextSnapshot[];
+  let resolvedSavedContextIds: string[];
+  if (sourceActivityId) {
+    savedContextSnapshot = sourceActivity?.savedContextSnapshot ?? [];
+    resolvedSavedContextIds = [];
+  } else {
+    try {
+      const resolved = await resolveSavedContextSnapshots(
+        input.classId,
+        savedContextIds,
+      );
+      savedContextSnapshot = resolved.snapshots;
+      resolvedSavedContextIds = resolved.ids;
+    } catch (error) {
+      if (error instanceof SavedContextError) {
+        throw new GenerationError(error.code, error.message, { cause: error });
+      }
+      throw error;
+    }
+  }
 
   return {
     chipIds,
+    savedContextIds: resolvedSavedContextIds,
+    savedContextSnapshot,
+    sourceActivityId,
     teacherProvidedUrl,
     selectedUnit: selectedUnit
       ? {
@@ -209,6 +269,11 @@ async function buildGenerationContext(
         materialsAvailable: optionalText(input.materialsAvailable),
         completionSignal: optionalText(input.completionSignal),
         focusChips: selectedChips.map((chip) => chip.label),
+          savedContext: savedContextSnapshot.map((item) => ({
+            label: item.label,
+            category: item.category ?? null,
+            details: item.details ?? null,
+          })),
         deviceMode: effectiveDeviceMode,
         technologyMode,
         durationMinutes: input.durationMinutes,
@@ -309,38 +374,58 @@ export async function generateAndSaveActivity(
   input: GenerateActivityInput,
   provider: BoardworkGenerationProvider,
 ) {
-  const { context, chipIds, teacherProvidedUrl, selectedUnit } =
+  const {
+    context,
+    chipIds,
+    savedContextIds,
+    savedContextSnapshot,
+    sourceActivityId,
+    teacherProvidedUrl,
+    selectedUnit,
+  } =
     await buildGenerationContext(input);
   const generated = await generateWithRepair(provider, context);
 
-  const [created] = await db
-    .insert(activitiesTable)
-    .values({
-      classId: input.classId,
-      eyebrow: generated.eyebrow,
-      title: getActivityCompatibilityTitle(generated.task),
-      task: generated.task,
-      prompts: generated.prompts,
-      durationMinutes: generated.durationMinutes,
-      deviceMode: generated.deviceMode,
-      technologyMode: context.today.technologyMode,
-      arrivalInstructions: context.classProfile.arrivalRoutine,
-      resourceUrl: teacherProvidedUrl,
-      resourceNote: context.today.teacherProvidedResourceNote,
-      materials: generated.materials,
-      teacherNote: generated.teacherNote,
-      sourceTopic: context.today.topic,
-      sourceGoal: context.today.goal,
-      sourceUnitId: selectedUnit?.id ?? null,
-      sourceUnitName: selectedUnit?.name ?? null,
-      sourceChipIds: chipIds,
-      style:
-        context.today.activityStyle ??
-        generated.activityStyle ??
-        (input.surprise ? "Surprise Me" : null),
-      presentationTheme: input.presentationTheme ?? null,
-    })
-    .returning();
+  const created = await db.transaction(async (tx) => {
+    const [activity] = await tx
+      .insert(activitiesTable)
+      .values({
+        classId: input.classId,
+        eyebrow: generated.eyebrow,
+        title: getActivityCompatibilityTitle(generated.task),
+        task: generated.task,
+        prompts: generated.prompts,
+        durationMinutes: generated.durationMinutes,
+        deviceMode: generated.deviceMode,
+        technologyMode: context.today.technologyMode,
+        arrivalInstructions: context.classProfile.arrivalRoutine,
+        resourceUrl: teacherProvidedUrl,
+        resourceNote: context.today.teacherProvidedResourceNote,
+        materials: generated.materials,
+        teacherNote: generated.teacherNote,
+        sourceTopic: context.today.topic,
+        sourceGoal: context.today.goal,
+        sourceUnitId: selectedUnit?.id ?? null,
+        sourceUnitName: selectedUnit?.name ?? null,
+        sourceChipIds: chipIds,
+        sourceActivityId,
+        savedContextSnapshot,
+        style:
+          context.today.activityStyle ??
+          generated.activityStyle ??
+          (input.surprise ? "Surprise Me" : null),
+        presentationTheme: input.presentationTheme ?? null,
+      })
+      .returning();
+
+    if (savedContextIds.length > 0) {
+      await tx
+        .update(savedContextsTable)
+        .set({ lastUsedAt: new Date() })
+        .where(inArray(savedContextsTable.id, savedContextIds));
+    }
+    return activity;
+  });
 
   return created;
 }

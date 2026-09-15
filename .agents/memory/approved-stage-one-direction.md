@@ -14,3 +14,9 @@ Keep class data separated into three layers: durable class profile, periodically
 **Why:** Teachers should not re-enter stable or periodic context during daily generation, and a class identifier should not become a presentation theme.
 
 **How to apply:** Preserve these boundaries as persistence evolves and when later AI inputs are assembled; do not move current units into permanent profile settings or apply class colors to generated boards.
+
+Saved Context is an optional reusable input within that workflow, not a reason to add a teacher-account migration or a curriculum-management dashboard. “All classes” means this shared installation, not school-wide sharing.
+
+**Why:** The user explicitly chose to keep the existing shared-app model and clear daily selections on class changes, rather than introduce private teacher libraries or remembered selections.
+
+**How to apply:** Keep later context improvements narrow. Revisit ownership or persistent selection only when separately requested; don't infer them from authentication being present.

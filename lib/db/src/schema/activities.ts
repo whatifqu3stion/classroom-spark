@@ -26,6 +26,13 @@ export type PresentationVisual = {
   description?: string | null;
 };
 
+export type SavedContextSnapshot = {
+  contextId?: string | null;
+  label: string;
+  category?: string | null;
+  details?: string | null;
+};
+
 export const activitiesTable = pgTable("activities", {
   id: uuid("id").primaryKey().defaultRandom(),
   classId: uuid("class_id")
@@ -56,6 +63,11 @@ export const activitiesTable = pgTable("activities", {
   }),
   sourceUnitName: text("source_unit_name"),
   sourceChipIds: jsonb("source_chip_ids").$type<string[]>().notNull().default([]),
+  sourceActivityId: uuid("source_activity_id"),
+  savedContextSnapshot: jsonb("saved_context_snapshot")
+    .$type<SavedContextSnapshot[]>()
+    .notNull()
+    .default([]),
   style: text("style"),
   presentationTheme: jsonb("presentation_theme")
     .$type<PresentationThemeSelection | null>(),

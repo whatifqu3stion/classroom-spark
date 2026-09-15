@@ -221,6 +221,137 @@ export interface ChipUpdate {
   label: string;
 }
 
+export interface ContextCategory {
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  name: string;
+  archived: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ContextCategoryInput {
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  name: string;
+}
+
+export type SavedContextScope = typeof SavedContextScope[keyof typeof SavedContextScope];
+
+
+export const SavedContextScope = {
+  class: 'class',
+  global: 'global',
+} as const;
+
+export interface SavedContext {
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 50
+     */
+  label: string;
+  /**
+     * @maxLength 300
+     * @nullable
+     */
+  details: string | null;
+  /** @nullable */
+  categoryId: string | null;
+  /** @nullable */
+  categoryName: string | null;
+  scope: SavedContextScope;
+  /** @nullable */
+  classId: string | null;
+  archived: boolean;
+  createdAt: string;
+  updatedAt: string;
+  /** @nullable */
+  lastUsedAt: string | null;
+}
+
+export type SavedContextInputScope = typeof SavedContextInputScope[keyof typeof SavedContextInputScope];
+
+
+export const SavedContextInputScope = {
+  class: 'class',
+  global: 'global',
+} as const;
+
+export interface SavedContextInput {
+  /**
+     * @minLength 1
+     * @maxLength 50
+     */
+  label: string;
+  /**
+     * @maxLength 300
+     * @nullable
+     */
+  details?: string | null;
+  /** @nullable */
+  categoryId?: string | null;
+  scope: SavedContextInputScope;
+  /** @nullable */
+  classId?: string | null;
+}
+
+export type SavedContextUpdateScope = typeof SavedContextUpdateScope[keyof typeof SavedContextUpdateScope];
+
+
+export const SavedContextUpdateScope = {
+  class: 'class',
+  global: 'global',
+} as const;
+
+export interface SavedContextUpdate {
+  /**
+     * @minLength 1
+     * @maxLength 50
+     */
+  label: string;
+  /**
+     * @maxLength 300
+     * @nullable
+     */
+  details: string | null;
+  /** @nullable */
+  categoryId: string | null;
+  scope: SavedContextUpdateScope;
+  /** @nullable */
+  classId: string | null;
+}
+
+export interface SavedContextLibrary {
+  items: SavedContext[];
+  categories: ContextCategory[];
+}
+
+export interface SavedContextSnapshot {
+  /** @nullable */
+  contextId?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 50
+     */
+  label: string;
+  /**
+     * @maxLength 40
+     * @nullable
+     */
+  category?: string | null;
+  /**
+     * @maxLength 300
+     * @nullable
+     */
+  details?: string | null;
+}
+
 export interface Activity {
   id: string;
   classId: string;
@@ -256,6 +387,9 @@ export interface Activity {
   /** @nullable */
   sourceUnitName?: string | null;
   sourceChipIds?: string[];
+  /** @nullable */
+  sourceActivityId?: string | null;
+  savedContextSnapshot?: SavedContextSnapshot[];
   /** @nullable */
   style?: string | null;
   presentationTheme?: PresentationThemeSelection | null;
@@ -304,6 +438,11 @@ export interface ActivityInput {
   /** @nullable */
   sourceUnitName?: string | null;
   sourceChipIds?: string[];
+  /**
+     * Saved context ids resolved by the server into an immutable response snapshot.
+     * @maxItems 20
+     */
+  savedContextIds?: string[];
   /** @nullable */
   style?: string | null;
   presentationTheme?: PresentationThemeSelection | null;
@@ -377,6 +516,13 @@ export interface GenerateActivityInput {
   goal?: string;
   /** @maxItems 20 */
   chipIds: string[];
+  /**
+     * Selected saved context ids. Mutually exclusive with a non-empty sourceActivityId.
+     * @maxItems 20
+     */
+  savedContextIds?: string[];
+  /** Resolve and reuse the immutable saved context snapshot from this activity. Mutually exclusive with non-empty savedContextIds. */
+  sourceActivityId?: string;
   deviceMode: DeviceMode;
   technologyMode?: TechnologyMode;
   durationMinutes: Duration;
@@ -413,6 +559,12 @@ export interface AppState {
   /** @nullable */
   activeClassId: string | null;
 }
+
+export type ClassIdQueryParamParameter = string;
+
+export type ListSavedContextsParams = {
+classId: ClassIdQueryParamParameter;
+};
 
 export type ListActivitiesParams = {
 classId?: string;

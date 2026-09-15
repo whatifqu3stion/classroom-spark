@@ -49,6 +49,11 @@ export interface BoardworkGenerationContext {
     materialsAvailable?: string | null;
     completionSignal?: string | null;
     focusChips: string[];
+    savedContext?: Array<{
+      label: string;
+      category: string | null;
+      details: string | null;
+    }>;
     deviceMode: "off" | "on";
     technologyMode?: "no_computer" | "computer_available" | "computer_required";
     durationMinutes: number;

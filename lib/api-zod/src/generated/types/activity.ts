@@ -9,6 +9,7 @@ import type { DeviceMode } from './deviceMode';
 import type { Duration } from './duration';
 import type { PresentationThemeSelection } from './presentationThemeSelection';
 import type { PresentationVisual } from './presentationVisual';
+import type { SavedContextSnapshot } from './savedContextSnapshot';
 import type { TechnologyMode } from './technologyMode';
 
 export interface Activity {
@@ -46,6 +47,9 @@ export interface Activity {
   /** @nullable */
   sourceUnitName?: string | null;
   sourceChipIds?: string[];
+  /** @nullable */
+  sourceActivityId?: string | null;
+  savedContextSnapshot?: SavedContextSnapshot[];
   /** @nullable */
   style?: string | null;
   presentationTheme?: PresentationThemeSelection | null;

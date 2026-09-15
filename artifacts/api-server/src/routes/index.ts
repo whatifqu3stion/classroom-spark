@@ -7,6 +7,7 @@ import activitiesRouter from "./activities";
 import generationRouter from "./generation";
 import authRouter from "./auth";
 import unitsRouter from "./units";
+import savedContextRouter from "./saved-context";
 
 const router: IRouter = Router();
 
@@ -18,6 +19,7 @@ router.use(appStateRouter);
 router.use(classesRouter);
 router.use(unitsRouter);
 router.use(chipsRouter);
+router.use(savedContextRouter);
 router.use(activitiesRouter);
 router.use(generationRouter);
 

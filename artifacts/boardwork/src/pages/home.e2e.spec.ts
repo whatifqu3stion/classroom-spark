@@ -226,6 +226,12 @@ async function expectHeaderControlsDoNotOverlap(page: Page) {
 }
 
 test.beforeEach(async ({ page }) => {
+  await page.route("**/api/saved-context?*", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ items: [], categories: [] }),
+    }),
+  );
   await page.route("**/api/auth/status", (route) =>
     route.fulfill({
       contentType: "application/json",
@@ -826,6 +832,7 @@ test("lets keyboard users complete board setup without losing focus", async ({ p
     "input-topic",
     "button-add-unit",
     "select-unit",
+    "button-add-context-empty",
     "segment-no_computer",
     "segment-computer_available",
     "segment-computer_required",
