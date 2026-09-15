@@ -217,6 +217,42 @@ const setViewport = (width: number, height: number) => {
 };
 
 describe("Home presentation defaults", () => {
+  it("distinguishes custom duration selection from focus and invalid input", () => {
+    render(<Home />);
+    const custom = screen.getByTestId("input-custom-activity-duration");
+    fireEvent.focus(custom);
+    expect(custom).toHaveAttribute("data-active", "false");
+    expect(screen.getByTestId("segment-5")).toHaveAttribute("aria-pressed", "true");
+    fireEvent.change(custom, { target: { value: "19" } });
+    expect(custom).toHaveAttribute("data-active", "true");
+    expect(custom).toHaveClass("border-primary", "bg-primary/10");
+    for (const preset of [3, 5, 7]) {
+      expect(screen.getByTestId(`segment-${preset}`)).toHaveAttribute("aria-pressed", "false");
+    }
+    fireEvent.change(custom, { target: { value: "abc" } });
+    expect(custom).toHaveAttribute("data-active", "false");
+    expect(custom).toHaveAttribute("aria-invalid", "true");
+    expect(custom).toHaveClass("border-destructive");
+    expect(custom).toHaveAccessibleDescription("Enter a whole number of minutes.");
+    fireEvent.click(screen.getByTestId("segment-3"));
+    expect(custom).toHaveValue("");
+    expect(custom).toHaveAttribute("data-active", "false");
+    expect(custom).toHaveAttribute("aria-invalid", "false");
+    expect(screen.getByTestId("segment-3")).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("exposes one selected technology without changing resource visibility", () => {
+    render(<Home />);
+    const group = screen.getByRole("group", { name: "Technology" });
+    expect(within(group).getByRole("button", { pressed: true })).toHaveTextContent("No computer");
+    for (const mode of ["computer_available", "computer_required", "no_computer"]) {
+      fireEvent.click(screen.getByTestId(`segment-${mode}`));
+      expect(within(group).getAllByRole("button", { pressed: true })).toHaveLength(1);
+      expect(screen.getByTestId(`segment-${mode}`)).toHaveClass("bg-primary", "text-primary-foreground");
+      expect(Boolean(screen.queryByTestId("input-resource-url"))).toBe(mode !== "no_computer");
+    }
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.activityId = undefined;
@@ -492,10 +528,10 @@ describe("Home presentation defaults", () => {
     rerender(<Home />);
     await waitFor(() => {
       expect(screen.getByTestId("input-topic")).toHaveValue("");
-      expect(screen.getByTestId("segment-5")).toHaveClass("bg-background");
+      expect(screen.getByTestId("segment-5")).toHaveClass("bg-primary");
       expect(screen.getByTestId("input-custom-activity-duration")).toHaveValue("");
       expect(screen.getByTestId("segment-computer_available")).toHaveClass(
-        "bg-background",
+        "bg-primary",
       );
     });
 
@@ -612,7 +648,7 @@ describe("Home presentation defaults", () => {
     fireEvent.click(screen.getByTestId("button-edit-class"));
     fireEvent.click(screen.getByTestId("mock-set-default-device-on"));
     expect(screen.getByTestId("segment-computer_available")).toHaveClass(
-      "bg-background",
+      "bg-primary",
     );
 
     fireEvent.click(screen.getByTestId("button-generate"));
@@ -627,7 +663,7 @@ describe("Home presentation defaults", () => {
 
     fireEvent.click(screen.getByTestId("button-edit-class"));
     fireEvent.click(screen.getByTestId("mock-set-default-device-off"));
-    expect(screen.getByTestId("segment-no_computer")).toHaveClass("bg-background");
+    expect(screen.getByTestId("segment-no_computer")).toHaveClass("bg-primary");
 
     fireEvent.click(screen.getByTestId("button-generate"));
     await waitFor(() =>
@@ -674,7 +710,7 @@ describe("Home presentation defaults", () => {
       prompts: [], durationMinutes: minutes, deviceMode: "off",
     });
     render(<Home />);
-    expect(screen.getByTestId("segment-5")).toHaveClass("bg-background");
+    expect(screen.getByTestId("segment-5")).toHaveClass("bg-primary");
     if (minutes === 19) {
       fireEvent.change(screen.getByTestId("input-custom-activity-duration"), {
         target: { value: String(minutes) },
@@ -712,7 +748,7 @@ describe("Home presentation defaults", () => {
     mocks.activityId = undefined;
     rerender(<Home />);
     expect(screen.queryByTestId("board-editor-draft")).not.toBeInTheDocument();
-    expect(screen.getByTestId("segment-5")).toHaveClass("bg-background");
+    expect(screen.getByTestId("segment-5")).toHaveClass("bg-primary");
     expect(screen.getByTestId("input-custom-activity-duration")).toHaveValue("");
     fireEvent.click(screen.getByTestId("button-blank"));
     expect(screen.getByTestId("board-editor-draft")).toHaveTextContent('"durationMinutes":5');
@@ -739,7 +775,7 @@ describe("Home presentation defaults", () => {
     mocks.activityId = undefined;
     rerender(<Home />);
     expect(screen.queryByTestId("board-editor-draft")).not.toBeInTheDocument();
-    expect(screen.getByTestId("segment-5")).toHaveClass("bg-background");
+    expect(screen.getByTestId("segment-5")).toHaveClass("bg-primary");
     expect(screen.getByTestId("input-custom-activity-duration")).toHaveValue("");
     fireEvent.click(screen.getByTestId("button-blank"));
     expect(screen.getByTestId("board-editor-draft")).toHaveTextContent('"durationMinutes":5');

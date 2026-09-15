@@ -944,6 +944,7 @@ export default function Home() {
                  <div className="space-y-2 sm:col-span-2">
                  <Label>Technology</Label>
                    <SegmentedControl<TechnologyMode>
+                    ariaLabel="Technology"
                     options={[
                        { label: "No computer", value: "no_computer", icon: <MonitorOff className="w-4 h-4" /> },
                        { label: "Available", value: "computer_available", icon: <MonitorSmartphone className="w-4 h-4" /> },
@@ -961,6 +962,7 @@ export default function Home() {
                     <Label htmlFor="input-custom-activity-duration">Duration (min)</Label>
                     <div className="flex min-w-0 items-center gap-2">
                       <SegmentedControl<Duration>
+                        ariaLabel="Duration presets"
                         options={PRESET_DURATIONS.map((value) => ({
                           label: String(value),
                           value,
@@ -986,14 +988,20 @@ export default function Home() {
                             setDuration(Number(value) as Duration);
                           }
                         }}
-                        className="w-20 shrink-0"
+                        className={`w-20 shrink-0 ${durationError
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : isCustomDuration
+                            ? "border-primary bg-primary/10 font-medium ring-1 ring-primary hover:bg-primary/10 focus-visible:bg-primary/10"
+                            : ""}`}
+                        data-active={isCustomDuration && !durationError}
+                        aria-describedby={durationError ? "custom-duration-error" : undefined}
                         aria-label="Custom duration in minutes"
                         aria-invalid={Boolean(durationError)}
                         data-testid="input-custom-activity-duration"
                       />
                     </div>
                     {durationError && (
-                      <p className="text-xs text-destructive" role="alert" data-testid="custom-duration-error">
+                      <p id="custom-duration-error" className="text-xs text-destructive" role="alert" data-testid="custom-duration-error">
                         {durationError}
                       </p>
                     )}

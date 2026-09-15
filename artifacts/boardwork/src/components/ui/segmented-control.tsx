@@ -12,6 +12,7 @@ interface SegmentedControlProps<T extends string | number> {
   value: T;
   onChange: (value: T) => void;
   className?: string;
+  ariaLabel?: string;
 }
 
 export function SegmentedControl<T extends string | number>({
@@ -19,9 +20,12 @@ export function SegmentedControl<T extends string | number>({
   value,
   onChange,
   className,
+  ariaLabel,
 }: SegmentedControlProps<T>) {
   return (
     <div
+      role={ariaLabel ? "group" : undefined}
+      aria-label={ariaLabel}
       className={cn(
         "grid min-h-10 min-w-0 w-full items-center rounded-lg border border-input bg-muted/50 p-1 text-muted-foreground",
         className
@@ -33,11 +37,14 @@ export function SegmentedControl<T extends string | number>({
           <button
             key={String(option.value)}
             type="button"
+            aria-pressed={isSelected}
             onClick={() => onChange(option.value)}
             className={cn(
-                "flex min-w-0 min-h-9 items-center justify-center gap-1 rounded-md px-2 py-1.5 text-center text-sm font-medium leading-tight ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+                "flex min-w-0 min-h-9 items-center justify-center gap-1 rounded-md border border-transparent px-2 py-1.5 text-center text-sm font-medium leading-tight ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
                 "max-[360px]:flex-col max-[360px]:gap-0.5 max-[360px]:px-1 max-[360px]:py-1 max-[360px]:text-xs",
-              isSelected && "bg-background text-foreground shadow-sm"
+              isSelected
+                ? "border-primary bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-background hover:text-foreground"
             )}
             data-testid={`segment-${String(option.value)}`}
           >
