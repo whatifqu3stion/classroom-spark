@@ -16,3 +16,12 @@ boards may need durations longer than the old 120-minute validation ceiling.
 the custom field when a preset is chosen, and validate only positive whole
 minutes at the UI/API boundary. Preserve the existing integer database storage
 and timer behavior.
+
+Keep stored class duration settings and historical activity metadata intact when
+simplifying fresh-board setup.
+
+**Why:** A uniform five-minute fresh-board default is a creation-screen choice,
+not permission to migrate saved durations or remove shared data capabilities.
+
+**How to apply:** Keep future setup simplifications separate from persistence
+cleanup; changing defaults must not rewrite saved boards or class profiles.

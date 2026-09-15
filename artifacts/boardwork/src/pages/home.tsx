@@ -20,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChipGroup } from "@/components/chip-group";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { BoardEditor } from "@/components/board-editor";
 import { getLastUsedPresentationTheme } from "@/lib/presentation-theme";
@@ -28,8 +27,7 @@ import { ClassFormDialog } from "@/components/class-form-dialog";
 import { UnitFormDialog, UnitFormValues } from "@/components/unit-form-dialog";
 import { ClassColorDot } from "@/components/class-color-dot";
 import { HelpTooltip } from "@/components/ui/tooltip";
-import { Settings, Plus, Play, Shuffle, FilePlus, MonitorOff, MonitorSmartphone, Loader2, AlertCircle, ChevronDown } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Settings, Plus, Play, Shuffle, FilePlus, MonitorOff, MonitorSmartphone, Loader2, AlertCircle } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useToast } from "@/hooks/use-toast";
@@ -38,9 +36,6 @@ import {
   useUpdateClass,
   useDeleteClass,
   useSelectClass,
-  useCreateChip,
-  useUpdateChip,
-  useDeleteChip,
   useCreateActivity,
   useGenerateActivity,
   useUpdateActivity,
@@ -53,9 +48,7 @@ import {
 } from "@workspace/api-client-react";
 import {
   ACTIVITY_PAYLOAD_TOO_LARGE_ERROR,
-  activityStyleCatalog,
   technologyModeForDeviceMode,
-  type ActivityStyleValue,
 } from "@workspace/api-zod";
 import {
   AlertDialog,
@@ -71,15 +64,7 @@ import {
 const shouldShowSubject = (className: string, subject: string) =>
   !className.toLocaleLowerCase().includes(subject.toLocaleLowerCase());
 
-const FAST_ACTIVITY_STYLES = [
-  "Auto",
-  "Retrieval Practice",
-  "Observe & Notice",
-  "Quick Write",
-  "Apply",
-] as const;
 const PRESET_DURATIONS = [3, 5, 7] as const;
-type WorkMode = "quiet" | "think_together" | "discussion" | "teacher_check";
 
 const getGenerationErrorMessage = (error: unknown) => {
   if (
@@ -176,14 +161,10 @@ export default function Home() {
   const {
     appState,
     activeClassId,
-    selectedChipIds,
-    toggleChipSelection,
-    clearChipSelection
   } = useBoardwork();
 
   const classes = appState?.classes || [];
   const units = appState?.units || [];
-  const chips = appState?.chips || [];
   const instructionalContexts = appState?.instructionalContexts || [];
   const activities = appState?.activities || [];
 
@@ -192,10 +173,6 @@ export default function Home() {
   const updateClassMut = useUpdateClass();
   const deleteClassMut = useDeleteClass();
   const selectClassMut = useSelectClass();
-
-  const createChipMut = useCreateChip();
-  const updateChipMut = useUpdateChip();
-  const deleteChipMut = useDeleteChip();
 
   const createActivityMut = useCreateActivity();
   const generateActivityMut = useGenerateActivity();
@@ -208,24 +185,15 @@ export default function Home() {
   const [topic, setTopic] = useState("");
   const [goal, setGoal] = useState("");
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
-  const [studentOutput, setStudentOutput] = useState("");
-  const [workMode, setWorkMode] = useState<WorkMode | "">("");
-  const [materialsAvailable, setMaterialsAvailable] = useState("");
-  const [completionSignal, setCompletionSignal] = useState("");
   const [deviceMode, setDeviceMode] = useState<DeviceMode>("off");
   const [technologyMode, setTechnologyMode] = useState<TechnologyMode>("no_computer");
   const [duration, setDuration] = useState<Duration>(5);
   const [customDurationInput, setCustomDurationInput] = useState("");
   const [resourceUrl, setResourceUrl] = useState("");
   const [resourceNote, setResourceNote] = useState("");
-  const [activityStyle, setActivityStyle] = useState<ActivityStyleValue>("Auto");
-  const [customizeOpen, setCustomizeOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [lastGenerationWasSurprise, setLastGenerationWasSurprise] = useState(false);
-  const selectedActivityStyle =
-    activityStyleCatalog.find((style) => style.value === activityStyle) ??
-    activityStyleCatalog[0];
 
   const isCustomDuration = !PRESET_DURATIONS.includes(
     duration as (typeof PRESET_DURATIONS)[number],
@@ -271,7 +239,6 @@ export default function Home() {
   const saveLoopPromiseRef = useRef<Promise<void> | null>(null);
 
   const activeClass = classes.find((c) => c.id === activeClassId);
-  const activeChips = chips.filter((c) => c.classId === activeClassId);
   const selectedUnit = units.find((unit) => unit.id === selectedUnitId) ?? null;
   const generatorClassIdRef = useRef<string | null>(null);
 
@@ -279,20 +246,15 @@ export default function Home() {
     setTopic("");
     setGoal("");
     setSelectedUnitId(null);
-    setStudentOutput("");
-    setWorkMode("");
-    setMaterialsAvailable("");
-    setCompletionSignal("");
     setResourceUrl("");
     setResourceNote("");
-    setActivityStyle("Auto");
-    setCustomizeOpen(false);
     setGenerationError(null);
+    setDuration(5);
+    setCustomDurationInput("");
 
     if (classProfile) {
       setDeviceMode(classProfile.defaultDeviceMode);
       setTechnologyMode(technologyModeForDeviceMode(classProfile.defaultDeviceMode));
-      setDuration(classProfile.defaultDuration);
     }
   };
 
@@ -343,6 +305,7 @@ export default function Home() {
         setLocalDraft(null);
         setSaveStatus("idle");
         setSaveError(null);
+        resetGeneratorState(activeClass);
       }
     }
   }, [activityId, serverActivity]);
@@ -415,7 +378,7 @@ export default function Home() {
         ...savePayload,
         sourceTopic: (draft.sourceTopic ?? topic) || undefined,
         sourceGoal: (draft.sourceGoal ?? goal) || undefined,
-        sourceChipIds: draft.sourceChipIds ?? selectedChipIds,
+        sourceChipIds: draft.sourceChipIds ?? [],
       };
 
       try {
@@ -540,7 +503,6 @@ export default function Home() {
       setSaveStatus("idle");
       setSaveError(null);
       resetGeneratorState(classes.find((classProfile) => classProfile.id === id));
-      clearChipSelection();
     }
 
     const previousActiveClassId = activeClassId;
@@ -575,12 +537,10 @@ export default function Home() {
     if (editingClassId) {
       const shouldApplyDefaults = editingClassId === activeClassId && !activityId && !localDraft;
       const previousDeviceMode = activeClass?.defaultDeviceMode ?? deviceMode;
-      const previousDuration = activeClass?.defaultDuration ?? duration;
 
       if (shouldApplyDefaults) {
         setDeviceMode(data.defaultDeviceMode);
         setTechnologyMode(technologyModeForDeviceMode(data.defaultDeviceMode));
-        setDuration(data.defaultDuration);
       }
 
       try {
@@ -590,7 +550,6 @@ export default function Home() {
         if (shouldApplyDefaults) {
           setDeviceMode(previousDeviceMode);
           setTechnologyMode(technologyModeForDeviceMode(previousDeviceMode));
-          setDuration(previousDuration);
         }
         throw error;
       }
@@ -685,16 +644,11 @@ export default function Home() {
         unitId: selectedUnitId || undefined,
         topic: topic.trim() || undefined,
         goal: goal.trim() || undefined,
-        studentOutput: studentOutput.trim() || undefined,
-        workMode: workMode || undefined,
-        materialsAvailable: materialsAvailable.trim() || undefined,
-        completionSignal: completionSignal.trim() || undefined,
-        chipIds: selectedChipIds,
+        chipIds: [],
         deviceMode,
         technologyMode,
         durationMinutes: duration,
-        activityStyle:
-          !surprise && activityStyle !== "Auto" ? activityStyle : null,
+        activityStyle: null,
         teacherProvidedUrl:
           deviceMode === "on" ? resourceUrl.trim() || null : null,
         teacherProvidedResourceNote:
@@ -1070,147 +1024,6 @@ export default function Home() {
                  </div>
                )}
             </div>
-
-            <Collapsible open={customizeOpen} onOpenChange={setCustomizeOpen} className="rounded-xl border bg-card/50">
-              <CollapsibleTrigger
-                className="group flex min-h-14 w-full items-center justify-between gap-4 px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-xl"
-                data-testid="button-toggle-customize"
-              >
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-foreground">Add optional details</span>
-                   <span className="mt-0.5 block text-xs text-muted-foreground">
-                     Add details only when they will shape the board.
-                   </span>
-                </span>
-                <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform ${customizeOpen ? "rotate-180" : ""}`} />
-              </CollapsibleTrigger>
-               <CollapsibleContent className="border-t border-border/70 px-4 pb-4 pt-4 lg:px-5">
-                <div className="space-y-6">
-                  <ChipGroup
-                    chips={activeChips}
-                    selectedChipIds={selectedChipIds}
-                    onToggleSelection={toggleChipSelection}
-                    onAddChip={(label) => createChipMut.mutate(
-                      { classId: activeClassId!, data: { label } },
-                      {
-                        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() }),
-                        onError: () => toast({
-                          title: "Couldn’t add focus chip",
-                          description: "The new chip was not saved. Try again.",
-                          variant: "destructive",
-                        }),
-                      },
-                    )}
-                    onUpdateChip={(id, label) => updateChipMut.mutate(
-                      { chipId: id, data: { label } },
-                      {
-                        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() }),
-                        onError: () => toast({
-                          title: "Couldn’t rename focus chip",
-                          description: "The chip name was not changed. Try again.",
-                          variant: "destructive",
-                        }),
-                      },
-                    )}
-                    onDeleteChip={(id) => deleteChipMut.mutate(
-                      { chipId: id },
-                      {
-                        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() }),
-                        onError: () => toast({
-                          title: "Couldn’t delete focus chip",
-                          description: "The chip was not deleted. Try again.",
-                          variant: "destructive",
-                        }),
-                      },
-                    )}
-                    onClearSelection={clearChipSelection}
-                  />
-
-                   <div className="grid gap-4 sm:grid-cols-2">
-                     <div className="space-y-2 sm:col-span-2">
-                        <Label htmlFor="student-output">What will students leave behind?</Label>
-                       <Input
-                         id="student-output"
-                         dir="auto"
-                         className="boardwork-user-content"
-                         placeholder="e.g. one annotated diagram or a claim with evidence"
-                         value={studentOutput}
-                         onChange={(event) => setStudentOutput(event.target.value)}
-                         data-testid="input-student-output"
-                       />
-                     </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="work-mode">Work mode</Label>
-                       <Select value={workMode || "none"} onValueChange={(value) => setWorkMode(value === "none" ? "" : value as WorkMode)}>
-                         <SelectTrigger id="work-mode" data-testid="select-work-mode">
-                           <SelectValue placeholder="Choose if useful" />
-                         </SelectTrigger>
-                         <SelectContent>
-                           <SelectItem value="none">No preference</SelectItem>
-                           <SelectItem value="quiet">Quiet start</SelectItem>
-                           <SelectItem value="think_together">Think, then compare</SelectItem>
-                           <SelectItem value="discussion">Brief discussion</SelectItem>
-                           <SelectItem value="teacher_check">Quick teacher check</SelectItem>
-                         </SelectContent>
-                       </Select>
-                     </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="materials-available">Materials already available</Label>
-                       <Input
-                         id="materials-available"
-                         dir="auto"
-                         className="boardwork-user-content"
-                         placeholder="e.g. notebook, textbook page 42"
-                         value={materialsAvailable}
-                         onChange={(event) => setMaterialsAvailable(event.target.value)}
-                         data-testid="input-materials-available"
-                       />
-                     </div>
-                     <div className="space-y-2 sm:col-span-2">
-                        <Label htmlFor="completion-signal">How should students signal done or stuck?</Label>
-                       <Input
-                         id="completion-signal"
-                         dir="auto"
-                         className="boardwork-user-content"
-                         placeholder="e.g. circle the part they are unsure about"
-                         value={completionSignal}
-                         onChange={(event) => setCompletionSignal(event.target.value)}
-                         data-testid="input-completion-signal"
-                       />
-                     </div>
-                     <div className="space-y-2 sm:col-span-2">
-                        <div className="flex items-center gap-1">
-                          <Label htmlFor="activityStyle">Activity approach</Label>
-                          <HelpTooltip label="About activity approaches">
-                            Choose a familiar starting move to guide the generated board, or leave Auto to let Boardwork choose.
-                          </HelpTooltip>
-                        </div>
-                       <Select value={activityStyle} onValueChange={(value) => setActivityStyle(value as ActivityStyleValue)}>
-                         <SelectTrigger id="activityStyle" data-testid="select-activity-style">
-                           <SelectValue>{selectedActivityStyle.label}</SelectValue>
-                         </SelectTrigger>
-                         <SelectContent>
-                           {FAST_ACTIVITY_STYLES.map((styleValue) => {
-                             const style = activityStyleCatalog.find((item) => item.value === styleValue);
-                             return style ? (
-                               <SelectItem key={style.value} value={style.value} textValue={style.label} className="items-start py-2">
-                                 <span className="flex flex-col items-start gap-0.5">
-                                   <span>{style.label}</span>
-                                   <span className="text-xs font-normal text-muted-foreground">{style.description}</span>
-                                 </span>
-                               </SelectItem>
-                             ) : null;
-                           })}
-                         </SelectContent>
-                       </Select>
-                       <p className="text-xs leading-relaxed text-muted-foreground" data-testid="activity-style-description">
-                         {selectedActivityStyle.description}
-                       </p>
-                     </div>
-                   </div>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
 
               <div
                 className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-3 border-t bg-background/95 px-4 py-3 backdrop-blur-sm lg:static lg:mx-0 lg:border-t-0 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none"

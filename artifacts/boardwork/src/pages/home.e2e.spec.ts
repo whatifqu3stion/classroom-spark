@@ -432,6 +432,10 @@ for (const viewport of viewports) {
       await expectElementReachableInViewport(page, locator, viewport);
     }
 
+    await expect(controls.getByText("Add optional details", { exact: true })).toHaveCount(0);
+    await expect(page.getByTestId("segment-5")).toHaveClass(/bg-background/);
+    await expect(page.getByTestId("segment-7")).not.toHaveClass(/bg-background/);
+
     const documentWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(documentWidth, "the document should not overflow horizontally").toBeLessThanOrEqual(
       viewport.width,
@@ -561,13 +565,11 @@ test("keeps creation examples readable in dark mode", async ({ page }) => {
     document.documentElement.classList.add("dark");
   });
 
-  await page.getByTestId("button-toggle-customize").click();
   await page.getByTestId("segment-computer_available").click();
 
   const placeholderInputs = [
     page.getByTestId("input-topic"),
     page.getByTestId("input-goal"),
-    page.getByTestId("input-student-output"),
     page.getByTestId("input-resource-url"),
     page.getByTestId("input-resource-note"),
     page.getByTestId("input-custom-activity-duration"),
@@ -806,12 +808,13 @@ test("lets keyboard users complete board setup without losing focus", async ({ p
   await page.setViewportSize(viewport);
   await page.goto("/");
 
-  const setup = page.getByTestId("board-creation-setup");
-  const actions = page.getByTestId("creation-actions");
-  const focusOrderBeforeDetails = [
+  await page.getByTestId("segment-computer_available").click();
+
+  const focusOrder = [
     "select-class",
     "button-edit-class",
     "button-new-class",
+    "button-add-unit",
     "select-unit",
     "input-topic",
     "input-goal",
@@ -822,10 +825,11 @@ test("lets keyboard users complete board setup without losing focus", async ({ p
     "segment-5",
     "segment-7",
     "input-custom-activity-duration",
-    "button-toggle-customize",
+    "input-resource-url",
+    "input-resource-note",
   ];
 
-  await page.getByTestId(focusOrderBeforeDetails[0]).focus();
+  await page.getByTestId(focusOrder[0]).focus();
 
   const tabTo = async (locator: Locator, label: string) => {
     for (let attempt = 0; attempt < 12; attempt += 1) {
@@ -837,7 +841,7 @@ test("lets keyboard users complete board setup without losing focus", async ({ p
     throw new Error(`${label} was not reachable with Tab`);
   };
 
-  for (const testId of focusOrderBeforeDetails) {
+  for (const testId of focusOrder) {
     const control = page.getByTestId(testId);
     await tabTo(control, testId);
     await expect(control).toBeFocused();
@@ -857,48 +861,24 @@ test("lets keyboard users complete board setup without losing focus", async ({ p
       `${testId} should have a visible keyboard focus indicator`,
     ).toBe(true);
 
-    if (testId === "button-toggle-customize") {
-      await page.keyboard.press("Enter");
-      await expect(page.getByTestId("input-student-output")).toBeVisible();
-    }
     await page.keyboard.press("Tab");
   }
 
-  const focusOrderAfterDetails = [
-    "button-add-chip",
-    "input-student-output",
-    "select-work-mode",
-    "input-materials-available",
-    "input-completion-signal",
-    "select-activity-style",
+  const focusOrderActions = [
     "button-generate",
     "button-surprise",
     "button-blank",
   ];
 
-  for (const testId of focusOrderAfterDetails) {
+  for (const testId of focusOrderActions) {
     const control = page.getByTestId(testId);
     await tabTo(control, testId);
     await expect(control).toBeFocused();
 
-    const [controlBox, setupBox, actionsBox] = await Promise.all([
-      control.boundingBox(),
-      setup.boundingBox(),
-      actions.boundingBox(),
-    ]);
+    const controlBox = await control.boundingBox();
     expect(controlBox, `${testId} should have geometry`).not.toBeNull();
-    expect(setupBox, "the setup scroll container should have geometry").not.toBeNull();
-    expect(actionsBox, "the sticky creation actions should have geometry").not.toBeNull();
-    if (testId !== "button-generate" && testId !== "button-surprise" && testId !== "button-blank") {
-      expect(
-        controlBox!.y,
-        `${testId} should stay inside the setup scroll container`,
-      ).toBeGreaterThanOrEqual(setupBox!.y);
-      expect(
-        controlBox!.y + controlBox!.height,
-        `${testId} should not be hidden below the sticky creation actions`,
-      ).toBeLessThanOrEqual(actionsBox!.y);
-    }
+    expect(controlBox!.y, `${testId} should scroll into view on focus`).toBeGreaterThanOrEqual(0);
+    expect(controlBox!.y + controlBox!.height).toBeLessThanOrEqual(viewport.height);
 
     await page.keyboard.press("Tab");
   }
@@ -1153,7 +1133,7 @@ for (const viewport of [
   { name: "desktop", width: 1280, height: 800 },
   { name: "narrow", width: 390, height: 844 },
 ] as const) {
-  test(`keeps one editor frame when returning from a populated board at ${viewport.name} width`, async ({ page }) => {
+  test(`keeps one editor frame and resets fresh-board setup at ${viewport.name} width`, async ({ page }) => {
     await page.unroute("**/api/app-state");
     await page.route("**/api/app-state", (route) =>
       route.fulfill({
@@ -1177,6 +1157,10 @@ for (const viewport of [
     await expect(page.getByTestId("board-editor")).toHaveCount(0);
     await expect(editorPanel).toHaveClass(/rounded-xl/);
     await expect(editorPanel).toHaveClass(/\bborder\b/);
+    await expect(page.getByTestId("input-topic")).toHaveValue("");
+    await expect(page.getByTestId("input-goal")).toHaveValue("");
+    await expect(page.getByTestId("segment-5")).toHaveClass(/bg-background/);
+    await expect(page.getByTestId("segment-7")).not.toHaveClass(/bg-background/);
 
     const emptyBounds = await editorPanel.boundingBox();
     expect(emptyBounds).not.toBeNull();
@@ -1198,3 +1182,24 @@ for (const viewport of [
     );
   });
 }
+
+test("preserves a saved board duration when opening Present", async ({ page }) => {
+  await page.unroute("**/api/app-state");
+  await page.route("**/api/app-state", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify(savedBoardAppState),
+    }),
+  );
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/activity/activity-saved-board");
+
+  await expect(page.getByTestId("button-present")).toBeVisible();
+  await page.getByTestId("button-present").click();
+  await expect(page).toHaveURL(/\/present\/activity-saved-board$/);
+
+  await page.getByRole("button", { name: "Minimize timer" }).click();
+  const timerProgress = page.getByRole("progressbar", { name: "Time remaining" });
+  await expect(timerProgress).toHaveAttribute("aria-valuemax", "420");
+  await expect(timerProgress).toHaveAttribute("aria-valuenow", "420");
+});

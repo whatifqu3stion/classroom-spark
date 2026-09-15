@@ -13,14 +13,16 @@ const mocks = vi.hoisted(() => ({
   setQueryData: vi.fn(),
   invalidateQueries: vi.fn(),
   toast: vi.fn(),
+  activityId: undefined as string | undefined,
 }));
 
-vi.mock("@/store/boardwork-context", () => ({
+vi.mock("@/store/boardwork-context", async (importOriginal) => ({
+  ...await importOriginal<typeof import("@/store/boardwork-context")>(),
   useBoardwork: vi.fn(),
 }));
 
 vi.mock("wouter", () => ({
-  useRoute: () => [false, undefined],
+  useRoute: () => [!!mocks.activityId, mocks.activityId ? { id: mocks.activityId } : undefined],
   useLocation: () => ["/", mocks.setLocation],
 }));
 
@@ -102,10 +104,6 @@ vi.mock("@/components/class-form-dialog", () => ({
     ) : null,
 }));
 
-vi.mock("@/components/chip-group", () => ({
-  ChipGroup: () => null,
-}));
-
 vi.mock("@/components/class-color-dot", () => ({
   ClassColorDot: () => <span />,
 }));
@@ -116,9 +114,6 @@ vi.mock("@workspace/api-client-react", () => ({
   useDeleteClass: () => ({ mutate: vi.fn() }),
   useSelectClass: () => ({ mutate: vi.fn() }),
   useUpdateInstructionalContext: () => ({ mutate: vi.fn() }),
-  useCreateChip: () => ({ mutate: vi.fn() }),
-  useUpdateChip: () => ({ mutate: vi.fn() }),
-  useDeleteChip: () => ({ mutate: vi.fn() }),
   useCreateActivity: () => ({ mutateAsync: mocks.createActivity }),
   useGenerateActivity: () => ({ mutateAsync: mocks.generateActivity }),
   useUpdateActivity: () => ({ mutateAsync: vi.fn() }),
@@ -136,7 +131,7 @@ const appState = {
       name: "Science",
       subject: "Science",
       color: "#2563eb",
-      defaultDuration: 5,
+      defaultDuration: 10,
       defaultDeviceMode: "off" as const,
       arrivalRoutine: null,
     },
@@ -198,6 +193,7 @@ const setViewport = (width: number, height: number) => {
 describe("Home presentation defaults", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.activityId = undefined;
     localStorage.clear();
     vi.mocked(useBoardwork).mockReturnValue({
       appState,
@@ -348,7 +344,7 @@ describe("Home presentation defaults", () => {
     );
   });
 
-  it("resets creation inputs and uses the new class defaults after a class switch", async () => {
+  it("resets creation inputs and duration to 5 while using the new class technology default", async () => {
     const firstReturn = {
       appState,
       isLoading: false,
@@ -372,12 +368,17 @@ describe("Home presentation defaults", () => {
     fireEvent.change(screen.getByTestId("input-goal"), {
       target: { value: "Old class goal" },
     });
+    fireEvent.change(screen.getByTestId("input-custom-activity-duration"), {
+      target: { value: "19" },
+    });
 
     vi.mocked(useBoardwork).mockReturnValue(secondReturn);
     rerender(<Home />);
     await waitFor(() => {
       expect(screen.getByTestId("input-topic")).toHaveValue("");
       expect(screen.getByTestId("input-goal")).toHaveValue("");
+      expect(screen.getByTestId("segment-5")).toHaveClass("bg-background");
+      expect(screen.getByTestId("input-custom-activity-duration")).toHaveValue("");
       expect(screen.getByTestId("segment-computer_available")).toHaveClass(
         "bg-background",
       );
@@ -389,7 +390,7 @@ describe("Home presentation defaults", () => {
       title: "Generated",
       task: "Practice",
       prompts: [],
-      durationMinutes: 12,
+      durationMinutes: 5,
       deviceMode: "on",
       technologyMode: "computer_available",
     });
@@ -402,7 +403,7 @@ describe("Home presentation defaults", () => {
           goal: undefined,
           deviceMode: "on",
           technologyMode: "computer_available",
-          durationMinutes: 12,
+          durationMinutes: 5,
         }),
       }),
     );
@@ -525,22 +526,125 @@ describe("Home presentation defaults", () => {
     );
   });
 
-  it("does not repeat optional markers inside the collapsed details section", () => {
+  it("removes the optional details section and all its controls", () => {
     render(<Home />);
 
     expect(screen.getByText("Board settings")).toBeInTheDocument();
     expect(screen.queryByText("Adjust the setup for this board.")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByTestId("button-toggle-customize"));
-
-    expect(screen.getByText("What will students leave behind?")).toBeInTheDocument();
-    expect(screen.getByText("Work mode")).toBeInTheDocument();
-    expect(screen.getByText("Materials already available")).toBeInTheDocument();
-    expect(screen.getByText("How should students signal done or stuck?")).toBeInTheDocument();
-    expect(screen.getByText("Activity approach")).toBeInTheDocument();
-    expect(screen.queryByText("What will students leave behind? (optional)")).not.toBeInTheDocument();
-    expect(screen.queryByText("Work mode (optional)")).not.toBeInTheDocument();
+    expect(screen.queryByText("Add optional details")).not.toBeInTheDocument();
+    for (const testId of [
+      "button-toggle-customize", "button-add-chip", "input-student-output",
+      "select-work-mode", "input-materials-available", "input-completion-signal",
+      "select-activity-style", "activity-style-description",
+    ]) {
+      expect(screen.queryByTestId(testId)).not.toBeInTheDocument();
+    }
     expect(screen.getByRole("button", { name: "About board setup" })).toBeInTheDocument();
+  });
+
+  it.each([3, 5, 7, 19])("honors %i minutes for Generate, Surprise me, and Start Blank", async (minutes) => {
+    // A leftover selection in the shared store must never become a hidden input.
+    vi.mocked(useBoardwork).mockReturnValue({
+      appState: {
+        ...appState,
+        units: [{ id: "unit-1", name: "Living things" }],
+        instructionalContexts: [{ ...appState.instructionalContexts[0], unitOrProject: "Living things" }],
+      } as unknown as AppState,
+      isLoading: false, activeClassId: "class-1",
+      toggleChipSelection: vi.fn(), clearChipSelection: vi.fn(),
+      selectedChipIds: ["stale-chip"],
+    });
+    mocks.generateActivity.mockResolvedValue({
+      id: "generated", classId: "class-1", task: "Practice",
+      prompts: [], durationMinutes: minutes, deviceMode: "off",
+    });
+    render(<Home />);
+    expect(screen.getByTestId("segment-5")).toHaveClass("bg-background");
+    if (minutes === 19) {
+      fireEvent.change(screen.getByTestId("input-custom-activity-duration"), {
+        target: { value: String(minutes) },
+      });
+    } else if (minutes !== 5) {
+      fireEvent.click(screen.getByTestId(`segment-${minutes}`));
+    }
+    fireEvent.change(screen.getByTestId("input-topic"), { target: { value: "Cells" } });
+    fireEvent.change(screen.getByTestId("input-goal"), { target: { value: "Explain evidence" } });
+    for (const action of ["button-generate", "button-surprise"]) {
+      fireEvent.click(screen.getByTestId(action));
+      await waitFor(() => expect(screen.getByTestId(action)).toBeEnabled());
+      const payload = mocks.generateActivity.mock.calls.at(-1)![0].data;
+      expect(payload).toMatchObject({
+        classId: "class-1", unitId: "unit-1", topic: "Cells", goal: "Explain evidence",
+        durationMinutes: minutes, chipIds: [], activityStyle: null,
+        surprise: action === "button-surprise",
+      });
+      for (const field of ["studentOutput", "workMode", "materialsAvailable", "completionSignal"]) {
+        expect(payload).not.toHaveProperty(field);
+      }
+    }
+    fireEvent.click(screen.getByTestId("button-blank"));
+    expect(screen.getByTestId("board-editor-draft")).toHaveTextContent(`"durationMinutes":${minutes}`);
+  });
+
+  it("keeps a custom choice when the class profile is saved or refreshed", async () => {
+    const { rerender } = render(<Home />);
+    fireEvent.change(screen.getByTestId("input-custom-activity-duration"), {
+      target: { value: "23" },
+    });
+    fireEvent.click(screen.getByTestId("button-edit-class"));
+    fireEvent.click(screen.getByTestId("mock-set-default-device-on"));
+    await waitFor(() => expect(screen.getByTestId("input-custom-activity-duration")).toHaveValue("23"));
+    vi.mocked(useBoardwork).mockReturnValue({
+      appState: { ...appState, classes: [{ ...appState.classes[0], defaultDuration: 30 }] },
+      isLoading: false, activeClassId: "class-1", selectedChipIds: [],
+      toggleChipSelection: vi.fn(), clearChipSelection: vi.fn(),
+    });
+    rerender(<Home />);
+    expect(screen.getByTestId("input-custom-activity-duration")).toHaveValue("23");
+    fireEvent.click(screen.getByTestId("button-blank"));
+    expect(screen.getByTestId("board-editor-draft")).toHaveTextContent('"durationMinutes":23');
+  });
+
+  it("preserves a saved board and resets to 5 when returning to fresh setup", () => {
+    const saved = {
+      id: "saved", classId: "class-1", title: "Saved", task: "Keep this task",
+      prompts: ["Keep this prompt"], durationMinutes: 17, deviceMode: "off" as const,
+      materials: ["Notebook"], style: "Quick Write", sourceChipIds: ["saved-chip"],
+    };
+    vi.mocked(useBoardwork).mockReturnValue({
+      appState: { ...appState, activities: [saved] } as unknown as AppState,
+      isLoading: false, activeClassId: "class-1", selectedChipIds: ["stale-chip"],
+      toggleChipSelection: vi.fn(), clearChipSelection: vi.fn(),
+    });
+    const { rerender } = render(<Home />);
+    fireEvent.change(screen.getByTestId("input-custom-activity-duration"), {
+      target: { value: "21" },
+    });
+    mocks.activityId = "saved";
+    rerender(<Home />);
+    expect(JSON.parse(screen.getByTestId("board-editor-draft").textContent!)).toEqual(saved);
+    mocks.activityId = undefined;
+    rerender(<Home />);
+    expect(screen.queryByTestId("board-editor-draft")).not.toBeInTheDocument();
+    expect(screen.getByTestId("segment-5")).toHaveClass("bg-background");
+    expect(screen.getByTestId("input-custom-activity-duration")).toHaveValue("");
+    fireEvent.click(screen.getByTestId("button-blank"));
+    expect(screen.getByTestId("board-editor-draft")).toHaveTextContent('"durationMinutes":5');
+  });
+
+  it.each(["0", "-1", "1.5", "abc"])("rejects invalid custom minutes %s for all creation actions", (value) => {
+    render(<Home />);
+    fireEvent.change(screen.getByTestId("input-custom-activity-duration"), { target: { value } });
+    expect(screen.getByTestId("custom-duration-error")).toBeVisible();
+    for (const action of ["button-generate", "button-surprise", "button-blank"]) {
+      fireEvent.click(screen.getByTestId(action));
+    }
+    expect(mocks.generateActivity).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("board-editor-draft")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("segment-7"));
+    expect(screen.getByTestId("input-custom-activity-duration")).toHaveValue("");
+    expect(screen.getByTestId("button-blank")).toBeEnabled();
   });
 
   it("shows the concise board creation introduction", () => {
