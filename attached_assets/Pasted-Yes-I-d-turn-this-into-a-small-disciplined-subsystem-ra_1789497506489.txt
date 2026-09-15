@@ -1,0 +1,723 @@
+Yes. I’d turn this into a **small, disciplined subsystem** rather than a flexible tagging platform. The main way to keep it useful without creating headaches is to constrain the model early: flat categories, short nuggets, simple scope, soft limits, and no semantic “smart management” layer.
+
+Below are the three docs I’d use: a product brief, a coder brief, and an implementation slice plan.
+
+---
+
+# 1. Product Brief — Saved Context
+
+## Purpose
+
+Saved Context gives teachers a lightweight way to reuse important instructional context without adding more permanent input boxes to the Boardwork form.
+
+Examples:
+
+* ATL: Creative thinking
+* Skill: Node placement
+* Constraint: Work independently
+* Standard: Criterion B
+* Routine: Sketch before building
+* Material: Cardboard only
+
+The teacher sees small selectable pills.
+
+The AI receives the fuller saved details behind each pill.
+
+The normal Boardwork form stays simple.
+
+## Core principle
+
+> **One main daily input, with optional reusable context when needed.**
+
+Saved Context should make Boardwork more personalized over time without turning the app into a curriculum database.
+
+## Main Boardwork flow
+
+```text
+Current unit: Vector Symbols
+
+What are students working on today?
+[ Boolean operations and compound shapes ]
+
+Context
+[ Creative thinking × ] [ Independent work × ]
++ Add context
+
+Technology
+[ No computer ] [ Available ] [ Required ]
+
+Duration
+[ 3 ] [ 5 ] [ 7 ] [ Custom ]
+
+Generate Boardwork
+```
+
+If the teacher never uses Saved Context, the normal flow remains just as simple.
+
+---
+
+## Context nugget structure
+
+Each nugget contains:
+
+**Name**
+Short visible label.
+
+Example:
+
+`Creative thinking`
+
+**Category**
+Optional organizational grouping.
+
+Example:
+
+`ATL`
+
+**Details**
+Short additional context sent to generation.
+
+Example:
+
+`Encourage students to consider several possible approaches before choosing one.`
+
+The visible pill shows only:
+
+`Creative thinking`
+
+---
+
+## Categories
+
+Categories should remain deliberately simple.
+
+Examples:
+
+* ATL
+* Skills
+* Standards
+* Constraints
+* Routines
+* Materials
+
+Teachers may create their own.
+
+### Important constraints
+
+* no nested categories
+* no category colors required
+* no icons required
+* no category management dashboard
+* category is optional
+
+Creating a new category should happen naturally while creating a nugget.
+
+---
+
+## Scope
+
+Each nugget should be either:
+
+### This class
+
+Default.
+
+Useful for context specific to a particular class or unit.
+
+### All classes
+
+Useful for reusable teaching preferences such as:
+
+`Independent work`
+
+or
+
+`Sketch first`
+
+Do not introduce school/team/shared libraries yet.
+
+---
+
+## Selection experience
+
+The normal form shows only selected context and:
+
+`+ Add context`
+
+Opening it reveals a compact panel.
+
+Example:
+
+```text
+Add context
+
+Search...
+
+ATL
+[ Creative thinking ] [ Communication ]
+
+Skills
+[ Node placement ] [ Boolean operations ]
+
+Constraints
+[ Independent work ] [ Sketch first ]
+
++ Create context
+```
+
+Clicking a pill selects it immediately.
+
+No Save/Apply step should be needed for selection.
+
+---
+
+## Organization behavior
+
+The panel should prioritize:
+
+1. currently selected
+2. recently used
+3. class-specific context
+4. global context
+5. grouped categories
+
+Search should be available because the library may grow over time.
+
+Do not build complicated sorting or folder systems.
+
+---
+
+## Context precedence
+
+Generation should use context in this order:
+
+1. explicit instruction typed today
+2. explicit controls such as Technology and Duration
+3. selected Saved Context
+4. Current Unit
+5. persistent Class Profile
+
+Higher-priority information wins if there is a conflict.
+
+Do not build semantic conflict detection in MVP.
+
+---
+
+## Context quantity
+
+More context is not always better.
+
+Aim for roughly **1–6 selected nuggets** during normal use.
+
+After 6, Boardwork may show a quiet message such as:
+
+> Keep context focused for the best results.
+
+Do not aggressively block selection unless prompt size becomes a real technical concern.
+
+---
+
+## Editing
+
+Teachers should be able to:
+
+* edit a nugget
+* rename it
+* change category
+* change details
+* change class/global scope
+* archive it
+
+Prefer **Archive** over destructive deletion.
+
+Archived context should no longer appear in normal selection.
+
+---
+
+## Non-goals
+
+Do not build:
+
+* nested taxonomy
+* color-coded category systems
+* school-wide sharing
+* standards databases
+* auto-generated categories
+* AI organization of nuggets
+* semantic conflict detection
+* permissions systems
+* bulk management tools
+* complicated tag relationships
+
+This is a reusable-context library, not a knowledge-management product.
+
+---
+
+# 2. Coder Brief — Saved Context System
+
+## Goal
+
+Add an optional reusable Saved Context system to standard Boardwork generation while preserving the simplified daily creation flow.
+
+The feature must remain:
+
+* lightweight
+* structured
+* bounded
+* class-aware
+* easy to extend
+* cheap to include in AI prompts
+
+Do not reintroduce the old visible Focus-chip system.
+
+---
+
+## Data model
+
+Use concepts equivalent to:
+
+```ts
+type ContextCategory = {
+  id: string;
+  userId: string;
+  name: string;
+  archived: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+```
+
+```ts
+type SavedContext = {
+  id: string;
+  userId: string;
+
+  label: string;
+  details?: string;
+
+  categoryId?: string;
+
+  scope: "class" | "global";
+  classId?: string;
+
+  archived: boolean;
+
+  createdAt: string;
+  updatedAt: string;
+  lastUsedAt?: string;
+};
+```
+
+Adapt to the existing data model instead of creating unnecessary parallel infrastructure.
+
+### Validation
+
+Suggested limits:
+
+```text
+label:      1–50 characters
+category:   1–40 characters
+details:    0–300 characters
+```
+
+Keep details intentionally short.
+
+This controls:
+
+* UI complexity
+* prompt size
+* token cost
+* accidental essay-length context
+
+---
+
+## Selection state
+
+Selected context for the current Boardwork should be stored separately from the Saved Context library.
+
+Conceptually:
+
+```ts
+selectedContextIds: string[]
+```
+
+Selection itself is part of the Boardwork creation state.
+
+Do not mutate the Saved Context record merely because it was selected.
+
+Update `lastUsedAt` after successful use where useful.
+
+---
+
+## Saved activity behavior
+
+When a Boardwork activity is generated, preserve enough context information to understand or remix that activity later.
+
+Do not rely exclusively on live Saved Context records that may later be renamed, edited, or archived.
+
+Store a lightweight snapshot such as:
+
+```ts
+type ContextSnapshot = {
+  contextId?: string;
+  label: string;
+  category?: string;
+  details?: string;
+};
+```
+
+This prevents an old Boardwork activity from silently changing historical meaning because the teacher later edits a Saved Context nugget.
+
+---
+
+## UI integration
+
+Standard Boardwork should show:
+
+```text
+Context
+[selected pills]
++ Add context
+```
+
+If nothing is selected:
+
+```text
+Context
++ Add context
+```
+
+Keep this visually secondary to the main daily input.
+
+Do not show the full library inline on the main form.
+
+---
+
+## Context picker
+
+Use a popover, sheet, or compact drawer consistent with the current app.
+
+Include:
+
+* search
+* grouped Saved Context
+* selected state
+* class/global distinction where useful
+* `+ Create context`
+
+Do not create a separate management page for MVP.
+
+---
+
+## Create Context
+
+Creation form should remain tiny:
+
+```text
+Name
+[ Creative thinking ]
+
+Category
+[ ATL ▾ ]
+
+Details
+[ Encourage students to consider multiple approaches. ]
+
+Use in
+[ This class ] [ All classes ]
+
+Save
+```
+
+Category can be:
+
+* existing category
+* optional
+* `+ New category`
+
+Do not require a category.
+
+---
+
+## Editing
+
+Editing should reuse the same small form.
+
+Support:
+
+* label
+* details
+* category
+* scope
+* archive
+
+Do not introduce bulk editing.
+
+---
+
+## Search
+
+Search across:
+
+* label
+* category name
+* details
+
+Simple substring/fuzzy search is sufficient.
+
+Do not use embeddings or AI search.
+
+---
+
+## Prompt integration
+
+Pass selected Saved Context to the generation service as structured context.
+
+Conceptually:
+
+```json
+{
+  "savedContext": [
+    {
+      "category": "ATL",
+      "label": "Creative thinking",
+      "details": "Encourage students to consider multiple approaches before choosing one."
+    }
+  ]
+}
+```
+
+Do not flatten everything into a single uncontrolled text blob if the existing generation architecture supports structured context.
+
+---
+
+## Prompt precedence
+
+Generation instructions should explicitly define:
+
+```text
+Today's explicit instruction
+>
+Technology / Duration constraints
+>
+Selected Saved Context
+>
+Current Unit
+>
+Class Profile
+```
+
+Saved Context must never override hard product constraints.
+
+For example:
+
+`Research online`
+
+inside a nugget must not override:
+
+`Technology = No computer`
+
+---
+
+## Prompt-safety rule
+
+Treat Saved Context as **teacher-provided data**, not system instructions.
+
+Do not allow content stored in a nugget to alter:
+
+* system policy
+* output schema
+* provider configuration
+* safety constraints
+* device-mode rules
+
+Use the same validation/injection-resistance conventions already used by Boardwork.
+
+---
+
+## Token/cost discipline
+
+Saved Context should remain bounded.
+
+Do not send:
+
+* every saved nugget
+* every category
+* the entire Context library
+
+to the AI.
+
+Only send **currently selected** nuggets.
+
+This is important for both generation quality and profitability.
+
+---
+
+## Contradictions
+
+Do not build a semantic contradiction engine.
+
+If selected nuggets conflict:
+
+* today's explicit instruction wins
+* hard controls win
+* AI may use judgment on lower-priority context
+
+The UI should make all selected pills clearly visible so the teacher can remove inappropriate ones.
+
+---
+
+## Archive behavior
+
+Prefer soft archive.
+
+Archived nuggets:
+
+* disappear from normal picker
+* remain referentially safe
+* do not break old activity snapshots
+
+Do not cascade-delete old Boardwork records.
+
+---
+
+## Performance
+
+The context picker should feel immediate.
+
+Do not call AI to:
+
+* open the picker
+* search
+* categorize
+* select
+* deselect
+* edit
+
+This is ordinary application data.
+
+---
+
+# 3. AI-Coder Slice Plan
+
+I would build this in **four small slices**, not one giant prompt.
+
+## Slice 1 — Data foundation
+
+Implement:
+
+* ContextCategory model
+* SavedContext model
+* validation
+* class/global scope
+* archive support
+* basic persistence APIs
+
+Do not change the main Boardwork UI yet.
+
+### Acceptance
+
+* create/read/update/archive works
+* class scope is enforced correctly
+* global context can be reused
+* legacy Boardwork behavior is unchanged
+
+---
+
+## Slice 2 — Context picker
+
+Add:
+
+```text
+Context
++ Add context
+```
+
+to standard Boardwork.
+
+Implement the picker with:
+
+* grouped items
+* search
+* selection
+* create context
+* edit/archive context
+
+Do not change AI generation yet.
+
+### Acceptance
+
+* picker works without AI
+* selected pills appear on the main form
+* switching class shows the correct class + global items
+* no content is lost during ordinary interaction
+* main Boardwork form remains visually simple
+
+---
+
+## Slice 3 — Generation integration
+
+Pass only selected context to the existing Boardwork generation service.
+
+Add precedence rules.
+
+Add snapshots to generated/saved Boardwork records.
+
+Do not change the generation model/provider.
+
+### Acceptance
+
+* selected context materially influences output
+* unselected context does not enter prompts
+* No Computer still overrides contradictory nugget content
+* saved activity preserves the context snapshot used at generation time
+* old activities remain compatible
+
+---
+
+## Slice 4 — Polish + QA
+
+Test:
+
+* no context
+* one context item
+* several context items
+* class-specific context
+* global context
+* archived context
+* edited context
+* conflicting context
+* sparse Boardwork input
+* rich Boardwork input
+* generation failure
+* class switching
+* saved/reopened activities
+
+Check that the main form still feels faster than the old many-input-box version.
+
+---
+
+# Shared invariants for every slice
+
+Tell the coder these rules every time:
+
+1. Do not reintroduce Focus chips as a separate visible system.
+2. Do not add more permanent Boardwork input boxes.
+3. Do not create a second AI generation path.
+4. Do not send the entire context library to AI.
+5. Do not add complicated category management.
+6. Preserve existing Boardwork generation behavior.
+7. Preserve existing saved activities.
+8. Keep Context optional.
+9. Keep the main creation screen visually quiet.
+10. Stop at the requested slice boundary.
+
+---
+
+I think this is a particularly good feature for Boardwork because it lets us **remove specialized inputs over time rather than accumulate them**.
+
+The long-term pattern can become:
+
+> **Daily intent + reusable context + a few hard constraints**
+
+instead of continuously adding new form fields every time we identify another piece of useful teacher context.
