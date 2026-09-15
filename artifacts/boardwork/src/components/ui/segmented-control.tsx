@@ -23,7 +23,7 @@ export function SegmentedControl<T extends string | number>({
   return (
     <div
       className={cn(
-        "grid min-h-9 min-w-0 w-full items-center rounded-lg bg-muted p-1 text-muted-foreground",
+        "grid min-h-10 min-w-0 w-full items-center rounded-lg border border-input bg-muted/50 p-1 text-muted-foreground",
         className
       )}
     >

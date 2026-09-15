@@ -44,7 +44,7 @@ describe("BoardEditor presentation visual disclosure", () => {
 
     expect(screen.getByTestId("board-editor")).toHaveClass("min-w-0");
     expect(screen.getByTestId("board-editor")).not.toHaveClass(
-      "rounded-xl",
+      "rounded-[14px]",
       "border",
       "shadow-sm",
     );

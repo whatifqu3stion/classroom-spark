@@ -71,7 +71,7 @@ function EditableText({
       aria-multiline={multiline}
       dir="auto"
       className={cn(
-        "boardwork-user-content outline-none cursor-text transition-colors empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/40 hover:bg-muted/40 focus:bg-muted/20 focus:ring-2 focus:ring-primary/20 rounded-md px-1.5 -mx-1.5 py-0.5 -my-0.5",
+        "boardwork-user-content outline-none cursor-text transition-colors empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground hover:bg-muted/50 focus:bg-muted/30 focus:ring-2 focus:ring-ring rounded-lg px-1.5 -mx-1.5 py-0.5 -my-0.5",
         className
       )}
       onKeyDown={(e) => {
@@ -457,7 +457,7 @@ export function BoardEditor({
                            <span className="text-sm font-semibold">
                              Image {index + 1}
                            </span>
-                           <label className="inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-medium hover:bg-muted/50 focus-within:ring-2 focus-within:ring-ring">
+                           <label className="inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-lg border border-input px-3 text-sm font-medium hover:bg-muted/50 focus-within:ring-2 focus-within:ring-ring">
                              <ImagePlus className="h-4 w-4" aria-hidden="true" />
                              Replace image
                              <input
@@ -500,12 +500,12 @@ export function BoardEditor({
                              updateVisuals(nextVisuals);
                            }}
                            placeholder="Optional description for students"
-                           className="h-10 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                           className="h-10 w-full rounded-lg border border-input bg-muted/50 px-3 text-sm outline-none focus:ring-2 focus:ring-ring transition-colors hover:bg-muted/70 focus:bg-background"
                          />
                        </div>
                      ))}
                      {visuals.length < 2 && (
-                       <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-medium hover:bg-muted/50 focus-within:ring-2 focus-within:ring-ring">
+                       <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-input px-3 text-sm font-medium hover:bg-muted/50 focus-within:ring-2 focus-within:ring-ring">
                          <ImagePlus className="h-4 w-4" aria-hidden="true" />
                          {visuals.length === 0 ? "Add image" : "Add second image"}
                          <input

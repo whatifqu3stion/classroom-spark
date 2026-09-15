@@ -804,16 +804,16 @@ export default function Home() {
 
           {/* Left Column: Generator Controls */}
           <div
-            className="boardwork-creation-panel flex min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-xl border border-border/80 bg-card/50 shadow-teacher-card lg:h-full lg:w-[420px] xl:w-[500px]"
+            className="boardwork-creation-panel flex min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-[14px] border bg-card shadow-teacher-card lg:h-full lg:w-[400px]"
             data-testid="creation-controls"
           >
             <div
-              className="boardwork-class-header flex min-w-0 flex-shrink-0 items-center justify-between gap-2 border-b border-border/70 px-4 py-3 lg:px-5"
+              className="boardwork-class-header flex min-w-0 flex-shrink-0 items-center justify-between gap-2 border-b px-5 py-4 lg:px-6"
               data-testid="creation-class-header"
             >
-              <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
+              <div className="flex min-w-0 flex-1 items-center gap-2">
                 <Select value={activeClassId || ""} onValueChange={handleSetActiveClass}>
-                  <SelectTrigger className="-ml-2 h-auto min-w-0 flex-1 border-transparent bg-transparent px-2 py-2 text-lg font-semibold transition-colors hover:border-border hover:bg-muted/50" data-testid="select-class">
+                  <SelectTrigger className="-ml-2 h-auto min-w-0 flex-1 border-transparent bg-transparent px-2 py-2 text-base font-semibold transition-colors hover:border-border hover:bg-muted/50" data-testid="select-class">
                     {activeClass ? (
                       <div className="flex min-w-0 items-center gap-2">
                         <ClassColorDot color={activeClass.color || undefined} />
@@ -843,29 +843,29 @@ export default function Home() {
                   </Button>
                 )}
               </div>
-              <Button variant="outline" size="sm" onClick={() => { setEditingClassId(null); setClassDialogOpen(true); }} className="shrink-0 gap-2" aria-label="New class" data-testid="button-new-class">
+              <Button variant="ghost" size="sm" onClick={() => { setEditingClassId(null); setClassDialogOpen(true); }} className="shrink-0 gap-2 text-muted-foreground hover:text-foreground" aria-label="New class" data-testid="button-new-class">
                 <Plus className="w-4 h-4" />
                 <span className="hidden sm:inline">New Class</span>
               </Button>
             </div>
 
             <div
-              className="board-creation-setup flex min-h-0 w-full flex-1 flex-col gap-6 overflow-y-auto overscroll-contain scroll-pb-36 p-4 pb-8 lg:scroll-pb-5 lg:p-5"
+              className="board-creation-setup flex min-h-0 w-full flex-1 flex-col gap-6 overflow-y-auto overscroll-contain scroll-pb-36 p-5 pb-8 lg:scroll-pb-5 lg:p-6"
               data-testid="board-creation-setup"
             >
-            <div className="space-y-5 lg:space-y-6">
-              <div className="max-w-xl">
-                <h1 className="text-xl font-semibold tracking-tight text-foreground text-balance">
-                  <Label htmlFor="topic" className="text-xl font-semibold leading-tight">What are students working on today?</Label>
+            <div className="space-y-6">
+              <div className="max-w-xl flex flex-col gap-2">
+                <h1 className="text-lg font-semibold tracking-tight text-foreground text-balance m-0 p-0">
+                  <Label htmlFor="topic" className="text-lg font-semibold leading-tight">What are students working on today?</Label>
                 </h1>
-                <p id="boardwork-context-description" className="mt-1 max-w-lg text-sm leading-relaxed text-muted-foreground">
+                <p id="boardwork-context-description" className="max-w-lg text-sm text-muted-foreground">
                   Add a topic, learning goal, standard, concept, or anything else that should shape the Boardwork.
                 </p>
                 <Textarea
                   id="topic"
                   dir="auto"
                   aria-describedby="boardwork-context-description"
-                  className="boardwork-user-content mt-3 min-h-28 resize-y"
+                  className="boardwork-user-content min-h-28 resize-y"
                   placeholder="e.g. osmosis: explain how water moves across a membrane"
                   rows={4}
                   maxLength={1000}
@@ -874,7 +874,7 @@ export default function Home() {
                   data-testid="input-topic"
                 />
               </div>
-              <div className="space-y-5 border-b border-border/70 pb-6">
+              <div className="space-y-5 border-b border-border/40 pb-6">
                 <div className="space-y-2">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-1">
@@ -931,7 +931,7 @@ export default function Home() {
               />
             )}
 
-            <div className="space-y-5 border-b border-border/70 pb-6">
+            <div className="space-y-5 border-b border-border/40 pb-6">
                <div>
                  <div className="flex items-center gap-1">
                     <h2 className="text-sm font-semibold text-foreground">Board settings</h2>
@@ -957,7 +957,7 @@ export default function Home() {
                      className="grid-cols-3"
                   />
                 </div>
-                  <div className="space-y-2 sm:max-w-[360px]">
+                  <div className="w-full space-y-2 sm:col-span-2">
                     <Label htmlFor="input-custom-activity-duration">Duration (min)</Label>
                     <div className="flex min-w-0 items-center gap-2">
                       <SegmentedControl<Duration>
@@ -1000,7 +1000,7 @@ export default function Home() {
                   </div>
               </div>
                {technologyMode !== "no_computer" && (
-                  <div className="col-span-2 space-y-4 border-t border-border/70 pt-4">
+                  <div className="col-span-2 space-y-4 border-t border-border/40 pt-4">
                    <div className="space-y-2">
                       <div className="flex items-center gap-1">
                         <Label htmlFor="resourceUrl">
@@ -1041,7 +1041,7 @@ export default function Home() {
             </div>
 
               <div
-                className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-3 border-t bg-background/95 px-4 py-3 backdrop-blur-sm lg:static lg:mx-0 lg:border-t-0 lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none"
+                className="sticky bottom-0 z-10 -mx-5 flex flex-col gap-3 border-t border-border/50 bg-card px-5 py-3 lg:-mx-6 lg:px-6"
                 data-testid="creation-actions"
               >
               <Button
@@ -1110,7 +1110,7 @@ export default function Home() {
 
           {/* Right Column: Editor */}
           <div
-            className="boardwork-editor-panel flex min-h-[500px] min-w-0 flex-1 overflow-hidden rounded-xl border border-border/80 bg-card/30 shadow-teacher-card lg:min-h-0 lg:pb-0"
+            className="boardwork-editor-panel flex min-h-[500px] min-w-0 flex-1 overflow-hidden rounded-[14px] border bg-card shadow-teacher-card lg:min-h-0 lg:pb-0"
             data-testid="editor-workspace-panel"
           >
             {localDraft ? (

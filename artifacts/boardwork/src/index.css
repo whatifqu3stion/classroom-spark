@@ -2202,19 +2202,19 @@
 }
 
 /*
- * Keep creation examples quiet without changing the shared Input default.
+ * Keep creation examples readable without changing the shared Input default.
  * This intentionally lives outside the component layer so it wins over the
  * generated placeholder utility used by the shared input component.
  */
 .board-creation-setup input::placeholder,
 .board-creation-setup textarea::placeholder {
-  color: hsl(var(--muted-foreground) / 0.38);
+  color: hsl(var(--muted-foreground));
   opacity: 1;
 }
 
 .dark .board-creation-setup input::placeholder,
 .dark .board-creation-setup textarea::placeholder {
-  color: hsl(var(--muted-foreground) / 0.88);
+  color: hsl(var(--muted-foreground));
 }
 
 .board-editor-empty-state-title {

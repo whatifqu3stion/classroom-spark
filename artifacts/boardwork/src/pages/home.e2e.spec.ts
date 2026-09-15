@@ -864,7 +864,7 @@ test("keeps the empty editor preview visually quiet", async ({ page }) => {
   await expect(emptyState).toHaveClass(/bg-muted\/20/);
   await expect(emptyState).not.toHaveClass(/border-dashed/);
   await expect(editorPanel).toHaveClass(/boardwork-editor-panel/);
-  await expect(editorPanel).toHaveClass(/rounded-xl/);
+  await expect(editorPanel).toHaveClass(/rounded-\[14px\]/);
   await expect(editorPanel).toHaveClass(/\bborder\b/);
   await expect(
     emptyState.getByRole("heading", { name: "No activity created yet" }),
@@ -952,7 +952,7 @@ test("keeps the empty editor preview contained when text is enlarged", async ({ 
   await expect(emptyContent).toBeVisible();
   await expect(emptyState).not.toHaveClass(/border-dashed/);
   await expect(editorPanel).toHaveClass(/boardwork-editor-panel/);
-  await expect(editorPanel).toHaveClass(/rounded-xl/);
+  await expect(editorPanel).toHaveClass(/rounded-\[14px\]/);
   await expect(editorPanel).toHaveClass(/\bborder\b/);
 
   const bounds = await emptyState.evaluate((element) => {
@@ -1052,7 +1052,7 @@ for (const viewport of [
     const editorPanel = page.getByTestId("editor-workspace-panel");
     const emptyState = page.getByTestId("empty-editor-state");
     await expect(emptyState).toBeVisible();
-    await expect(editorPanel).toHaveClass(/rounded-xl/);
+    await expect(editorPanel).toHaveClass(/rounded-\[14px\]/);
     await expect(editorPanel).toHaveClass(/\bborder\b/);
 
     const initialBounds = await editorPanel.boundingBox();
@@ -1127,7 +1127,7 @@ for (const viewport of [
 
     await expect(page.getByTestId("empty-editor-state")).toBeVisible();
     await expect(page.getByTestId("board-editor")).toHaveCount(0);
-    await expect(editorPanel).toHaveClass(/rounded-xl/);
+    await expect(editorPanel).toHaveClass(/rounded-\[14px\]/);
     await expect(editorPanel).toHaveClass(/\bborder\b/);
     await expect(page.getByTestId("input-topic")).toHaveValue("");
     await expect(page.getByTestId("segment-5")).toHaveClass(/bg-background/);

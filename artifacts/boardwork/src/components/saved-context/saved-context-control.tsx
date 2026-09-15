@@ -103,7 +103,7 @@ export function SavedContextControl({
               className={cn(
                 "inline-flex items-center gap-1 pl-2.5 pr-1 py-1 rounded-full text-sm font-medium border max-w-full",
                 ctx.isAvailable
-                  ? "bg-secondary text-secondary-foreground border-transparent"
+                  ? "bg-muted/50 text-foreground border-input"
                   : "bg-destructive/10 text-destructive border-destructive/20"
               )}
             >

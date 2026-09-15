@@ -348,7 +348,7 @@ export default function History() {
                 .map((chipId) => chips.find((chip) => chip.id === chipId)?.label)
                 .filter((label): label is string => Boolean(label));
               return (
-                <div key={activity.id} className="group flex min-w-0 items-center justify-between rounded-xl border bg-card p-4 shadow-teacher-card transition-colors hover:border-foreground/20" data-testid={`history-item-${activity.id}`}>
+                <div key={activity.id} className="group flex min-w-0 items-center justify-between rounded-[14px] border bg-card p-4 shadow-teacher-card transition-colors hover:border-foreground/20" data-testid={`history-item-${activity.id}`}>
                   <div className="flex items-center gap-4 min-w-0 flex-1">
                      <Tooltip>
                        <TooltipTrigger asChild>

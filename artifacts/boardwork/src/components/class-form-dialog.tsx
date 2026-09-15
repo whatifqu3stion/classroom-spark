@@ -253,7 +253,7 @@ export function ClassFormDialog({
               )}
             />
 
-            <Collapsible open={moreOpen} onOpenChange={setMoreOpen} className="rounded-lg border">
+            <Collapsible open={moreOpen} onOpenChange={setMoreOpen} className="rounded-lg border border-border/40">
               <CollapsibleTrigger
                 className="flex w-full items-center justify-between gap-4 p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
                 data-testid="button-toggle-more-class-details"
@@ -267,7 +267,7 @@ export function ClassFormDialog({
                 <ChevronDown className={`size-4 text-muted-foreground transition-transform ${moreOpen ? "rotate-180" : ""}`} />
               </CollapsibleTrigger>
 
-              <CollapsibleContent className="border-t px-4 pb-5 pt-4">
+              <CollapsibleContent className="border-t border-border/40 px-4 pb-5 pt-4">
                 <div className="grid gap-5">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <FormField
