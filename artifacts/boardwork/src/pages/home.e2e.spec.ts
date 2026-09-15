@@ -2,7 +2,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 
 const APPROVED_HEADING = "What are students working on today?";
 const APPROVED_SUPPORTING_COPY =
-  "Add a topic or goal. You can refine the board before presenting.";
+  "Add a topic, learning goal, standard, concept, or anything else that should shape the Boardwork.";
 
 const appState = {
   activeClassId: "class-1",
@@ -46,6 +46,8 @@ const savedBoardAppState = {
       title: "Explain how the evidence supports your idea",
       task: "Read the evidence and write one connected explanation.",
       prompts: ["Describe the strongest pattern in the data."],
+      sourceTopic: "Saved legacy topic",
+      sourceGoal: "Saved legacy goal",
       durationMinutes: 7,
       deviceMode: "off",
       technologyMode: "no_computer",
@@ -88,7 +90,6 @@ type Viewport = { width: number; height: number };
 const requiredControls = [
   "select-unit",
   "input-topic",
-  "input-goal",
   "button-generate",
   "button-surprise",
   "button-blank",
@@ -422,9 +423,18 @@ for (const viewport of viewports) {
     await expect(controls.getByTestId("select-class")).toBeVisible();
     await expect(editorPanel).toHaveClass(/boardwork-editor-panel/);
     await expect(controls.getByRole("heading", { name: APPROVED_HEADING, level: 1 })).toBeVisible();
-    await expect(controls.getByText(APPROVED_SUPPORTING_COPY)).toBeVisible();
-    await expect(controls.getByLabel("Topic or starting point (optional)")).toBeVisible();
-    await expect(controls.getByLabel("Learning goal (optional)")).toBeVisible();
+    await expect(controls.getByText(APPROVED_SUPPORTING_COPY)).toHaveAttribute(
+      "id",
+      "boardwork-context-description",
+    );
+    await expect(controls.getByLabel(APPROVED_HEADING)).toBeVisible();
+    await expect(controls.getByTestId("input-topic")).toHaveAttribute("id", "topic");
+    await expect(controls.getByTestId("input-topic")).toHaveAttribute(
+      "aria-describedby",
+      "boardwork-context-description",
+    );
+    await expect(controls.getByTestId("input-topic")).toHaveAttribute("maxLength", "1000");
+    await expect(controls.getByTestId("input-goal")).toHaveCount(0);
 
     for (const testId of requiredControls) {
       const locator = page.getByTestId(testId);
@@ -569,7 +579,6 @@ test("keeps creation examples readable in dark mode", async ({ page }) => {
 
   const placeholderInputs = [
     page.getByTestId("input-topic"),
-    page.getByTestId("input-goal"),
     page.getByTestId("input-resource-url"),
     page.getByTestId("input-resource-note"),
     page.getByTestId("input-custom-activity-duration"),
@@ -581,10 +590,10 @@ test("keeps creation examples readable in dark mode", async ({ page }) => {
 
   await page.getByTestId("input-topic").fill("Entered topic");
 
-  const styles = await page.getByTestId("input-goal").evaluate((element) => {
+  const styles = await page.getByTestId("input-topic").evaluate((element) => {
     const placeholder = getComputedStyle(element, "::placeholder");
     const input = getComputedStyle(element);
-    const label = getComputedStyle(document.querySelector('label[for="goal"]')!);
+    const label = getComputedStyle(document.querySelector('label[for="topic"]')!);
     const control = getComputedStyle(document.querySelector('[data-testid="button-generate"]')!);
     const parseColor = (value: string) => {
       const channels = value.match(/[\d.]+/g)?.map(Number) ?? [];
@@ -814,10 +823,9 @@ test("lets keyboard users complete board setup without losing focus", async ({ p
     "select-class",
     "button-edit-class",
     "button-new-class",
+    "input-topic",
     "button-add-unit",
     "select-unit",
-    "input-topic",
-    "input-goal",
     "segment-no_computer",
     "segment-computer_available",
     "segment-computer_required",
@@ -903,7 +911,7 @@ test("keeps the empty editor preview visually quiet", async ({ page }) => {
   ).toBeVisible();
   await expect(
     emptyState.getByText(
-      "Add a topic or goal on the left, then choose Create board. You can also start blank from the creation actions.",
+      "Add what students are working on in Board Setup, then choose Create board. You can also start blank.",
     ),
   ).toBeVisible();
   await expect(emptyState.locator("svg")).toHaveAttribute("aria-hidden", "true");
@@ -1158,7 +1166,6 @@ for (const viewport of [
     await expect(editorPanel).toHaveClass(/rounded-xl/);
     await expect(editorPanel).toHaveClass(/\bborder\b/);
     await expect(page.getByTestId("input-topic")).toHaveValue("");
-    await expect(page.getByTestId("input-goal")).toHaveValue("");
     await expect(page.getByTestId("segment-5")).toHaveClass(/bg-background/);
     await expect(page.getByTestId("segment-7")).not.toHaveClass(/bg-background/);
 

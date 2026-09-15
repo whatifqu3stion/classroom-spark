@@ -2203,12 +2203,14 @@
  * This intentionally lives outside the component layer so it wins over the
  * generated placeholder utility used by the shared input component.
  */
-.board-creation-setup input::placeholder {
+.board-creation-setup input::placeholder,
+.board-creation-setup textarea::placeholder {
   color: hsl(var(--muted-foreground) / 0.38);
   opacity: 1;
 }
 
-.dark .board-creation-setup input::placeholder {
+.dark .board-creation-setup input::placeholder,
+.dark .board-creation-setup textarea::placeholder {
   color: hsl(var(--muted-foreground) / 0.88);
 }
 

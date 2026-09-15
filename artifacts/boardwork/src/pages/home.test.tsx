@@ -4,11 +4,13 @@ import Home from "./home";
 import { useBoardwork } from "@/store/boardwork-context";
 import { rememberPresentationTheme } from "@/lib/presentation-theme";
 import type { AppState } from "@workspace/api-client-react";
+import type { ActivityDraft } from "@/store/boardwork-context";
 
 const mocks = vi.hoisted(() => ({
   setLocation: vi.fn(),
   generateActivity: vi.fn(),
   createActivity: vi.fn(),
+  updateActivity: vi.fn(),
   updateClass: vi.fn(),
   setQueryData: vi.fn(),
   invalidateQueries: vi.fn(),
@@ -42,8 +44,11 @@ vi.mock("@/components/layout/shell", () => ({
 }));
 
 vi.mock("@/components/board-editor", () => ({
-  BoardEditor: ({ draft }: { draft: unknown }) => (
-    <output data-testid="board-editor-draft">{JSON.stringify(draft)}</output>
+  BoardEditor: ({ draft, onChange }: { draft: ActivityDraft; onChange: (draft: Partial<ActivityDraft>) => void }) => (
+    <>
+      <output data-testid="board-editor-draft">{JSON.stringify(draft)}</output>
+      <button onClick={() => onChange({ task: "Edited task" })}>Edit test board</button>
+    </>
   ),
 }));
 
@@ -116,7 +121,7 @@ vi.mock("@workspace/api-client-react", () => ({
   useUpdateInstructionalContext: () => ({ mutate: vi.fn() }),
   useCreateActivity: () => ({ mutateAsync: mocks.createActivity }),
   useGenerateActivity: () => ({ mutateAsync: mocks.generateActivity }),
-  useUpdateActivity: () => ({ mutateAsync: vi.fn() }),
+  useUpdateActivity: () => ({ mutateAsync: mocks.updateActivity }),
   useCreateUnit: () => ({ mutate: vi.fn() }),
   useUpdateUnit: () => ({ mutate: vi.fn() }),
   useDeleteUnit: () => ({ mutate: vi.fn() }),
@@ -255,6 +260,59 @@ describe("Home presentation defaults", () => {
     );
   });
 
+  it("trims multiline mixed context into topic and omits the legacy goal field", async () => {
+    mocks.generateActivity.mockResolvedValue({
+      id: "activity-context",
+      classId: "class-1",
+      title: "Generated",
+      task: "Practice",
+      prompts: [],
+      durationMinutes: 7,
+      deviceMode: "off",
+    });
+
+    render(<Home />);
+    fireEvent.change(screen.getByTestId("input-topic"), {
+      target: {
+        value:
+          "  Compare the water cycle and carbon cycle.\n\nStandard: explain how matter moves through systems.  ",
+      },
+    });
+    fireEvent.click(screen.getByTestId("button-generate"));
+
+    await waitFor(() => expect(mocks.generateActivity).toHaveBeenCalledTimes(1));
+    expect(mocks.generateActivity.mock.calls[0][0].data).toMatchObject({
+      topic:
+        "Compare the water cycle and carbon cycle.\n\nStandard: explain how matter moves through systems.",
+    });
+    expect(mocks.generateActivity.mock.calls[0][0].data).not.toHaveProperty("goal");
+  });
+
+  it.each(["", " \n\t  "])(
+    "maps blank and whitespace-only context %j to an undefined topic",
+    async (value) => {
+      mocks.generateActivity.mockResolvedValue({
+        id: "activity-empty-context",
+        classId: "class-1",
+        title: "Generated",
+        task: "Practice",
+        prompts: [],
+        durationMinutes: 7,
+        deviceMode: "off",
+      });
+
+      render(<Home />);
+      fireEvent.change(screen.getByTestId("input-topic"), {
+        target: { value },
+      });
+      fireEvent.click(screen.getByTestId("button-generate"));
+
+      await waitFor(() => expect(mocks.generateActivity).toHaveBeenCalledTimes(1));
+      expect(mocks.generateActivity.mock.calls[0][0].data).toHaveProperty("topic", undefined);
+      expect(mocks.generateActivity.mock.calls[0][0].data).not.toHaveProperty("goal");
+    },
+  );
+
   it("takes Surprise me directly to Present while keeping Create board in the editor", async () => {
     mocks.generateActivity
       .mockResolvedValueOnce({
@@ -277,13 +335,28 @@ describe("Home presentation defaults", () => {
       });
 
     render(<Home />);
+    fireEvent.change(screen.getByTestId("input-topic"), {
+      target: { value: "  Fractions on a number line  " },
+    });
 
     fireEvent.click(screen.getByTestId("button-surprise"));
+    await waitFor(() => expect(mocks.generateActivity).toHaveBeenCalledTimes(1));
+    expect(mocks.generateActivity.mock.calls[0][0].data).toMatchObject({
+      topic: "Fractions on a number line",
+      surprise: true,
+    });
+    expect(mocks.generateActivity.mock.calls[0][0].data).not.toHaveProperty("goal");
     await waitFor(() =>
       expect(mocks.setLocation).toHaveBeenCalledWith("/present/activity-surprise"),
     );
 
     fireEvent.click(screen.getByTestId("button-generate"));
+    await waitFor(() => expect(mocks.generateActivity).toHaveBeenCalledTimes(2));
+    expect(mocks.generateActivity.mock.calls[1][0].data).toMatchObject({
+      topic: "Fractions on a number line",
+      surprise: false,
+    });
+    expect(mocks.generateActivity.mock.calls[1][0].data).not.toHaveProperty("goal");
     await waitFor(() =>
       expect(mocks.setLocation).toHaveBeenCalledWith("/activity/activity-created"),
     );
@@ -293,8 +366,20 @@ describe("Home presentation defaults", () => {
     mocks.generateActivity.mockRejectedValueOnce({
       data: { error: "The generator is temporarily unavailable." },
     });
+    mocks.generateActivity.mockResolvedValueOnce({
+      id: "activity-retried",
+      classId: "class-1",
+      title: "Retried",
+      task: "Practice",
+      prompts: [],
+      durationMinutes: 7,
+      deviceMode: "off",
+    });
 
     render(<Home />);
+    fireEvent.change(screen.getByTestId("input-topic"), {
+      target: { value: "\n  Photosynthesis and energy transfer\n" },
+    });
     fireEvent.click(screen.getByTestId("button-surprise"));
 
     await waitFor(() => {
@@ -304,6 +389,19 @@ describe("Home presentation defaults", () => {
     });
     expect(mocks.setLocation).not.toHaveBeenCalled();
     expect(screen.getByTestId("button-retry-generation")).toBeEnabled();
+    expect(mocks.generateActivity.mock.calls[0][0].data).toMatchObject({
+      topic: "Photosynthesis and energy transfer",
+      surprise: true,
+    });
+    expect(mocks.generateActivity.mock.calls[0][0].data).not.toHaveProperty("goal");
+
+    fireEvent.click(screen.getByTestId("button-retry-generation"));
+    await waitFor(() => expect(mocks.generateActivity).toHaveBeenCalledTimes(2));
+    expect(mocks.generateActivity.mock.calls[1][0].data).toMatchObject({
+      topic: "Photosynthesis and energy transfer",
+      surprise: true,
+    });
+    expect(mocks.generateActivity.mock.calls[1][0].data).not.toHaveProperty("goal");
   });
 
   it("reveals the teacher resource fields with Computer Available and sends them to generation", async () => {
@@ -365,9 +463,6 @@ describe("Home presentation defaults", () => {
     fireEvent.change(screen.getByTestId("input-topic"), {
       target: { value: "Old class topic" },
     });
-    fireEvent.change(screen.getByTestId("input-goal"), {
-      target: { value: "Old class goal" },
-    });
     fireEvent.change(screen.getByTestId("input-custom-activity-duration"), {
       target: { value: "19" },
     });
@@ -376,7 +471,6 @@ describe("Home presentation defaults", () => {
     rerender(<Home />);
     await waitFor(() => {
       expect(screen.getByTestId("input-topic")).toHaveValue("");
-      expect(screen.getByTestId("input-goal")).toHaveValue("");
       expect(screen.getByTestId("segment-5")).toHaveClass("bg-background");
       expect(screen.getByTestId("input-custom-activity-duration")).toHaveValue("");
       expect(screen.getByTestId("segment-computer_available")).toHaveClass(
@@ -400,7 +494,6 @@ describe("Home presentation defaults", () => {
         data: expect.objectContaining({
           classId: "class-2",
           topic: undefined,
-          goal: undefined,
           deviceMode: "on",
           technologyMode: "computer_available",
           durationMinutes: 5,
@@ -569,16 +662,16 @@ describe("Home presentation defaults", () => {
       fireEvent.click(screen.getByTestId(`segment-${minutes}`));
     }
     fireEvent.change(screen.getByTestId("input-topic"), { target: { value: "Cells" } });
-    fireEvent.change(screen.getByTestId("input-goal"), { target: { value: "Explain evidence" } });
     for (const action of ["button-generate", "button-surprise"]) {
       fireEvent.click(screen.getByTestId(action));
       await waitFor(() => expect(screen.getByTestId(action)).toBeEnabled());
       const payload = mocks.generateActivity.mock.calls.at(-1)![0].data;
       expect(payload).toMatchObject({
-        classId: "class-1", unitId: "unit-1", topic: "Cells", goal: "Explain evidence",
+        classId: "class-1", unitId: "unit-1", topic: "Cells",
         durationMinutes: minutes, chipIds: [], activityStyle: null,
         surprise: action === "button-surprise",
       });
+      expect(payload).not.toHaveProperty("goal");
       for (const field of ["studentOutput", "workMode", "materialsAvailable", "completionSignal"]) {
         expect(payload).not.toHaveProperty(field);
       }
@@ -610,7 +703,8 @@ describe("Home presentation defaults", () => {
     const saved = {
       id: "saved", classId: "class-1", title: "Saved", task: "Keep this task",
       prompts: ["Keep this prompt"], durationMinutes: 17, deviceMode: "off" as const,
-      materials: ["Notebook"], style: "Quick Write", sourceChipIds: ["saved-chip"],
+      materials: ["Notebook"], style: "Quick Write", sourceTopic: "Legacy topic",
+      sourceGoal: "Legacy goal", sourceChipIds: ["saved-chip"],
     };
     vi.mocked(useBoardwork).mockReturnValue({
       appState: { ...appState, activities: [saved] } as unknown as AppState,
@@ -631,6 +725,46 @@ describe("Home presentation defaults", () => {
     expect(screen.getByTestId("input-custom-activity-duration")).toHaveValue("");
     fireEvent.click(screen.getByTestId("button-blank"));
     expect(screen.getByTestId("board-editor-draft")).toHaveTextContent('"durationMinutes":5');
+  });
+
+  it("keeps legacy source context intact when saving an edited older board", async () => {
+    const saved = {
+      id: "saved", classId: "class-1", title: "Saved", task: "Original task",
+      prompts: [], durationMinutes: 5, deviceMode: "off" as const,
+      sourceTopic: "Legacy topic", sourceGoal: "Legacy goal",
+    };
+    mocks.activityId = saved.id;
+    mocks.updateActivity.mockResolvedValue({ ...saved, task: "Edited task" });
+    vi.mocked(useBoardwork).mockReturnValue({
+      appState: { ...appState, activities: [saved] } as unknown as AppState,
+      isLoading: false, activeClassId: "class-1", selectedChipIds: [],
+      toggleChipSelection: vi.fn(), clearChipSelection: vi.fn(),
+    });
+    render(<Home />);
+    fireEvent.click(screen.getByRole("button", { name: "Edit test board" }));
+    await waitFor(() => expect(mocks.updateActivity).toHaveBeenCalledTimes(1), { timeout: 2000 });
+    const patch = mocks.updateActivity.mock.calls[0][0].data;
+    expect(patch.task).toBe("Edited task");
+    expect(patch).not.toHaveProperty("sourceTopic");
+    expect(patch).not.toHaveProperty("sourceGoal");
+    expect(JSON.parse(screen.getByTestId("board-editor-draft").textContent!)).toMatchObject({
+      sourceTopic: "Legacy topic", sourceGoal: "Legacy goal",
+    });
+  });
+
+  it("saves the combined context with a newly authored blank board", async () => {
+    mocks.createActivity.mockResolvedValue({ id: "new-board", classId: "class-1" });
+    render(<Home />);
+    fireEvent.change(screen.getByTestId("input-topic"), {
+      target: { value: "  Fractions\nExplain equivalent values.  " },
+    });
+    fireEvent.click(screen.getByTestId("button-blank"));
+    fireEvent.click(screen.getByRole("button", { name: "Edit test board" }));
+    await waitFor(() => expect(mocks.createActivity).toHaveBeenCalledTimes(1), { timeout: 2000 });
+    expect(mocks.createActivity.mock.calls[0][0].data).toMatchObject({
+      sourceTopic: "Fractions\nExplain equivalent values.",
+      sourceGoal: undefined,
+    });
   });
 
   it.each(["0", "-1", "1.5", "abc"])("rejects invalid custom minutes %s for all creation actions", (value) => {
@@ -656,13 +790,25 @@ describe("Home presentation defaults", () => {
         level: 1,
       }),
     ).toBeInTheDocument();
+    const contextDescription = screen.getByText(
+      "Add a topic, learning goal, standard, concept, or anything else that should shape the Boardwork.",
+    );
+    const contextInput = screen.getByTestId("input-topic");
+    expect(contextDescription).toHaveAttribute("id", "boardwork-context-description");
+    expect(screen.getByLabelText("What are students working on today?")).toBeInTheDocument();
+    expect(contextInput.tagName).toBe("TEXTAREA");
+    expect(contextInput).toBe(contextDescription.nextElementSibling);
+    expect(contextInput).toHaveAttribute("id", "topic");
+    expect(contextInput).toHaveAttribute(
+      "aria-describedby",
+      "boardwork-context-description",
+    );
+    expect(contextInput).toHaveAttribute("maxLength", "1000");
     expect(
-      screen.getByText(
-        "Add a topic or goal. You can refine the board before presenting.",
-      ),
-    ).toBeInTheDocument();
-    expect(screen.getByLabelText("Topic or starting point (optional)")).toBeInTheDocument();
-    expect(screen.getByLabelText("Learning goal (optional)")).toBeInTheDocument();
+      contextInput.compareDocumentPosition(screen.getByTestId("select-unit")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.queryByTestId("input-goal")).not.toBeInTheDocument();
     expect(screen.queryByText("Create today's board")).not.toBeInTheDocument();
     expect(
       screen.queryByText("What should students practice today?"),
@@ -687,7 +833,7 @@ describe("Home presentation defaults", () => {
     expect(screen.getByRole("heading", { name: "No activity created yet" })).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Add a topic or goal on the left, then choose Create board. You can also start blank from the creation actions.",
+        "Add what students are working on in Board Setup, then choose Create board. You can also start blank.",
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText("Board preview")).not.toBeInTheDocument();
@@ -739,15 +885,14 @@ describe("Home presentation defaults", () => {
       ).toBeVisible();
       expect(
         within(controls).getByText(
-          "Add a topic or goal. You can refine the board before presenting.",
+          "Add a topic, learning goal, standard, concept, or anything else that should shape the Boardwork.",
         ),
       ).toBeVisible();
 
       expect(within(controls).getByTestId("select-unit")).toBeVisible();
       expect(within(controls).getByTestId("input-topic")).toBeVisible();
-      expect(within(controls).getByTestId("input-goal")).toBeVisible();
-      expect(within(controls).getByLabelText("Topic or starting point (optional)")).toBeVisible();
-      expect(within(controls).getByLabelText("Learning goal (optional)")).toBeVisible();
+      expect(within(controls).getByLabelText("What are students working on today?")).toBeVisible();
+      expect(within(controls).queryByTestId("input-goal")).not.toBeInTheDocument();
       expect(within(actions).getByTestId("button-generate")).toBeVisible();
       expect(within(actions).getByTestId("button-surprise")).toBeVisible();
       expect(within(actions).getByTestId("button-blank")).toBeVisible();
@@ -773,12 +918,12 @@ describe("Home presentation defaults", () => {
       "lg:w-[420px]",
       "xl:w-[500px]",
     );
-    expect(screen.getByTestId("input-topic")).toHaveAttribute("aria-label", "Topic or starting point (optional)");
-    expect(screen.getByTestId("input-topic")).toHaveAttribute("placeholder", "e.g. a diagram of osmosis");
-    expect(screen.getByTestId("input-goal")).toHaveAttribute(
+    expect(screen.getByTestId("input-topic")).toHaveAttribute("id", "topic");
+    expect(screen.getByTestId("input-topic")).toHaveAttribute(
       "placeholder",
-      "e.g. explain the evidence in one sentence",
+      "e.g. osmosis: explain how water moves across a membrane",
     );
+    expect(screen.getByTestId("input-topic")).toHaveAttribute("maxLength", "1000");
     expect(screen.getByTestId("input-custom-activity-duration")).toHaveAttribute(
       "placeholder",
       "Custom",

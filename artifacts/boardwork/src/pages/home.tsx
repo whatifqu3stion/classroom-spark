@@ -12,6 +12,7 @@ import {
 } from "@/store/boardwork-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -182,8 +183,7 @@ export default function Home() {
   const deleteUnitMut = useDeleteUnit();
 
   // Local UI State
-  const [topic, setTopic] = useState("");
-  const [goal, setGoal] = useState("");
+  const [boardworkContext, setBoardworkContext] = useState("");
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
   const [deviceMode, setDeviceMode] = useState<DeviceMode>("off");
   const [technologyMode, setTechnologyMode] = useState<TechnologyMode>("no_computer");
@@ -243,8 +243,7 @@ export default function Home() {
   const generatorClassIdRef = useRef<string | null>(null);
 
   const resetGeneratorState = (classProfile: ClassProfile | undefined) => {
-    setTopic("");
-    setGoal("");
+    setBoardworkContext("");
     setSelectedUnitId(null);
     setResourceUrl("");
     setResourceNote("");
@@ -376,8 +375,8 @@ export default function Home() {
       const payload: ActivityInput = {
         classId: draft.classId,
         ...savePayload,
-        sourceTopic: (draft.sourceTopic ?? topic) || undefined,
-        sourceGoal: (draft.sourceGoal ?? goal) || undefined,
+        sourceTopic: (draft.sourceTopic ?? boardworkContext.trim()) || undefined,
+        sourceGoal: draft.sourceGoal || undefined,
         sourceChipIds: draft.sourceChipIds ?? [],
       };
 
@@ -642,8 +641,7 @@ export default function Home() {
       const payload: GenerateActivityInput = {
         classId: activeClassId,
         unitId: selectedUnitId || undefined,
-        topic: topic.trim() || undefined,
-        goal: goal.trim() || undefined,
+        topic: boardworkContext.trim() || undefined,
         chipIds: [],
         deviceMode,
         technologyMode,
@@ -833,13 +831,27 @@ export default function Home() {
             >
             <div className="space-y-5 lg:space-y-6">
               <div className="max-w-xl">
-                <h1 className="text-xl font-semibold tracking-tight text-foreground text-balance">What are students working on today?</h1>
-                <p className="mt-1 max-w-lg text-sm leading-relaxed text-muted-foreground">
-                  Add a topic or goal. You can refine the board before presenting.
+                <h1 className="text-xl font-semibold tracking-tight text-foreground text-balance">
+                  <Label htmlFor="topic" className="text-xl font-semibold leading-tight">What are students working on today?</Label>
+                </h1>
+                <p id="boardwork-context-description" className="mt-1 max-w-lg text-sm leading-relaxed text-muted-foreground">
+                  Add a topic, learning goal, standard, concept, or anything else that should shape the Boardwork.
                 </p>
+                <Textarea
+                  id="topic"
+                  dir="auto"
+                  aria-describedby="boardwork-context-description"
+                  className="boardwork-user-content mt-3 min-h-28 resize-y"
+                  placeholder="e.g. osmosis: explain how water moves across a membrane"
+                  rows={4}
+                  maxLength={1000}
+                  value={boardworkContext}
+                  onChange={(e) => setBoardworkContext(e.target.value)}
+                  data-testid="input-topic"
+                />
               </div>
               <div className="space-y-5 border-b border-border/70 pb-6">
-                <div className="space-y-2 border-b border-border/70 pb-5">
+                <div className="space-y-2">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-1">
                       <Label htmlFor="unit-select">Current unit <span className="font-normal text-muted-foreground">(optional)</span></Label>
@@ -881,37 +893,6 @@ export default function Home() {
                       </Button>
                     )}
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="topic">Topic or starting point</Label>
-                  <Input
-                    id="topic"
-                    dir="auto"
-                    aria-label="Topic or starting point (optional)"
-                    className="boardwork-user-content"
-                    placeholder="e.g. a diagram of osmosis"
-                    value={topic}
-                    onChange={(e) => setTopic(e.target.value)}
-                    data-testid="input-topic"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-1">
-                    <Label htmlFor="goal">Learning goal</Label>
-                    <HelpTooltip label="About the student goal">
-                      Add one observable outcome to steer this short board. A full lesson plan is not needed.
-                    </HelpTooltip>
-                  </div>
-                  <Input
-                    id="goal"
-                    dir="auto"
-                    aria-label="Learning goal (optional)"
-                    className="boardwork-user-content"
-                    placeholder="e.g. explain the evidence in one sentence"
-                    value={goal}
-                    onChange={(e) => setGoal(e.target.value)}
-                    data-testid="input-goal"
-                  />
                 </div>
               </div>
             </div>
@@ -1133,7 +1114,7 @@ export default function Home() {
                     No activity created yet
                   </h3>
                   <p className="board-editor-empty-state-copy mb-6 w-full max-w-sm">
-                    Add a topic or goal on the left, then choose Create board. You can also start blank from the creation actions.
+                    Add what students are working on in Board Setup, then choose Create board. You can also start blank.
                   </p>
                 </div>
               </div>
