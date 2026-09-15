@@ -23,3 +23,4 @@
 - [Multi-visual payload compatibility](multi-visual-payloads.md) — Aggregate request limits and legacy normalization must evolve with ordered presentation media.
 - [Wide Present composition](wide-present-composition.md) — Center authored content and rail children only on tall wide boards; keep short and constrained layouts top-aligned.
 - [Adaptive Present measurement](adaptive-present-measurement.md) — Measure candidate typography offscreen in the real container hierarchy to avoid live-state oscillation.
+- [Nested automatic direction](nested-auto-direction.md) — Assert resolved bidi direction on the innermost auto-direction boundary that owns the text.

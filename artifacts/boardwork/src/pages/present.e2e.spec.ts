@@ -254,6 +254,23 @@ const roomyPromptAppState = {
   activities: [roomyPromptActivity, contentTallActivity],
 };
 
+const adaptiveFormulaActivity = {
+  ...promptSpacingActivity,
+  id: "activity-adaptive-formula",
+  title: "Adaptive formula and mixed-script board",
+  task:
+    "Solve $$\\frac{x^2 + \\sqrt{16}}{2} = 5$$ and explain the equality in English.",
+  prompts: [
+    "العربية: فسّر لماذا يبقى $x^2$ واضحًا، ثم اكتب ملاحظة قصيرة in English.",
+    "עברית: השוו את $\\sqrt{16}$ עם हिन्दी निष्कर्ष, ثم تحققوا من 日本語の説明.",
+  ],
+};
+
+const adaptiveFormulaAppState = {
+  ...appState,
+  activities: [adaptiveFormulaActivity],
+};
+
 const extremeVisualActivities = {
   ...appState,
   activities: [
@@ -2476,6 +2493,187 @@ test("scales the live student hierarchy from constrained to roomy without center
     "data-room-state",
     "constrained",
   );
+});
+
+test("keeps enlarged formulas and mixed-script prompts contained across room states", async ({
+  page,
+}) => {
+  const assertBrowserHealth = await reportBrowserHealth(page);
+  await stubPresentationState(page, adaptiveFormulaAppState);
+
+  const measureContent = async () =>
+    page.getByTestId("presentation-surface").evaluate((surface) => {
+      const content = surface.querySelector<HTMLElement>(".presentation-content");
+      const task = surface.querySelector<HTMLElement>(".presentation-task");
+      const promptCopies = Array.from(
+        surface.querySelectorAll<HTMLElement>(
+          ".presentation-prompt > .boardwork-user-content",
+        ),
+      );
+      const footer = surface.querySelector<HTMLElement>(".presentation-footer");
+      const formulas = Array.from(
+        surface.querySelectorAll<HTMLElement>("[data-formula]"),
+      );
+      if (!content || !task || promptCopies.length !== 2 || !footer) {
+        throw new Error("Missing adaptive formula presentation regions");
+      }
+
+      const contentBounds = content.getBoundingClientRect();
+      const authoredElements = [task, ...promptCopies];
+      const directionalElements = authoredElements.map((element) => {
+        const formulaText = element.querySelector<HTMLElement>(".formula-text");
+        if (!formulaText) throw new Error("Missing authored text direction boundary");
+        return formulaText;
+      });
+      const authoredBounds = authoredElements.map((element) =>
+        element.getBoundingClientRect().toJSON(),
+      );
+      const formulaBounds = formulas.map((formula) => {
+        const container = formula.closest<HTMLElement>(
+          ".presentation-task, .presentation-prompt > .boardwork-user-content",
+        );
+        if (!container) throw new Error("Missing formula content container");
+        return {
+          formula: formula.getBoundingClientRect().toJSON(),
+          container: container.getBoundingClientRect().toJSON(),
+        };
+      });
+      const lineCounts = promptCopies.map((prompt) => {
+        const range = document.createRange();
+        range.selectNodeContents(prompt);
+        return new Set(
+          Array.from(range.getClientRects())
+            .filter((rect) => rect.width > 0 && rect.height > 0)
+            .map((rect) => Math.round(rect.top)),
+        ).size;
+      });
+      const computed = directionalElements.map((element) => {
+        const styles = getComputedStyle(element);
+        return {
+          resolvedDirection: element.matches(":dir(rtl)") ? "rtl" : "ltr",
+          unicodeBidi: styles.unicodeBidi,
+          overflowWrap: styles.overflowWrap,
+        };
+      });
+
+      return {
+        state: surface.dataset.roomState,
+        taskFontSize: Number.parseFloat(getComputedStyle(task).fontSize),
+        promptFontSize: Number.parseFloat(
+          getComputedStyle(promptCopies[0].closest(".presentation-prompt")!)
+            .fontSize,
+        ),
+        surfaceOverflow: surface.scrollWidth - surface.clientWidth,
+        contentOverflow: content.scrollWidth - content.clientWidth,
+        content: contentBounds.toJSON(),
+        authoredBounds,
+        formulaBounds,
+        lineCounts,
+        computed,
+        dirAttributes: directionalElements.map((element) =>
+          element.getAttribute("dir"),
+        ),
+        authoredBottom: Math.max(...authoredBounds.map((bounds) => bounds.bottom)),
+        footerTop: footer.getBoundingClientRect().top,
+      };
+    });
+
+  const measurements = [];
+  for (const viewport of [
+    {
+      width: 1280,
+      height: 720,
+      expectedState: "constrained",
+      label: "constrained landscape",
+    },
+    {
+      width: 1280,
+      height: 900,
+      expectedState: "comfortable",
+      label: "comfortable classroom",
+    },
+    {
+      width: 2560,
+      height: 1440,
+      expectedState: "roomy",
+      label: "roomy high-resolution projector",
+    },
+  ]) {
+    await page.setViewportSize({
+      width: viewport.width,
+      height: viewport.height,
+    });
+    await page.goto("/present/activity-adaptive-formula");
+    await settlePresentationSurface(page);
+    await expect(page.getByTestId("presentation-surface")).toHaveAttribute(
+      "data-room-state",
+      viewport.expectedState,
+    );
+
+    const measurement = await measureContent();
+    measurements.push(measurement);
+    expect(
+      measurement.surfaceOverflow,
+      `${viewport.label} should not create horizontal page overflow`,
+    ).toBeLessThanOrEqual(0);
+    expect(
+      measurement.contentOverflow,
+      `${viewport.label} should keep authored content inside its pane`,
+    ).toBeLessThanOrEqual(1);
+    expect(
+      measurement.authoredBottom,
+      `${viewport.label} authored content should not collide with the footer`,
+    ).toBeLessThanOrEqual(measurement.footerTop + 1);
+    for (const bounds of measurement.authoredBounds) {
+      expect(bounds.left, `${viewport.label} authored text left edge`).toBeGreaterThanOrEqual(
+        measurement.content.left - 1,
+      );
+      expect(bounds.right, `${viewport.label} authored text right edge`).toBeLessThanOrEqual(
+        measurement.content.right + 1,
+      );
+    }
+    for (const bounds of measurement.formulaBounds) {
+      expect(bounds.formula.left, `${viewport.label} formula left edge`).toBeGreaterThanOrEqual(
+        bounds.container.left - 1,
+      );
+      expect(bounds.formula.right, `${viewport.label} formula right edge`).toBeLessThanOrEqual(
+        bounds.container.right + 1,
+      );
+    }
+    expect(measurement.dirAttributes).toEqual(["auto", "auto", "auto"]);
+    expect(
+      measurement.computed.map(({ resolvedDirection }) => resolvedDirection),
+    ).toEqual(["ltr", "rtl", "rtl"]);
+    expect(measurement.computed.map(({ unicodeBidi }) => unicodeBidi)).toEqual([
+      "plaintext",
+      "plaintext",
+      "plaintext",
+    ]);
+    expect(measurement.computed.map(({ overflowWrap }) => overflowWrap)).toEqual([
+      "anywhere",
+      "anywhere",
+      "anywhere",
+    ]);
+  }
+
+  const [constrained, comfortable, roomy] = measurements;
+  expect(comfortable.taskFontSize).toBeGreaterThan(constrained.taskFontSize);
+  expect(comfortable.promptFontSize).toBeGreaterThan(
+    constrained.promptFontSize,
+  );
+  expect(roomy.taskFontSize).toBeGreaterThan(comfortable.taskFontSize);
+  expect(roomy.promptFontSize).toBeGreaterThan(comfortable.promptFontSize);
+  expect(roomy.lineCounts.every((lineCount) => lineCount > 1)).toBe(true);
+  expect(await page.getByTestId("present-task").locator("[data-formula]").count()).toBe(
+    1,
+  );
+  expect(
+    await page
+      .getByTestId("presentation-surface")
+      .locator(".presentation-prompt [data-formula]")
+      .count(),
+  ).toBe(2);
+  assertBrowserHealth();
 });
 
 test("captures stable responsive Present compositions and keeps export surfaces clean", async ({
