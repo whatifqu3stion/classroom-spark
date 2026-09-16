@@ -168,6 +168,14 @@ Within roughly five seconds and from classroom distance.
 - minimal content
 - timer value visible but not dominant
 - optional arrival instructions clearly separated
+- task and rail tops aligned intentionally instead of independently centered, with no forced heights
+- flat, simplified framing for visuals (no drop shadows or glows)
+- modest eyebrow tracking and proximity; preserve authored breaks without inferring sentence roles
+- shared neutral image backing in preview, Present, and export; never recolor uploaded pixels
+
+Fixed PNG geometry is independent of browser width. Its rail must not inherit
+the narrow live layout's second-row placement. Keep the 1920×1080 composition
+and validate authored element bounds, not just the outer canvas dimensions.
 
 Suggested responsive type using `clamp()` rather than fixed pixels.
 

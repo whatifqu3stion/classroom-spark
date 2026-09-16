@@ -21,7 +21,7 @@
 - [Extreme visual framing](extreme-visual-framing.md) — Preserve intrinsic image proportions in the presentation rail instead of forcing portrait assets to full width.
 - [Tall Present dock reachability](tall-present-dock-reachability.md) — Normal-flow teacher docks need scroll-to-open behavior and stable focus restoration on close.
 - [Multi-visual payload compatibility](multi-visual-payloads.md) — Aggregate request limits and legacy normalization must evolve with ordered presentation media.
-- [Wide Present composition](wide-present-composition.md) — Center authored content and rail children only on tall wide boards; keep short and constrained layouts top-aligned.
+- [Wide Present composition](wide-present-composition.md) — The approved review favors shared task/image top alignment and breathing room over independently centering the text.
 - [Adaptive Present measurement](adaptive-present-measurement.md) — Measure candidate typography offscreen in the real container hierarchy to avoid live-state oscillation.
 - [Nested automatic direction](nested-auto-direction.md) — Assert resolved bidi direction on the innermost auto-direction boundary that owns the text.
 - [Conditional dialog focus](conditional-dialog-focus.md) — Restore focus to the current opener when selection replaces the button that opened a dialog.

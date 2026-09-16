@@ -3,8 +3,8 @@ name: Wide Present composition
 description: Vertical alignment rule for live Present boards across tall and constrained classroom surfaces
 ---
 
-Live landscape Present boards with measured text fitting balance the authored task/prompt stack within the available main height. The independent rail keeps its established layout; narrow, editor-preview, and fixed export surfaces keep their existing flow.
+Keep the task and image anchored to a common top edge rather than independently centering the student stack against a top-aligned rail. Leave unused room below, instead of filling it with stretched gaps.
 
-**Why:** The wide 16:9 surface otherwise leaves a large unexplained lower void while the student content and rail cluster at the top. Centering only the student composition preserves the footer row, divider, content hierarchy, and intrinsic visual framing without adding decoration or persisted layout state.
+**Why:** The approved dark-board review favored intentional text/image alignment and proximity to the eyebrow over the earlier independent centering approach. The empty lower area is useful breathing room, not a defect to eliminate.
 
-**How to apply:** Scope the balance to live surfaces eligible for measured fitting. Measure authored children rather than the full-height content grid item in browser coverage; assert relative centers and whitespace, not absolute page positions, which legitimately change when the footer grows.
+**How to apply:** Preserve natural flow for dense and constrained boards. Judge alignment by authored child bounds, not equal-height wrappers. Keep fixed export geometry and growth-only readable baselines separate from live composition choices.

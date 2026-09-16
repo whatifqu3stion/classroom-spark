@@ -63,9 +63,9 @@ export function getPresentationTextFitMetrics(
   const promptBase = clamp(width * 0.04, MIN_PROMPT_SIZE, 36);
   const taskWidthCeiling = clamp(width * 0.1, 28, MAX_TASK_SIZE);
   const promptWidthCeiling = clamp(width * 0.075, 28, MAX_PROMPT_SIZE);
-  const contentGapBase = clamp(width * 0.055, 24, 52);
+  const contentGapBase = clamp(width * 0.04, 24, 40);
   const promptGapBase = clamp(width * 0.032, 16, 34);
-  const promptPaddingBase = clamp(width * 0.03, 16, 28);
+  const promptPaddingBase = clamp(width * 0.022, 16, 22);
 
   return {
     taskSize: Math.min(taskWidthCeiling, taskBase * safeScale, MAX_TASK_SIZE),
@@ -74,9 +74,9 @@ export function getPresentationTextFitMetrics(
       promptBase * safeScale,
       MAX_PROMPT_SIZE,
     ),
-    contentGap: Math.min(56, contentGapBase * safeScale),
+    contentGap: Math.min(44, contentGapBase * safeScale),
     promptGap: Math.min(38, promptGapBase * safeScale),
-    promptPadding: Math.min(32, promptPaddingBase * safeScale),
+    promptPadding: Math.min(24, promptPaddingBase * safeScale),
   };
 }
 

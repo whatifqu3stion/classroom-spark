@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "CAZENO0Efw1DNgV5Ozun7"
+uri = "file://screenshots/balance/after.png"
+type = "image"
+title = "Refined Boardwork presentation"
+description = "Reference composition with clearer task hierarchy, aligned imagery, and a quieter large timer."
+logical_id = "1934093f-9d4b-4dac-a1af-b840932c1b95"
+content_hash = "sha256:63d8ef17ad35d96b4843d9951f7b710ce895e69aa7f465c0fddd273fafac36f8"
+size = 193919
+mtime_ms = 1789588759858
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:9ad62490-af3f-41dd-9710-85fb8168a6bf/1934093f-9d4b-4dac-a1af-b840932c1b95/363573b0-b5d2-474b-9eb4-f283f1532cbe"
+storage_version_token = "1789588841260133"
+content_type = "image/png"

@@ -65,6 +65,20 @@ describe("presentation text fit", () => {
     expect(narrowMaximum.promptSize).toBeLessThanOrEqual(28);
   });
 
+  it("keeps live hierarchy spacing inside the measured balance budget", () => {
+    const baseline = getPresentationTextFitMetrics(620, 1);
+    const maximum = getPresentationTextFitMetrics(620, 4);
+
+    expect(baseline.contentGap).toBeGreaterThanOrEqual(24);
+    expect(baseline.contentGap).toBeLessThanOrEqual(40);
+    expect(baseline.promptPadding).toBeGreaterThanOrEqual(16);
+    expect(baseline.promptPadding).toBeLessThanOrEqual(22);
+    expect(maximum.contentGap).toBeLessThanOrEqual(44);
+    expect(maximum.promptPadding).toBeLessThanOrEqual(24);
+    expect(maximum.contentGap).toBeGreaterThanOrEqual(baseline.contentGap);
+    expect(maximum.promptPadding).toBeGreaterThanOrEqual(baseline.promptPadding);
+  });
+
   it("grows continuously into unused vertical room", () => {
     const result = choosePresentationTextFit({
       paneWidth: 620,
@@ -100,6 +114,55 @@ describe("presentation text fit", () => {
     expect(result.promptSize).toBeGreaterThanOrEqual(
       presentationTextFitConstants.minPromptSize,
     );
+  });
+
+  it("keeps editor preview and fixed export layouts outside live text fitting", () => {
+    const surface = document.createElement("div");
+    const main = document.createElement("main");
+    const content = document.createElement("div");
+    surface.append(main);
+    main.append(content);
+    document.body.append(surface);
+    const dimensions = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockImplementation(() => DOMRect.fromRect({ width: 1280, height: 720 }));
+
+    const baseOptions = {
+      surfaceRef: { current: surface },
+      mainRef: { current: main },
+      contentRef: { current: content },
+      hasAuthoredStudentContent: true,
+      contentVersion: "unchanged",
+      hasRightRail: true,
+    };
+    const { result, rerender } = renderHook(
+      ({ exportLayout, editorPreview }) =>
+        usePresentationTextFit({
+          ...baseOptions,
+          exportLayout,
+          editorPreview,
+        }),
+      {
+        initialProps: { exportLayout: false, editorPreview: true },
+      },
+    );
+
+    try {
+      expect(result.current.active).toBe(false);
+      expect(result.current.scale).toBe(1);
+      expect(result.current.roomState).toBe("constrained");
+      expect(dimensions).not.toHaveBeenCalled();
+
+      rerender({ exportLayout: true, editorPreview: false });
+
+      expect(result.current.active).toBe(false);
+      expect(result.current.scale).toBe(1);
+      expect(result.current.roomState).toBe("constrained");
+      expect(dimensions).not.toHaveBeenCalled();
+    } finally {
+      dimensions.mockRestore();
+      surface.remove();
+    }
   });
 
   it("does not activate below the landscape projector viewport", () => {

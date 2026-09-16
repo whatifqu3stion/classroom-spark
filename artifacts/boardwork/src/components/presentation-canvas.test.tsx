@@ -18,6 +18,27 @@ const timer = {
   status: "idle" as const,
 };
 
+const visualBalanceActivity: ActivityDraft = {
+  ...activity,
+  eyebrow: "Constraint Challenge",
+  title: "Constraint Challenge",
+  task:
+    "Design a small holder for one classroom item: a pencil, eraser, or ruler. Sketch it from the front. It must be stable, easy to use, and have no more than three visible parts. Label each part and explain how one feature solves a user need.",
+  prompts: [
+    "What user need does your design address?",
+    "Which part makes it stable?",
+    "What might fail, and how could you improve it?",
+  ],
+  durationMinutes: 5,
+  visualUrl: "data:image/svg+xml;charset=utf-8,bright-local-classroom-visual",
+  visualDescription: "A bright local classroom design visual.",
+  presentationTheme: {
+    kind: "curated",
+    themeId: "charcoal-v2",
+    accentId: "plum",
+  },
+};
+
 describe("PresentationCanvas timer visibility", () => {
   it("renders two visuals and forces the timer into compact mode", () => {
     const twoVisualActivity = {
@@ -744,6 +765,50 @@ describe("PresentationCanvas timer visibility", () => {
       imageActivity.visualUrl,
     );
     expect(screen.getByText("A saved classroom image")).toBeInTheDocument();
+  });
+
+  it("keeps the authored Constraint Challenge hierarchy and image in preview and export", () => {
+    const { rerender } = render(
+      <PresentationCanvas activity={visualBalanceActivity} editorPreview />,
+    );
+
+    const preview = screen.getByTestId("presentation-preview-surface");
+    expect(preview).toHaveAttribute("data-text-fit-active", "false");
+    expect(preview).toHaveAttribute("data-room-state", "constrained");
+    expect(screen.getByTestId("present-eyebrow")).toHaveTextContent(
+      "Constraint Challenge",
+    );
+    expect(screen.getByTestId("present-task")).toHaveTextContent(
+      visualBalanceActivity.task,
+    );
+    visualBalanceActivity.prompts.forEach((prompt) => {
+      expect(screen.getByText(prompt, { exact: true })).toBeInTheDocument();
+    });
+    expect(
+      screen.getByRole("img", {
+        name: visualBalanceActivity.visualDescription!,
+      }),
+    ).toHaveAttribute("src", visualBalanceActivity.visualUrl);
+    expect(preview.style.getPropertyValue("--presentation-bg")).toBe("#232323");
+    expect(preview.style.getPropertyValue("--presentation-surface")).toBe("#303030");
+    expect(preview.style.getPropertyValue("--presentation-primary-text")).toBe("#FBF8F1");
+    expect(preview.style.getPropertyValue("--presentation-accent")).toBe("#C18AC0");
+
+    rerender(<PresentationCanvas activity={visualBalanceActivity} exportLayout />);
+
+    const exportSurface = document.querySelector(".presentation-surface--export");
+    expect(exportSurface).toBeInTheDocument();
+    expect(exportSurface).toHaveAttribute("data-text-fit-active", "false");
+    expect(exportSurface).toHaveAttribute("data-room-state", "constrained");
+    expect(exportSurface).toHaveTextContent(visualBalanceActivity.task);
+    visualBalanceActivity.prompts.forEach((prompt) => {
+      expect(exportSurface).toHaveTextContent(prompt);
+    });
+    expect(
+      exportSurface?.querySelector<HTMLImageElement>(".presentation-visual img"),
+    ).toHaveAttribute("src", visualBalanceActivity.visualUrl);
+    expect(exportSurface?.querySelector(".presentation-timer")).not.toBeInTheDocument();
+    expect(exportSurface).toHaveClass("presentation-surface--export-with-visual");
   });
 
   it("keeps extreme visual framing and captions in preview and export modes", () => {
