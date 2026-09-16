@@ -22,6 +22,7 @@ import {
   PRESENTATION_RAIL_CONTRACT,
   PRESENTATION_RAIL_INVARIANTS,
 } from "@workspace/presentation-rail-contract";
+import { usePresentationTextFit } from "@/hooks/use-presentation-text-fit";
 import { FormulaText } from "./formula-text";
 import type { CountdownTimerState } from "./countdown-timer";
 
@@ -53,7 +54,6 @@ const MAX_CONTENT_RATIO = 0.76;
 const LAYOUT_STEP = 0.04;
 const MIN_CONTENT_WIDTH = 280;
 const MIN_RAIL_WIDTH = 240;
-type PresentationRoomState = "constrained" | "comfortable" | "roomy";
 
 type LayoutRatioBounds = {
   min: number;
@@ -81,11 +81,10 @@ export function PresentationCanvas({
     max: MAX_CONTENT_RATIO,
   });
   const [isResizing, setIsResizing] = useState(false);
-  const [roomState, setRoomState] =
-    useState<PresentationRoomState>("constrained");
   const surfaceElementRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const compactControlsRef = useRef<HTMLDivElement>(null);
   const arrivalInstruction = activity.arrivalInstructions?.trim();
   const safeResourceUrl = getSafeResourceUrl(activity.resourceUrl);
   const themeColors = getThemeColors(activity.presentationTheme);
@@ -146,6 +145,48 @@ export function PresentationCanvas({
     1,
     Number((presentationTimerReading.length * 0.55).toFixed(2)),
   );
+
+  useLayoutEffect(() => {
+    const panel = compactControlsRef.current;
+    if (!showCompactTimer || !timerControlsOpen || !panel) return;
+
+    // Arrival/header text and the enlarged circle determine the actual panel
+    // origin. A fixed viewport subtraction cannot account for all three.
+    const fitPanel = () => {
+      const top = panel.getBoundingClientRect().top;
+      const viewport = window.visualViewport;
+      const bottom = viewport
+        ? viewport.offsetTop + viewport.height
+        : window.innerHeight;
+      panel.style.setProperty(
+        "--compact-controls-available-height",
+        `${Math.max(48, bottom - top - 16)}px`,
+      );
+    };
+    fitPanel();
+    const observer = typeof ResizeObserver !== "undefined"
+      ? new ResizeObserver(fitPanel)
+      : null;
+    const header = panel.closest(".presentation-header");
+    if (header) observer?.observe(header);
+    const surface = surfaceElementRef.current;
+    if (surface) {
+      observer?.observe(surface);
+      const arrival = surface.querySelector(".presentation-arrival");
+      if (arrival) observer?.observe(arrival);
+    }
+    window.addEventListener("resize", fitPanel);
+    window.addEventListener("scroll", fitPanel, true);
+    window.visualViewport?.addEventListener("resize", fitPanel);
+    window.visualViewport?.addEventListener("scroll", fitPanel);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", fitPanel);
+      window.removeEventListener("scroll", fitPanel, true);
+      window.visualViewport?.removeEventListener("resize", fitPanel);
+      window.visualViewport?.removeEventListener("scroll", fitPanel);
+    };
+  }, [showCompactTimer, timerControlsOpen]);
   const setSurfaceRefs = useCallback(
     (node: HTMLDivElement | null) => {
       surfaceElementRef.current = node;
@@ -158,136 +199,17 @@ export function PresentationCanvas({
     [surfaceRef],
   );
 
-  const measureRoomState = useCallback((): PresentationRoomState => {
-    const surface = surfaceElementRef.current;
-    const main = mainRef.current;
-    const content = contentRef.current;
-    if (
-      !surface ||
-      !main ||
-      !content ||
-      exportLayout ||
-      editorPreview ||
-      contentIsDense ||
-      !hasAuthoredStudentContent ||
-      window.innerWidth < 760 ||
-      window.innerHeight <= 800 ||
-      window.innerWidth / window.innerHeight < 4 / 3
-    ) {
-      return "constrained";
-    }
-
-    const footer = surface.querySelector<HTMLElement>(".presentation-footer");
-    if (!footer) return "constrained";
-
-    const mainBounds = main.getBoundingClientRect();
-    const mainStyles = window.getComputedStyle(main);
-    const mainInnerHeight =
-      mainBounds.height -
-      (Number.parseFloat(mainStyles.paddingTop) || 0) -
-      (Number.parseFloat(mainStyles.paddingBottom) || 0);
-    const footerBounds = footer.getBoundingClientRect();
-    const footerStyles = window.getComputedStyle(footer);
-    const footerMinimumHeight =
-      Number.parseFloat(footerStyles.minHeight) || 0;
-    const footerOnlyHeight = Math.max(
-      0,
-      footerBounds.height - footerMinimumHeight,
-    );
-    const usableContentHeight = mainInnerHeight + footerOnlyHeight;
-    const surfaceBounds = surface.getBoundingClientRect();
-
-    const candidateFits = (
-      candidate: Exclude<PresentationRoomState, "constrained">,
-    ) => {
-      const measurementSurface = surface.cloneNode(false) as HTMLDivElement;
-      const measurementMain = main.cloneNode(false) as HTMLElement;
-      const measurementContent = content.cloneNode(true) as HTMLDivElement;
-      measurementSurface.removeAttribute("data-testid");
-      measurementSurface.dataset.roomState = candidate;
-      measurementSurface.setAttribute("aria-hidden", "true");
-      Object.assign(measurementSurface.style, {
-        position: "fixed",
-        inset: "0 auto auto -10000px",
-        display: "block",
-        width: `${surfaceBounds.width}px`,
-        height: "auto",
-        minHeight: "0",
-        visibility: "hidden",
-        pointerEvents: "none",
-      });
-      measurementMain.style.paddingBlock = "0";
-      measurementMain.append(measurementContent);
-      measurementSurface.append(measurementMain);
-      document.body.append(measurementSurface);
-
-      const contentBounds = measurementContent.getBoundingClientRect();
-      const minimumWidth = candidate === "roomy" ? 700 : 500;
-      const minimumBottomRoom = candidate === "roomy" ? 48 : 24;
-      const staysWithinPane =
-        measurementContent.scrollWidth <= measurementContent.clientWidth + 1;
-      const fits =
-        contentBounds.width >= minimumWidth &&
-        usableContentHeight - contentBounds.height >= minimumBottomRoom &&
-        staysWithinPane;
-      measurementSurface.remove();
-      return fits;
-    };
-
-    const nextRoomState = candidateFits("roomy")
-      ? "roomy"
-      : candidateFits("comfortable")
-        ? "comfortable"
-        : "constrained";
-    return nextRoomState;
-  }, [
-    contentIsDense,
-    editorPreview,
+  const textFit = usePresentationTextFit({
+    surfaceRef: surfaceElementRef,
+    mainRef,
+    contentRef,
     exportLayout,
+    editorPreview,
     hasAuthoredStudentContent,
-  ]);
-
-  useLayoutEffect(() => {
-    const surface = surfaceElementRef.current;
-    const main = mainRef.current;
-    const content = contentRef.current;
-    if (!surface || !main || !content) return;
-
-    let frame = 0;
-    const refreshRoomState = () => {
-      window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(() => {
-        const nextRoomState = measureRoomState();
-        setRoomState((current) =>
-          current === nextRoomState ? current : nextRoomState,
-        );
-      });
-    };
-
-    const initialRoomState = measureRoomState();
-    setRoomState((current) =>
-      current === initialRoomState ? current : initialRoomState,
-    );
-
-    const observer =
-      typeof ResizeObserver !== "undefined"
-        ? new ResizeObserver(refreshRoomState)
-        : null;
-    observer?.observe(main);
-    observer?.observe(content);
-    window.addEventListener("resize", refreshRoomState);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      observer?.disconnect();
-      window.removeEventListener("resize", refreshRoomState);
-    };
-  }, [
-    activity.prompts,
-    activity.task,
-    effectiveContentRatio,
+    contentVersion: JSON.stringify([activity.task, activity.prompts, themeTypography]),
     hasRightRail,
-    measureRoomState,
-  ]);
+  });
+
   const getLayoutRatioBounds = (): LayoutRatioBounds => {
     const main = mainRef.current;
     if (!main) {
@@ -417,17 +339,24 @@ export function PresentationCanvas({
         "--presentation-heading-scale": themeTypography.headingScale,
         "--presentation-content-flex": `${effectiveContentRatio}fr`,
         "--presentation-rail-flex": `${1 - effectiveContentRatio}fr`,
+        "--presentation-text-fit-task-size": `${textFit.taskSize}px`,
+        "--presentation-text-fit-prompt-size": `${textFit.promptSize}px`,
+        "--presentation-text-fit-content-gap": `${textFit.contentGap}px`,
+        "--presentation-text-fit-prompt-gap": `${textFit.promptGap}px`,
+        "--presentation-text-fit-prompt-padding": `${textFit.promptPadding}px`,
         backgroundColor: themeColors.background,
         color: themeColors.primaryText,
         fontFamily: themeTypography.body.family,
         fontWeight: themeTypography.body.weight,
       } as CSSProperties}
       data-rail-contract={PRESENTATION_RAIL_CONTRACT}
-      data-room-state={roomState}
-       {...testId(
-         includeTestIds,
-         editorPreview ? "presentation-preview-surface" : "presentation-surface",
-       )}
+      data-room-state={textFit.roomState}
+      data-text-fit-active={textFit.active ? "true" : "false"}
+      data-text-fit-scale={String(Number(textFit.scale.toFixed(2)))}
+      {...testId(
+        includeTestIds,
+        editorPreview ? "presentation-preview-surface" : "presentation-surface",
+      )}
     >
       <div
         className={cn(
@@ -543,6 +472,7 @@ export function PresentationCanvas({
                   </button>
                   {timerControls && (
                     <div
+                      ref={compactControlsRef}
                       id="presentation-timer-controls-panel"
                       className={cn(
                         "presentation-time-compact-controls",

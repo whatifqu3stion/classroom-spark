@@ -70,6 +70,29 @@ describe("PresentationThemePicker", () => {
     expect(screen.queryByRole("button", { name: /typography/i })).not.toBeInTheDocument();
   });
 
+  it("uses matching swatches and stable checkmark slots in both color rows", () => {
+    render(<PresentationThemePicker onChange={vi.fn()} />);
+
+    const options = [
+      screen.getByTestId("theme-option-boardwork"),
+      screen.getByTestId("theme-option-paper"),
+      screen.getByTestId("accent-option-blue"),
+      screen.getByTestId("accent-option-sage"),
+    ];
+    for (const option of options) {
+      expect(option.querySelector(".presentation-theme-swatch")).toHaveClass(
+        "h-5", "w-5", "rounded-md", "border",
+      );
+      const check = option.querySelector(".presentation-theme-check");
+      expect(check).toHaveAttribute("aria-hidden", "true");
+      if (option.getAttribute("aria-pressed") === "true") {
+        expect(check).not.toHaveClass("invisible");
+      } else {
+        expect(check).toHaveClass("invisible");
+      }
+    }
+  });
+
   it("uses the curated surface and accent colors as the control color cues", () => {
     render(<PresentationThemePicker onChange={vi.fn()} />);
 

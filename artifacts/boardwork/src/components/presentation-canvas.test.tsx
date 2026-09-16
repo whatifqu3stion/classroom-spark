@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { ActivityDraft } from "@/store/boardwork-context";
 import { PresentationCanvas } from "./presentation-canvas";
@@ -349,6 +349,42 @@ describe("PresentationCanvas timer visibility", () => {
       "aria-valuemax",
       "6000",
     );
+  });
+
+  it("keeps ordinary and long compact readings on the shared length scale", () => {
+    const { rerender } = render(
+      <PresentationCanvas
+        activity={activity}
+        timer={{ ...timer, remainingSeconds: 300 }}
+        timerMinimized
+      />,
+    );
+
+    expect(screen.getByText("5:00")).toHaveStyle({
+      "--presentation-time-reading-scale": "1",
+    });
+
+    rerender(
+      <PresentationCanvas
+        activity={{ ...activity, durationMinutes: 100 }}
+        timer={{ ...timer, remainingSeconds: 6000 }}
+        timerMinimized
+      />,
+    );
+    expect(screen.getByText("100:00")).toHaveStyle({
+      "--presentation-time-reading-scale": "0.6666666666666666",
+    });
+
+    rerender(
+      <PresentationCanvas
+        activity={{ ...activity, durationMinutes: 1000 }}
+        timer={{ ...timer, remainingSeconds: 60000 }}
+        timerMinimized
+      />,
+    );
+    expect(screen.getByText("1000:00")).toHaveStyle({
+      "--presentation-time-reading-scale": "0.5714285714285714",
+    });
   });
 
   it("keeps compact timer actions out of the student canvas", () => {
@@ -1097,5 +1133,129 @@ describe("PresentationCanvas timer visibility", () => {
         expect(promptRuns[index]).toHaveTextContent(expectedText);
       },
     );
+  });
+
+  it("refits the open compact controls when the observed presentation origin moves", () => {
+    const observerInstances: Array<{
+      callback: ResizeObserverCallback;
+      observe: ReturnType<typeof vi.fn>;
+      disconnect: ReturnType<typeof vi.fn>;
+    }> = [];
+    const resizeObserver = vi.fn((callback: ResizeObserverCallback) => {
+      const observer = {
+        callback,
+        observe: vi.fn(),
+        disconnect: vi.fn(),
+      };
+      observerInstances.push(observer);
+      return observer as unknown as ResizeObserver;
+    });
+    const visualViewport = {
+      offsetTop: 24,
+      height: 640,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+    const previousVisualViewport = Object.getOwnPropertyDescriptor(
+      window,
+      "visualViewport",
+    );
+    vi.stubGlobal("ResizeObserver", resizeObserver);
+    Object.defineProperty(window, "visualViewport", {
+      configurable: true,
+      value: visualViewport,
+    });
+
+    try {
+      const { rerender } = render(
+        <PresentationCanvas
+          activity={{
+            ...activity,
+            arrivalInstructions: "Read this first.",
+          }}
+          timer={timer}
+          timerMinimized
+          timerControlsOpen
+          onToggleTimerControls={() => undefined}
+          timerControls={<button type="button">Start timer</button>}
+        />,
+      );
+
+      const surface = screen.getByTestId("presentation-surface");
+      const panel = screen.getByTestId("present-timer-controls-panel");
+      const arrival = surface.querySelector(".presentation-arrival");
+      const header = surface.querySelector(".presentation-header");
+      if (!arrival || !header) throw new Error("Missing compact panel observations");
+
+      let panelTop = 120;
+      vi.spyOn(panel, "getBoundingClientRect").mockImplementation(
+        () =>
+          ({
+            top: panelTop,
+            left: 0,
+            right: 200,
+            bottom: 200,
+            width: 200,
+            height: 80,
+            x: 0,
+            y: panelTop,
+            toJSON: () => ({}),
+          }) as DOMRect,
+      );
+
+      const compactObserver = observerInstances.find((observer) =>
+        observer.observe.mock.calls.some(([target]) => target === surface),
+      );
+      expect(compactObserver).toBeDefined();
+      expect(compactObserver!.observe).toHaveBeenCalledWith(surface);
+      expect(compactObserver!.observe).toHaveBeenCalledWith(arrival);
+      expect(compactObserver!.observe).toHaveBeenCalledWith(header);
+      act(() => {
+        compactObserver!.callback(
+          [],
+          compactObserver as unknown as ResizeObserver,
+        );
+      });
+      expect(panel.style.getPropertyValue("--compact-controls-available-height")).toBe(
+        "528px",
+      );
+
+      panelTop = 260;
+      act(() => {
+        compactObserver!.callback(
+          [],
+          compactObserver as unknown as ResizeObserver,
+        );
+      });
+      expect(panel.style.getPropertyValue("--compact-controls-available-height")).toBe(
+        "388px",
+      );
+
+      rerender(
+        <PresentationCanvas
+          activity={{
+            ...activity,
+            arrivalInstructions: "Read this first.",
+          }}
+          timer={timer}
+        />,
+      );
+      expect(compactObserver!.disconnect).toHaveBeenCalledOnce();
+      expect(visualViewport.addEventListener).toHaveBeenCalledWith(
+        "resize",
+        expect.any(Function),
+      );
+      expect(visualViewport.removeEventListener).toHaveBeenCalledWith(
+        "resize",
+        expect.any(Function),
+      );
+    } finally {
+      vi.unstubAllGlobals();
+      if (previousVisualViewport) {
+        Object.defineProperty(window, "visualViewport", previousVisualViewport);
+      } else {
+        Reflect.deleteProperty(window, "visualViewport");
+      }
+    }
   });
 });

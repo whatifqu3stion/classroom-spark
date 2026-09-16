@@ -10,3 +10,13 @@ Measure adaptive typography candidates in an offscreen clone that preserves the 
 When footer-only content must not alter student typography, derive capacity from actual main and footer geometry, then normalize out only the footer height above its baseline minimum.
 
 **How to apply:** Use this approach whenever Present sizing depends on rendered line wrapping, column-divider width, or available vertical room. Keep editor preview and fixed export outside the adaptive classifier.
+
+Use a fresh, intrinsic content probe for each bounded candidate, with the candidate's dimensions applied before insertion. Never measure a stretched rail-height grid item. Set custom CSS properties with `style.setProperty`, not object assignment.
+
+**Why:** Chromium retained the first computed descendant sizes when a reused offscreen query-container probe changed inherited variables—even direct child style changes were deferred. That falsely accepted the largest candidate and overflowed a short 720px board. Fresh candidate trees measured correctly.
+
+Choose growth from actual rendered space, not character-count density cutoffs, and retain a readable floor when long content cannot fit.
+
+**Why:** The teacher wants proportional whitespace and classroom-readable copy; an extra character must not suddenly shrink the whole board. Scrolling exceptional long content is preferable to tiny type.
+
+**How to apply:** Base capacity on viewport and fixed layout reserves rather than live content height. Preserve forced font invalidations when coalescing resize events; changing to an already-loaded typography also requires remeasurement.

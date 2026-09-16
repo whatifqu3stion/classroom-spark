@@ -50,7 +50,7 @@ function SurfaceSwatch({
     >
       <span
         aria-hidden="true"
-        className="presentation-theme-swatch h-5 w-5 shrink-0 rounded-md border shadow-sm"
+        className="presentation-theme-swatch h-5 w-5 shrink-0 rounded-md border"
         style={{ backgroundColor }}
         data-testid={`theme-swatch-color-${surface.id}`}
       />
@@ -62,9 +62,10 @@ function SurfaceSwatch({
           <Sun className="presentation-theme-mode h-3 w-3 text-muted-foreground" aria-label="Light" />
         )}
       </span>
-      {selected && (
-        <Check className="presentation-theme-check ml-auto h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-      )}
+      <Check
+        className={cn("presentation-theme-check ml-auto h-3.5 w-3.5 shrink-0", !selected && "invisible")}
+        aria-hidden="true"
+      />
     </button>
   );
 }
@@ -95,16 +96,17 @@ function AccentSwatch({
       data-testid={`accent-option-${accent.id}`}
     >
       <span
-        className="presentation-theme-swatch h-4 w-4 shrink-0 rounded-full border"
+        className="presentation-theme-swatch h-5 w-5 shrink-0 rounded-md border"
         style={{ backgroundColor: color }}
         aria-hidden="true"
       />
       <span className="truncate text-xs font-medium text-foreground">
         {name}
       </span>
-      {selected && (
-        <Check className="presentation-theme-check ml-auto h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-      )}
+      <Check
+        className={cn("presentation-theme-check ml-auto h-3.5 w-3.5 shrink-0", !selected && "invisible")}
+        aria-hidden="true"
+      />
     </button>
   );
 }

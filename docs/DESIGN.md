@@ -171,6 +171,48 @@ Within roughly five seconds and from classroom distance.
 
 Suggested responsive type using `clamp()` rather than fixed pixels.
 
+### Live timer sizing
+- The minimized timer uses a 7.5rem circular surface and 1.75rem ordinary-duration
+  digits (21pt at the default root size). Longer readings scale by character
+  count, leaving clearance between the text corners and the ring's inner stroke.
+  Background, hover, and keyboard focus belong to the circular trigger only;
+  the separately positioned controls panel must not be clipped to the circle.
+- Large timer numerals scale from the timer card's usable inline width, with
+  one-line fitting for long durations. Both timer-only and visual-plus-timer
+  layouts continue growing throughout divider resizing, rather than stopping
+  at viewport-based font caps. Short screens use a smaller width coefficient
+  to reserve room for visuals and actions, not a fixed numeral-size ceiling.
+- Keep the reading intrinsically left-aligned and the progress/actions full
+  width. Live timer surfaces, controls, and alarms remain excluded from exports.
+
+### Adaptive Present typography
+
+Live landscape Present boards use a measured, growth-only type fit for the
+student task and prompt stack. The fit is intentionally based on the actual
+left content pane after the optional divider, not on total viewport width:
+
+- the readable desktop baseline is at least 24px for both task and prompts;
+  narrow/mobile flow keeps its established smaller baseline;
+- task and prompt type, line-height, and their block/list gaps grow together;
+- width-derived ceilings prevent a narrow divider pane from producing giant
+  isolated words (roughly 86px for tasks and 58px for prompts at the widest
+  useful pane);
+- the vertical candidate budget reserves the arrival/header rows, main
+  padding, footer minimum, safe-area space, and approximately 18% of the
+  remaining room;
+- long authored stacks keep the readable baseline and flow/scroll rather than
+  shrinking below it.
+
+Candidates are measured in an offscreen clone of the real surface, main,
+content, and formula-rendered hierarchy. The live stack is never temporarily
+styled for probing, so ResizeObserver cannot feed a growing content height back
+into the next candidate. A bounded binary fit is quantized for stable results,
+and only stable pane/viewport/arrival/header geometry, font readiness, and
+divider changes trigger another fit. Supporting footer text above its minimum
+height is normalized out of the student budget, so a materials note cannot
+change student-facing type. The fit is live-only; editor previews and fixed
+PNG export retain their established geometry.
+
 ### Example structure
 DO NOW                                      7 MIN
 

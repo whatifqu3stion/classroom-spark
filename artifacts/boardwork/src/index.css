@@ -222,74 +222,36 @@
 
   .presentation-theme-option {
     --theme-control-color: hsl(var(--primary));
-    background-color: color-mix(in srgb, var(--theme-control-color) 7%, hsl(var(--card)));
-    border-color: color-mix(in srgb, var(--theme-control-color) 26%, hsl(var(--border)));
+    min-height: 2.5rem;
+    background-color: hsl(var(--card));
+    border-color: color-mix(in srgb, hsl(var(--foreground)) 20%, hsl(var(--card)));
     color: hsl(var(--foreground));
   }
 
   .presentation-theme-option:hover {
-    background-color: color-mix(in srgb, var(--theme-control-color) 14%, hsl(var(--card)));
-    border-color: color-mix(in srgb, var(--theme-control-color) 42%, hsl(var(--border)));
+    background-color: hsl(var(--accent));
+    border-color: hsl(var(--muted-foreground));
   }
 
   .presentation-theme-option[aria-pressed="true"] {
-    background-color: color-mix(in srgb, var(--theme-control-color) 15%, hsl(var(--card)));
-    border-color: color-mix(in srgb, var(--theme-control-color) 68%, hsl(var(--foreground)));
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--theme-control-color) 38%, transparent),
-      0 1px 2px color-mix(in srgb, var(--theme-control-color) 14%, transparent);
+    background-color: hsl(var(--muted));
+    border-color: hsl(var(--foreground));
   }
 
   .presentation-theme-option:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--theme-control-color) 62%, hsl(var(--ring)));
     outline-offset: 2px;
   }
 
-  .dark .presentation-theme-option {
-    background-color: color-mix(in srgb, var(--theme-control-color) 10%, hsl(var(--card)));
-    border-color: color-mix(in srgb, var(--theme-control-color) 34%, hsl(var(--border)));
-  }
-
-  .dark .presentation-theme-option:hover {
-    background-color: color-mix(in srgb, var(--theme-control-color) 18%, hsl(var(--card)));
-    border-color: color-mix(in srgb, var(--theme-control-color) 52%, hsl(var(--border)));
-  }
-
-  .dark .presentation-theme-option[aria-pressed="true"] {
-    background-color: color-mix(in srgb, var(--theme-control-color) 20%, hsl(var(--card)));
-    border-color: color-mix(in srgb, var(--theme-control-color) 78%, hsl(var(--foreground)));
-  }
-
-  .dark .presentation-theme-option:focus-visible {
-    outline-color: color-mix(in srgb, var(--theme-control-color) 72%, hsl(var(--ring)));
-  }
-
   .presentation-theme-swatch {
-    border-color: color-mix(in srgb, var(--theme-control-color) 38%, hsl(var(--border)));
-  }
-
-  .dark .presentation-theme-swatch {
-    border-color: color-mix(in srgb, var(--theme-control-color) 32%, hsl(var(--foreground)));
-  }
-
-  .presentation-theme-option[aria-pressed="true"] .presentation-theme-swatch {
-    box-shadow:
-      0 0 0 2px hsl(var(--card)),
-      0 0 0 3px color-mix(in srgb, var(--theme-control-color) 62%, hsl(var(--foreground)));
-  }
-
-  .dark .presentation-theme-option[aria-pressed="true"] .presentation-theme-swatch {
-    box-shadow:
-      0 0 0 2px hsl(var(--card)),
-      0 0 0 3px color-mix(in srgb, var(--theme-control-color) 70%, hsl(var(--foreground)));
+    border-color: color-mix(in srgb, var(--theme-control-color) 25%, hsl(var(--muted-foreground)));
   }
 
   .presentation-theme-check {
-    color: color-mix(in srgb, var(--theme-control-color) 74%, hsl(var(--foreground)));
+    color: hsl(var(--foreground));
   }
 
   .presentation-theme-mode {
-    color: color-mix(in srgb, var(--theme-control-color) 38%, hsl(var(--muted-foreground)));
+    color: hsl(var(--muted-foreground));
   }
 
   @container (min-width: 36rem) {
@@ -499,23 +461,22 @@
     min-height: 3.2rem;
     align-items: center;
     gap: 0.35rem;
-    border-radius: 0.4rem;
+    border-radius: 50%;
     padding: 0;
     font-family: var(--font-mono);
-    font-size: clamp(1.31rem, 4.42vw, 1.66rem);
+    font-size: 1.75rem;
     letter-spacing: 0.08em;
     line-height: 1;
-    background: color-mix(in srgb, var(--presentation-surface, #fafafa) 94%, transparent);
-    box-shadow: 0 1px 3px color-mix(in srgb, var(--presentation-primary-text, #171717) 10%, transparent);
-    outline: 1px solid color-mix(in srgb, var(--presentation-primary-text, #171717) 16%, transparent);
-    transition: background-color 150ms ease, color 150ms ease;
+    background: transparent;
   }
 
   .presentation-time-compact-shell {
     position: relative;
     display: inline-grid;
-    width: clamp(5.1rem, 10vw, 5.4rem);
-    height: clamp(5.1rem, 10vw, 5.4rem);
+    /* At 28px, four monospace characters leave >6px of corner clearance
+       from the inner stroke (20.25 / 52 of this diameter). */
+    width: 7.5rem;
+    height: 7.5rem;
     flex: 0 0 auto;
     place-items: center;
     color: var(--presentation-primary-text, #171717);
@@ -573,7 +534,7 @@
     justify-content: center;
     border: 0;
     border-radius: 999px;
-    background: transparent;
+    background: var(--presentation-surface, #fafafa);
     padding: 0.42rem;
     color: inherit;
     font: inherit;
@@ -587,16 +548,11 @@
     align-items: center;
     color: var(--presentation-primary-text, #171717);
     font-size: calc(
-      clamp(1.31rem, 4.42vw, 1.66rem) *
+      1.75rem *
         var(--presentation-time-reading-scale, 1)
     );
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
-  }
-
-  .presentation-time--compact:hover {
-    background: var(--presentation-accent-soft, rgb(23 23 23 / 6%));
-    color: var(--presentation-primary-text, #171717);
   }
 
   .presentation-time--compact::before {
@@ -687,7 +643,7 @@
     display: block;
     width: min(22rem, calc(100dvw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right)));
     max-width: calc(100dvw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right));
-    max-height: calc(100dvh - 5.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    max-height: calc(var(--compact-controls-available-height, calc(100dvh - 10rem - env(safe-area-inset-top))) - env(safe-area-inset-bottom));
   }
 
   .presentation-time--compact.presentation-time--compact-open .presentation-time-compact-controls,
@@ -788,88 +744,6 @@
     min-width: 0;
     width: 100%;
     max-width: none;
-  }
-
-  /*
-   * Live Present measures the rendered authored stack before selecting either
-   * growth step. These caps enlarge the student hierarchy without changing
-   * editor preview or fixed export geometry.
-   */
-  .presentation-surface:not(.presentation-surface--export):not(
-      .presentation-surface--editor-preview
-    )[data-room-state="comfortable"]
-    .presentation-content {
-    gap: clamp(2.5rem, 4.5vh, 3rem);
-  }
-
-  .presentation-surface:not(.presentation-surface--export):not(
-      .presentation-surface--editor-preview
-    )[data-room-state="comfortable"]
-    .presentation-task {
-    font-size: clamp(3rem, 3.2vw, 3.5rem);
-  }
-
-  .presentation-surface:not(.presentation-surface--export):not(
-      .presentation-surface--editor-preview
-    )[data-room-state="comfortable"]
-    .presentation-prompts {
-    gap: clamp(1.25rem, 2.2vh, 1.5rem);
-    padding-top: clamp(1.25rem, 2.2vh, 1.5rem);
-  }
-
-  .presentation-surface:not(.presentation-surface--export):not(
-      .presentation-surface--editor-preview
-    )[data-room-state="comfortable"]
-    .presentation-prompt {
-    font-size: clamp(1.9rem, 2.25vw, 2.35rem);
-  }
-
-  .presentation-surface:not(.presentation-surface--export):not(
-      .presentation-surface--editor-preview
-    )[data-room-state="comfortable"]
-    .presentation-prompt-marker {
-    font-size: 1.12em;
-  }
-
-  .presentation-surface:not(.presentation-surface--export):not(
-      .presentation-surface--editor-preview
-    )[data-room-state="roomy"]
-    .presentation-content {
-    gap: clamp(3rem, 5.5vh, 3.75rem);
-  }
-
-  .presentation-surface:not(.presentation-surface--export):not(
-      .presentation-surface--editor-preview
-    )[data-room-state="roomy"]
-    .presentation-task {
-    max-width: 48ch;
-    font-size: clamp(3.5rem, 3.6vw, 4.25rem);
-    line-height: 1.16;
-  }
-
-  .presentation-surface:not(.presentation-surface--export):not(
-      .presentation-surface--editor-preview
-    )[data-room-state="roomy"]
-    .presentation-prompts {
-    gap: clamp(1.5rem, 2.7vh, 1.9rem);
-    padding-top: clamp(1.6rem, 2.8vh, 2rem);
-  }
-
-  .presentation-surface:not(.presentation-surface--export):not(
-      .presentation-surface--editor-preview
-    )[data-room-state="roomy"]
-    .presentation-prompt {
-    max-width: 64ch;
-    gap: clamp(1rem, 1.6vw, 1.6rem);
-    font-size: clamp(2.15rem, 2.45vw, 2.75rem);
-    line-height: 1.26;
-  }
-
-  .presentation-surface:not(.presentation-surface--export):not(
-      .presentation-surface--editor-preview
-    )[data-room-state="roomy"]
-    .presentation-prompt-marker {
-    font-size: 1.2em;
   }
 
   .presentation-layout-divider {
@@ -1075,13 +949,11 @@
     max-inline-size: 100%;
     min-inline-size: 0;
     font-family: var(--font-mono);
-    font-size: clamp(2.5rem, 6vw, 6rem);
-    font-size: min(
-      clamp(2.5rem, 6vw, 6rem),
-      calc(
-        (100cqw - 0.5rem) /
-          var(--presentation-timer-reading-width-factor, 3.3)
-      )
+    /* Use the card's content width, not vw or a rem ceiling. Scaling only
+       inline size cannot feed back through the card's intrinsic height. */
+    font-size: calc(
+      (var(--presentation-timer-reading-width, 80cqw) - 0.5rem) /
+        var(--presentation-timer-reading-width-factor, 3.3)
     );
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.06em;
@@ -1155,15 +1027,20 @@
     background: var(--presentation-accent, hsl(var(--primary)));
   }
 
-  .presentation-rail--timer-only .presentation-timer strong {
-    font-size: clamp(4rem, 10vw, 10rem);
-    font-size: min(
-      clamp(4rem, 10vw, 10rem),
-      calc(
-        (100cqw - 0.5rem) /
-          var(--presentation-timer-reading-width-factor, 3.3)
-      )
-    );
+  .presentation-rail--timer-only .presentation-timer {
+    --presentation-timer-reading-width: 100cqw;
+  }
+
+  @media (max-height: 800px) {
+    /* Reserve vertical room for visuals/actions, without reintroducing a
+       fixed font cap: widening either rail still enlarges its reading. */
+    .presentation-timer {
+      --presentation-timer-reading-width: 60cqw;
+    }
+
+    .presentation-rail--timer-only .presentation-timer {
+      --presentation-timer-reading-width: 85cqw;
+    }
   }
 
   .presentation-rail--split {
@@ -1787,11 +1664,6 @@
   }
 
   @media (max-width: 759px) {
-    .presentation-time-compact-shell {
-      width: 5.1rem;
-      height: 5.1rem;
-    }
-
     .presentation-main {
       grid-template-columns: minmax(0, 1fr);
     }
@@ -1885,26 +1757,6 @@
       line-height: 1.28;
     }
 
-    .presentation-surface--content-dense .presentation-content {
-      gap: clamp(1rem, 2.2vh, 1.7rem);
-    }
-
-    .presentation-surface--content-dense .presentation-task {
-      font-size: clamp(1.5rem, 3.3vh, 2.2rem);
-      line-height: 1.14;
-    }
-
-    .presentation-surface--content-dense .presentation-prompts {
-      gap: clamp(0.55rem, 1vh, 0.85rem);
-      padding-top: clamp(0.45rem, 0.7vh, 0.65rem);
-    }
-
-    .presentation-surface--content-dense .presentation-prompt {
-      gap: clamp(0.55rem, 1vw, 0.9rem);
-      font-size: clamp(1.25rem, 2.5vh, 1.75rem);
-      line-height: 1.24;
-    }
-
     .presentation-footer {
       min-height: clamp(2.75rem, 5vh, 4rem);
       padding-top: clamp(1rem, 2.2vh, 1.6rem);
@@ -1958,26 +1810,6 @@
     .presentation-prompt {
       font-size: clamp(1.35rem, 2.2vw, 1.9rem);
       line-height: 1.3;
-    }
-
-    .presentation-surface--content-dense .presentation-content {
-      gap: 0.7rem;
-    }
-
-    .presentation-surface--content-dense .presentation-task {
-      font-size: clamp(1.35rem, 3.3vh, 1.75rem);
-      line-height: 1.1;
-    }
-
-    .presentation-surface--content-dense .presentation-prompts {
-      gap: 0.5rem;
-      padding-top: 0.4rem;
-    }
-
-    .presentation-surface--content-dense .presentation-prompt {
-      gap: 0.55rem;
-      font-size: clamp(1.125rem, 2.5vh, 1.5rem);
-      line-height: 1.2;
     }
 
     .presentation-materials,
@@ -2045,6 +1877,46 @@
       min-height: 0;
       padding-top: 0.75rem;
       grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  /*
+   * Live Present text fit is driven by the measured left pane and a fixed
+   * viewport/layout budget. The inline values are deliberately absent from
+   * editor previews and exports, keeping their established geometry intact.
+   */
+  @media (orientation: landscape) and (min-width: 700px) and (min-height: 500px) {
+    .presentation-surface:not(.presentation-surface--export):not(
+        .presentation-surface--editor-preview
+      )[data-text-fit-active="true"]
+      .presentation-content {
+      gap: var(--presentation-text-fit-content-gap, 1.5rem);
+      align-content: center;
+    }
+
+    .presentation-surface:not(.presentation-surface--export):not(
+        .presentation-surface--editor-preview
+      )[data-text-fit-active="true"]
+      .presentation-task {
+      font-size: var(--presentation-text-fit-task-size, 1.5rem);
+      line-height: 1.2;
+    }
+
+    .presentation-surface:not(.presentation-surface--export):not(
+        .presentation-surface--editor-preview
+      )[data-text-fit-active="true"]
+      .presentation-prompts {
+      gap: var(--presentation-text-fit-prompt-gap, 1rem);
+      padding-top: var(--presentation-text-fit-prompt-padding, 1rem);
+    }
+
+    .presentation-surface:not(.presentation-surface--export):not(
+        .presentation-surface--editor-preview
+      )[data-text-fit-active="true"]
+      .presentation-prompt {
+      gap: var(--presentation-text-fit-prompt-gap, 1rem);
+      font-size: var(--presentation-text-fit-prompt-size, 1.5rem);
+      line-height: 1.35;
     }
   }
 

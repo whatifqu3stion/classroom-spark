@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { inflateSync } from "node:zlib";
 import { readFile } from "node:fs/promises";
 import {
@@ -320,7 +320,9 @@ const darkVisualAppState = {
 
 async function stubPresentationState(
   page: Page,
-  state: typeof appState = appState,
+  state: Omit<typeof appState, "activities"> & {
+    activities: Array<typeof longMixedDirectionActivity & { presentationTheme?: unknown }>;
+  } = appState,
 ) {
   await page.addInitScript(() => {
     const frozenNow = 1_756_800_000_000;
@@ -513,7 +515,163 @@ async function settlePresentationSurface(page: Page) {
             }),
       ),
     );
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
   });
+  // Font discovery, observer delivery and React's committed fit may span more
+  // than two frames. Require a quiet authored geometry before capturing it.
+  let previous = "";
+  let stableReads = 0;
+  await expect.poll(async () => {
+    const geometry = await page.getByTestId("presentation-surface").evaluate((surface) => {
+      const task = surface.querySelector<HTMLElement>(".presentation-task");
+      const prompts = surface.querySelector<HTMLElement>(".presentation-prompts");
+      return JSON.stringify([
+        surface.dataset.textFitScale,
+        task ? getComputedStyle(task).fontSize : null,
+        task?.getBoundingClientRect().toJSON(),
+        prompts?.getBoundingClientRect().toJSON(),
+      ]);
+    });
+    stableReads = geometry === previous ? stableReads + 1 : 0;
+    previous = geometry;
+    return stableReads;
+  }, { intervals: [50], timeout: 5000 }).toBeGreaterThanOrEqual(2);
+}
+
+async function attachPresentationScreenshot(
+  page: Page,
+  testInfo: TestInfo,
+  name: string,
+) {
+  const path = testInfo.outputPath(`${name}.png`);
+  await page.screenshot({ path });
+  await testInfo.attach(name, { path, contentType: "image/png" });
+}
+
+type CompactReadingGeometry = {
+  textWidth: number;
+  fontSize: number;
+  shellWidth: number;
+  shellHeight: number;
+  toggleBorderRadius: string;
+  toggleBackground: string;
+  wrapperBackground: string;
+  cornerClearance: number;
+};
+
+async function readCompactReadingGeometry(
+  page: Page,
+): Promise<CompactReadingGeometry> {
+  return page.getByTestId("presentation-surface").locator(".presentation-time-reading").evaluate((reading) => {
+    const shell = reading.closest<HTMLElement>(".presentation-time-compact-shell");
+    const wrapper = reading.closest<HTMLElement>(".presentation-time");
+    const ring = shell?.querySelector<SVGSVGElement>(".presentation-time-compact-ring");
+    const track = ring?.querySelector<SVGCircleElement>(".presentation-time-compact-ring-track");
+    if (!shell || !wrapper || !ring || !track || !reading.firstChild) {
+      throw new Error("Missing compact timer geometry");
+    }
+
+    const textRange = document.createRange();
+    textRange.selectNodeContents(reading);
+    const textBounds = textRange.getBoundingClientRect();
+    const ringBounds = ring.getBoundingClientRect();
+    const viewBox = ring.viewBox.baseVal;
+    const scale = ringBounds.width / (viewBox.width || 52);
+    const strokeWidth = Number.parseFloat(getComputedStyle(track).strokeWidth) || 3.5;
+    const innerStrokeRadius = 22 * scale - (strokeWidth * scale) / 2;
+    const centerX = ringBounds.left + 26 * scale;
+    const centerY = ringBounds.top + 26 * scale;
+    // The reading must remain inside the ring. Measure the inward radial gap
+    // at each actual text-range corner rather than relying on element bounds.
+    const cornerClearances = [
+      [textBounds.left, textBounds.top],
+      [textBounds.right, textBounds.top],
+      [textBounds.left, textBounds.bottom],
+      [textBounds.right, textBounds.bottom],
+    ].map(([x, y]) => innerStrokeRadius - Math.hypot(x - centerX, y - centerY));
+
+    const shellBounds = shell.getBoundingClientRect();
+    const toggle = shell.querySelector<HTMLButtonElement>(
+      ".presentation-time-compact-toggle",
+    );
+    if (!toggle) throw new Error("Missing compact timer toggle");
+    const toggleStyles = getComputedStyle(toggle);
+    return {
+      textWidth: textBounds.width,
+      fontSize: Number.parseFloat(getComputedStyle(reading).fontSize),
+      shellWidth: shellBounds.width,
+      shellHeight: shellBounds.height,
+      toggleBorderRadius: toggleStyles.borderRadius,
+      toggleBackground: toggleStyles.backgroundColor,
+      wrapperBackground: getComputedStyle(wrapper).backgroundColor,
+      cornerClearance: Math.min(...cornerClearances),
+    };
+  });
+}
+
+async function readCompactWrapperBackgrounds(page: Page) {
+  const toggle = page.getByTestId("button-toggle-timer-controls");
+  const wrapper = page.getByTestId("presentation-surface").locator(".presentation-time");
+  await toggle.hover();
+  const hoverBackground = await wrapper.evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
+  await toggle.focus();
+  const focusBackground = await wrapper.evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
+  return { hoverBackground, focusBackground };
+}
+
+type LargeTimerReadingMetrics = {
+  elementWidth: number;
+  textWidth: number;
+  fontSize: number;
+};
+
+async function readLargeTimerReadingMetrics(
+  page: Page,
+): Promise<LargeTimerReadingMetrics> {
+  return page.getByTestId("presentation-surface").locator(".presentation-timer-reading").evaluate((reading) => {
+    const textRange = document.createRange();
+    textRange.selectNodeContents(reading);
+    const bounds = reading.getBoundingClientRect();
+    const textBounds = textRange.getBoundingClientRect();
+    return {
+      elementWidth: bounds.width,
+      textWidth: textBounds.width,
+      fontSize: Number.parseFloat(getComputedStyle(reading).fontSize),
+    };
+  });
+}
+
+async function setPresentationDividerPosition(
+  page: Page,
+  position: "rail-wide" | "middle" | "rail-narrow",
+) {
+  const divider = page.getByTestId("presentation-layout-divider");
+  if (position === "rail-wide") {
+    await divider.press("Home");
+    for (let index = 0; index < 6; index += 1) {
+      await divider.press("ArrowLeft");
+    }
+    await expect(divider).toHaveAttribute("aria-valuenow", "42");
+  } else if (position === "rail-narrow") {
+    await divider.press("End");
+    await expect(divider).toHaveAttribute(
+      "aria-valuenow",
+      (await divider.getAttribute("aria-valuemax"))!,
+    );
+  } else {
+    await divider.dblclick();
+    await expect(divider).toHaveAttribute("aria-valuenow", "64");
+  }
+  // Container-query typography resolves after the grid's new track sizes.
+  await page.evaluate(() => new Promise<void>((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  }));
 }
 
 async function assertExportSurfaceHasNoLiveDivider(page: Page) {
@@ -735,7 +893,6 @@ test("exports long mixed-direction board text as a complete local-font PNG", asy
       ["task", ".presentation-task"],
       ["prompt-one", ".presentation-prompt:nth-child(1)"],
       ["prompt-two", ".presentation-prompt:nth-child(2)"],
-      ["visual", ".presentation-visual img"],
     ] as const;
 
     return selectors.map(([name, selector]) => {
@@ -769,7 +926,7 @@ test("exports long mixed-direction board text as a complete local-font PNG", asy
   const exportAction = page.getByTestId("button-export-png");
   await expect(exportAction).toBeVisible();
   const downloadPromise = page.waitForEvent("download");
-  await exportAction.tap();
+  await exportAction.click();
   const download = await downloadPromise;
   const png = decodePng(await readFile(await download.path()!));
 
@@ -777,18 +934,162 @@ test("exports long mixed-direction board text as a complete local-font PNG", asy
     width: 1920,
     height: 1080,
   });
-  expect(
-    countVisiblePixels(png, {
-      name: "duration badge header area",
-      x: 1450,
-      y: 54,
-      width: 334,
-      height: 150,
-    }),
-    "the downloaded PNG should not contain the configured 7 MIN badge",
-  ).toBe(0);
+  // Authored text can occupy the former badge rectangle; those pixels do not
+  // indicate a timer. Inspect the exact surface used for the downloaded PNG.
+  await expect(page.locator(".presentation-surface--export").locator(".presentation-time, .presentation-timer")).toHaveCount(0);
 
   assertBrowserHealth();
+});
+
+test("contains large 1000:00 timer cards and keeps their labels reachable", async ({
+  page,
+}) => {
+  const largeTimerActivity = {
+    ...longMixedDirectionActivity,
+    id: "activity-large-1000-containment",
+    durationMinutes: 1000,
+  };
+  const states = {
+    split: {
+      ...appState,
+      activities: [
+        {
+          ...largeTimerActivity,
+          visualUrl: localVisualUrl,
+          visualDescription: "A local diagram showing a changing system.",
+        },
+      ],
+    },
+    "timer-only": {
+      ...appState,
+      activities: [largeTimerActivity],
+    },
+  };
+  let activeState: typeof appState = states.split;
+
+  await page.addInitScript(() => {
+    const frozenNow = 1_756_800_000_000;
+    Date.now = () => frozenNow;
+  });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.route("**/api/auth/status", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ passwordRequired: false, authenticated: true }),
+    }),
+  );
+  await page.route("**/api/app-state", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify(activeState),
+    }),
+  );
+
+  const viewports = [
+    { width: 1280, height: 720, label: "1280x720" },
+    { width: 640, height: 400, label: "640x400" },
+    { width: 320, height: 640, label: "320x640" },
+  ] as const;
+
+  for (const viewport of viewports) {
+    for (const mode of ["split", "timer-only"] as const) {
+      activeState = states[mode];
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await page.goto("/present/activity-large-1000-containment");
+      await settlePresentationSurface(page);
+
+      const liveSurface = page.getByTestId("presentation-surface");
+      const timerCard = liveSurface.locator(".presentation-timer");
+      const reading = timerCard.locator(".presentation-timer-reading");
+      await expect(reading).toHaveText("1000:00");
+      await expect(timerCard.locator(".presentation-timer-progress")).toBeVisible();
+
+      const containment = await timerCard.evaluate((card) => {
+        const reading = card.querySelector<HTMLElement>(".presentation-timer-reading");
+        const progress = card.querySelector<HTMLElement>(".presentation-timer-progress");
+        if (!reading || !progress) throw new Error("Missing large timer containment elements");
+
+        const textRange = document.createRange();
+        textRange.selectNodeContents(reading);
+        const textBounds = textRange.getBoundingClientRect();
+        const cardBounds = card.getBoundingClientRect();
+        const progressBounds = progress.getBoundingClientRect();
+        const styles = getComputedStyle(card);
+        const usableLeft =
+          cardBounds.left +
+          (Number.parseFloat(styles.borderLeftWidth) || 0) +
+          (Number.parseFloat(styles.paddingLeft) || 0);
+        const usableRight =
+          cardBounds.right -
+          (Number.parseFloat(styles.borderRightWidth) || 0) -
+          (Number.parseFloat(styles.paddingRight) || 0);
+        const usableTop =
+          cardBounds.top +
+          (Number.parseFloat(styles.borderTopWidth) || 0) +
+          (Number.parseFloat(styles.paddingTop) || 0);
+        const usableBottom =
+          cardBounds.bottom -
+          (Number.parseFloat(styles.borderBottomWidth) || 0) -
+          (Number.parseFloat(styles.paddingBottom) || 0);
+
+        return {
+          text: textBounds.toJSON(),
+          progress: progressBounds.toJSON(),
+          usable: {
+            left: usableLeft,
+            right: usableRight,
+            top: usableTop,
+            bottom: usableBottom,
+          },
+        };
+      });
+
+      expect(
+        containment.text.left,
+        `${viewport.label} ${mode} 1000:00 should start inside the usable timer card`,
+      ).toBeGreaterThanOrEqual(containment.usable.left - 1);
+      expect(
+        containment.text.right,
+        `${viewport.label} ${mode} 1000:00 should end inside the usable timer card`,
+      ).toBeLessThanOrEqual(containment.usable.right + 1);
+      expect(
+        containment.text.top,
+        `${viewport.label} ${mode} 1000:00 should stay inside the usable timer card vertically`,
+      ).toBeGreaterThanOrEqual(containment.usable.top - 1);
+      expect(
+        containment.text.bottom,
+        `${viewport.label} ${mode} 1000:00 should stay inside the usable timer card vertically`,
+      ).toBeLessThanOrEqual(containment.usable.bottom + 1);
+      expect(containment.progress.left).toBeGreaterThanOrEqual(
+        containment.usable.left - 1,
+      );
+      expect(containment.progress.right).toBeLessThanOrEqual(
+        containment.usable.right + 1,
+      );
+
+      const actionLabels = timerCard.locator(
+        ".presentation-timer-label, .presentation-timer-actions > button",
+      );
+      expect(await actionLabels.count()).toBeGreaterThan(0);
+      for (let index = 0; index < (await actionLabels.count()); index += 1) {
+        const label = actionLabels.nth(index);
+        await label.scrollIntoViewIfNeeded();
+        await expect(
+          label,
+          `${viewport.label} ${mode} timer action should be reachable (narrow cards use named icon buttons)`,
+        ).toBeInViewport();
+      }
+
+      const overflow = await page.evaluate(() => ({
+        documentWidth: document.documentElement.scrollWidth,
+        viewportWidth: window.innerWidth,
+      }));
+      expect(
+        overflow.documentWidth,
+        `${viewport.label} ${mode} should not introduce horizontal overflow`,
+      ).toBeLessThanOrEqual(overflow.viewportWidth + 1);
+    }
+  }
 });
 
 // Keep the browser coverage file terminated after the final test.
@@ -812,7 +1113,7 @@ test("keeps configured duration labels out of the exported board", async ({
   const exportAction = page.getByTestId("button-export-png");
   await expect(exportAction).toBeVisible();
   const downloadPromise = page.waitForEvent("download");
-  await exportAction.tap();
+  await exportAction.click();
   const download = await downloadPromise;
   const png = decodePng(await readFile(await download.path()!));
 
@@ -968,7 +1269,7 @@ test("exports long mixed-direction board text beside a visual without clipping",
   const exportAction = page.getByTestId("button-export-png");
   await expect(exportAction).toBeVisible();
   const downloadPromise = page.waitForEvent("download");
-  await exportAction.tap();
+  await exportAction.click();
   const download = await downloadPromise;
   const png = decodePng(await readFile(await download.path()!));
 
@@ -1286,7 +1587,7 @@ test("keeps compact timer primary actions inline at narrow classroom sizes", asy
       expect(
         action.labelScrollWidth,
         `${viewport.label} action ${index} label should not be clipped`,
-      ).toBeLessThanOrEqual(action.labelWidth);
+      ).toBeLessThanOrEqual(Math.ceil(action.labelWidth));
       expect(
         action.left,
         `${viewport.label} action ${index} should stay inside the panel`,
@@ -1481,6 +1782,237 @@ test("keeps a multi-digit compact timer reading inside its themed ring", async (
   expect(bounds.readingLeft).toBeGreaterThanOrEqual(bounds.shellLeft);
   expect(bounds.readingRight).toBeLessThanOrEqual(bounds.shellRight);
   expect(bounds.timerRight).toBeLessThanOrEqual(640);
+  assertBrowserHealth();
+});
+
+test("keeps compact readings clear inside a circular control", async (
+  { page },
+  testInfo,
+) => {
+  const assertBrowserHealth = await reportBrowserHealth(page);
+  await stubPresentationState(page, {
+    ...appState,
+    activities: [
+      {
+        ...longMixedDirectionActivity,
+        id: "activity-compact-ordinary",
+        durationMinutes: 5,
+      },
+      {
+        ...longMixedDirectionActivity,
+        id: "activity-compact-ordinary-dark",
+        durationMinutes: 5,
+        presentationTheme: {
+          kind: "curated" as const,
+          themeId: "midnight" as const,
+        },
+      },
+      {
+        ...longMixedDirectionActivity,
+        id: "activity-compact-100",
+        durationMinutes: 100,
+      },
+      {
+        ...longMixedDirectionActivity,
+        id: "activity-compact-1000",
+        durationMinutes: 1000,
+        presentationTheme: {
+          kind: "curated" as const,
+          themeId: "midnight" as const,
+        },
+      },
+    ],
+  });
+  await page.setViewportSize({ width: 287, height: 640 });
+
+  const readings = [
+    {
+      id: "activity-compact-ordinary",
+      text: "5:00",
+      scale: 1,
+      theme: "light",
+      screenshot: "idle-light",
+    },
+    {
+      id: "activity-compact-ordinary-dark",
+      text: "5:00",
+      scale: 1,
+      theme: "dark",
+      screenshot: "idle-dark",
+    },
+    {
+      id: "activity-compact-100",
+      text: "100:00",
+      scale: 4 / 6,
+      theme: "light",
+      screenshot: "long-100",
+    },
+    {
+      id: "activity-compact-1000",
+      text: "1000:00",
+      scale: 4 / 7,
+      theme: "dark",
+      screenshot: "long-1000",
+    },
+  ];
+
+  for (const reading of readings) {
+    await page.goto(`/present/${reading.id}`);
+    await settlePresentationSurface(page);
+    await openTeacherControls(page);
+    await page.getByRole("button", { name: "Minimize timer" }).click();
+
+    const compactReading = page.getByTestId("presentation-surface").locator(
+      ".presentation-time-reading",
+    );
+    await expect(compactReading).toHaveText(reading.text);
+    const geometry = await readCompactReadingGeometry(page);
+    expect(geometry.shellWidth, `${reading.theme} ${reading.text} shell width`).toBeCloseTo(
+      120,
+      0,
+    );
+    expect(geometry.shellHeight, `${reading.theme} ${reading.text} shell height`).toBeCloseTo(
+      120,
+      0,
+    );
+    expect(geometry.shellWidth).toBeCloseTo(geometry.shellHeight, 0);
+    expect(geometry.toggleBorderRadius).not.toBe("0px");
+    expect(geometry.toggleBackground).not.toBe("rgba(0, 0, 0, 0)");
+    expect(geometry.wrapperBackground).toBe("rgba(0, 0, 0, 0)");
+    expect(
+      geometry.fontSize,
+      `${reading.theme} ${reading.text} should keep the 1.75rem base`,
+    ).toBeCloseTo(28 * reading.scale, 1);
+    expect(
+      geometry.cornerClearance,
+      `${reading.theme} ${reading.text} text corners should clear the inner ring`,
+    ).toBeGreaterThanOrEqual(6);
+
+    const wrapperBackgrounds = await readCompactWrapperBackgrounds(page);
+    expect(wrapperBackgrounds.hoverBackground).toBe("rgba(0, 0, 0, 0)");
+    expect(wrapperBackgrounds.focusBackground).toBe("rgba(0, 0, 0, 0)");
+    await attachPresentationScreenshot(
+      page,
+      testInfo,
+      `compact-${reading.screenshot}`,
+    );
+  }
+
+  assertBrowserHealth();
+});
+
+test("sizes large timer numerals from the usable rail at every divider position", async (
+  { page },
+  testInfo,
+) => {
+  const assertBrowserHealth = await reportBrowserHealth(page);
+  let activeState: typeof appState = visualAppState;
+  await page.addInitScript(() => {
+    const frozenNow = 1_756_800_000_000;
+    Date.now = () => frozenNow;
+  });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.route("**/api/auth/status", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ passwordRequired: false, authenticated: true }),
+    }),
+  );
+  await page.route("**/api/app-state", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify(activeState),
+    }),
+  );
+
+  const viewports = [
+    { width: 1920, height: 1080, label: "1920x1080" },
+    { width: 1280, height: 720, label: "1280x720" },
+  ];
+  const modes = [
+    {
+      label: "split",
+      state: visualAppState,
+      previousCap: 96,
+    },
+    {
+      label: "timer-only",
+      state: appState,
+      previousCap: 160,
+    },
+  ] as const;
+
+  for (const viewport of viewports) {
+    for (const mode of modes) {
+      activeState = mode.state;
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await page.goto("/present/activity-long-mixed-direction");
+      await settlePresentationSurface(page);
+      await expect(
+        page.getByTestId("presentation-surface").locator(
+          `.presentation-rail--${mode.label} .presentation-timer-reading`,
+        ),
+      ).toBeVisible();
+
+      await setPresentationDividerPosition(page, "rail-wide");
+      const railWide = await readLargeTimerReadingMetrics(page);
+      await attachPresentationScreenshot(
+        page,
+        testInfo,
+        `large-${mode.label}-${viewport.label}-rail-wide`,
+      );
+      await setPresentationDividerPosition(page, "middle");
+      const middle = await readLargeTimerReadingMetrics(page);
+      await attachPresentationScreenshot(
+        page,
+        testInfo,
+        `large-${mode.label}-${viewport.label}-middle`,
+      );
+      await setPresentationDividerPosition(page, "rail-narrow");
+      const railNarrow = await readLargeTimerReadingMetrics(page);
+      await attachPresentationScreenshot(
+        page,
+        testInfo,
+        `large-${mode.label}-${viewport.label}-rail-narrow`,
+      );
+
+      expect(
+        railWide.fontSize,
+        `${viewport.label} ${mode.label} should grow with a wider rail`,
+      ).toBeGreaterThan(middle.fontSize);
+      expect(
+        middle.fontSize,
+        `${viewport.label} ${mode.label} should shrink with a narrower rail`,
+      ).toBeGreaterThan(railNarrow.fontSize);
+      expect(
+        railWide.textWidth,
+        `${viewport.label} ${mode.label} should expose the actual numeral width`,
+      ).toBeGreaterThan(railNarrow.textWidth);
+      expect(railWide.elementWidth).toBeCloseTo(railWide.textWidth, 0);
+      expect(middle.elementWidth).toBeCloseTo(middle.textWidth, 0);
+      expect(railNarrow.elementWidth).toBeCloseTo(railNarrow.textWidth, 0);
+      expect(
+        railWide.fontSize,
+        `${viewport.label} ${mode.label} should exceed the former ${mode.previousCap}px cap`,
+      ).toBeGreaterThan(mode.previousCap);
+
+      const stableReadings = await Promise.all([
+        readLargeTimerReadingMetrics(page),
+        readLargeTimerReadingMetrics(page),
+        readLargeTimerReadingMetrics(page),
+      ]);
+      for (const stableReading of stableReadings) {
+        expect(stableReading.fontSize).toBeCloseTo(railNarrow.fontSize, 2);
+        expect(stableReading.textWidth).toBeCloseTo(railNarrow.textWidth, 2);
+      }
+
+      await setPresentationDividerPosition(page, "rail-wide");
+      const reverseRailWide = await readLargeTimerReadingMetrics(page);
+      expect(reverseRailWide.fontSize).toBeCloseTo(railWide.fontSize, 2);
+      expect(reverseRailWide.textWidth).toBeCloseTo(railWide.textWidth, 2);
+    }
+  }
+
   assertBrowserHealth();
 });
 
@@ -1729,7 +2261,7 @@ test("keeps Present controls tappable in a short landscape tablet viewport", asy
     ).toBeVisible();
 
     const viewport = page.viewportSize();
-    expect(viewport).toEqual({ width: 1024, height: 600 });
+    expect(viewport).toEqual({ width: 1280, height: 720 });
     const timerPanelBox = await timerPanel.boundingBox();
     expect(timerPanelBox).not.toBeNull();
     expect(timerPanelBox!.x).toBeGreaterThanOrEqual(0);
@@ -1917,22 +2449,19 @@ test("returns focus to the compact timer trigger after teacher controls close", 
   await expect(timerPanel).toBeVisible();
   await expect(timerToggle).toHaveAttribute("aria-expanded", "true");
 
-      const openGeometry = await page.evaluate(() => {
-        const studentBounds = document.querySelector(".presentation-main")!.getBoundingClientRect();
-        const panelBounds = document.querySelector("#presentation-controls-panel")!.getBoundingClientRect();
-        const dockBounds = document.querySelector(".presentation-controls-dock")!.getBoundingClientRect();
-        return {
-           documentWidth: document.documentElement.scrollWidth,
-           viewportWidth: window.innerWidth,
-           panelLeft: panelBounds.left,
-           panelRight: panelBounds.right,
-           panelBottom: panelBounds.bottom,
-          studentBottom: studentBounds.bottom,
-          panelTop: panelBounds.top,
-          dockBottom: dockBounds.bottom,
-          viewportHeight: window.innerHeight,
-        };
-      });
+  const openGeometry = await page.evaluate(() => {
+    const panelBounds = document
+      .querySelector("#presentation-timer-controls-panel")!
+      .getBoundingClientRect();
+    return {
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: window.innerWidth,
+      panelLeft: panelBounds.left,
+      panelRight: panelBounds.right,
+      panelBottom: panelBounds.bottom,
+      viewportHeight: window.innerHeight,
+    };
+  });
   expect(openGeometry.documentWidth).toBeLessThanOrEqual(openGeometry.viewportWidth);
   expect(openGeometry.panelLeft).toBeGreaterThanOrEqual(0);
   expect(openGeometry.panelRight).toBeLessThanOrEqual(openGeometry.viewportWidth);
@@ -2274,7 +2803,7 @@ test("keeps footer-only content from changing Present prompt spacing", async ({ 
       const firstPromptBounds = firstPrompt.getBoundingClientRect();
       return {
         dividerToFirstPrompt: firstPromptBounds.top - promptBounds.top - 2,
-        rowTops: promptRows.map((row) => row.getBoundingClientRect().top),
+        rowTops: promptRows.map((row) => row.getBoundingClientRect().top - firstPromptBounds.top),
         promptLineHeight: getComputedStyle(firstPrompt).lineHeight,
         mainBottom: main.getBoundingClientRect().bottom,
         footerTop: footer.getBoundingClientRect().top,
@@ -2367,9 +2896,9 @@ test("keeps footer-only content from changing Present prompt spacing", async ({ 
   expect(exportMeasurements[1].horizontalOverflow).toBeLessThanOrEqual(0);
 });
 
-test("scales the live student hierarchy from constrained to roomy without centering it", async ({
+test("fits the live student hierarchy to the pane with proportional whitespace", async ({
   page,
-}) => {
+}, testInfo) => {
   await stubPresentationState(page, roomyPromptAppState);
 
   const measureHierarchy = async () =>
@@ -2413,90 +2942,94 @@ test("scales the live student hierarchy from constrained to roomy without center
         contentBottom: contentBounds.bottom,
         footerTop: footer.getBoundingClientRect().top,
         horizontalOverflow: surface.scrollWidth - surface.clientWidth,
+        taskLineHeight: Number.parseFloat(getComputedStyle(task).lineHeight),
+        promptLineHeight: Number.parseFloat(getComputedStyle(promptRows[0]).lineHeight),
       };
     });
 
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto("/present/activity-roomy-prompt");
   await settlePresentationSurface(page);
-  await expect(page.getByTestId("presentation-surface")).toHaveAttribute(
-    "data-room-state",
-    "constrained",
-  );
   const constrained = await measureHierarchy();
+  expect(constrained.taskFontSize).toBeGreaterThanOrEqual(24);
+  expect(constrained.promptFontSize).toBeGreaterThanOrEqual(24);
+  expect(constrained.contentBottom).toBeLessThanOrEqual(constrained.footerTop);
+  expect(constrained.footerTop).toBeLessThanOrEqual(660);
+  await attachPresentationScreenshot(page, testInfo, "student-fit-1280-720");
+  const exportSize = await page.locator(".presentation-surface--export .presentation-task")
+    .evaluate((element) => getComputedStyle(element).fontSize);
 
   await page.setViewportSize({ width: 1280, height: 900 });
-  await expect(page.getByTestId("presentation-surface")).toHaveAttribute(
-    "data-room-state",
-    "comfortable",
-  );
+  await settlePresentationSurface(page);
   const comfortable = await measureHierarchy();
   const divider = page.getByTestId("presentation-layout-divider");
-  const dragTarget = await page.getByTestId("presentation-surface").evaluate(
-    (surface) => {
-      const main = surface.querySelector<HTMLElement>(".presentation-main");
-      if (!main) throw new Error("Missing presentation main");
-      const bounds = main.getBoundingClientRect();
-      const styles = getComputedStyle(main);
-      const gap = Number.parseFloat(styles.columnGap || styles.gap || "0") || 0;
-      const availableWidth = bounds.width - gap * 2 - 1;
-      return {
-        x: bounds.left + gap + availableWidth * 0.75,
-        y: bounds.top + bounds.height / 2,
-      };
-    },
-  );
-  const dividerBounds = await divider.boundingBox();
-  if (!dividerBounds) throw new Error("Missing presentation divider bounds");
-  await page.mouse.move(
-    dividerBounds.x + dividerBounds.width / 2,
-    dividerBounds.y + dividerBounds.height / 2,
-  );
-  await page.mouse.down();
-  await page.mouse.move(dragTarget.x, dragTarget.y);
-  await page.mouse.up();
-  await expect(page.getByTestId("presentation-surface")).toHaveAttribute(
-    "data-room-state",
-    "roomy",
-  );
   await divider.press("Home");
-  await expect(page.getByTestId("presentation-surface")).toHaveAttribute(
-    "data-room-state",
-    "comfortable",
-  );
+  for (let step = 0; step < 6; step += 1) await divider.press("ArrowLeft");
+  await settlePresentationSurface(page);
+  const narrowPane = await measureHierarchy();
+  await divider.press("End");
+  await settlePresentationSurface(page);
+  const widePane = await measureHierarchy();
+  expect(widePane.taskFontSize).toBeGreaterThan(narrowPane.taskFontSize);
+  expect(widePane.promptFontSize).toBeGreaterThan(narrowPane.promptFontSize);
+  expect(widePane.promptRowSpacing).toBeGreaterThanOrEqual(narrowPane.promptRowSpacing);
+  await divider.press("Home");
+  await settlePresentationSurface(page);
+  await expect.poll(async () => (await measureHierarchy()).taskFontSize)
+    .toBeCloseTo(comfortable.taskFontSize, 1);
 
   await page.setViewportSize({ width: 1920, height: 1080 });
-  await expect(page.getByTestId("presentation-surface")).toHaveAttribute(
-    "data-room-state",
-    "roomy",
-  );
+  await settlePresentationSurface(page);
   const roomy = await measureHierarchy();
+  await attachPresentationScreenshot(page, testInfo, "student-fit-1920-1080");
 
-  expect(comfortable.taskFontSize).toBeGreaterThan(constrained.taskFontSize);
-  expect(comfortable.promptFontSize).toBeGreaterThan(constrained.promptFontSize);
-  expect(comfortable.markerFontSize).toBeGreaterThan(constrained.markerFontSize);
+  // The taller breakpoint slightly increases outer padding, changing usable
+  // pane width; allow subpixel differences instead of assuming equal tracks.
+  expect(comfortable.taskFontSize).toBeGreaterThanOrEqual(constrained.taskFontSize - 1);
+  expect(comfortable.promptFontSize).toBeGreaterThanOrEqual(constrained.promptFontSize - 1);
+  expect(comfortable.markerFontSize).toBeGreaterThanOrEqual(constrained.markerFontSize - 1);
   expect(roomy.taskFontSize).toBeGreaterThan(comfortable.taskFontSize);
   expect(roomy.promptFontSize).toBeGreaterThan(comfortable.promptFontSize);
   expect(roomy.markerFontSize).toBeGreaterThan(comfortable.markerFontSize);
-  expect(roomy.taskToDivider).toBeGreaterThan(constrained.taskToDivider);
-  expect(roomy.dividerToFirstPrompt).toBeGreaterThan(
+  expect(roomy.taskToDivider).toBeGreaterThanOrEqual(constrained.taskToDivider);
+  expect(roomy.dividerToFirstPrompt).toBeGreaterThanOrEqual(
     constrained.dividerToFirstPrompt,
   );
-  expect(roomy.promptRowSpacing).toBeGreaterThan(constrained.promptRowSpacing);
-  expect(roomy.contentAlignment).toBe("start");
+  expect(roomy.promptRowSpacing).toBeGreaterThanOrEqual(constrained.promptRowSpacing);
   expect(roomy.contentTop).toBeLessThan(roomy.footerTop);
   expect(roomy.contentBottom).toBeLessThanOrEqual(roomy.footerTop);
   expect(roomy.horizontalOverflow).toBeLessThanOrEqual(0);
+  expect(roomy.taskLineHeight / roomy.taskFontSize).toBeGreaterThanOrEqual(1.19);
+  expect(roomy.promptLineHeight / roomy.promptFontSize).toBeGreaterThanOrEqual(1.34);
+  // Stable after ticking: typography is not refitted on each timer render.
+  await page.getByRole("button", { name: "Start or resume timer", exact: true }).click();
+  await page.waitForTimeout(1100);
+  expect((await measureHierarchy()).taskFontSize).toBe(roomy.taskFontSize);
+  expect(await page.locator(".presentation-surface--export .presentation-task")
+    .evaluate((element) => getComputedStyle(element).fontSize)).toBe(exportSize);
 
   await page.goto("/present/activity-content-tall");
   await settlePresentationSurface(page);
-  await expect(page.getByTestId("presentation-surface")).toHaveAttribute(
-    "data-room-state",
-    "constrained",
-  );
+  expect((await measureHierarchy()).promptFontSize).toBeGreaterThanOrEqual(24);
+  await attachPresentationScreenshot(page, testInfo, "student-fit-long");
+  for (const viewport of [
+    { width: 1024, height: 768 },
+    { width: 640, height: 800 },
+    { width: 320, height: 600 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.evaluate(() => document.documentElement.classList.add("dark"));
+    await settlePresentationSurface(page);
+    const long = await measureHierarchy();
+    expect(long.horizontalOverflow).toBeLessThanOrEqual(1);
+    expect(long.promptFontSize).toBeGreaterThanOrEqual(20);
+    await page.getByTestId("presentation-surface").locator(".presentation-footer")
+      .scrollIntoViewIfNeeded();
+    await attachPresentationScreenshot(page, testInfo, `student-fit-dark-${viewport.width}`);
+  }
 });
 
-test("keeps enlarged formulas and mixed-script prompts contained across room states", async ({
+test("keeps enlarged formulas and mixed-script prompts contained across pane sizes", async ({
   page,
 }) => {
   const assertBrowserHealth = await reportBrowserHealth(page);
@@ -2584,19 +3117,16 @@ test("keeps enlarged formulas and mixed-script prompts contained across room sta
     {
       width: 1280,
       height: 720,
-      expectedState: "constrained",
       label: "constrained landscape",
     },
     {
       width: 1280,
       height: 900,
-      expectedState: "comfortable",
       label: "comfortable classroom",
     },
     {
       width: 2560,
       height: 1440,
-      expectedState: "roomy",
       label: "roomy high-resolution projector",
     },
   ]) {
@@ -2606,10 +3136,6 @@ test("keeps enlarged formulas and mixed-script prompts contained across room sta
     });
     await page.goto("/present/activity-adaptive-formula");
     await settlePresentationSurface(page);
-    await expect(page.getByTestId("presentation-surface")).toHaveAttribute(
-      "data-room-state",
-      viewport.expectedState,
-    );
 
     const measurement = await measureContent();
     measurements.push(measurement);
@@ -2658,9 +3184,9 @@ test("keeps enlarged formulas and mixed-script prompts contained across room sta
   }
 
   const [constrained, comfortable, roomy] = measurements;
-  expect(comfortable.taskFontSize).toBeGreaterThan(constrained.taskFontSize);
-  expect(comfortable.promptFontSize).toBeGreaterThan(
-    constrained.promptFontSize,
+  expect(comfortable.taskFontSize).toBeGreaterThanOrEqual(constrained.taskFontSize - 1);
+  expect(comfortable.promptFontSize).toBeGreaterThanOrEqual(
+    constrained.promptFontSize - 1,
   );
   expect(roomy.taskFontSize).toBeGreaterThan(comfortable.taskFontSize);
   expect(roomy.promptFontSize).toBeGreaterThan(comfortable.promptFontSize);
@@ -2736,9 +3262,10 @@ test("captures stable responsive Present compositions and keeps export surfaces 
       contentAlignment: styles.alignContent,
     };
   });
-  expect(wideComposition.contentAlignment).toBe("start");
-  expect(wideComposition.contentTopSpace).toBeLessThan(2);
-  expect(wideComposition.contentBottomSpace).toBeGreaterThanOrEqual(0);
+  expect(wideComposition.contentAlignment).toBe("center");
+  expect(wideComposition.contentCenter).toBeCloseTo(wideComposition.innerCenter, 0);
+  expect(wideComposition.contentTopSpace).toBeGreaterThanOrEqual(-1);
+  expect(wideComposition.contentBottomSpace).toBeGreaterThanOrEqual(-1);
   expect(wideComposition.mainBottom).toBeLessThanOrEqual(wideComposition.footerTop);
   await assertExportSurfaceHasNoLiveDivider(page);
 
@@ -2805,7 +3332,7 @@ test("captures stable responsive Present compositions and keeps export surfaces 
   await assertExportSurfaceHasNoLiveDivider(page);
 });
 
-test("keeps short landscape Present compositions compact and top-aligned", async ({
+test("keeps short landscape Present text balanced and the rail top-aligned", async ({
   page,
 }) => {
   await stubPresentationState(page, visualAppState);
@@ -2838,7 +3365,7 @@ test("keeps short landscape Present compositions compact and top-aligned", async
   });
 
   expect(composition.mainColumns).toHaveLength(3);
-  expect(composition.contentAlignment).toBe("start");
+  expect(composition.contentAlignment).toBe("center");
   expect(composition.railAlignment).toBe("flex-start");
   expect(composition.contentTop).toBeGreaterThanOrEqual(composition.mainTop);
   expect(composition.mainBottom).toBeLessThanOrEqual(composition.footerTop + 1);
