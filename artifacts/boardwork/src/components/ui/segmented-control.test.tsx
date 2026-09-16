@@ -12,18 +12,19 @@ describe("SegmentedControl selected appearance", () => {
     };
     const { rerender } = render(<SegmentedControl {...props} value={5} />);
     const selected = screen.getByRole("button", { name: "5", pressed: true });
-    expect(selected).toHaveClass("bg-primary", "text-primary-foreground", "border-primary");
+    expect(selected).toHaveClass("bg-foreground/10", "text-foreground", "border-foreground/25", "dark:bg-foreground/15");
+    expect(selected).not.toHaveClass("bg-primary", "text-primary-foreground");
     expect(selected).not.toHaveClass("shadow-sm");
     const next = screen.getByRole("button", { name: "7", pressed: false });
-    expect(next).not.toHaveClass("bg-primary");
+    expect(next).not.toHaveClass("bg-foreground/10");
     expect(next).toHaveClass("hover:bg-background", "focus-visible:ring-2", "border-transparent");
     fireEvent.focus(next);
     expect(selected).toHaveAttribute("aria-pressed", "true");
     fireEvent.click(next);
     expect(onChange).toHaveBeenCalledWith(7);
     rerender(<SegmentedControl {...props} value={7} />);
-    expect(screen.getByRole("button", { name: "7", pressed: true })).toHaveClass("bg-primary");
-    expect(screen.getByRole("button", { name: "5", pressed: false })).not.toHaveClass("bg-primary");
+    expect(screen.getByRole("button", { name: "7", pressed: true })).toHaveClass("bg-foreground/10");
+    expect(screen.getByRole("button", { name: "5", pressed: false })).not.toHaveClass("bg-foreground/10");
   });
 
   it("does not select a preset when its value is custom", () => {

@@ -43,7 +43,7 @@ export function SegmentedControl<T extends string | number>({
                 "flex min-w-0 min-h-9 items-center justify-center gap-1 rounded-md border border-transparent px-2 py-1.5 text-center text-sm font-medium leading-tight ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
                 "max-[360px]:flex-col max-[360px]:gap-0.5 max-[360px]:px-1 max-[360px]:py-1 max-[360px]:text-xs",
               isSelected
-                ? "border-primary bg-primary text-primary-foreground"
+                ? "border-foreground/25 bg-foreground/10 text-foreground dark:bg-foreground/15"
                 : "text-muted-foreground hover:bg-background hover:text-foreground"
             )}
             data-testid={`segment-${String(option.value)}`}

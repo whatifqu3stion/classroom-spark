@@ -991,7 +991,7 @@ export default function Home() {
                         className={`w-20 shrink-0 ${durationError
                           ? "border-destructive focus-visible:ring-destructive"
                           : isCustomDuration
-                            ? "border-primary bg-primary/10 font-medium ring-1 ring-primary hover:bg-primary/10 focus-visible:bg-primary/10"
+                            ? "border-foreground/25 bg-foreground/10 font-medium ring-1 ring-foreground/25 hover:bg-foreground/10 focus-visible:bg-foreground/10 dark:bg-foreground/15 dark:hover:bg-foreground/15 dark:focus-visible:bg-foreground/15"
                             : ""}`}
                         data-active={isCustomDuration && !durationError}
                         aria-describedby={durationError ? "custom-duration-error" : undefined}

@@ -225,7 +225,8 @@ describe("Home presentation defaults", () => {
     expect(screen.getByTestId("segment-5")).toHaveAttribute("aria-pressed", "true");
     fireEvent.change(custom, { target: { value: "19" } });
     expect(custom).toHaveAttribute("data-active", "true");
-    expect(custom).toHaveClass("border-primary", "bg-primary/10");
+    expect(custom).toHaveClass("border-foreground/25", "bg-foreground/10", "dark:bg-foreground/15");
+    expect(custom).not.toHaveClass("border-primary", "bg-primary/10");
     for (const preset of [3, 5, 7]) {
       expect(screen.getByTestId(`segment-${preset}`)).toHaveAttribute("aria-pressed", "false");
     }
@@ -248,7 +249,7 @@ describe("Home presentation defaults", () => {
     for (const mode of ["computer_available", "computer_required", "no_computer"]) {
       fireEvent.click(screen.getByTestId(`segment-${mode}`));
       expect(within(group).getAllByRole("button", { pressed: true })).toHaveLength(1);
-      expect(screen.getByTestId(`segment-${mode}`)).toHaveClass("bg-primary", "text-primary-foreground");
+      expect(screen.getByTestId(`segment-${mode}`)).toHaveClass("bg-foreground/10", "text-foreground");
       expect(Boolean(screen.queryByTestId("input-resource-url"))).toBe(mode !== "no_computer");
     }
   });
@@ -528,10 +529,10 @@ describe("Home presentation defaults", () => {
     rerender(<Home />);
     await waitFor(() => {
       expect(screen.getByTestId("input-topic")).toHaveValue("");
-      expect(screen.getByTestId("segment-5")).toHaveClass("bg-primary");
+      expect(screen.getByTestId("segment-5")).toHaveClass("bg-foreground/10");
       expect(screen.getByTestId("input-custom-activity-duration")).toHaveValue("");
       expect(screen.getByTestId("segment-computer_available")).toHaveClass(
-        "bg-primary",
+        "bg-foreground/10",
       );
     });
 
@@ -648,7 +649,7 @@ describe("Home presentation defaults", () => {
     fireEvent.click(screen.getByTestId("button-edit-class"));
     fireEvent.click(screen.getByTestId("mock-set-default-device-on"));
     expect(screen.getByTestId("segment-computer_available")).toHaveClass(
-      "bg-primary",
+      "bg-foreground/10",
     );
 
     fireEvent.click(screen.getByTestId("button-generate"));
@@ -663,7 +664,7 @@ describe("Home presentation defaults", () => {
 
     fireEvent.click(screen.getByTestId("button-edit-class"));
     fireEvent.click(screen.getByTestId("mock-set-default-device-off"));
-    expect(screen.getByTestId("segment-no_computer")).toHaveClass("bg-primary");
+    expect(screen.getByTestId("segment-no_computer")).toHaveClass("bg-foreground/10");
 
     fireEvent.click(screen.getByTestId("button-generate"));
     await waitFor(() =>
@@ -710,7 +711,7 @@ describe("Home presentation defaults", () => {
       prompts: [], durationMinutes: minutes, deviceMode: "off",
     });
     render(<Home />);
-    expect(screen.getByTestId("segment-5")).toHaveClass("bg-primary");
+    expect(screen.getByTestId("segment-5")).toHaveClass("bg-foreground/10");
     if (minutes === 19) {
       fireEvent.change(screen.getByTestId("input-custom-activity-duration"), {
         target: { value: String(minutes) },
@@ -748,7 +749,7 @@ describe("Home presentation defaults", () => {
     mocks.activityId = undefined;
     rerender(<Home />);
     expect(screen.queryByTestId("board-editor-draft")).not.toBeInTheDocument();
-    expect(screen.getByTestId("segment-5")).toHaveClass("bg-primary");
+    expect(screen.getByTestId("segment-5")).toHaveClass("bg-foreground/10");
     expect(screen.getByTestId("input-custom-activity-duration")).toHaveValue("");
     fireEvent.click(screen.getByTestId("button-blank"));
     expect(screen.getByTestId("board-editor-draft")).toHaveTextContent('"durationMinutes":5');
@@ -775,7 +776,7 @@ describe("Home presentation defaults", () => {
     mocks.activityId = undefined;
     rerender(<Home />);
     expect(screen.queryByTestId("board-editor-draft")).not.toBeInTheDocument();
-    expect(screen.getByTestId("segment-5")).toHaveClass("bg-primary");
+    expect(screen.getByTestId("segment-5")).toHaveClass("bg-foreground/10");
     expect(screen.getByTestId("input-custom-activity-duration")).toHaveValue("");
     fireEvent.click(screen.getByTestId("button-blank"));
     expect(screen.getByTestId("board-editor-draft")).toHaveTextContent('"durationMinutes":5');
