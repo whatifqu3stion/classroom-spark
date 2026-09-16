@@ -1290,7 +1290,7 @@ test("exports long mixed-direction board text beside a visual without clipping",
 
 test("keeps two ordered visuals visible in Present and PNG export", async ({
   page,
-}) => {
+}, testInfo) => {
   const assertBrowserHealth = await reportBrowserHealth(page);
 
   await stubPresentationState(page, twoVisualAppState);
@@ -1311,6 +1311,41 @@ test("keeps two ordered visuals visible in Present and PNG export", async ({
     }),
   ).toBeVisible();
   await expect(liveSurface.getByTestId("compact-timer-progress")).toBeVisible();
+
+  const measureImages = async () => liveSurface.locator(".presentation-visual img")
+    .evaluateAll((images) => images.map((image) => {
+      const bounds = image.getBoundingClientRect();
+      return { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height };
+    }));
+  const expectStacked = (images: Awaited<ReturnType<typeof measureImages>>) => {
+    expect(images).toHaveLength(2);
+    expect(images[1].y).toBeGreaterThan(images[0].y + images[0].height);
+    expect(images[0].x + images[0].width / 2)
+      .toBeCloseTo(images[1].x + images[1].width / 2, 0);
+  };
+  const divider = page.getByTestId("presentation-layout-divider");
+  await divider.press("End");
+  await settlePresentationSurface(page);
+  const smallerImages = await measureImages();
+  expectStacked(smallerImages);
+  for (let step = 0; step < 5; step += 1) await divider.press("ArrowLeft");
+  await settlePresentationSurface(page);
+  const largerImages = await measureImages();
+  expectStacked(largerImages);
+  for (let index = 0; index < 2; index += 1) {
+    expect(largerImages[index].width).toBeGreaterThan(smallerImages[index].width);
+    expect(largerImages[index].height).toBeGreaterThan(smallerImages[index].height);
+  }
+  await divider.press("Home");
+  await settlePresentationSurface(page);
+  await page.screenshot({ path: testInfo.outputPath("stacked-board-visuals.jpg"), fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await settlePresentationSurface(page);
+  expectStacked(await measureImages());
+  expect(await liveSurface.evaluate((surface) => surface.scrollWidth - surface.clientWidth))
+    .toBeLessThanOrEqual(1);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await settlePresentationSurface(page);
 
   await openTeacherControls(page);
   await expect(page.getByRole("button", { name: "Expand timer" })).toHaveCount(0);
@@ -1338,6 +1373,7 @@ test("keeps two ordered visuals visible in Present and PNG export", async ({
     });
   });
   expect(regions).toHaveLength(2);
+  expect(regions[1].y).toBeGreaterThan(regions[0].y + regions[0].height);
   for (const region of regions) {
     expect(region.x).toBeGreaterThan(0);
     expect(region.y).toBeGreaterThan(0);

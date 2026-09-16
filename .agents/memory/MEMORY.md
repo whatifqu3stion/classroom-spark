@@ -27,3 +27,4 @@
 - [Conditional dialog focus](conditional-dialog-focus.md) — Restore focus to the current opener when selection replaces the button that opened a dialog.
 - [Tailwind shadow baselines](tailwind-shadow-baselines.md) — Compare rendered shadow utilities, not similarly named root variables, when tuning elevation.
 - [Command accessible names](command-accessible-names.md) — cmdk’s generated label can override input aria-label; assert resolved names and stabilize input modality for style checks.
+- [Technology setup compatibility](technology-setup-compatibility.md) — Simplify new-board choices without reinterpreting saved Computer available activities.

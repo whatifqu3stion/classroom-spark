@@ -86,15 +86,6 @@ const viewports = [
   { name: "narrow", width: 390, height: 844 },
 ] as const;
 
-      const readSurface = (locator: Locator) => locator.evaluate((element) => {
-        const style = getComputedStyle(element);
-        const rect = element.getBoundingClientRect();
-        return {
-          shadow: style.boxShadow,
-          geometry: [rect.x, rect.y, rect.width, rect.height],
-          appearance: [style.backgroundColor, style.color, style.border, style.borderRadius, style.padding, style.outline],
-        };
-      });
 type Viewport = { width: number; height: number };
 
 const requiredControls = [
@@ -270,7 +261,7 @@ test("keeps long class header controls separate at an intermediate scaled width"
     document.documentElement.style.fontSize = "125%";
   });
 
-  const header = page.getByTestId("board-editor-header");
+  const header = page.getByTestId("creation-class-header");
   await expect(header).toBeVisible();
   await expect(page.getByTestId("select-class")).toContainText(
     "Grade 7 Design Studio — Forces, Motion & Modeling",
@@ -479,13 +470,20 @@ test("keeps creation examples very faint compared with entered text", async ({ p
   await page.goto("/");
 
   const topic = page.getByTestId("input-topic");
-  const styles = await emptyState.evaluate((element) => {
+  const styles = await topic.evaluate((element) => {
     const computed = getComputedStyle(element);
+    const placeholder = getComputedStyle(element, "::placeholder");
+    const luminance = (color: string) => {
+      const channels = color.match(/[\d.]+/g)?.map(Number);
+      if (!channels || channels.length < 3) throw new Error(`Invalid color: ${color}`);
+      return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+    };
     return {
-      borderStyle: computed.borderStyle,
-      borderWidth: computed.borderWidth,
-      boxShadow: computed.boxShadow,
-      backgroundImage: computed.backgroundImage,
+      placeholderOpacity: placeholder.opacity,
+      placeholderColor: placeholder.color,
+      textColor: computed.color,
+      placeholderLuminance: luminance(placeholder.color),
+      textLuminance: luminance(computed.color),
     };
   });
 
@@ -580,7 +578,7 @@ test("keeps creation examples readable in dark mode", async ({ page }) => {
     document.documentElement.classList.add("dark");
   });
 
-  await page.getByTestId("segment-computer_available").click();
+  await page.getByTestId("segment-computer_required").click();
 
   const placeholderInputs = [
     page.getByTestId("input-topic"),
@@ -595,13 +593,40 @@ test("keeps creation examples readable in dark mode", async ({ page }) => {
 
   await page.getByTestId("input-topic").fill("Entered topic");
 
-  const styles = await emptyState.evaluate((element) => {
+  const styles = await page.getByTestId("input-topic").evaluate((element) => {
     const computed = getComputedStyle(element);
+    const placeholder = getComputedStyle(element, "::placeholder");
+    const label = document.querySelector('label[for="topic"]');
+    const control = document.querySelector('[data-testid="select-unit"]');
+    if (!label || !control) throw new Error("Setup label and unit control must be present");
+    const luminance = (color: string) => {
+      const channels = color.match(/[\d.]+/g)?.map(Number);
+      if (!channels || channels.length < 3) throw new Error(`Invalid color: ${color}`);
+      return channels.slice(0, 3).map((channel) => {
+        const normalized = channel / 255;
+        return normalized <= 0.03928
+          ? normalized / 12.92
+          : ((normalized + 0.055) / 1.055) ** 2.4;
+      }).reduce((total, channel, index) => total + channel * [0.2126, 0.7152, 0.0722][index], 0);
+    };
+    const placeholderLuminance = luminance(placeholder.color);
+    const textLuminance = luminance(computed.color);
+    const backgroundLuminance = luminance(computed.backgroundColor);
+    const contrast = (foreground: number) =>
+      (Math.max(foreground, backgroundLuminance) + 0.05) /
+      (Math.min(foreground, backgroundLuminance) + 0.05);
     return {
-      borderStyle: computed.borderStyle,
-      borderWidth: computed.borderWidth,
-      boxShadow: computed.boxShadow,
-      backgroundImage: computed.backgroundImage,
+      placeholderOpacity: placeholder.opacity,
+      placeholderContrast: contrast(placeholderLuminance),
+      textContrast: contrast(textLuminance),
+      placeholderLuminance,
+      textLuminance,
+      backgroundLuminance,
+      inputText: computed.color,
+      labelText: getComputedStyle(label).color,
+      inputBackground: computed.backgroundColor,
+      controlBackground: getComputedStyle(control).backgroundColor,
+      controlText: getComputedStyle(control).color,
     };
   });
 
@@ -772,7 +797,7 @@ test("lets keyboard users complete board setup without losing focus", async ({ p
   await page.setViewportSize(viewport);
   await page.goto("/");
 
-  await page.getByTestId("segment-computer_available").click();
+  await page.getByTestId("segment-computer_required").click();
 
   const focusOrder = [
     "select-class",
@@ -783,14 +808,13 @@ test("lets keyboard users complete board setup without losing focus", async ({ p
     "select-unit",
     "button-add-context-empty",
     "segment-no_computer",
-    "segment-computer_available",
     "segment-computer_required",
+    "input-resource-url",
+    "input-resource-note",
     "segment-3",
     "segment-5",
     "segment-7",
     "input-custom-activity-duration",
-    "input-resource-url",
-    "input-resource-note",
   ];
 
   await page.getByTestId(focusOrder[0]).focus();
@@ -808,7 +832,6 @@ test("lets keyboard users complete board setup without losing focus", async ({ p
   for (const testId of focusOrder) {
     const control = page.getByTestId(testId);
 
-        const currentControl = await readSurface(control);
     await tabTo(control, testId);
     await expect(control).toBeFocused();
 
@@ -839,7 +862,6 @@ test("lets keyboard users complete board setup without losing focus", async ({ p
   for (const testId of focusOrderActions) {
     const control = page.getByTestId(testId);
 
-        const currentControl = await readSurface(control);
     await tabTo(control, testId);
     await expect(control).toBeFocused();
 
@@ -1038,16 +1060,9 @@ for (const viewport of [
   { name: "desktop", width: 1280, height: 800 },
   { name: "narrow", width: 390, height: 844 },
 ] as const) {
-  test(`keeps one editor frame and resets fresh-board setup at ${viewport.name} width`, async ({ page }) => {
-    await page.unroute("**/api/app-state");
-    await page.route("**/api/app-state", (route) =>
-      route.fulfill({
-        contentType: "application/json",
-        body: JSON.stringify(savedBoardAppState),
-      }),
-    );
+  test(`keeps one editor frame when a blank board is created at ${viewport.name} width`, async ({ page }) => {
     await page.setViewportSize(viewport);
-    await page.goto("/activity/activity-saved-board");
+    await page.goto("/");
 
     const editorPanel = page.getByTestId("editor-workspace-panel");
     const emptyState = page.getByTestId("empty-editor-state");
@@ -1130,8 +1145,8 @@ for (const viewport of [
     await expect(editorPanel).toHaveClass(/rounded-\[14px\]/);
     await expect(editorPanel).toHaveClass(/\bborder\b/);
     await expect(page.getByTestId("input-topic")).toHaveValue("");
-    await expect(page.getByTestId("segment-5")).toHaveClass(/bg-background/);
-    await expect(page.getByTestId("segment-7")).not.toHaveClass(/bg-background/);
+    await expect(page.getByTestId("segment-5")).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByTestId("segment-7")).toHaveAttribute("aria-pressed", "false");
 
     const emptyBounds = await editorPanel.boundingBox();
     expect(emptyBounds).not.toBeNull();
@@ -1174,33 +1189,3 @@ test("preserves a saved board duration when opening Present", async ({ page }) =
   await expect(timerProgress).toHaveAttribute("aria-valuemax", "420");
   await expect(timerProgress).toHaveAttribute("aria-valuenow", "420");
 });
-
-          const menuAppearance = await readSurface(menu);
-
-        const oldCards = await Promise.all((await cards.all()).map(readSurface));
-
-      const surface = page.locator(".presentation-surface").first();
-
-      const appearance = await readSurface(surface);
-
-          const restingShadow = (await readSurface(cards.first())).shadow;
-
-          const menu = page.getByRole("menu");
-
-        const currentCards = await Promise.all((await cards.all()).map(readSurface));
-
-        const cards = page.locator(".shadow-teacher-card");
-
-      const legacyShadow = async (enabled: boolean) => {
-        await page.evaluate((enabled) => {
-          if (enabled) {
-            const original = document.createElement("div");
-            original.className = "shadow-sm";
-            document.body.append(original);
-            document.documentElement.style.setProperty("--teacher-card-shadow", getComputedStyle(original).boxShadow);
-            original.remove();
-          } else {
-            document.documentElement.style.removeProperty("--teacher-card-shadow");
-          }
-        }, enabled);
-      };

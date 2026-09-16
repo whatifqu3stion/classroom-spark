@@ -5,7 +5,6 @@ import {
   useBoardwork,
   DeviceMode,
   Duration,
-  TechnologyMode,
   ClassProfile,
   ActivityDraft,
   getPresentationVisuals,
@@ -49,10 +48,7 @@ import {
   ActivityInput,
   GenerateActivityInput,
 } from "@workspace/api-client-react";
-import {
-  ACTIVITY_PAYLOAD_TOO_LARGE_ERROR,
-  technologyModeForDeviceMode,
-} from "@workspace/api-zod";
+import { ACTIVITY_PAYLOAD_TOO_LARGE_ERROR } from "@workspace/api-zod";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -63,6 +59,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+type SetupTechnologyMode = "no_computer" | "computer_required";
+
+const setupTechnologyForDeviceMode = (mode: DeviceMode): SetupTechnologyMode =>
+  mode === "off" ? "no_computer" : "computer_required";
 
 const shouldShowSubject = (className: string, subject: string) =>
   !className.toLocaleLowerCase().includes(subject.toLocaleLowerCase());
@@ -189,7 +190,7 @@ export default function Home() {
   const [selectedContextIds, setSelectedContextIds] = useState<string[]>([]);
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
   const [deviceMode, setDeviceMode] = useState<DeviceMode>("off");
-  const [technologyMode, setTechnologyMode] = useState<TechnologyMode>("no_computer");
+  const [technologyMode, setTechnologyMode] = useState<SetupTechnologyMode>("no_computer");
   const [duration, setDuration] = useState<Duration>(5);
   const [customDurationInput, setCustomDurationInput] = useState("");
   const [resourceUrl, setResourceUrl] = useState("");
@@ -257,7 +258,7 @@ export default function Home() {
 
     if (classProfile) {
       setDeviceMode(classProfile.defaultDeviceMode);
-      setTechnologyMode(technologyModeForDeviceMode(classProfile.defaultDeviceMode));
+      setTechnologyMode(setupTechnologyForDeviceMode(classProfile.defaultDeviceMode));
     }
   };
 
@@ -547,7 +548,7 @@ export default function Home() {
 
       if (shouldApplyDefaults) {
         setDeviceMode(data.defaultDeviceMode);
-        setTechnologyMode(technologyModeForDeviceMode(data.defaultDeviceMode));
+        setTechnologyMode(setupTechnologyForDeviceMode(data.defaultDeviceMode));
       }
 
       try {
@@ -556,7 +557,7 @@ export default function Home() {
       } catch (error) {
         if (shouldApplyDefaults) {
           setDeviceMode(previousDeviceMode);
-          setTechnologyMode(technologyModeForDeviceMode(previousDeviceMode));
+          setTechnologyMode(setupTechnologyForDeviceMode(previousDeviceMode));
         }
         throw error;
       }
@@ -943,21 +944,59 @@ export default function Home() {
                   <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                  <div className="space-y-2 sm:col-span-2">
                  <Label>Technology</Label>
-                   <SegmentedControl<TechnologyMode>
+                    <SegmentedControl<SetupTechnologyMode>
                     ariaLabel="Technology"
                     options={[
                        { label: "No computer", value: "no_computer", icon: <MonitorOff className="w-4 h-4" /> },
-                       { label: "Available", value: "computer_available", icon: <MonitorSmartphone className="w-4 h-4" /> },
-                       { label: "Required", value: "computer_required", icon: <MonitorSmartphone className="w-4 h-4" /> },
+                       { label: "Computer required", value: "computer_required", icon: <MonitorSmartphone className="w-4 h-4" /> },
                     ]}
                      value={technologyMode}
                      onChange={(value) => {
                        setTechnologyMode(value);
                        setDeviceMode(value === "no_computer" ? "off" : "on");
                      }}
-                     className="grid-cols-3"
+                     className="grid-cols-2"
                   />
                 </div>
+                 {technologyMode === "computer_required" && (
+                   <div className="space-y-4 sm:col-span-2">
+                     <div className="space-y-2">
+                       <div className="flex items-center gap-1">
+                         <Label htmlFor="resourceUrl">
+                           Teacher-provided resource URL{" "}
+                           <span className="font-normal text-muted-foreground">(optional)</span>
+                         </Label>
+                         <HelpTooltip label="About student resource links">
+                           Paste the link students should open. Boardwork saves the link you provide; it does not create or inspect links.
+                         </HelpTooltip>
+                       </div>
+                       <Input
+                         id="resourceUrl"
+                         type="url"
+                         inputMode="url"
+                         placeholder="https://..."
+                         value={resourceUrl}
+                         onChange={(e) => setResourceUrl(e.target.value)}
+                         data-testid="input-resource-url"
+                       />
+                     </div>
+                     <div className="space-y-2">
+                       <Label htmlFor="resourceNote">
+                         Resource description{" "}
+                         <span className="font-normal text-muted-foreground">(optional)</span>
+                       </Label>
+                       <Input
+                         id="resourceNote"
+                         dir="auto"
+                         className="boardwork-user-content"
+                         placeholder="e.g. A short article introducing biomimicry"
+                         value={resourceNote}
+                         onChange={(e) => setResourceNote(e.target.value)}
+                         data-testid="input-resource-note"
+                       />
+                     </div>
+                   </div>
+                 )}
                   <div className="w-full space-y-2 sm:col-span-2">
                     <Label htmlFor="input-custom-activity-duration">Duration (min)</Label>
                     <div className="flex min-w-0 items-center gap-2">
@@ -1007,45 +1046,6 @@ export default function Home() {
                     )}
                   </div>
               </div>
-               {technologyMode !== "no_computer" && (
-                  <div className="col-span-2 space-y-4 border-t border-border/40 pt-4">
-                   <div className="space-y-2">
-                      <div className="flex items-center gap-1">
-                        <Label htmlFor="resourceUrl">
-                        Teacher-provided resource URL{" "}
-                       <span className="font-normal text-muted-foreground">(optional)</span>
-                        </Label>
-                        <HelpTooltip label="About student resource links">
-                          Paste the link students should open. Boardwork saves the link you provide; it does not create or inspect links.
-                        </HelpTooltip>
-                      </div>
-                     <Input
-                       id="resourceUrl"
-                       type="url"
-                       inputMode="url"
-                       placeholder="https://..."
-                       value={resourceUrl}
-                       onChange={(e) => setResourceUrl(e.target.value)}
-                       data-testid="input-resource-url"
-                     />
-                   </div>
-                   <div className="space-y-2">
-                     <Label htmlFor="resourceNote">
-                       Resource description{" "}
-                       <span className="font-normal text-muted-foreground">(optional)</span>
-                     </Label>
-                     <Input
-                       id="resourceNote"
-                       dir="auto"
-                       className="boardwork-user-content"
-                       placeholder="e.g. A short article introducing biomimicry"
-                       value={resourceNote}
-                       onChange={(e) => setResourceNote(e.target.value)}
-                       data-testid="input-resource-note"
-                     />
-                   </div>
-                 </div>
-               )}
             </div>
 
               <div

@@ -242,16 +242,52 @@ describe("Home presentation defaults", () => {
     expect(screen.getByTestId("segment-3")).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("exposes one selected technology without changing resource visibility", () => {
+  it("exposes exactly two technology options and keeps required resources before duration", () => {
     render(<Home />);
     const group = screen.getByRole("group", { name: "Technology" });
+    expect(within(group).getAllByRole("button")).toHaveLength(2);
+    expect(within(group).getByRole("button", { name: "No computer" })).toBeInTheDocument();
+    expect(
+      within(group).getByRole("button", { name: "Computer required" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Available" })).not.toBeInTheDocument();
     expect(within(group).getByRole("button", { pressed: true })).toHaveTextContent("No computer");
-    for (const mode of ["computer_available", "computer_required", "no_computer"]) {
-      fireEvent.click(screen.getByTestId(`segment-${mode}`));
-      expect(within(group).getAllByRole("button", { pressed: true })).toHaveLength(1);
-      expect(screen.getByTestId(`segment-${mode}`)).toHaveClass("bg-foreground/10", "text-foreground");
-      expect(Boolean(screen.queryByTestId("input-resource-url"))).toBe(mode !== "no_computer");
-    }
+    expect(screen.queryByTestId("input-resource-url")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("input-resource-note")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("segment-computer_required"));
+    expect(within(group).getAllByRole("button", { pressed: true })).toHaveLength(1);
+    expect(screen.getByTestId("segment-computer_required")).toHaveClass(
+      "bg-foreground/10",
+      "text-foreground",
+    );
+
+    const resourceUrl = screen.getByTestId("input-resource-url");
+    const resourceNote = screen.getByTestId("input-resource-note");
+    const durationGroup = screen.getByRole("group", { name: "Duration presets" });
+    const technologySection = group.parentElement;
+    const resourceSection = resourceUrl.parentElement?.parentElement;
+    const durationSection = durationGroup.parentElement?.parentElement;
+
+    expect(resourceUrl).toBeVisible();
+    expect(resourceNote).toBeVisible();
+    expect(technologySection?.nextElementSibling).toBe(resourceSection);
+    expect(resourceSection).toContainElement(resourceUrl);
+    expect(resourceSection).toContainElement(resourceNote);
+    expect(resourceSection?.nextElementSibling).toBe(durationSection);
+    expect(
+      resourceNote.compareDocumentPosition(durationGroup) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+
+    fireEvent.change(resourceUrl, { target: { value: "https://example.com/resource" } });
+    fireEvent.change(resourceNote, { target: { value: "Read this short resource." } });
+    fireEvent.click(screen.getByTestId("segment-no_computer"));
+    expect(screen.queryByTestId("input-resource-url")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("input-resource-note")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("segment-computer_required"));
+    expect(screen.getByTestId("input-resource-url")).toHaveValue("https://example.com/resource");
+    expect(screen.getByTestId("input-resource-note")).toHaveValue("Read this short resource.");
   });
 
   beforeEach(() => {
@@ -462,7 +498,7 @@ describe("Home presentation defaults", () => {
     expect(mocks.generateActivity.mock.calls[1][0].data).not.toHaveProperty("goal");
   });
 
-  it("reveals the teacher resource fields with Computer Available and sends them to generation", async () => {
+  it("reveals the teacher resource fields when a computer is required and sends them to generation", async () => {
     mocks.generateActivity.mockResolvedValue({
       id: "activity-1",
       classId: "class-1",
@@ -474,7 +510,7 @@ describe("Home presentation defaults", () => {
     });
 
     render(<Home />);
-    fireEvent.click(screen.getByTestId("segment-computer_available"));
+    fireEvent.click(screen.getByTestId("segment-computer_required"));
 
     const resourceUrl = screen.getByTestId("input-resource-url");
     const resourceNote = screen.getByTestId("input-resource-note");
@@ -493,6 +529,7 @@ describe("Home presentation defaults", () => {
       expect(mocks.generateActivity).toHaveBeenCalledWith({
         data: expect.objectContaining({
           deviceMode: "on",
+          technologyMode: "computer_required",
           teacherProvidedUrl: "https://example.com/article",
           teacherProvidedResourceNote: "Read the short article.",
         }),
@@ -531,7 +568,7 @@ describe("Home presentation defaults", () => {
       expect(screen.getByTestId("input-topic")).toHaveValue("");
       expect(screen.getByTestId("segment-5")).toHaveClass("bg-foreground/10");
       expect(screen.getByTestId("input-custom-activity-duration")).toHaveValue("");
-      expect(screen.getByTestId("segment-computer_available")).toHaveClass(
+      expect(screen.getByTestId("segment-computer_required")).toHaveClass(
         "bg-foreground/10",
       );
     });
@@ -544,7 +581,7 @@ describe("Home presentation defaults", () => {
       prompts: [],
       durationMinutes: 5,
       deviceMode: "on",
-      technologyMode: "computer_available",
+      technologyMode: "computer_required",
     });
     fireEvent.click(screen.getByTestId("button-generate"));
     await waitFor(() =>
@@ -553,7 +590,7 @@ describe("Home presentation defaults", () => {
           classId: "class-2",
           topic: undefined,
           deviceMode: "on",
-          technologyMode: "computer_available",
+          technologyMode: "computer_required",
           durationMinutes: 5,
         }),
       }),
@@ -589,7 +626,7 @@ describe("Home presentation defaults", () => {
     render(<Home />);
     fireEvent.click(screen.getAllByTestId("button-blank").at(-1)!);
     expect(screen.getAllByTestId("board-editor-draft").at(-1)).toHaveTextContent(
-      '"deviceMode":"on","technologyMode":"computer_available"',
+      '"deviceMode":"on","technologyMode":"computer_required"',
     );
   });
 
@@ -642,13 +679,13 @@ describe("Home presentation defaults", () => {
       prompts: [],
       durationMinutes: 7,
       deviceMode: "on",
-      technologyMode: "computer_available",
+      technologyMode: "computer_required",
     });
 
     render(<Home />);
     fireEvent.click(screen.getByTestId("button-edit-class"));
     fireEvent.click(screen.getByTestId("mock-set-default-device-on"));
-    expect(screen.getByTestId("segment-computer_available")).toHaveClass(
+    expect(screen.getByTestId("segment-computer_required")).toHaveClass(
       "bg-foreground/10",
     );
 
@@ -657,7 +694,7 @@ describe("Home presentation defaults", () => {
       expect(mocks.generateActivity).toHaveBeenLastCalledWith({
         data: expect.objectContaining({
           deviceMode: "on",
-          technologyMode: "computer_available",
+          technologyMode: "computer_required",
         }),
       }),
     );
@@ -741,21 +778,31 @@ describe("Home presentation defaults", () => {
   it("keeps a custom choice when the class profile is saved or refreshed", async () => {
     const { rerender } = render(<Home />);
     fireEvent.change(screen.getByTestId("input-custom-activity-duration"), {
-      target: { value: "21" },
+      target: { value: "23" },
     });
-    mocks.activityId = "saved";
+    fireEvent.click(screen.getByTestId("button-edit-class"));
+    fireEvent.click(screen.getByTestId("mock-set-default-device-on"));
+    await waitFor(() =>
+      expect(screen.getByTestId("input-custom-activity-duration")).toHaveValue("23"),
+    );
+    vi.mocked(useBoardwork).mockReturnValue({
+      appState: {
+        ...appState,
+        classes: [{ ...appState.classes[0], defaultDuration: 30 }],
+      } as unknown as AppState,
+      isLoading: false,
+      activeClassId: "class-1",
+      selectedChipIds: [],
+      toggleChipSelection: vi.fn(),
+      clearChipSelection: vi.fn(),
+    });
     rerender(<Home />);
-    expect(JSON.parse(screen.getByTestId("board-editor-draft").textContent!)).toEqual(saved);
-    mocks.activityId = undefined;
-    rerender(<Home />);
-    expect(screen.queryByTestId("board-editor-draft")).not.toBeInTheDocument();
-    expect(screen.getByTestId("segment-5")).toHaveClass("bg-foreground/10");
-    expect(screen.getByTestId("input-custom-activity-duration")).toHaveValue("");
+    expect(screen.getByTestId("input-custom-activity-duration")).toHaveValue("23");
     fireEvent.click(screen.getByTestId("button-blank"));
-    expect(screen.getByTestId("board-editor-draft")).toHaveTextContent('"durationMinutes":5');
+    expect(screen.getByTestId("board-editor-draft")).toHaveTextContent('"durationMinutes":23');
   });
 
-  it("keeps legacy source context intact when saving an edited older board", async () => {
+  it("preserves a saved board and resets to 5 when returning to fresh setup", async () => {
     const saved = {
       id: "saved", classId: "class-1", title: "Saved", task: "Original task",
       prompts: [], durationMinutes: 5, deviceMode: "off" as const,
@@ -956,7 +1003,8 @@ describe("Home presentation defaults", () => {
     render(<Home />);
 
     const emptyState = screen.getByTestId("empty-editor-state");
-      const editorPanel = within(workspace).getByTestId("editor-workspace-panel");
+    const workspace = screen.getByTestId("creation-workspace");
+    const editorPanel = within(workspace).getByTestId("editor-workspace-panel");
     expect(emptyState).toHaveClass("min-w-0", "w-full", "flex-1");
     expect(screen.getByTestId("empty-editor-content")).toHaveClass(
       "w-full",
@@ -985,7 +1033,8 @@ describe("Home presentation defaults", () => {
   it("keeps the editor workspace frame stable when a board is created", () => {
     render(<Home />);
 
-      const editorPanel = within(workspace).getByTestId("editor-workspace-panel");
+    const workspace = screen.getByTestId("creation-workspace");
+    const editorPanel = within(workspace).getByTestId("editor-workspace-panel");
     expect(editorPanel).toHaveClass("boardwork-editor-panel", "rounded-[14px]", "border");
     expect(screen.getByTestId("empty-editor-state")).toBeInTheDocument();
 

@@ -8,3 +8,9 @@ Presentation rail images should preserve their intrinsic aspect ratio: use intri
 **Why:** Extreme portrait assets otherwise leave misleading blank framing or appear clipped, while landscape assets still expand naturally to the available rail width.
 
 **How to apply:** Keep the same containment rule for live Present, editor preview, and fixed-size PNG export, and cover both extremes at wide and narrow classroom sizes.
+
+For stacked visuals, tie live height limits to the resizable image column rather than a fixed viewport height.
+
+**Why:** A viewport-only height cap makes portrait images stop responding to the middle divider even while the image column gets wider. The user expects both stacked images to scale together.
+
+**How to apply:** Keep proportional, column-relative containment in the interactive board; retain separate fixed-size containment for PNG exports.
