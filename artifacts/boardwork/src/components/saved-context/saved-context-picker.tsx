@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
-import { Search, Plus, Pencil, Check, Archive, ArchiveRestore, Loader2 } from "lucide-react";
+import { Search, Plus, Pencil, Check, Loader2 } from "lucide-react";
 import type { SavedContext, SavedContextLibrary } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -201,7 +201,7 @@ export function SavedContextPicker({
           />
         ) : (
           <>
-            <DialogHeader className="p-4 pb-2">
+            <DialogHeader className="p-4 pb-2 pr-12 text-left">
               <DialogTitle>Saved context</DialogTitle>
               <DialogDescription className="sr-only">
                 Select predefined contexts to shape the generated activity.
@@ -212,6 +212,7 @@ export function SavedContextPicker({
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
                 <Input
+                  aria-label="Search saved contexts"
                   placeholder="Search label, category, or details..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -258,18 +259,21 @@ export function SavedContextPicker({
                           return (
                             <div
                               key={item.id}
-                              className="group flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-muted/50 transition-colors"
+                              className={cn(
+                                "flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-muted focus-within:bg-muted transition-colors",
+                                isSelected && "bg-muted"
+                              )}
                             >
                               <button
                                 type="button"
                                 disabled={isDisabled}
                                 aria-pressed={isSelected}
                                 onClick={() => toggleSelection(item.id)}
-                                className="flex-1 flex items-start text-left gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="min-w-0 min-h-11 flex-1 flex items-start py-2 text-left gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                 data-testid={`context-row-${item.id}`}
                               >
-                                <div className={cn("mt-0.5 flex-shrink-0 flex items-center justify-center size-4 border rounded-sm", isSelected ? "border-primary text-primary" : "border-primary/30 text-transparent")}>
-                                  {isSelected && <Check className="size-3" />}
+                                <div aria-hidden="true" className={cn("mt-0.5 flex-shrink-0 flex items-center justify-center size-4 border rounded-sm border-muted-foreground/70", isSelected ? "bg-background text-foreground" : "bg-background text-transparent")}>
+                                  {isSelected && <Check className="size-3" strokeWidth={3} />}
                                 </div>
                                 <div className="min-w-0 flex-1">
                                   <div className="text-sm font-medium leading-tight text-foreground boardwork-user-content" dir="auto">
@@ -286,7 +290,7 @@ export function SavedContextPicker({
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                className="size-7 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 shrink-0 ml-2"
+                                className="size-11 text-muted-foreground hover:bg-muted hover:text-foreground shrink-0 ml-2"
                                 onClick={() => handleEditClick(item)}
                                 disabled={isFetching}
                                 data-testid={`button-edit-context-${item.id}`}
@@ -306,7 +310,7 @@ export function SavedContextPicker({
 
             <div className="p-4 border-t bg-background">
               <Button
-                className="w-full"
+                className="w-full hover:bg-muted hover:text-foreground"
                 variant="outline"
                 onClick={() => handleEditClick("new")}
                 disabled={selectedIds.length >= 20 || isFetching || (isError && !data)}

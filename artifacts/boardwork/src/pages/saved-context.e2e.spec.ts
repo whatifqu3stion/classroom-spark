@@ -158,6 +158,93 @@ async function switchClass(page: Page, name: string) {
   await expect(page.locator('[data-testid^="context-pill-"]')).toHaveCount(0);
 }
 
+for (const width of [390, 1280]) {
+  for (const theme of ["light", "dark"] as const) {
+    test(`Saved Context menu polish at ${width}px in ${theme}`, async ({ page }, testInfo) => {
+      const fixture = await installFixture(page);
+      await page.setViewportSize({ width, height: 844 });
+      await page.emulateMedia({ colorScheme: theme, reducedMotion: "reduce" });
+      await page.goto("/");
+      await page.evaluate((dark) => document.documentElement.classList.toggle("dark", dark), theme === "dark");
+      await page.getByTestId("button-add-context-empty").click();
+      const dialog = page.getByRole("dialog");
+      const search = page.getByRole("textbox", { name: "Search saved contexts" });
+      await expect(search).toBeVisible();
+      await search.fill("Class A observation");
+      const row = page.getByTestId(`context-row-${localId}`);
+      await expect(row).toBeVisible();
+      await search.clear();
+      await row.click();
+      await expect(row).toHaveAttribute("aria-pressed", "true");
+      const edit = page.getByRole("button", { name: "Edit Class A observation", exact: true });
+      await expect(edit).toHaveCSS("opacity", "1");
+      const box = await edit.boundingBox();
+      expect(box!.width).toBeGreaterThanOrEqual(44);
+      expect(box!.height).toBeGreaterThanOrEqual(44);
+      await row.focus();
+      await page.keyboard.press("Tab");
+      await expect(edit).toBeFocused();
+      expect(await edit.evaluate((element) => getComputedStyle(element).boxShadow)).not.toBe("none");
+      await expect(dialog.getByRole("heading", { name: "Saved context", exact: true })).toHaveCSS("text-align", "left");
+      await expectReadableText(page.getByTestId(`context-row-${globalId}`).getByText(originalDetails, { exact: true }), "rtl");
+      await page.screenshot({ path: testInfo.outputPath("picker.png") });
+      await edit.click();
+      await expect(dialog.getByRole("heading", { name: "Edit context" })).toHaveCSS("text-align", "left");
+      const category = page.getByRole("combobox", { name: "Category (optional)", exact: true });
+      await expect(category).toContainText("Evidence");
+      await expect(page.getByRole("radiogroup", { name: "Availability", exact: true })).toBeVisible();
+      await expect(dialog.getByText("19/50", { exact: true })).toHaveCSS("font-size", "12px");
+      await expect(page.getByRole("button", { name: "Save changes", exact: true })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Archive", exact: true })).toBeVisible();
+      await page.screenshot({ path: testInfo.outputPath("edit.png") });
+      await category.click();
+      const categorySearch = page.getByRole("combobox", { name: "Search or create category", exact: true });
+      await expect(categorySearch).toBeVisible();
+      await categorySearch.fill("Evidence");
+      const option = page.getByRole("option", { name: "Evidence", exact: true });
+      await expect(option).toBeVisible();
+      await page.mouse.move(0, 0);
+      await page.keyboard.press("ArrowDown");
+      await expect(option).toHaveAttribute("data-selected", "true");
+      await option.hover();
+      const optionColors = await option.evaluate((element) => {
+        const sample = document.createElement("span");
+        sample.style.backgroundColor = "hsl(var(--muted))";
+        document.body.append(sample);
+        const colors = { actual: getComputedStyle(element).backgroundColor, expected: getComputedStyle(sample).backgroundColor };
+        sample.remove();
+        return colors;
+      });
+      expect(optionColors.actual).toBe(optionColors.expected);
+      await page.screenshot({ path: testInfo.outputPath("category.png") });
+      await option.click();
+      await expect(category).toBeFocused();
+      await page.getByRole("button", { name: "Back", exact: true }).click();
+      await expect(row).toBeFocused();
+      await page.getByTestId("button-create-context-picker").click();
+      await expect(dialog.getByRole("heading", { name: "Create context" })).toHaveCSS("text-align", "left");
+      await expect(dialog.getByRole("button", { name: "Create", exact: true })).toBeVisible();
+      await expect(dialog.getByRole("button", { name: "Archive", exact: true })).toHaveCount(0);
+      await page.screenshot({ path: testInfo.outputPath("create.png") });
+      for (const element of [dialog, page.getByTestId("button-save-context")]) {
+        const bounds = await element.boundingBox();
+        expect(bounds!.x).toBeGreaterThanOrEqual(0);
+        expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
+        expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(844);
+      }
+      expect(await dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+      await page.getByRole("button", { name: "Back", exact: true }).click();
+      await expect(page.getByTestId("button-create-context-picker")).toBeFocused();
+      await page.keyboard.press("Escape");
+      await expect(page.getByTestId("button-add-context")).toBeFocused();
+      expect(fixture.unexpected).toEqual([]);
+      expect(fixture.updates).toEqual([]);
+      expect(fixture.archives).toEqual([]);
+      expect(fixture.selections).toEqual([]);
+    });
+  }
+}
+
 async function expectReadableText(locator: Locator, direction: "rtl" | "ltr") {
   await locator.scrollIntoViewIfNeeded();
   await expect(locator).toBeVisible();

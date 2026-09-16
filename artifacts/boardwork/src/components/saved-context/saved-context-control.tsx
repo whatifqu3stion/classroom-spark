@@ -139,7 +139,7 @@ export function SavedContextControl({
               type="button"
               variant="outline"
               size="sm"
-              className="h-7 rounded-full px-3 text-xs"
+              className="h-7 rounded-full px-3 text-xs hover:bg-muted hover:text-foreground"
               onClick={isError && !data ? () => refetch() : handleOpenPicker}
               disabled={disabled || (isError && !data && isFetching)}
               data-testid="button-add-context"
@@ -157,7 +157,7 @@ export function SavedContextControl({
           type="button"
           variant="outline"
           size="sm"
-          className={cn("h-8 rounded-full px-3 text-xs", isError && !data && "border-destructive/30 text-destructive hover:bg-destructive/10")}
+          className={cn("h-8 rounded-full px-3 text-xs hover:bg-muted hover:text-foreground", isError && !data && "border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive")}
           onClick={isError && !data ? () => refetch() : handleOpenPicker}
           disabled={disabled || (isError && !data && isFetching)}
           data-testid="button-add-context-empty"

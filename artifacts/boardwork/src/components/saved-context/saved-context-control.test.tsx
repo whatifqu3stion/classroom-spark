@@ -198,6 +198,41 @@ describe("SavedContextControl", () => {
     expect(screen.getByText("Focus on examples")).toBeInTheDocument();
   });
 
+  it("exposes named picker and form controls", async () => {
+    renderComponent();
+
+    fireEvent.click(await screen.findByTestId("button-add-context-empty"));
+    expect(await screen.findByRole("textbox", { name: "Search saved contexts" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("button-create-context-picker"));
+
+    expect(screen.getByRole("combobox", { name: "Category (optional)" })).toBeInTheDocument();
+    expect(screen.getByRole("radiogroup", { name: "Availability" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("combobox", { name: "Category (optional)" }));
+    expect(screen.getByRole("combobox", { name: "Search or create category" })).toBeInTheDocument();
+  });
+
+  it("keeps edit actions visible and counters readable", async () => {
+    renderComponent();
+
+    fireEvent.click(await screen.findByTestId("button-add-context-empty"));
+
+    const editButtons = [
+      screen.getByTestId("button-edit-context-ctx-1"),
+      screen.getByTestId("button-edit-context-ctx-2"),
+    ];
+    editButtons.forEach((button) => {
+      expect(button).toBeVisible();
+      expect(button).toHaveClass("size-11");
+      expect(button).not.toHaveClass("opacity-0");
+    });
+
+    fireEvent.click(screen.getByTestId("button-edit-context-ctx-1"));
+    expect(screen.getByText("21/300")).toHaveClass("text-xs");
+    expect(screen.getByText("17/50")).toHaveClass("text-xs");
+  });
+
   it("allows selecting a context from the picker with correct aria-pressed", async () => {
     const { onSelectionChange } = renderComponent({ selectedIds: ["ctx-1"] });
     
@@ -235,6 +270,16 @@ describe("SavedContextControl", () => {
     fireEvent.keyDown(dialog, { key: "Escape", code: "Escape" });
     await waitFor(() => expect(trigger).toHaveFocus());
   });
+
+  it("returns focus to the edited row when Back leaves the form", async () => {
+    renderComponent();
+
+    fireEvent.click(await screen.findByTestId("button-add-context-empty"));
+    fireEvent.click(screen.getByTestId("button-edit-context-ctx-2"));
+    fireEvent.click(await screen.findByTestId("button-back-picker"));
+
+    await waitFor(() => expect(screen.getByTestId("context-row-ctx-2")).toHaveFocus());
+  });
   
   it("does not auto-select edited unselected items", async () => {
     const { onSelectionChange } = renderComponent({ selectedIds: [] });
@@ -252,10 +297,71 @@ describe("SavedContextControl", () => {
     fireEvent.click(screen.getByTestId("button-save-context"));
     
     await waitFor(() => {
-      expect(useUpdateSavedContext().mutateAsync).toHaveBeenCalled();
+      expect(useUpdateSavedContext().mutateAsync).toHaveBeenCalledWith({
+        contextId: "ctx-2",
+        data: {
+          label: "Changed Context",
+          details: null,
+          categoryId: null,
+          scope: "global",
+          classId: null,
+        },
+      });
     });
     // Shouldn't auto-select because it wasn't selected before edit
     expect(onSelectionChange).not.toHaveBeenCalled();
+  });
+
+  it("archives a selected context and deselects it", async () => {
+    const { onSelectionChange } = renderComponent({ selectedIds: ["ctx-1"] });
+
+    fireEvent.click(await screen.findByTestId("button-add-context"));
+    fireEvent.click(await screen.findByTestId("button-edit-context-ctx-1"));
+    fireEvent.click(await screen.findByTestId("button-archive-context"));
+
+    await waitFor(() => {
+      expect(useArchiveSavedContext().mutateAsync).toHaveBeenCalledWith({
+        contextId: "ctx-1",
+      });
+      expect(onSelectionChange).toHaveBeenCalledWith([]);
+    });
+    expect(screen.queryByTestId("button-archive-context")).not.toBeInTheDocument();
+  });
+
+  it("creates a category with the entered name before saving a context", async () => {
+    renderComponent();
+
+    fireEvent.click(await screen.findByTestId("button-add-context-empty"));
+    fireEvent.click(await screen.findByTestId("button-create-context-picker"));
+
+    const categoryTrigger = screen.getByRole("combobox", { name: "Category (optional)" });
+    fireEvent.click(categoryTrigger);
+    const categorySearch = screen.getByRole("combobox", { name: "Search or create category" });
+    fireEvent.change(categorySearch, { target: { value: "Discussion" } });
+    fireEvent.click(await screen.findByTestId("command-create-category"));
+
+    await waitFor(() => {
+      expect(useCreateContextCategory().mutateAsync).toHaveBeenCalledWith({
+        data: { name: "Discussion" },
+      });
+    });
+
+    fireEvent.change(screen.getByTestId("input-context-label"), {
+      target: { value: "New discussion context" },
+    });
+    fireEvent.click(screen.getByTestId("button-save-context"));
+
+    await waitFor(() => {
+      expect(useCreateSavedContext().mutateAsync).toHaveBeenCalledWith({
+        data: {
+          label: "New discussion context",
+          details: null,
+          categoryId: "new-cat",
+          scope: "class",
+          classId: "class-1",
+        },
+      });
+    });
   });
 
   it("can switch to create form and save new context", async () => {

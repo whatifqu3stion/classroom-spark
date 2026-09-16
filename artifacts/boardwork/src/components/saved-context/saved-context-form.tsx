@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Loader2, ArrowLeft, Archive, Trash2, Plus } from "lucide-react";
+import { Loader2, ArrowLeft, Archive, Plus } from "lucide-react";
 import type { SavedContext, ContextCategory, SavedContextInputScope } from "@workspace/api-client-react";
 import {
   useCreateSavedContext,
@@ -194,12 +194,12 @@ export function SavedContextForm({
 
   return (
     <>
-      <DialogHeader className="p-4 pb-2 flex flex-row items-center gap-2 border-b">
-        <Button variant="ghost" size="icon" className="size-8 shrink-0" onClick={onClose} disabled={isSaving || isArchiving} data-testid="button-back-picker" aria-label="Back">
+      <DialogHeader className="p-4 pb-2 pr-12 flex flex-row items-center gap-2 space-y-0 text-left border-b">
+        <Button variant="ghost" size="icon" className="size-11 shrink-0 hover:bg-muted hover:text-foreground" onClick={onClose} disabled={isSaving || isArchiving} data-testid="button-back-picker" aria-label="Back">
           <ArrowLeft className="size-4" />
         </Button>
         <div className="flex-1">
-          <DialogTitle className="text-base">{initialData ? "Edit context" : "Create context"}</DialogTitle>
+          <DialogTitle>{initialData ? "Edit context" : "Create context"}</DialogTitle>
           <DialogDescription className="sr-only">Form to create or edit a saved context snippet.</DialogDescription>
         </div>
       </DialogHeader>
@@ -225,27 +225,32 @@ export function SavedContextForm({
             data-testid="input-context-label"
             autoFocus
           />
-          <div className="text-[10px] text-muted-foreground text-right">{label.length}/50</div>
+          <div className="text-xs text-muted-foreground text-right">{label.length}/50</div>
         </div>
 
         <div className="space-y-2 flex flex-col">
-          <Label>Category (optional)</Label>
+          <Label id="context-category-label" htmlFor="context-category">Category (optional)</Label>
           <Popover open={catOpen} onOpenChange={setCatOpen}>
             <PopoverTrigger asChild>
               <Button
+                type="button"
+                id="context-category"
                 variant="outline"
                 role="combobox"
+                aria-labelledby="context-category-label"
                 aria-expanded={catOpen}
-                className="justify-between font-normal"
+                className="justify-between min-w-0 font-normal hover:bg-muted hover:text-foreground"
                 data-testid="combobox-context-category"
               >
-                {selectedCat ? selectedCat.name : "Select a category..."}
+                <span className={cn("truncate", !selectedCat && "text-muted-foreground")}>{selectedCat ? selectedCat.name : "Select a category..."}</span>
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-              <Command shouldFilter={false}>
+              <Command label="Search or create category" shouldFilter={false} className="[&_[cmdk-item]]:min-h-11 [&_[cmdk-item][data-selected=true]]:bg-muted [&_[cmdk-item][data-selected=true]]:text-foreground">
                 <CommandInput
+                  aria-label="Search or create category"
+                  className="focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                   placeholder="Search or create category..."
                   value={catSearch}
                   onValueChange={setCatSearch}
@@ -257,7 +262,7 @@ export function SavedContextForm({
                       <Button 
                         type="button" 
                         variant="secondary" 
-                        className="w-full text-xs h-8"
+                        className="w-full text-xs min-h-11 h-auto whitespace-normal break-words bg-muted text-foreground hover:bg-muted/80"
                         onClick={() => handleCreateCategory(catSearch)}
                         disabled={createCatMut.isPending}
                         data-testid="button-create-category-inline"
@@ -298,18 +303,18 @@ export function SavedContextForm({
                               categoryId === category.id ? "opacity-100" : "opacity-0"
                             )}
                           />
-                          {category.name}
+                          <span className="min-w-0 break-words">{category.name}</span>
                         </CommandItem>
                       ))}
                     {catSearch.trim() && !categories.some(c => c.name.toLowerCase() === catSearch.toLowerCase()) && (
                       <CommandItem
                         value={catSearch}
                         onSelect={(currentValue) => handleCreateCategory(currentValue)}
-                        className="text-primary font-medium"
+                        className="text-foreground font-medium"
                         data-testid="command-create-category"
                       >
                         <Plus className="mr-2 h-4 w-4" />
-                        Create "{catSearch}"
+                        <span className="min-w-0 break-words">Create "{catSearch}"</span>
                       </CommandItem>
                     )}
                   </CommandGroup>
@@ -333,12 +338,12 @@ export function SavedContextForm({
             maxLength={300}
             data-testid="textarea-context-details"
           />
-          <div className="text-[10px] text-muted-foreground text-right">{details.length}/300</div>
+          <div className="text-xs text-muted-foreground text-right">{details.length}/300</div>
         </div>
 
         <div className="space-y-3">
-          <Label>Availability</Label>
-          <RadioGroup value={scope} onValueChange={(val) => setScope(val as "class" | "global")} className="flex flex-col gap-2">
+          <Label id="context-availability-label">Availability</Label>
+          <RadioGroup aria-labelledby="context-availability-label" value={scope} onValueChange={(val) => setScope(val as "class" | "global")} className="flex flex-col gap-2 [&_[role=radio]]:border-muted-foreground/70 [&_[role=radio]]:text-foreground [&_[role=radio]]:shadow-none [&_svg]:fill-current">
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="class" id="scope-class" data-testid="radio-scope-class" />
               <Label htmlFor="scope-class" className="font-normal cursor-pointer">This class only</Label>
