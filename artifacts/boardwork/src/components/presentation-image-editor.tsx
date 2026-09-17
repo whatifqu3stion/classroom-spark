@@ -123,8 +123,7 @@ export function PresentationImageEditor({ draft, onChange }: PresentationImageEd
               data-testid={`image-selector-${index + 1}`}
               onClick={() => { if (!unavailable) setActiveIndex(index); }}
               className={cn(
-                "flex min-h-11 min-w-0 flex-col items-start justify-center gap-1 rounded-lg border px-3 py-2 text-left text-sm font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                selectedIndex === index ? "border-foreground/25 bg-foreground/10 dark:bg-foreground/15" : "border-input bg-card hover:bg-muted/70",
+                "presentation-settings-choice flex min-h-11 min-w-0 flex-col items-start justify-center gap-1 rounded-lg border px-3 py-2 text-left text-sm font-medium text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background",
                 unavailable && "cursor-not-allowed opacity-50",
               )}
             >
@@ -149,7 +148,7 @@ export function PresentationImageEditor({ draft, onChange }: PresentationImageEd
       </div>
       <div className="grid grid-cols-2 gap-2">
         <label className={cn(
-          "relative flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-lg border border-input bg-card px-2 py-2 text-sm font-medium focus-within:ring-2 focus-within:ring-ring",
+          "relative flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-lg border border-input bg-card px-2 py-2 text-sm font-medium focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 ring-offset-background",
           busy ? "cursor-wait opacity-60" : "cursor-pointer hover:bg-muted/70",
         )}>
           {busy ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" /> : <ImagePlus className="h-4 w-4 shrink-0" aria-hidden="true" />}
@@ -169,7 +168,7 @@ export function PresentationImageEditor({ draft, onChange }: PresentationImageEd
           variant="ghost"
           disabled={!visual || busy}
           aria-label={`Remove image ${selectedIndex + 1}`}
-          className="h-auto min-h-11 min-w-0 gap-2 whitespace-normal px-2 py-2 shadow-none"
+          className="h-auto min-h-11 min-w-0 gap-2 whitespace-normal px-2 py-2 shadow-none hover:bg-muted/70 hover:text-foreground focus-visible:ring-offset-2"
           onClick={() => {
             setError(null);
             updateVisuals(getPresentationVisuals(latest.current.draft).filter((_, index) => index !== selectedIndex));

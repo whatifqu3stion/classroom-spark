@@ -400,8 +400,8 @@ export function BoardEditor({
                   </div>
 
                   <div className="border-t pt-5">
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div className="mb-3 flex min-w-0 flex-wrap items-center justify-between gap-3">
+                      <div className="text-sm font-medium text-foreground">
                         Teacher note
                       </div>
                       {draft.teacherNote == null ? (
@@ -409,7 +409,7 @@ export function BoardEditor({
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="h-8 text-xs"
+                          className="h-auto min-h-11 text-sm hover:bg-muted/70 hover:text-foreground focus-visible:ring-offset-2"
                           onClick={() => onChange({ teacherNote: "" })}
                           data-testid="button-add-teacher-note"
                         >
@@ -420,7 +420,7 @@ export function BoardEditor({
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="h-8 text-xs text-muted-foreground"
+                          className="h-auto min-h-11 text-sm text-muted-foreground hover:bg-muted/70 hover:text-foreground focus-visible:ring-offset-2"
                           onClick={() => onChange({ teacherNote: null })}
                           data-testid="button-remove-teacher-note"
                         >
@@ -435,7 +435,7 @@ export function BoardEditor({
                           value={draft.teacherNote}
                           onChange={(val) => onChange({ teacherNote: val || null })}
                           placeholder="Optional note for the teacher..."
-                          className="text-muted-foreground text-sm block w-full"
+                          className="block w-full min-h-20 rounded-lg border border-input bg-muted/50 px-3 py-2.5 mx-0 my-0 text-sm text-foreground hover:bg-muted/70 focus:bg-background focus:ring-offset-2"
                         />
                         <FormulaPreview>{draft.teacherNote}</FormulaPreview>
                       </div>

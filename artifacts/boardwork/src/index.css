@@ -216,30 +216,33 @@
   .presentation-theme-grid {
     display: grid;
     min-width: 0;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: 0.5rem;
   }
 
-  .presentation-theme-option {
+  .presentation-theme-option,
+  .presentation-settings-choice {
     --theme-control-color: hsl(var(--primary));
-    min-height: 2.5rem;
+    min-height: 2.75rem;
     background-color: hsl(var(--card));
-    border-color: color-mix(in srgb, hsl(var(--foreground)) 20%, hsl(var(--card)));
+    border-color: hsl(var(--input));
     color: hsl(var(--foreground));
   }
 
-  .presentation-theme-option:hover {
-    background-color: hsl(var(--accent));
-    border-color: hsl(var(--muted-foreground));
+  .presentation-theme-option:hover,
+  .presentation-settings-choice:where(:not([aria-disabled="true"])):hover {
+    background-color: color-mix(in srgb, hsl(var(--muted)) 70%, hsl(var(--card)));
   }
 
-  .presentation-theme-option[aria-pressed="true"] {
-    background-color: hsl(var(--muted));
-    border-color: hsl(var(--foreground));
+  .presentation-theme-option[aria-pressed="true"],
+  .presentation-settings-choice[aria-pressed="true"] {
+    background-color: color-mix(in srgb, hsl(var(--foreground)) 10%, hsl(var(--card)));
+    border-color: color-mix(in srgb, hsl(var(--foreground)) 25%, hsl(var(--card)));
   }
 
-  .presentation-theme-option:focus-visible {
-    outline-offset: 2px;
+  .dark .presentation-theme-option[aria-pressed="true"],
+  .dark .presentation-settings-choice[aria-pressed="true"] {
+    background-color: color-mix(in srgb, hsl(var(--foreground)) 15%, hsl(var(--card)));
   }
 
   .presentation-theme-swatch {
@@ -254,7 +257,13 @@
     color: hsl(var(--muted-foreground));
   }
 
-  @container (min-width: 36rem) {
+  @container (min-width: 20rem) {
+    .presentation-theme-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @container (min-width: 40rem) {
     .presentation-theme-grid {
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }

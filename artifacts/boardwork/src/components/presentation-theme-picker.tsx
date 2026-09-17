@@ -1,4 +1,4 @@
-import { Check, Moon, Sparkles, Sun } from "lucide-react";
+import { Check, Moon, Sun } from "lucide-react";
 import type { CSSProperties } from "react";
 import {
   getCuratedPresentationTheme,
@@ -44,7 +44,7 @@ function SurfaceSwatch({
       onClick={onSelect}
       style={themeControlStyle(backgroundColor)}
       className={cn(
-        "presentation-theme-option presentation-theme-option--surface relative grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-lg border px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "presentation-theme-option presentation-theme-option--surface relative grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background",
       )}
       data-testid={`theme-option-${surface.id === "paper-v2" ? "paper" : surface.id.replace("-v2", "")}`}
     >
@@ -54,16 +54,16 @@ function SurfaceSwatch({
         style={{ backgroundColor }}
         data-testid={`theme-swatch-color-${surface.id}`}
       />
-      <span className="flex min-w-0 items-center gap-1 text-xs font-medium text-foreground">
-        <span className="min-w-0 truncate">{surface.name}</span>
+      <span className="flex min-w-0 flex-wrap items-center gap-1 text-sm font-medium text-foreground">
+        <span className="min-w-0 [overflow-wrap:anywhere]">{surface.name}</span>
         {surface.mode === "dark" ? (
-          <Moon className="presentation-theme-mode h-3 w-3 text-muted-foreground" aria-label="Dark" />
+          <Moon className="presentation-theme-mode h-4 w-4 shrink-0 text-muted-foreground" aria-label="Dark" />
         ) : (
-          <Sun className="presentation-theme-mode h-3 w-3 text-muted-foreground" aria-label="Light" />
+          <Sun className="presentation-theme-mode h-4 w-4 shrink-0 text-muted-foreground" aria-label="Light" />
         )}
       </span>
       <Check
-        className={cn("presentation-theme-check ml-auto h-3.5 w-3.5 shrink-0", !selected && "invisible")}
+        className={cn("presentation-theme-check ml-auto h-4 w-4 shrink-0", !selected && "invisible")}
         aria-hidden="true"
       />
     </button>
@@ -91,7 +91,7 @@ function AccentSwatch({
       onClick={onSelect}
       style={themeControlStyle(color)}
       className={cn(
-        "presentation-theme-option presentation-theme-option--accent relative grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-lg border px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "presentation-theme-option presentation-theme-option--accent relative grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background",
       )}
       data-testid={`accent-option-${accent.id}`}
     >
@@ -100,11 +100,11 @@ function AccentSwatch({
         style={{ backgroundColor: color }}
         aria-hidden="true"
       />
-      <span className="truncate text-xs font-medium text-foreground">
+      <span className="min-w-0 text-sm font-medium text-foreground [overflow-wrap:anywhere]">
         {name}
       </span>
       <Check
-        className={cn("presentation-theme-check ml-auto h-3.5 w-3.5 shrink-0", !selected && "invisible")}
+        className={cn("presentation-theme-check ml-auto h-4 w-4 shrink-0", !selected && "invisible")}
         aria-hidden="true"
       />
     </button>
@@ -133,18 +133,15 @@ export function PresentationThemePicker({
 
   return (
     <div className="space-y-3" data-testid="presentation-theme-picker">
-      <div>
-        <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-          Visual presentation colors
+        <div className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-foreground">
+          <span className="min-w-0">Visual presentation colors</span>
           <HelpTooltip label="About presentation colors">
             Choose the background first, then use accents for small signals such as links, progress, and emphasis.
           </HelpTooltip>
         </div>
-      </div>
 
       <div className="space-y-2" data-testid="presentation-surfaces">
-            <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="flex items-center gap-1 text-sm font-medium text-muted-foreground">
           Background
               <HelpTooltip label="About presentation backgrounds">
                 Pick the surface students will see behind the lesson. Light and dark options are labeled for quick comparison.
@@ -181,14 +178,12 @@ export function PresentationThemePicker({
 
       {selectedSurface ? (
         <div className="space-y-2" data-testid="presentation-accents">
-            <div>
-              <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="flex items-center gap-1 text-sm font-medium text-muted-foreground">
               Accent
                 <HelpTooltip label="About presentation accents">
                   Accents mark links, progress, and emphasis without changing the background.
                 </HelpTooltip>
             </div>
-          </div>
           <div className="presentation-theme-grid-container">
             <div className="presentation-theme-grid">
               {presentationAccentThemes.map((accent) => (
