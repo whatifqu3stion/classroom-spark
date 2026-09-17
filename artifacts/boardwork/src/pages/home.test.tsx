@@ -1037,12 +1037,16 @@ describe("Home presentation defaults", () => {
     const editorPanel = within(workspace).getByTestId("editor-workspace-panel");
     expect(editorPanel).toHaveClass("boardwork-editor-panel", "rounded-[14px]", "border");
     expect(screen.getByTestId("empty-editor-state")).toBeInTheDocument();
+    expect(editorPanel).toHaveClass("min-h-[500px]");
+    expect(editorPanel).not.toHaveClass("lg:self-start", "lg:max-h-full");
 
     fireEvent.click(screen.getByTestId("button-blank"));
 
     expect(screen.getByTestId("board-editor-draft")).toBeInTheDocument();
     expect(screen.queryByTestId("empty-editor-state")).not.toBeInTheDocument();
     expect(editorPanel).toHaveClass("boardwork-editor-panel", "rounded-[14px]", "border");
+    expect(editorPanel).toHaveClass("w-full", "min-h-0", "flex-col", "lg:self-start", "lg:max-h-full");
+    expect(editorPanel).not.toHaveClass("min-h-[500px]");
   });
 
   it.each(creationViewports)(

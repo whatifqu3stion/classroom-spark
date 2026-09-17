@@ -180,7 +180,7 @@ export function BoardEditor({
     : "Add a task before presenting.";
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background" data-testid="board-editor">
+    <div className="flex min-h-0 min-w-0 flex-auto flex-col overflow-hidden bg-background" data-testid="board-editor">
       <div
         className="flex shrink-0 flex-col gap-3 border-b bg-card px-5 py-4 sm:flex-row sm:items-center sm:justify-between lg:px-6"
         data-testid="board-editor-header"
@@ -260,7 +260,7 @@ export function BoardEditor({
         </div>
       </div>
 
-      <div className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-3 sm:p-6 md:p-10">
+      <div className="min-h-0 min-w-0 flex-auto overflow-x-hidden overflow-y-auto p-3 sm:p-6 md:p-10" data-testid="board-editor-content">
         <div className="max-w-3xl mx-auto space-y-8">
           
           <div className="space-y-4">
@@ -451,7 +451,7 @@ export function BoardEditor({
                 data-testid="presentation-visual-editor"
               >
                 <div
-                  className="space-y-6 pt-5"
+                  className={cn("space-y-6", presentationVisualOpen && "pt-5")}
                   data-testid="presentation-visual-editor-content"
                 >
                    <div className="space-y-4">

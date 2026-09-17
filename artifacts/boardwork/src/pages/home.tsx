@@ -1118,7 +1118,11 @@ export default function Home() {
 
           {/* Right Column: Editor */}
           <div
-            className="boardwork-editor-panel flex min-h-[500px] min-w-0 flex-1 overflow-hidden rounded-[14px] border bg-card shadow-teacher-card lg:min-h-0 lg:pb-0"
+            className={`boardwork-editor-panel flex min-w-0 overflow-hidden rounded-[14px] border bg-card shadow-teacher-card ${
+              localDraft
+                ? "w-full min-h-0 flex-col lg:max-h-full lg:flex-1 lg:self-start"
+                : "min-h-[500px] flex-1 lg:min-h-0 lg:pb-0"
+            }`}
             data-testid="editor-workspace-panel"
           >
             {localDraft ? (

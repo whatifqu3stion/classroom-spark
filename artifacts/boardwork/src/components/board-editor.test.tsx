@@ -43,6 +43,10 @@ describe("BoardEditor presentation visual disclosure", () => {
     );
 
     expect(screen.getByTestId("board-editor")).toHaveClass("min-w-0");
+    expect(screen.getByTestId("board-editor")).toHaveClass("min-h-0", "flex-auto");
+    expect(screen.getByTestId("board-editor-content")).toHaveClass(
+      "min-h-0", "flex-auto", "overflow-y-auto", "p-3", "sm:p-6", "md:p-10",
+    );
     expect(screen.getByTestId("board-editor")).not.toHaveClass(
       "rounded-[14px]",
       "border",
@@ -88,6 +92,7 @@ describe("BoardEditor presentation visual disclosure", () => {
     expect(editor).toHaveAttribute("aria-hidden", "true");
     expect(editor.children).toHaveLength(1);
     expect(editor.firstElementChild).toHaveClass("space-y-6");
+    expect(editor.firstElementChild).not.toHaveClass("pt-5");
     expect(screen.queryByText("No image")).not.toBeInTheDocument();
     expect(screen.queryByText("Image added")).not.toBeInTheDocument();
     expect(toggle).toHaveAccessibleName("Open presentation settings");
@@ -98,6 +103,7 @@ describe("BoardEditor presentation visual disclosure", () => {
 
     expect(toggle).toHaveAttribute("aria-expanded", "true");
     expect(editor).not.toHaveAttribute("inert");
+    expect(editor.firstElementChild).toHaveClass("pt-5");
     expect(screen.getByTestId("presentation-settings-chevron")).toHaveClass("rotate-180");
     expect(editor).toHaveAttribute("data-state", "open");
     expect(editor).toHaveAttribute("aria-hidden", "false");
