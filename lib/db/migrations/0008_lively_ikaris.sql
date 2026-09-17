@@ -1,0 +1,1 @@
+ALTER TABLE "activities" ADD COLUMN "content_formatting" jsonb;

@@ -1281,6 +1281,46 @@ components:
           type: ["string", "null"]
           maxLength: 300
 
+    InlineTextRun:
+      type: object
+      additionalProperties: false
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 100000
+        bold:
+          type: boolean
+        underline:
+          type: boolean
+        highlight:
+          type: boolean
+
+    BoardContentFormatting:
+      type: object
+      additionalProperties: false
+      required:
+        - version
+      properties:
+        version:
+          type: integer
+          enum: [1]
+        task:
+          type: array
+          maxItems: 10000
+          items:
+            $ref: "#/components/schemas/InlineTextRun"
+        prompts:
+          type: array
+          maxItems: 1000
+          items:
+            type: array
+            maxItems: 10000
+            items:
+              $ref: "#/components/schemas/InlineTextRun"
+
     Activity:
       type: object
       required:
@@ -1309,6 +1349,10 @@ components:
           type: array
           items:
             type: string
+        contentFormatting:
+          anyOf:
+            - $ref: "#/components/schemas/BoardContentFormatting"
+            - type: "null"
         durationMinutes:
           $ref: "#/components/schemas/Duration"
         deviceMode:
@@ -1398,6 +1442,10 @@ components:
           type: array
           items:
             type: string
+        contentFormatting:
+          anyOf:
+            - $ref: "#/components/schemas/BoardContentFormatting"
+            - type: "null"
         durationMinutes:
           $ref: "#/components/schemas/Duration"
         deviceMode:
@@ -1464,6 +1512,10 @@ components:
           type: array
           items:
             type: string
+        contentFormatting:
+          anyOf:
+            - $ref: "#/components/schemas/BoardContentFormatting"
+            - type: "null"
         durationMinutes:
           $ref: "#/components/schemas/Duration"
         deviceMode:

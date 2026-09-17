@@ -24,6 +24,8 @@ import {
 } from "@workspace/presentation-rail-contract";
 import { usePresentationTextFit } from "@/hooks/use-presentation-text-fit";
 import { FormulaText } from "./formula-text";
+import { FormattedBoardText } from "./formatted-board-text";
+import { getInlineHighlightStyle } from "@/lib/inline-formatting";
 import type { CountdownTimerState } from "./countdown-timer";
 
 interface PresentationCanvasProps {
@@ -208,7 +210,7 @@ export function PresentationCanvas({
     exportLayout,
     editorPreview,
     hasAuthoredStudentContent,
-    contentVersion: JSON.stringify([activity.task, activity.prompts, themeTypography]),
+    contentVersion: JSON.stringify([activity.task, activity.prompts, activity.contentFormatting, themeTypography]),
     hasRightRail,
   });
 
@@ -324,6 +326,7 @@ export function PresentationCanvas({
         isResizing && "presentation-surface--resizing",
       )}
       style={{
+        ...getInlineHighlightStyle(activity.presentationTheme),
         "--presentation-bg": themeColors.background,
         "--presentation-surface": themeColors.surface,
         "--presentation-primary-text": themeColors.primaryText,
@@ -524,7 +527,7 @@ export function PresentationCanvas({
               dir="auto"
               {...testId(includeTestIds, "present-task")}
             >
-              <FormulaText>{activity.task}</FormulaText>
+              <FormattedBoardText runs={activity.contentFormatting?.task}>{activity.task}</FormattedBoardText>
             </p>
           )}
 
@@ -536,7 +539,7 @@ export function PresentationCanvas({
                     •
                   </span>
                   <span className="boardwork-user-content" dir="auto">
-                    <FormulaText>{prompt}</FormulaText>
+                    <FormattedBoardText runs={activity.contentFormatting?.prompts?.[index]}>{prompt}</FormattedBoardText>
                   </span>
                 </li>
               ))}

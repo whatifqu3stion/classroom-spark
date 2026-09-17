@@ -23,6 +23,16 @@ export const HealthCheckResponse = zod.object({
  */
 export const getAppStateResponseClassesItemDefaultDurationMultipleOf = 1;
 
+export const getAppStateResponseActivitiesItemContentFormattingOneTaskItemTextMax = 100000;
+
+export const getAppStateResponseActivitiesItemContentFormattingOneTaskMax = 10000;
+
+export const getAppStateResponseActivitiesItemContentFormattingOnePromptsItemItemTextMax = 100000;
+
+export const getAppStateResponseActivitiesItemContentFormattingOnePromptsItemMax = 10000;
+
+export const getAppStateResponseActivitiesItemContentFormattingOnePromptsMax = 1000;
+
 export const getAppStateResponseActivitiesItemDurationMinutesMultipleOf = 1;
 
 
@@ -85,6 +95,21 @@ export const GetAppStateResponse = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
+  "contentFormatting": zod.union([zod.object({
+  "version": zod.literal(1),
+  "task": zod.array(zod.object({
+  "text": zod.string().min(1).max(getAppStateResponseActivitiesItemContentFormattingOneTaskItemTextMax),
+  "bold": zod.boolean().optional(),
+  "underline": zod.boolean().optional(),
+  "highlight": zod.boolean().optional()
+})).max(getAppStateResponseActivitiesItemContentFormattingOneTaskMax).optional(),
+  "prompts": zod.array(zod.array(zod.object({
+  "text": zod.string().min(1).max(getAppStateResponseActivitiesItemContentFormattingOnePromptsItemItemTextMax),
+  "bold": zod.boolean().optional(),
+  "underline": zod.boolean().optional(),
+  "highlight": zod.boolean().optional()
+})).max(getAppStateResponseActivitiesItemContentFormattingOnePromptsItemMax)).max(getAppStateResponseActivitiesItemContentFormattingOnePromptsMax).optional()
+}),zod.null()]).optional(),
   "durationMinutes": zod.number().min(1).multipleOf(getAppStateResponseActivitiesItemDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
@@ -465,6 +490,16 @@ export const GenerateActivityBody = zod.object({
   "surprise": zod.boolean()
 })
 
+export const generateActivityResponseContentFormattingOneTaskItemTextMax = 100000;
+
+export const generateActivityResponseContentFormattingOneTaskMax = 10000;
+
+export const generateActivityResponseContentFormattingOnePromptsItemItemTextMax = 100000;
+
+export const generateActivityResponseContentFormattingOnePromptsItemMax = 10000;
+
+export const generateActivityResponseContentFormattingOnePromptsMax = 1000;
+
 export const generateActivityResponseDurationMinutesMultipleOf = 1;
 
 
@@ -488,6 +523,21 @@ export const GenerateActivityResponse = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
+  "contentFormatting": zod.union([zod.object({
+  "version": zod.literal(1),
+  "task": zod.array(zod.object({
+  "text": zod.string().min(1).max(generateActivityResponseContentFormattingOneTaskItemTextMax),
+  "bold": zod.boolean().optional(),
+  "underline": zod.boolean().optional(),
+  "highlight": zod.boolean().optional()
+})).max(generateActivityResponseContentFormattingOneTaskMax).optional(),
+  "prompts": zod.array(zod.array(zod.object({
+  "text": zod.string().min(1).max(generateActivityResponseContentFormattingOnePromptsItemItemTextMax),
+  "bold": zod.boolean().optional(),
+  "underline": zod.boolean().optional(),
+  "highlight": zod.boolean().optional()
+})).max(generateActivityResponseContentFormattingOnePromptsItemMax)).max(generateActivityResponseContentFormattingOnePromptsMax).optional()
+}),zod.null()]).optional(),
   "durationMinutes": zod.number().min(1).multipleOf(generateActivityResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
@@ -770,6 +820,16 @@ export const ListActivitiesQueryParams = zod.object({
   "classId": zod.coerce.string().optional()
 })
 
+export const listActivitiesResponseContentFormattingOneTaskItemTextMax = 100000;
+
+export const listActivitiesResponseContentFormattingOneTaskMax = 10000;
+
+export const listActivitiesResponseContentFormattingOnePromptsItemItemTextMax = 100000;
+
+export const listActivitiesResponseContentFormattingOnePromptsItemMax = 10000;
+
+export const listActivitiesResponseContentFormattingOnePromptsMax = 1000;
+
 export const listActivitiesResponseDurationMinutesMultipleOf = 1;
 
 
@@ -793,6 +853,21 @@ export const ListActivitiesResponseItem = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
+  "contentFormatting": zod.union([zod.object({
+  "version": zod.literal(1),
+  "task": zod.array(zod.object({
+  "text": zod.string().min(1).max(listActivitiesResponseContentFormattingOneTaskItemTextMax),
+  "bold": zod.boolean().optional(),
+  "underline": zod.boolean().optional(),
+  "highlight": zod.boolean().optional()
+})).max(listActivitiesResponseContentFormattingOneTaskMax).optional(),
+  "prompts": zod.array(zod.array(zod.object({
+  "text": zod.string().min(1).max(listActivitiesResponseContentFormattingOnePromptsItemItemTextMax),
+  "bold": zod.boolean().optional(),
+  "underline": zod.boolean().optional(),
+  "highlight": zod.boolean().optional()
+})).max(listActivitiesResponseContentFormattingOnePromptsItemMax)).max(listActivitiesResponseContentFormattingOnePromptsMax).optional()
+}),zod.null()]).optional(),
   "durationMinutes": zod.number().min(1).multipleOf(listActivitiesResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
@@ -843,6 +918,16 @@ export const ListActivitiesResponse = zod.array(ListActivitiesResponseItem)
 /**
  * @summary Create an activity
  */
+export const createActivityBodyContentFormattingOneTaskItemTextMax = 100000;
+
+export const createActivityBodyContentFormattingOneTaskMax = 10000;
+
+export const createActivityBodyContentFormattingOnePromptsItemItemTextMax = 100000;
+
+export const createActivityBodyContentFormattingOnePromptsItemMax = 10000;
+
+export const createActivityBodyContentFormattingOnePromptsMax = 1000;
+
 export const createActivityBodyDurationMinutesMultipleOf = 1;
 
 
@@ -860,6 +945,21 @@ export const CreateActivityBody = zod.object({
   "eyebrow": zod.string().nullish(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()).optional(),
+  "contentFormatting": zod.union([zod.object({
+  "version": zod.literal(1),
+  "task": zod.array(zod.object({
+  "text": zod.string().min(1).max(createActivityBodyContentFormattingOneTaskItemTextMax),
+  "bold": zod.boolean().optional(),
+  "underline": zod.boolean().optional(),
+  "highlight": zod.boolean().optional()
+})).max(createActivityBodyContentFormattingOneTaskMax).optional(),
+  "prompts": zod.array(zod.array(zod.object({
+  "text": zod.string().min(1).max(createActivityBodyContentFormattingOnePromptsItemItemTextMax),
+  "bold": zod.boolean().optional(),
+  "underline": zod.boolean().optional(),
+  "highlight": zod.boolean().optional()
+})).max(createActivityBodyContentFormattingOnePromptsItemMax)).max(createActivityBodyContentFormattingOnePromptsMax).optional()
+}),zod.null()]).optional(),
   "durationMinutes": zod.number().min(1).multipleOf(createActivityBodyDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
@@ -896,6 +996,16 @@ export const CreateActivityBody = zod.object({
   "favorite": zod.boolean().optional()
 })
 
+export const createActivityResponseContentFormattingOneTaskItemTextMax = 100000;
+
+export const createActivityResponseContentFormattingOneTaskMax = 10000;
+
+export const createActivityResponseContentFormattingOnePromptsItemItemTextMax = 100000;
+
+export const createActivityResponseContentFormattingOnePromptsItemMax = 10000;
+
+export const createActivityResponseContentFormattingOnePromptsMax = 1000;
+
 export const createActivityResponseDurationMinutesMultipleOf = 1;
 
 
@@ -919,6 +1029,21 @@ export const CreateActivityResponse = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
+  "contentFormatting": zod.union([zod.object({
+  "version": zod.literal(1),
+  "task": zod.array(zod.object({
+  "text": zod.string().min(1).max(createActivityResponseContentFormattingOneTaskItemTextMax),
+  "bold": zod.boolean().optional(),
+  "underline": zod.boolean().optional(),
+  "highlight": zod.boolean().optional()
+})).max(createActivityResponseContentFormattingOneTaskMax).optional(),
+  "prompts": zod.array(zod.array(zod.object({
+  "text": zod.string().min(1).max(createActivityResponseContentFormattingOnePromptsItemItemTextMax),
+  "bold": zod.boolean().optional(),
+  "underline": zod.boolean().optional(),
+  "highlight": zod.boolean().optional()
+})).max(createActivityResponseContentFormattingOnePromptsItemMax)).max(createActivityResponseContentFormattingOnePromptsMax).optional()
+}),zod.null()]).optional(),
   "durationMinutes": zod.number().min(1).multipleOf(createActivityResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
@@ -972,6 +1097,16 @@ export const GetActivityParams = zod.object({
   "activityId": zod.coerce.string()
 })
 
+export const getActivityResponseContentFormattingOneTaskItemTextMax = 100000;
+
+export const getActivityResponseContentFormattingOneTaskMax = 10000;
+
+export const getActivityResponseContentFormattingOnePromptsItemItemTextMax = 100000;
+
+export const getActivityResponseContentFormattingOnePromptsItemMax = 10000;
+
+export const getActivityResponseContentFormattingOnePromptsMax = 1000;
+
 export const getActivityResponseDurationMinutesMultipleOf = 1;
 
 
@@ -995,6 +1130,21 @@ export const GetActivityResponse = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
+  "contentFormatting": zod.union([zod.object({
+  "version": zod.literal(1),
+  "task": zod.array(zod.object({
+  "text": zod.string().min(1).max(getActivityResponseContentFormattingOneTaskItemTextMax),
+  "bold": zod.boolean().optional(),
+  "underline": zod.boolean().optional(),
+  "highlight": zod.boolean().optional()
+})).max(getActivityResponseContentFormattingOneTaskMax).optional(),
+  "prompts": zod.array(zod.array(zod.object({
+  "text": zod.string().min(1).max(getActivityResponseContentFormattingOnePromptsItemItemTextMax),
+  "bold": zod.boolean().optional(),
+  "underline": zod.boolean().optional(),
+  "highlight": zod.boolean().optional()
+})).max(getActivityResponseContentFormattingOnePromptsItemMax)).max(getActivityResponseContentFormattingOnePromptsMax).optional()
+}),zod.null()]).optional(),
   "durationMinutes": zod.number().min(1).multipleOf(getActivityResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
@@ -1049,6 +1199,16 @@ export const UpdateActivityParams = zod.object({
   "activityId": zod.coerce.string()
 })
 
+export const updateActivityBodyContentFormattingOneTaskItemTextMax = 100000;
+
+export const updateActivityBodyContentFormattingOneTaskMax = 10000;
+
+export const updateActivityBodyContentFormattingOnePromptsItemItemTextMax = 100000;
+
+export const updateActivityBodyContentFormattingOnePromptsItemMax = 10000;
+
+export const updateActivityBodyContentFormattingOnePromptsMax = 1000;
+
 export const updateActivityBodyDurationMinutesMultipleOf = 1;
 
 
@@ -1063,6 +1223,21 @@ export const UpdateActivityBody = zod.object({
   "eyebrow": zod.string().nullish(),
   "task": zod.string().optional(),
   "prompts": zod.array(zod.string()).optional(),
+  "contentFormatting": zod.union([zod.object({
+  "version": zod.literal(1),
+  "task": zod.array(zod.object({
+  "text": zod.string().min(1).max(updateActivityBodyContentFormattingOneTaskItemTextMax),
+  "bold": zod.boolean().optional(),
+  "underline": zod.boolean().optional(),
+  "highlight": zod.boolean().optional()
+})).max(updateActivityBodyContentFormattingOneTaskMax).optional(),
+  "prompts": zod.array(zod.array(zod.object({
+  "text": zod.string().min(1).max(updateActivityBodyContentFormattingOnePromptsItemItemTextMax),
+  "bold": zod.boolean().optional(),
+  "underline": zod.boolean().optional(),
+  "highlight": zod.boolean().optional()
+})).max(updateActivityBodyContentFormattingOnePromptsItemMax)).max(updateActivityBodyContentFormattingOnePromptsMax).optional()
+}),zod.null()]).optional(),
   "durationMinutes": zod.number().min(1).multipleOf(updateActivityBodyDurationMinutesMultipleOf).optional(),
   "deviceMode": zod.enum(['off', 'on']).optional(),
   "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
@@ -1098,6 +1273,16 @@ export const UpdateActivityBody = zod.object({
   "favorite": zod.boolean().optional()
 })
 
+export const updateActivityResponseContentFormattingOneTaskItemTextMax = 100000;
+
+export const updateActivityResponseContentFormattingOneTaskMax = 10000;
+
+export const updateActivityResponseContentFormattingOnePromptsItemItemTextMax = 100000;
+
+export const updateActivityResponseContentFormattingOnePromptsItemMax = 10000;
+
+export const updateActivityResponseContentFormattingOnePromptsMax = 1000;
+
 export const updateActivityResponseDurationMinutesMultipleOf = 1;
 
 
@@ -1121,6 +1306,21 @@ export const UpdateActivityResponse = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
+  "contentFormatting": zod.union([zod.object({
+  "version": zod.literal(1),
+  "task": zod.array(zod.object({
+  "text": zod.string().min(1).max(updateActivityResponseContentFormattingOneTaskItemTextMax),
+  "bold": zod.boolean().optional(),
+  "underline": zod.boolean().optional(),
+  "highlight": zod.boolean().optional()
+})).max(updateActivityResponseContentFormattingOneTaskMax).optional(),
+  "prompts": zod.array(zod.array(zod.object({
+  "text": zod.string().min(1).max(updateActivityResponseContentFormattingOnePromptsItemItemTextMax),
+  "bold": zod.boolean().optional(),
+  "underline": zod.boolean().optional(),
+  "highlight": zod.boolean().optional()
+})).max(updateActivityResponseContentFormattingOnePromptsItemMax)).max(updateActivityResponseContentFormattingOnePromptsMax).optional()
+}),zod.null()]).optional(),
   "durationMinutes": zod.number().min(1).multipleOf(updateActivityResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
@@ -1194,6 +1394,16 @@ export const DuplicateActivityParams = zod.object({
   "activityId": zod.coerce.string()
 })
 
+export const duplicateActivityResponseContentFormattingOneTaskItemTextMax = 100000;
+
+export const duplicateActivityResponseContentFormattingOneTaskMax = 10000;
+
+export const duplicateActivityResponseContentFormattingOnePromptsItemItemTextMax = 100000;
+
+export const duplicateActivityResponseContentFormattingOnePromptsItemMax = 10000;
+
+export const duplicateActivityResponseContentFormattingOnePromptsMax = 1000;
+
 export const duplicateActivityResponseDurationMinutesMultipleOf = 1;
 
 
@@ -1217,6 +1427,21 @@ export const DuplicateActivityResponse = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
+  "contentFormatting": zod.union([zod.object({
+  "version": zod.literal(1),
+  "task": zod.array(zod.object({
+  "text": zod.string().min(1).max(duplicateActivityResponseContentFormattingOneTaskItemTextMax),
+  "bold": zod.boolean().optional(),
+  "underline": zod.boolean().optional(),
+  "highlight": zod.boolean().optional()
+})).max(duplicateActivityResponseContentFormattingOneTaskMax).optional(),
+  "prompts": zod.array(zod.array(zod.object({
+  "text": zod.string().min(1).max(duplicateActivityResponseContentFormattingOnePromptsItemItemTextMax),
+  "bold": zod.boolean().optional(),
+  "underline": zod.boolean().optional(),
+  "highlight": zod.boolean().optional()
+})).max(duplicateActivityResponseContentFormattingOnePromptsItemMax)).max(duplicateActivityResponseContentFormattingOnePromptsMax).optional()
+}),zod.null()]).optional(),
   "durationMinutes": zod.number().min(1).multipleOf(duplicateActivityResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),
@@ -1274,6 +1499,16 @@ export const SetActivityFavoriteBody = zod.object({
   "favorite": zod.boolean()
 })
 
+export const setActivityFavoriteResponseContentFormattingOneTaskItemTextMax = 100000;
+
+export const setActivityFavoriteResponseContentFormattingOneTaskMax = 10000;
+
+export const setActivityFavoriteResponseContentFormattingOnePromptsItemItemTextMax = 100000;
+
+export const setActivityFavoriteResponseContentFormattingOnePromptsItemMax = 10000;
+
+export const setActivityFavoriteResponseContentFormattingOnePromptsMax = 1000;
+
 export const setActivityFavoriteResponseDurationMinutesMultipleOf = 1;
 
 
@@ -1297,6 +1532,21 @@ export const SetActivityFavoriteResponse = zod.object({
   "title": zod.string(),
   "task": zod.string(),
   "prompts": zod.array(zod.string()),
+  "contentFormatting": zod.union([zod.object({
+  "version": zod.literal(1),
+  "task": zod.array(zod.object({
+  "text": zod.string().min(1).max(setActivityFavoriteResponseContentFormattingOneTaskItemTextMax),
+  "bold": zod.boolean().optional(),
+  "underline": zod.boolean().optional(),
+  "highlight": zod.boolean().optional()
+})).max(setActivityFavoriteResponseContentFormattingOneTaskMax).optional(),
+  "prompts": zod.array(zod.array(zod.object({
+  "text": zod.string().min(1).max(setActivityFavoriteResponseContentFormattingOnePromptsItemItemTextMax),
+  "bold": zod.boolean().optional(),
+  "underline": zod.boolean().optional(),
+  "highlight": zod.boolean().optional()
+})).max(setActivityFavoriteResponseContentFormattingOnePromptsItemMax)).max(setActivityFavoriteResponseContentFormattingOnePromptsMax).optional()
+}),zod.null()]).optional(),
   "durationMinutes": zod.number().min(1).multipleOf(setActivityFavoriteResponseDurationMinutesMultipleOf),
   "deviceMode": zod.enum(['off', 'on']),
   "technologyMode": zod.enum(['no_computer', 'computer_available', 'computer_required']).optional().describe('Three-state creation setting; legacy deviceMode remains available for saved compatibility.'),

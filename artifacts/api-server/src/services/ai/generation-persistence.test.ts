@@ -127,6 +127,7 @@ describe.sequential("generation persistence", () => {
       "Historical task 2",
     ]);
     expect(created).toMatchObject({
+      contentFormatting: null,
       classId,
       title: validActivity.task.slice(0, 80),
       resourceUrl: "https://example.com/adaptations",
@@ -246,6 +247,7 @@ describe.sequential("generation persistence", () => {
     const copy = await duplicateActivity(created.id);
 
     expect(created).toMatchObject({
+      contentFormatting: null,
       title: multilingual.task.slice(0, 80),
       task: multilingual.task,
       prompts: multilingual.prompts,
@@ -256,6 +258,7 @@ describe.sequential("generation persistence", () => {
       resourceNote: "وصف المورد",
     });
     expect(copy).toMatchObject({
+      contentFormatting: null,
       title: multilingual.task.slice(0, 80),
       task: multilingual.task,
       prompts: multilingual.prompts,

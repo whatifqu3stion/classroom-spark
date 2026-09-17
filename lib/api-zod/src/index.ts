@@ -5,3 +5,4 @@ export * from "./presentation-theme-catalog";
 export * from "./activity-technology";
 export * from "./activity-payload-limits";
 export * from "./unicode";
+export * from "./inline-formatting";

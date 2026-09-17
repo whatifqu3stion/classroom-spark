@@ -352,6 +352,35 @@ export interface SavedContextSnapshot {
   details?: string | null;
 }
 
+export interface InlineTextRun {
+  /**
+     * @minLength 1
+     * @maxLength 100000
+     */
+  text: string;
+  bold?: boolean;
+  underline?: boolean;
+  highlight?: boolean;
+}
+
+export type BoardContentFormattingVersion = typeof BoardContentFormattingVersion[keyof typeof BoardContentFormattingVersion];
+
+
+export const BoardContentFormattingVersion = {
+  NUMBER_1: 1,
+} as const;
+
+export interface BoardContentFormatting {
+  version: BoardContentFormattingVersion;
+  /** @maxItems 10000 */
+  task?: InlineTextRun[];
+  /**
+     * @maxItems 1000
+     * @items.maxItems 10000
+     */
+  prompts?: InlineTextRun[][];
+}
+
 export interface Activity {
   id: string;
   classId: string;
@@ -360,6 +389,7 @@ export interface Activity {
   title: string;
   task: string;
   prompts: string[];
+  contentFormatting?: BoardContentFormatting | null;
   durationMinutes: Duration;
   deviceMode: DeviceMode;
   technologyMode?: TechnologyMode;
@@ -411,6 +441,7 @@ export interface ActivityInput {
   eyebrow?: string | null;
   task: string;
   prompts?: string[];
+  contentFormatting?: BoardContentFormatting | null;
   durationMinutes: Duration;
   deviceMode: DeviceMode;
   technologyMode?: TechnologyMode;
@@ -454,6 +485,7 @@ export interface ActivityUpdate {
   eyebrow?: string | null;
   task?: string;
   prompts?: string[];
+  contentFormatting?: BoardContentFormatting | null;
   durationMinutes?: Duration;
   deviceMode?: DeviceMode;
   technologyMode?: TechnologyMode;

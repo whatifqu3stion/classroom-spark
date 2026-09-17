@@ -12,7 +12,11 @@ import { PresentationThemePicker } from "@/components/presentation-theme-picker"
 import { PresentationImageEditor } from "@/components/presentation-image-editor";
 import { SavedContextSnapshotDetails } from "@/components/saved-context/saved-context-snapshot-details";
 import { FormulaPreview, FormulaText } from "@/components/formula-text";
+import { FormattedFormulaPreview } from "@/components/formatted-board-text";
+import { normalizeFormulaRuns } from "@/lib/inline-formatting";
 import { HelpTooltip, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { InlineEditor } from "@/components/inline-editor";
+import type { InlineTextRun } from "@workspace/api-zod";
 
 interface BoardEditorProps {
   draft: ActivityDraft;
@@ -87,6 +91,17 @@ export function BoardEditor({
   const [presentationVisualOpen, setPresentationVisualOpen] = useState(false);
   const [durationError, setDurationError] = useState<string | null>(null);
   const safeResourceUrl = getSafeResourceUrl(draft.resourceUrl);
+  const editorIdentity = useRef({ id: draft.id, classId: draft.classId, key: 0 });
+  if (editorIdentity.current.classId !== draft.classId ||
+    (editorIdentity.current.id !== undefined && editorIdentity.current.id !== draft.id)) {
+    editorIdentity.current.key += 1;
+  }
+  // The first autosave assigns an ID to the same draft; keep its selection/history.
+  editorIdentity.current.id = draft.id;
+  editorIdentity.current.classId = draft.classId;
+
+  const promptFormatting = () => draft.prompts.map((prompt, index) =>
+    normalizeFormulaRuns(prompt, draft.contentFormatting?.prompts?.[index]));
 
   useEffect(() => {
     setDurationError(null);
@@ -94,20 +109,46 @@ export function BoardEditor({
 
   const addPrompt = () => {
     if (draft.prompts.length < 3) {
-      onChange({ prompts: [...draft.prompts, ""] });
+      const newPrompts = [...draft.prompts, ""];
+      const currentFormatting = draft.contentFormatting || { version: 1 as const };
+      const newPromptsFormatting = promptFormatting();
+      newPromptsFormatting.push([]);
+
+      onChange({
+        prompts: newPrompts,
+        contentFormatting: { ...currentFormatting, prompts: newPromptsFormatting }
+      });
     }
   };
 
-  const updatePrompt = (index: number, val: string) => {
+  const updatePrompt = (index: number, val: string, runs?: InlineTextRun[]) => {
     const newPrompts = [...draft.prompts];
     newPrompts[index] = val;
-    onChange({ prompts: newPrompts });
+
+    const currentFormatting = draft.contentFormatting || { version: 1 as const };
+    const newPromptsFormatting = promptFormatting();
+    newPromptsFormatting[index] = normalizeFormulaRuns(val, runs);
+
+    onChange({
+      prompts: newPrompts,
+      contentFormatting: { ...currentFormatting, prompts: newPromptsFormatting }
+    });
   };
 
   const removePrompt = (index: number) => {
     const newPrompts = [...draft.prompts];
     newPrompts.splice(index, 1);
-    onChange({ prompts: newPrompts });
+
+    const currentFormatting = draft.contentFormatting || { version: 1 as const };
+    const newPromptsFormatting = promptFormatting();
+    if (newPromptsFormatting.length > index) {
+      newPromptsFormatting.splice(index, 1);
+    }
+
+    onChange({
+      prompts: newPrompts,
+      contentFormatting: { ...currentFormatting, prompts: newPromptsFormatting }
+    });
   };
 
   const disablePresent = (!draft.id && !isMeaningful) || Boolean(durationError);
@@ -242,29 +283,44 @@ export function BoardEditor({
 
           </div>
 
-          <EditableText
+          <InlineEditor
+            key={`task-${editorIdentity.current.key}`}
             multiline
             value={draft.task}
-            onChange={(val) => onChange({ task: val })}
+            runs={draft.contentFormatting?.task}
+            onChange={(val, runs) => {
+              onChange({
+                task: val,
+                contentFormatting: {
+                  ...draft.contentFormatting, version: 1,
+                  task: normalizeFormulaRuns(val, runs),
+                },
+              });
+            }}
             placeholder="Describe the main task for students..."
             className="text-xl md:text-2xl leading-relaxed text-foreground block w-full"
+            presentationTheme={draft.presentationTheme}
+            aria-label="Describe the main task for students..."
           />
-          <FormulaPreview>{draft.task}</FormulaPreview>
+          <FormattedFormulaPreview runs={draft.contentFormatting?.task} theme={draft.presentationTheme}>{draft.task}</FormattedFormulaPreview>
 
           {draft.prompts.length > 0 && (
             <ul className="space-y-3 list-none p-0 m-0">
               {draft.prompts.map((prompt, idx) => (
-                <li key={idx} className="group relative flex min-w-0 gap-3 pr-8 text-lg text-foreground sm:pr-0 md:text-xl">
+                <li key={`${editorIdentity.current.key}-${idx}`} className="group relative flex min-w-0 gap-3 pr-8 text-lg text-foreground sm:pr-0 md:text-xl">
                   <span className="text-primary mt-1 flex-shrink-0">•</span>
                   <div className="flex-1 min-w-0">
-                    <EditableText
+                    <InlineEditor
                       multiline
                       value={prompt}
-                      onChange={(val) => updatePrompt(idx, val)}
+                      runs={draft.contentFormatting?.prompts?.[idx]}
+                      onChange={(val, runs) => updatePrompt(idx, val, runs)}
                       placeholder="Enter prompt..."
-                      className="leading-relaxed"
+                      className="leading-relaxed block w-full"
+                      presentationTheme={draft.presentationTheme}
+                      aria-label={`Prompt ${idx + 1}`}
                     />
-                    <FormulaPreview>{prompt}</FormulaPreview>
+                    <FormattedFormulaPreview runs={draft.contentFormatting?.prompts?.[idx]} theme={draft.presentationTheme}>{prompt}</FormattedFormulaPreview>
                   </div>
                    <Tooltip>
                      <TooltipTrigger asChild>

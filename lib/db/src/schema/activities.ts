@@ -33,6 +33,19 @@ export type SavedContextSnapshot = {
   details?: string | null;
 };
 
+export type InlineTextRun = {
+  text: string;
+  bold?: boolean;
+  underline?: boolean;
+  highlight?: boolean;
+};
+
+export type BoardContentFormatting = {
+  version: 1;
+  task?: InlineTextRun[];
+  prompts?: InlineTextRun[][];
+};
+
 export const activitiesTable = pgTable("activities", {
   id: uuid("id").primaryKey().defaultRandom(),
   classId: uuid("class_id")
@@ -42,6 +55,7 @@ export const activitiesTable = pgTable("activities", {
   title: text("title").notNull(),
   task: text("task").notNull(),
   prompts: jsonb("prompts").$type<string[]>().notNull().default([]),
+  contentFormatting: jsonb("content_formatting").$type<BoardContentFormatting | null>(),
   durationMinutes: integer("duration_minutes").notNull(),
   deviceMode: text("device_mode").notNull(),
   technologyMode: text("technology_mode").notNull().default("no_computer"),

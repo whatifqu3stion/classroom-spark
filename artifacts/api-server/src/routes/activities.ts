@@ -24,6 +24,8 @@ import {
   SetActivityFavoriteResponse,
   ClearNonFavoriteActivitiesResponse,
   sanitizeUnicodeValue,
+  clearChangedBoardContentFormatting,
+  validateBoardContentFormatting,
 } from "@workspace/api-zod";
 import {
   deleteNonFavoriteActivities,
@@ -51,6 +53,13 @@ import {
 
 const router: IRouter = Router();
 
+function sameStrings(left: string[], right: string[]): boolean {
+  return (
+    left.length === right.length &&
+    left.every((value, index) => value === right[index])
+  );
+}
+
 router.get("/activities", async (req, res): Promise<void> => {
   const query = ListActivitiesQueryParams.safeParse(req.query);
   if (!query.success) {
@@ -72,10 +81,31 @@ router.get("/activities", async (req, res): Promise<void> => {
 });
 
 router.post("/activities", async (req, res): Promise<void> => {
-  const parsed = CreateActivityBody.safeParse(sanitizeUnicodeValue(req.body));
+  const sanitizedBody = sanitizeUnicodeValue(req.body);
+  const parsed = CreateActivityBody.safeParse(sanitizedBody);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
+  }
+
+  const rawContentFormatting =
+    sanitizedBody &&
+    typeof sanitizedBody === "object" &&
+    "contentFormatting" in sanitizedBody
+      ? sanitizedBody.contentFormatting
+      : undefined;
+  let contentFormatting = parsed.data.contentFormatting;
+  if (contentFormatting != null) {
+    try {
+      contentFormatting = validateBoardContentFormatting(
+        rawContentFormatting,
+        parsed.data.task,
+        parsed.data.prompts ?? [],
+      );
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+      return;
+    }
   }
 
   const visuals = normalizePresentationVisuals(
@@ -148,6 +178,7 @@ router.post("/activities", async (req, res): Promise<void> => {
       .insert(activitiesTable)
       .values({
         ...activityInput,
+        contentFormatting,
         visuals,
         savedContextSnapshot,
         ...getLegacyPresentationVisualFields(visuals),
@@ -196,7 +227,8 @@ router.patch("/activities/:activityId", async (req, res): Promise<void> => {
     res.status(400).json({ error: params.error.message });
     return;
   }
-  const parsed = UpdateActivityBody.safeParse(sanitizeUnicodeValue(req.body));
+  const sanitizedBody = sanitizeUnicodeValue(req.body);
+  const parsed = UpdateActivityBody.safeParse(sanitizedBody);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
@@ -210,6 +242,35 @@ router.patch("/activities/:activityId", async (req, res): Promise<void> => {
   if (!existing) {
     res.status(404).json({ error: "Activity not found" });
     return;
+  }
+
+  let contentFormatting;
+  if (parsed.data.contentFormatting !== undefined) {
+    if (parsed.data.contentFormatting === null) {
+      contentFormatting = null;
+    } else {
+      try {
+        contentFormatting = validateBoardContentFormatting(
+          sanitizedBody &&
+            typeof sanitizedBody === "object" &&
+            "contentFormatting" in sanitizedBody
+            ? sanitizedBody.contentFormatting
+            : parsed.data.contentFormatting,
+          parsed.data.task ?? existing.task,
+          parsed.data.prompts ?? existing.prompts,
+        );
+      } catch (error) {
+        res.status(400).json({ error: (error as Error).message });
+        return;
+      }
+    }
+  } else {
+    contentFormatting = clearChangedBoardContentFormatting(
+      existing.contentFormatting,
+      parsed.data.task !== undefined && parsed.data.task !== existing.task,
+      parsed.data.prompts !== undefined &&
+        !sameStrings(parsed.data.prompts, existing.prompts),
+    );
   }
 
   const shouldUpdateVisuals =
@@ -272,6 +333,7 @@ router.patch("/activities/:activityId", async (req, res): Promise<void> => {
     .update(activitiesTable)
     .set({
       ...parsed.data,
+      contentFormatting,
       ...(visuals
         ? { visuals, ...getLegacyPresentationVisualFields(visuals) }
         : {}),

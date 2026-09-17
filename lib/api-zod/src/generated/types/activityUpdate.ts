@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { BoardContentFormatting } from './boardContentFormatting';
 import type { DeviceMode } from './deviceMode';
 import type { Duration } from './duration';
 import type { PresentationThemeSelection } from './presentationThemeSelection';
@@ -16,6 +17,7 @@ export interface ActivityUpdate {
   eyebrow?: string | null;
   task?: string;
   prompts?: string[];
+  contentFormatting?: BoardContentFormatting | null;
   durationMinutes?: Duration;
   deviceMode?: DeviceMode;
   technologyMode?: TechnologyMode;

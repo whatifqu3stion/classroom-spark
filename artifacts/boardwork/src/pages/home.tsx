@@ -130,6 +130,7 @@ const isMeaningful = (
 const activitySavePayload = (draft: ActivityDraft) => ({
   task: draft.task,
   prompts: draft.prompts,
+  contentFormatting: draft.contentFormatting ?? null,
   eyebrow: draft.eyebrow,
   arrivalInstructions: draft.arrivalInstructions,
   durationMinutes: draft.durationMinutes,

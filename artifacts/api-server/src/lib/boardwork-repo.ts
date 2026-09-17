@@ -263,6 +263,7 @@ export async function duplicateActivity(
       title: getActivityCompatibilityTitle(source.task),
       task: source.task,
       prompts: source.prompts,
+      contentFormatting: source.contentFormatting,
       durationMinutes: source.durationMinutes,
       deviceMode: source.deviceMode,
       technologyMode: source.technologyMode,

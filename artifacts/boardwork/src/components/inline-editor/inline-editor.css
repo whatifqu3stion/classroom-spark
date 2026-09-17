@@ -1,0 +1,16 @@
+.inline-editor-wrapper .boardwork-user-content p {
+  margin: 0;
+}
+
+.inline-editor-wrapper .boardwork-user-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: hsl(var(--muted-foreground));
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.inline-editor-wrapper .boardwork-user-content mark.boardwork-inline-highlight {
+  /* These are already applied globally, so we can remove the overrides or let the global CSS handle it */
+  border-radius: 0.125rem;
+}

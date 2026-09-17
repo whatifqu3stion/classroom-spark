@@ -13,7 +13,7 @@ type FormulaNode =
       subscript?: FormulaNode[];
     };
 
-type FormulaSegment =
+export type FormulaSegment =
   | { kind: "text"; value: string }
   | {
       kind: "formula";
@@ -434,6 +434,19 @@ export function hasFormulaNotation(source: string) {
   return parseFormulaText(source).some((segment) => segment.kind === "formula");
 }
 
+export function FormulaSegmentView({ segment }: { segment: FormulaSegment }) {
+  if (segment.kind === "text") return <span>{segment.value}</span>;
+  if (!segment.nodes) return <span className="formula-fallback">{segment.source}</span>;
+  return (
+    <span
+      className={cn("formula-rendered", segment.display && "formula-rendered--block")}
+      data-formula
+    >
+      {renderNodes(segment.nodes, "formula")}
+    </span>
+  );
+}
+
 export function FormulaText({
   children,
   className,
@@ -444,28 +457,7 @@ export function FormulaText({
   const segments = parseFormulaText(children);
   return (
     <span className={cn("formula-text boardwork-user-content", className)} dir="auto">
-      {segments.map((segment, index) => {
-        if (segment.kind === "text") return <span key={index}>{segment.value}</span>;
-        if (!segment.nodes) {
-          return (
-            <span className="formula-fallback" key={index}>
-              {segment.source}
-            </span>
-          );
-        }
-        return (
-          <span
-            className={cn(
-              "formula-rendered",
-              segment.display && "formula-rendered--block",
-            )}
-            data-formula
-            key={index}
-          >
-            {renderNodes(segment.nodes, `formula-${index}`)}
-          </span>
-        );
-      })}
+      {segments.map((segment, index) => <FormulaSegmentView key={index} segment={segment} />)}
     </span>
   );
 }

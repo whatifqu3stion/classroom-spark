@@ -207,6 +207,25 @@
 }
 
 @layer components {
+  .boardwork-inline-bold {
+    font-weight: 700;
+  }
+
+  .boardwork-inline-underline {
+    text-decoration-line: underline;
+    text-decoration-thickness: 0.075em;
+    text-underline-offset: 0.13em;
+    text-decoration-skip-ink: auto;
+  }
+
+  .boardwork-inline-highlight {
+    background-color: var(--inline-highlight-background);
+    color: var(--inline-highlight-foreground);
+    border-radius: 0.08em;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
   .presentation-theme-grid-container {
     container-type: inline-size;
     min-width: 0;

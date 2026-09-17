@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useMemo, ReactNode } from "react";
 import { useGetAppState, AppState, type Activity, type PresentationThemeSelection } from "@workspace/api-client-react";
 import { Loader2 } from "lucide-react";
+import type { BoardContentFormatting } from "@workspace/api-zod";
 
 export type DeviceMode = "off" | "on";
 export type TechnologyMode = "no_computer" | "computer_available" | "computer_required";
@@ -46,6 +47,7 @@ export interface ActivityDraft {
   title: string;
   task: string;
   prompts: string[];
+  contentFormatting?: BoardContentFormatting | null;
   durationMinutes: Duration;
   deviceMode: DeviceMode;
   technologyMode?: TechnologyMode;
