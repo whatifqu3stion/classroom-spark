@@ -6,7 +6,7 @@ import {
   PresentationVisual,
 } from "@/store/boardwork-context";
 import { Button } from "./ui/button";
-import { Plus, X, Monitor, Clock, FileText, Loader2, CheckCircle2, AlertCircle, ExternalLink, ImagePlus, Palette } from "lucide-react";
+import { Plus, X, Monitor, Clock, FileText, Loader2, CheckCircle2, AlertCircle, ExternalLink, ImagePlus, Palette, ChevronDown } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { getSafeResourceUrl } from "@/lib/resource-url";
@@ -407,12 +407,12 @@ export function BoardEditor({
           />
 
             <section className="presentation-visual-editor-section mt-8 border-t pt-6" data-testid="presentation-visual-section">
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 items-center gap-2">
                 <button
                   type="button"
                   className={cn(
-                    "inline-flex h-9 shrink-0 items-center justify-start gap-2 rounded-md border border-border/70 bg-background/70 px-3 text-sm font-semibold text-muted-foreground shadow-xs transition-colors hover:border-border hover:bg-muted/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    presentationVisualOpen && "border-border bg-muted/70 text-foreground",
+                    "flex min-h-11 min-w-0 flex-1 items-center gap-3 rounded-lg border border-border bg-card px-3 py-3 text-left text-sm font-semibold text-foreground transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    presentationVisualOpen && "bg-muted/70",
                   )}
                   aria-label={
                     presentationVisualOpen
@@ -424,8 +424,16 @@ export function BoardEditor({
                   onClick={() => setPresentationVisualOpen((value) => !value)}
                   data-testid="button-toggle-presentation-visual"
                 >
-                  <Palette className="h-4 w-4" aria-hidden="true" />
-                  <span>Presentation settings</span>
+                  <Palette className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  <span className="min-w-0 flex-1">Presentation settings</span>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150 motion-reduce:transition-none",
+                      presentationVisualOpen && "rotate-180",
+                    )}
+                    aria-hidden="true"
+                    data-testid="presentation-settings-chevron"
+                  />
                 </button>
                  <HelpTooltip label="About presentation settings">
                    Shape how this board appears in Present and PNG export: add up to two local images, choose presentation colors, and add a teacher note. Images are shown without cropping.

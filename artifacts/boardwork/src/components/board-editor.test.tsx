@@ -81,6 +81,9 @@ describe("BoardEditor presentation visual disclosure", () => {
     const editor = screen.getByTestId("presentation-visual-editor");
 
     expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(toggle).toHaveAttribute("aria-controls", editor.id);
+    expect(editor).toHaveAttribute("inert");
+    expect(screen.getByTestId("presentation-settings-chevron")).not.toHaveClass("rotate-180");
     expect(editor).toHaveAttribute("data-state", "closed");
     expect(editor).toHaveAttribute("aria-hidden", "true");
     expect(editor.children).toHaveLength(1);
@@ -94,6 +97,8 @@ describe("BoardEditor presentation visual disclosure", () => {
     fireEvent.click(toggle);
 
     expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(editor).not.toHaveAttribute("inert");
+    expect(screen.getByTestId("presentation-settings-chevron")).toHaveClass("rotate-180");
     expect(editor).toHaveAttribute("data-state", "open");
     expect(editor).toHaveAttribute("aria-hidden", "false");
     expect(editor.children).toHaveLength(1);
@@ -109,12 +114,15 @@ describe("BoardEditor presentation visual disclosure", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("presents visual settings as a secondary button with complete guidance", async () => {
+  it("presents visual settings as a full-width neutral disclosure with separate guidance", async () => {
     render(<BoardEditor draft={draft} onChange={vi.fn()} />);
 
     const toggle = screen.getByTestId("button-toggle-presentation-visual");
 
-    expect(toggle).toHaveClass("border-border/70", "shadow-xs");
+    expect(toggle).toHaveClass("flex-1", "min-w-0", "min-h-11", "bg-card", "focus-visible:ring-2");
+    expect(toggle).not.toHaveClass("shadow-xs", "bg-primary");
+    expect(screen.getByTestId("presentation-settings-chevron")).toHaveClass("motion-reduce:transition-none");
+    expect(toggle).not.toContainElement(screen.getByRole("button", { name: "About presentation settings" }));
 
     fireEvent.focus(screen.getByRole("button", { name: "About presentation settings" }));
 
@@ -199,6 +207,11 @@ describe("BoardEditor presentation visual disclosure", () => {
     fireEvent.input(noteEditor);
 
     expect(noteEditor).toHaveTextContent("Ask for evidence.");
+    fireEvent.click(screen.getByTestId("button-toggle-presentation-visual"));
+    expect(screen.getByTestId("presentation-visual-editor")).toHaveAttribute("inert");
+    expect(screen.getByTestId("presentation-settings-chevron")).not.toHaveClass("rotate-180");
+    fireEvent.click(screen.getByTestId("button-toggle-presentation-visual"));
+    expect(screen.getByRole("textbox", { name: "Optional note for the teacher..." })).toHaveTextContent("Ask for evidence.");
     fireEvent.click(screen.getByTestId("button-remove-teacher-note"));
     expect(screen.queryByPlaceholderText("Optional note for the teacher...")).not.toBeInTheDocument();
   });
@@ -273,6 +286,13 @@ describe("BoardEditor presentation visual disclosure", () => {
     expect(screen.getByRole("textbox", { name: "Visual description 1" })).toHaveValue(
       "First classroom visual",
     );
+    fireEvent.click(screen.getByTestId("theme-option-paper"));
+    fireEvent.click(screen.getByTestId("button-toggle-presentation-visual"));
+    fireEvent.click(screen.getByTestId("button-toggle-presentation-visual"));
+    expect(screen.getByTestId("visual-slot-1")).toBeInTheDocument();
+    expect(screen.getByTestId("visual-slot-2")).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Visual description 1" })).toHaveValue("First classroom visual");
+    expect(screen.getByTestId("theme-option-paper")).toHaveAttribute("aria-pressed", "true");
 
     fireEvent.change(screen.getByLabelText("Replace image 2"), {
       target: {
