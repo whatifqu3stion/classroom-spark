@@ -463,7 +463,9 @@ export default function Home() {
       }
     } else {
       if (initializedForId.current !== persistedActivityId) return;
-      void flushActivityUpdates(persistedActivityId);
+      // The save loop exposes failures in the editor. Consume its rejection
+      // here so an autosave failure cannot open an unhandled-error overlay.
+      void flushActivityUpdates(persistedActivityId).catch(() => {});
     }
   }, [debouncedDraft]);
 
@@ -761,7 +763,7 @@ export default function Home() {
     const draft = latestDraftRef.current ?? localDraft;
     if (!draft) return;
     if (draft.id) {
-      void flushActivityUpdates(draft.id);
+      void flushActivityUpdates(draft.id).catch(() => {});
     } else if (isMeaningful(
       draft,
       classes.find((classProfile) => classProfile.id === draft.classId)?.arrivalRoutine,

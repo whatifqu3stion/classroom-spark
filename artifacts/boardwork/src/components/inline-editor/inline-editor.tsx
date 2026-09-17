@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { EditorContent, useEditor, Editor } from '@tiptap/react';
 import { BubbleMenuPlugin } from '@tiptap/extension-bubble-menu';
 import Document from '@tiptap/extension-document';
@@ -11,9 +12,10 @@ import History from '@tiptap/extension-history';
 import Placeholder from '@tiptap/extension-placeholder';
 import Highlight from '@tiptap/extension-highlight';
 import { Extension } from '@tiptap/core';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { Plugin, PluginKey, type Selection } from '@tiptap/pm/state';
 import { Bold as BoldIcon, Highlighter, Underline as UnderlineIcon, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { InlineTextRun } from '@workspace/api-zod';
 import type { PresentationThemeSelection } from '@workspace/api-client-react';
 import { 
@@ -158,10 +160,13 @@ export function InlineEditor({
   'aria-label': ariaLabel,
 }: InlineEditorProps) {
   const toolbarRef = useRef<HTMLDivElement>(null);
+  // The plugin may attach/detach this container. React owns only its portal
+  // children, so delegated click/key events continue working outside #root.
+  const [menuElement] = useState(() => document.createElement("div"));
   
   const [activeMarks, setActiveMarks] = useState({ bold: false, underline: false, highlight: false });
   const [mixedMarks, setMixedMarks] = useState({ bold: false, underline: false, highlight: false });
-  const isMenuDismissed = useRef(false);
+  const dismissedSelection = useRef<Selection | null>(null);
   const menuKey = useRef(new PluginKey('boardInlineFormatting')).current;
 
   const updateMarks = useCallback((editor: Editor) => {
@@ -234,12 +239,12 @@ export function InlineEditor({
     editorProps: {
       handleKeyDown: (view, event) => {
         if (event.key === "Escape" && !view.state.selection.empty) {
-          isMenuDismissed.current = true;
+          dismissedSelection.current = view.state.selection;
           view.dispatch(view.state.tr.setMeta(menuKey, "hide"));
           return true;
         }
         if (event.key === "Tab" && !event.shiftKey && !view.state.selection.empty &&
-          !isMenuDismissed.current && toolbarRef.current?.isConnected) {
+          !dismissedSelection.current?.eq(view.state.selection) && toolbarRef.current?.isConnected) {
           toolbarRef.current.querySelector("button")?.focus();
           return true;
         }
@@ -266,12 +271,10 @@ export function InlineEditor({
     onTransaction: ({ editor }) => {
       updateMarks(editor);
     },
-    onSelectionUpdate: () => {
-      isMenuDismissed.current = false;
-    },
     onBlur: ({ event }) => {
       if (!toolbarRef.current?.contains(event.relatedTarget as Node | null)) {
-        isMenuDismissed.current = true;
+        dismissedSelection.current = editor?.state.selection ?? null;
+        editor?.view.dispatch(editor.state.tr.setMeta(menuKey, "hide"));
       }
     }
   });
@@ -295,7 +298,7 @@ export function InlineEditor({
     const plugin = BubbleMenuPlugin({
       pluginKey: menuKey,
       editor,
-      element: toolbarRef.current,
+      element: menuElement,
       appendTo: () => document.body,
       updateDelay: 0,
       options: {
@@ -306,19 +309,22 @@ export function InlineEditor({
         shift: { padding: 10 },
       },
       shouldShow: ({ view, state }) => {
-        if (isMenuDismissed.current) return false;
+        // Plugin visibility is evaluated before onSelectionUpdate callbacks.
+        // Dismiss only this range, so a new selection can show immediately.
+        if (dismissedSelection.current?.eq(state.selection)) return false;
+        dismissedSelection.current = null;
         if (state.selection.empty) return false;
         const toolbarHasFocus = toolbarRef.current?.contains(document.activeElement);
         if (!view.hasFocus() && !toolbarHasFocus) return false;
         return true;
       }
     });
-    
+    menuElement.className = "z-[70]";
     editor.registerPlugin(plugin);
     return () => {
       editor.unregisterPlugin(menuKey);
     };
-  }, [editor, menuKey]);
+  }, [editor, menuKey, menuElement]);
 
   if (!editor) return null;
 
@@ -326,7 +332,7 @@ export function InlineEditor({
     if (e.key === 'Escape') {
       e.preventDefault();
       editor.commands.focus();
-      isMenuDismissed.current = true;
+      dismissedSelection.current = editor.state.selection;
       editor.view.dispatch(editor.state.tr.setMeta(menuKey, "hide"));
       return;
     }
@@ -348,22 +354,29 @@ export function InlineEditor({
   return (
     <div className="relative w-full inline-editor-wrapper" style={getInlineHighlightStyle(presentationTheme)}>
       <EditorContent editor={editor} className="w-full" />
-      <div style={{ visibility: 'hidden', position: 'absolute' }}>
+      {createPortal(
         <div 
           ref={toolbarRef}
           role="toolbar"
           aria-label="Text formatting"
           style={getInlineHighlightStyle(presentationTheme)}
           className="z-[70] flex items-center gap-1 bg-popover border border-border shadow-md rounded-md p-1 min-h-[44px]"
+          onPointerDown={(event) => {
+            // Pointer activation should not collapse native text selection.
+            // Keyboard users can still Tab into and navigate the toolbar.
+            event.preventDefault();
+          }}
           onKeyDown={handleToolbarKeydown}
           onBlurCapture={(event) => {
             if (!event.currentTarget.contains(event.relatedTarget as Node | null) &&
               !editor.view.dom.contains(event.relatedTarget as Node | null)) {
-              isMenuDismissed.current = true;
+              dismissedSelection.current = editor.state.selection;
               editor.view.dispatch(editor.state.tr.setMeta(menuKey, "hide"));
             }
           }}
         >
+          <Tooltip>
+          <TooltipTrigger asChild>
           <button
             type="button"
             onClick={() => toggleExpandedMark(editor, 'bold')}
@@ -371,10 +384,14 @@ export function InlineEditor({
             className="p-2 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-sm hover:bg-muted focus-visible:ring-2 focus-visible:outline-none aria-pressed:bg-muted aria-pressed:text-foreground text-muted-foreground transition-colors"
             aria-pressed={mixedMarks.bold ? 'mixed' : activeMarks.bold}
             aria-label="Bold"
-            title="Bold (Cmd+B)"
           >
             <BoldIcon className="w-4 h-4" />
           </button>
+          </TooltipTrigger>
+          <TooltipContent>Bold (Ctrl/Cmd+B)</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+          <TooltipTrigger asChild>
           <button
             type="button"
             onClick={() => toggleExpandedMark(editor, 'underline')}
@@ -382,10 +399,14 @@ export function InlineEditor({
             className="p-2 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-sm hover:bg-muted focus-visible:ring-2 focus-visible:outline-none aria-pressed:bg-muted aria-pressed:text-foreground text-muted-foreground transition-colors"
             aria-pressed={mixedMarks.underline ? 'mixed' : activeMarks.underline}
             aria-label="Underline"
-            title="Underline (Cmd+U)"
           >
             <UnderlineIcon className="w-4 h-4" />
           </button>
+          </TooltipTrigger>
+          <TooltipContent>Underline (Ctrl/Cmd+U)</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+          <TooltipTrigger asChild>
           <button
             type="button"
             onClick={() => toggleExpandedMark(editor, 'highlight')}
@@ -393,11 +414,15 @@ export function InlineEditor({
             className="p-2 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-sm hover:bg-muted focus-visible:ring-2 focus-visible:outline-none aria-pressed:bg-muted aria-pressed:text-foreground text-muted-foreground transition-colors"
             aria-pressed={mixedMarks.highlight ? 'mixed' : activeMarks.highlight}
             aria-label="Highlight"
-            title="Highlight"
           >
             <Highlighter className="w-4 h-4" />
           </button>
+          </TooltipTrigger>
+          <TooltipContent>Highlight</TooltipContent>
+          </Tooltip>
           <div className="w-[1px] h-6 bg-border mx-1" />
+          <Tooltip>
+          <TooltipTrigger asChild>
           <button
             type="button"
             onClick={() => {
@@ -427,12 +452,14 @@ export function InlineEditor({
             }}
             className="p-2 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-sm hover:bg-muted focus-visible:ring-2 focus-visible:outline-none text-muted-foreground hover:text-destructive transition-colors"
             aria-label="Clear formatting"
-            title="Clear formatting"
           >
             <X className="w-4 h-4" />
           </button>
+          </TooltipTrigger>
+          <TooltipContent>Clear formatting</TooltipContent>
+          </Tooltip>
         </div>
-      </div>
+      , menuElement)}
     </div>
   );
 }
