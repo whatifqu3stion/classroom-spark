@@ -51,11 +51,20 @@ describe("BoardEditor presentation visual disclosure", () => {
     expect(screen.getByTestId("board-editor-header")).toHaveClass(
       "flex-col",
       "sm:flex-row",
+      "bg-card",
+      "border-b",
+      "px-5",
+      "py-4",
+      "lg:px-6",
+      "shrink-0",
     );
+    expect(screen.getByTestId("board-editor-header")).not.toHaveClass("bg-muted/30");
     expect(screen.getByTestId("text-save-status")).toHaveTextContent("Saved");
     expect(screen.getByTestId("button-present")).toHaveClass(
       "w-full",
       "sm:w-auto",
+      "bg-primary",
+      "text-primary-foreground",
     );
     expect(screen.queryByRole("textbox", { name: "Enter a short title..." })).not.toBeInTheDocument();
     expect(

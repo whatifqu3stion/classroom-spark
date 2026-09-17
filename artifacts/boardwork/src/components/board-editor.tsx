@@ -182,11 +182,11 @@ export function BoardEditor({
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background" data-testid="board-editor">
       <div
-        className="flex flex-col gap-3 border-b bg-muted/30 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4"
+        className="flex shrink-0 flex-col gap-3 border-b bg-card px-5 py-4 sm:flex-row sm:items-center sm:justify-between lg:px-6"
         data-testid="board-editor-header"
       >
         <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm font-medium text-foreground">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-base font-semibold text-foreground">
             <div className="flex min-w-0 items-center gap-2">
               <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
               Edit your board
