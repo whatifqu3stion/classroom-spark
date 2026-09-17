@@ -2,25 +2,17 @@ import React, { useRef, useEffect, useState } from "react";
 import {
   ActivityDraft,
   Duration,
-  getPresentationVisuals,
-  PresentationVisual,
 } from "@/store/boardwork-context";
 import { Button } from "./ui/button";
-import { Plus, X, Monitor, Clock, FileText, Loader2, CheckCircle2, AlertCircle, ExternalLink, ImagePlus, Palette, ChevronDown } from "lucide-react";
+import { Plus, X, Monitor, Clock, FileText, Loader2, CheckCircle2, AlertCircle, ExternalLink, Palette, ChevronDown } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { getSafeResourceUrl } from "@/lib/resource-url";
 import { PresentationThemePicker } from "@/components/presentation-theme-picker";
+import { PresentationImageEditor } from "@/components/presentation-image-editor";
 import { SavedContextSnapshotDetails } from "@/components/saved-context/saved-context-snapshot-details";
 import { FormulaPreview, FormulaText } from "@/components/formula-text";
 import { HelpTooltip, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import {
-  estimatePresentationImageDataUrlBytes,
-  getPresentationImagePayloadError,
-  PRESENTATION_IMAGE_DATA_URL_LIMIT_BYTES,
-  PRESENTATION_IMAGE_FILE_LIMIT_BYTES,
-  PRESENTATION_IMAGE_SIZE_ERROR,
-} from "@workspace/api-zod";
 
 interface BoardEditorProps {
   draft: ActivityDraft;
@@ -94,13 +86,10 @@ export function BoardEditor({
 }: BoardEditorProps) {
   const [presentationVisualOpen, setPresentationVisualOpen] = useState(false);
   const [durationError, setDurationError] = useState<string | null>(null);
-  const [visualUploadError, setVisualUploadError] = useState<string | null>(null);
   const safeResourceUrl = getSafeResourceUrl(draft.resourceUrl);
-  const visuals = getPresentationVisuals(draft);
 
   useEffect(() => {
     setDurationError(null);
-    setVisualUploadError(null);
   }, [draft.id, draft.durationMinutes]);
 
   const addPrompt = () => {
@@ -119,59 +108,6 @@ export function BoardEditor({
     const newPrompts = [...draft.prompts];
     newPrompts.splice(index, 1);
     onChange({ prompts: newPrompts });
-  };
-
-  const updateVisuals = (nextVisuals: PresentationVisual[]) => {
-    onChange({
-      visuals: nextVisuals,
-      visualUrl: nextVisuals[0]?.url ?? null,
-      visualDescription: nextVisuals[0]?.description ?? null,
-    });
-  };
-
-  const handleVisualFile = (
-    event: React.ChangeEvent<HTMLInputElement>,
-    index: number,
-  ) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    if (file.size > PRESENTATION_IMAGE_FILE_LIMIT_BYTES) {
-      setVisualUploadError(PRESENTATION_IMAGE_SIZE_ERROR);
-      event.target.value = "";
-      return;
-    }
-    if (
-      estimatePresentationImageDataUrlBytes(file.size, file.type) >
-      PRESENTATION_IMAGE_DATA_URL_LIMIT_BYTES
-    ) {
-      setVisualUploadError(PRESENTATION_IMAGE_SIZE_ERROR);
-      event.target.value = "";
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onerror = () => {
-      setVisualUploadError(
-        "This image could not be read. Choose another image and try again.",
-      );
-    };
-    reader.onload = () => {
-      const visualUrl = String(reader.result ?? "");
-      const payloadError = getPresentationImagePayloadError(visualUrl);
-      if (payloadError) {
-        setVisualUploadError(payloadError);
-        return;
-      }
-      const nextVisuals = [...visuals];
-      nextVisuals[index] = {
-        url: visualUrl,
-        description: visuals[index]?.description ?? null,
-      };
-      setVisualUploadError(null);
-      updateVisuals(nextVisuals.slice(0, 2));
-    };
-    reader.readAsDataURL(file);
-    event.target.value = "";
   };
 
   const disablePresent = (!draft.id && !isMeaningful) || Boolean(durationError);
@@ -454,96 +390,7 @@ export function BoardEditor({
                   className={cn("space-y-6", presentationVisualOpen && "pt-5")}
                   data-testid="presentation-visual-editor-content"
                 >
-                   <div className="space-y-4">
-                     {visuals.map((visual, index) => (
-                       <div
-                         key={`${index}-${visual.url.slice(0, 24)}`}
-                         className="space-y-3 rounded-lg border bg-muted/10 p-3"
-                         data-testid={`visual-slot-${index + 1}`}
-                       >
-                         <div className="flex items-center justify-between gap-3">
-                           <span className="text-sm font-semibold">
-                             Image {index + 1}
-                           </span>
-                           <label className="inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-lg border border-input px-3 text-sm font-medium hover:bg-muted/50 focus-within:ring-2 focus-within:ring-ring">
-                             <ImagePlus className="h-4 w-4" aria-hidden="true" />
-                             Replace image
-                             <input
-                               type="file"
-                               accept="image/*"
-                               className="sr-only"
-                               aria-label={`Replace image ${index + 1}`}
-                               onChange={(event) => handleVisualFile(event, index)}
-                             />
-                           </label>
-                         </div>
-                         <img
-                           src={visual.url}
-                           alt=""
-                           className="h-24 w-full rounded-md border object-contain bg-muted/30"
-                         />
-                         <Button
-                           type="button"
-                           variant="ghost"
-                           size="sm"
-                           aria-label={`Remove image ${index + 1}`}
-                           onClick={() => {
-                             setVisualUploadError(null);
-                             updateVisuals(
-                               visuals.filter((_, visualIndex) => visualIndex !== index),
-                             );
-                           }}
-                         >
-                           Remove image
-                         </Button>
-                         <input
-                           aria-label={`Visual description ${index + 1}`}
-                           value={visual.description ?? ""}
-                           onChange={(event) => {
-                             const nextVisuals = [...visuals];
-                             nextVisuals[index] = {
-                               ...visual,
-                               description: event.target.value,
-                             };
-                             updateVisuals(nextVisuals);
-                           }}
-                           placeholder="Optional description for students"
-                           className="h-10 w-full rounded-lg border border-input bg-muted/50 px-3 text-sm outline-none focus:ring-2 focus:ring-ring transition-colors hover:bg-muted/70 focus:bg-background"
-                         />
-                       </div>
-                     ))}
-                     {visuals.length < 2 && (
-                       <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-input px-3 text-sm font-medium hover:bg-muted/50 focus-within:ring-2 focus-within:ring-ring">
-                         <ImagePlus className="h-4 w-4" aria-hidden="true" />
-                         {visuals.length === 0 ? "Add image" : "Add second image"}
-                         <input
-                           type="file"
-                           accept="image/*"
-                           className="sr-only"
-                           aria-label={
-                             visuals.length === 0 ? "Add image" : "Add second image"
-                           }
-                           onChange={(event) =>
-                             handleVisualFile(event, visuals.length)
-                           }
-                         />
-                       </label>
-                     )}
-                    {visualUploadError && (
-                      <p
-                        className="text-xs text-destructive"
-                        role="alert"
-                        data-testid="visual-upload-error"
-                      >
-                        {visualUploadError}
-                      </p>
-                    )}
-                     <p className="text-xs text-muted-foreground">
-                       Add up to 2 local images, up to 5 MB each. They appear in
-                       Present and PNG export without cropping. Two images keep
-                       the timer small so both visuals stay readable.
-                     </p>
-                  </div>
+                  <PresentationImageEditor draft={draft} onChange={onChange} />
 
                   <div className="border-t pt-5">
                     <PresentationThemePicker

@@ -108,7 +108,7 @@ describe("BoardEditor presentation visual disclosure", () => {
     expect(editor).toHaveAttribute("data-state", "open");
     expect(editor).toHaveAttribute("aria-hidden", "false");
     expect(editor.children).toHaveLength(1);
-     expect(screen.getByText("Add image")).toBeInTheDocument();
+     expect(screen.getByLabelText("Add image 1")).toBeInTheDocument();
      expect(screen.getByText(/Add up to 2 local images/)).toBeInTheDocument();
     expect(screen.getByTestId("presentation-theme-picker")).toBeInTheDocument();
     expect(screen.queryByTestId("presentation-preview")).not.toBeInTheDocument();
@@ -227,9 +227,7 @@ describe("BoardEditor presentation visual disclosure", () => {
     render(<BoardEditor draft={draft} onChange={onChange} />);
     fireEvent.click(screen.getByTestId("button-toggle-presentation-visual"));
 
-    const fileInput = document.querySelector(
-      'input[type="file"]',
-    ) as HTMLInputElement;
+    const fileInput = screen.getByLabelText("Add image 1");
     const oversizedImage = new File(
       [new Uint8Array(PRESENTATION_IMAGE_FILE_LIMIT_BYTES + 1)],
       "too-large.png",
@@ -244,7 +242,7 @@ describe("BoardEditor presentation visual disclosure", () => {
     );
   });
 
-  it("adds, replaces, describes, and removes two ordered images", async () => {
+  it("switches the shared image workspace while retaining palette, note, and disclosure state", async () => {
     function StatefulEditor() {
       const [currentDraft, setCurrentDraft] = useState<ActivityDraft>(draft);
 
@@ -261,13 +259,13 @@ describe("BoardEditor presentation visual disclosure", () => {
     render(<StatefulEditor />);
     fireEvent.click(screen.getByTestId("button-toggle-presentation-visual"));
 
-    fireEvent.change(screen.getByLabelText("Add image"), {
+     fireEvent.change(screen.getByLabelText("Add image 1"), {
       target: {
         files: [new File(["first"], "first.png", { type: "image/png" })],
       },
     });
     await waitFor(() =>
-      expect(screen.getByTestId("visual-slot-1")).toBeInTheDocument(),
+       expect(screen.getByTestId("visual-preview")).toBeInTheDocument(),
     );
 
     const firstDescription = screen.getByRole("textbox", {
@@ -276,42 +274,45 @@ describe("BoardEditor presentation visual disclosure", () => {
     fireEvent.change(firstDescription, {
       target: { value: "First classroom visual" },
     });
+     expect(firstDescription).toHaveValue("First classroom visual");
 
-    fireEvent.change(screen.getByLabelText("Add second image"), {
+     fireEvent.click(screen.getByRole("button", { name: "Image 2, Empty" }));
+     fireEvent.change(screen.getByLabelText("Add image 2"), {
       target: {
         files: [new File(["second"], "second.png", { type: "image/png" })],
       },
     });
     await waitFor(() =>
-      expect(screen.getByTestId("visual-slot-2")).toBeInTheDocument(),
+       expect(screen.getByTestId("visual-preview")).toBeInTheDocument(),
     );
 
-    expect(screen.getByTestId("presentation-visual-editor-content")).toHaveTextContent(
-      "Two images keep the timer small",
-    );
-    expect(screen.getByRole("textbox", { name: "Visual description 1" })).toHaveValue(
-      "First classroom visual",
-    );
-    fireEvent.click(screen.getByTestId("theme-option-paper"));
+     expect(screen.getByRole("button", { name: "Image 2, Added" })).toHaveAttribute(
+       "aria-pressed",
+       "true",
+     );
+     expect(screen.getByTestId("presentation-visual-editor-content")).toHaveTextContent(
+       "Two images keep the timer small",
+     );
+     fireEvent.click(screen.getByTestId("theme-option-paper"));
+     fireEvent.click(screen.getByTestId("button-add-teacher-note"));
+     const teacherNote = screen.getByRole("textbox", {
+       name: "Optional note for the teacher...",
+     });
+     teacherNote.textContent = "Keep the comparison brief.";
+     fireEvent.input(teacherNote);
+     fireEvent.click(screen.getByRole("button", { name: "Image 1, Added" }));
     fireEvent.click(screen.getByTestId("button-toggle-presentation-visual"));
     fireEvent.click(screen.getByTestId("button-toggle-presentation-visual"));
-    expect(screen.getByTestId("visual-slot-1")).toBeInTheDocument();
-    expect(screen.getByTestId("visual-slot-2")).toBeInTheDocument();
+     expect(screen.getByTestId("visual-preview")).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "Visual description 1" })).toHaveValue("First classroom visual");
     expect(screen.getByTestId("theme-option-paper")).toHaveAttribute("aria-pressed", "true");
+     expect(screen.getByRole("textbox", { name: "Optional note for the teacher..." })).toHaveTextContent(
+       "Keep the comparison brief.",
+     );
 
-    fireEvent.change(screen.getByLabelText("Replace image 2"), {
-      target: {
-        files: [new File(["replacement"], "replacement.png", { type: "image/png" })],
-      },
-    });
-    await waitFor(() =>
-      expect(screen.getByTestId("visual-slot-2")).toBeInTheDocument(),
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: "Remove image 2" }));
-    expect(screen.queryByTestId("visual-slot-2")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Add second image")).toBeInTheDocument();
+     fireEvent.click(screen.getByRole("button", { name: "Image 2, Added" }));
+     expect(screen.getByRole("textbox", { name: "Visual description 2" })).toHaveValue("");
+     expect(screen.getByLabelText("Replace image 2")).toBeInTheDocument();
   });
 
   it("keeps the image and retry recovery actions available after a save failure", () => {
