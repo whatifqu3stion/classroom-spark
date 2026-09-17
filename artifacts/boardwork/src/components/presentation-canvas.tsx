@@ -30,6 +30,7 @@ interface PresentationCanvasProps {
   activity: ActivityDraft;
   controls?: ReactNode;
   timerControls?: ReactNode;
+  onLeaveLargeTimerControls?: () => void;
   onShowTimer?: () => void;
   timerControlsOpen?: boolean;
   onToggleTimerControls?: () => void;
@@ -64,6 +65,7 @@ export function PresentationCanvas({
   activity,
   controls,
   timerControls,
+  onLeaveLargeTimerControls,
   onShowTimer,
   timerControlsOpen = false,
   onToggleTimerControls,
@@ -627,6 +629,23 @@ export function PresentationCanvas({
                 data-rail-surface={PRESENTATION_RAIL_INVARIANTS.largeTimer}
                 aria-live="polite"
                 aria-atomic="true"
+                onPointerLeave={(event) => {
+                  if (
+                    window.matchMedia("(hover: hover)").matches &&
+                    !event.currentTarget.contains(document.activeElement)
+                  ) {
+                    onLeaveLargeTimerControls?.();
+                  }
+                }}
+                onBlur={(event) => {
+                  if (
+                    window.matchMedia("(hover: hover)").matches &&
+                    !event.currentTarget.contains(event.relatedTarget) &&
+                    !event.currentTarget.matches(":hover")
+                  ) {
+                    onLeaveLargeTimerControls?.();
+                  }
+                }}
               >
                 <span className="presentation-timer-label">{timer.status === "completed" ? "Time is up" : "Time remaining"}</span>
                 <strong

@@ -1073,6 +1073,16 @@
     gap: 0.5rem;
   }
 
+  @media (hover: hover) {
+    /* Keep the separator and actions in flow and in the tab order. Hiding
+       visibility/display would prevent keyboard focus from revealing them. */
+    .presentation-timer:not(:hover):not(:focus-within):not(:has(.presentation-timer-options))
+      > .presentation-timer-controls {
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+
   .presentation-timer > .presentation-timer-controls .presentation-timer-actions {
     flex-wrap: nowrap;
     gap: 0.25rem;

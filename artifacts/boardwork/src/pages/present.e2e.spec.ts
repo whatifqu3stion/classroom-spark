@@ -164,7 +164,9 @@ const alarmAppState = {
   activities: [
     {
       ...longMixedDirectionActivity,
-      durationMinutes: 1 / 60,
+      // Keep the fixture aligned with the displayed whole-minute duration.
+      // Tests advance the controlled clock to complete it deterministically.
+      durationMinutes: 1,
     },
   ],
 };
@@ -372,6 +374,7 @@ async function stubPresentationState(
 
 async function hideTimerFromStudents(page: Page) {
   await page.getByTestId("button-teacher-controls").click();
+  await page.locator(".presentation-timer").hover();
   await page.getByRole("button", { name: "Adjust" }).click();
   await page.getByRole("button", { name: "Hide timer from students" }).click();
   await expect(page.getByTestId("button-show-timer")).toBeVisible();
@@ -691,6 +694,40 @@ async function readLargeTimerReadingMetrics(
       fontSize: Number.parseFloat(getComputedStyle(reading).fontSize),
     };
   });
+}
+
+async function readLargeTimerSurfaceGeometry(page: Page) {
+  return page.getByTestId("presentation-surface").evaluate((surface) => {
+    const selectors = {
+      reading: ".presentation-timer-reading",
+      card: ".presentation-timer",
+      rail: ".presentation-rail",
+      content: ".presentation-content",
+    } as const;
+    const geometry = Object.fromEntries(
+      Object.entries(selectors).map(([name, selector]) => {
+        const element = surface.querySelector<HTMLElement>(selector);
+        if (!element) throw new Error(`Missing large timer geometry region: ${name}`);
+        return [name, element.getBoundingClientRect().toJSON()];
+      }),
+    );
+    return geometry as Record<keyof typeof selectors, ReturnType<DOMRect["toJSON"]>>;
+  });
+}
+
+async function expectLargeTimerControlsRevealed(page: Page) {
+  const controls = page
+    .getByTestId("presentation-surface")
+    .locator(".presentation-timer > .presentation-timer-controls");
+  await expect(controls).toHaveCSS("opacity", "1");
+  await expect(controls).toHaveCSS("pointer-events", "auto");
+  return controls;
+}
+
+async function minimizeLargeTimer(page: Page) {
+  const card = page.getByTestId("presentation-surface").locator(".presentation-timer");
+  await card.hover();
+  await card.getByRole("button", { name: "Minimize timer" }).click();
 }
 
 async function setPresentationDividerPosition(
@@ -1208,13 +1245,14 @@ test("keeps the large timer actions under the clock", async ({
   expect(railStyle.padding).toBe("0px");
   await expect(page.locator("#presentation-controls-panel .presentation-timer-controls")).toHaveCount(0);
   const largeTimerControls = liveSurface.locator(".presentation-timer > .presentation-timer-controls");
+  await liveSurface.locator(".presentation-timer").hover();
   await expect(largeTimerControls).toBeVisible();
   await expect(
     largeTimerControls.getByRole("button", { name: "Start or resume timer" }),
   ).toBeVisible();
   await largeTimerControls.getByRole("button", { name: "Start or resume timer" }).click();
 
-  await page.getByRole("button", { name: "Minimize timer" }).click();
+  await minimizeLargeTimer(page);
   await expect(liveSurface.locator(".presentation-timer")).toHaveCount(0);
   await expect(page.getByTestId("compact-timer-progress")).toBeVisible();
   await expect(page.locator("#presentation-controls-panel .presentation-timer-controls")).toHaveCount(0);
@@ -1242,6 +1280,201 @@ test("keeps the large timer actions under the clock", async ({
   }
 
   assertBrowserHealth();
+});
+
+test("reveals large timer controls without moving the Present composition", async ({
+  page,
+}, testInfo) => {
+  await stubPresentationState(page, visualAppState);
+  await page.emulateMedia({ reducedMotion: "reduce", media: "screen" });
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/present/activity-long-mixed-direction");
+  await settlePresentationSurface(page);
+
+  const surface = page.getByTestId("presentation-surface");
+  const card = surface.locator(".presentation-timer");
+  const controls = surface.locator(".presentation-timer > .presentation-timer-controls");
+  const reading = card.locator(".presentation-timer-reading");
+  const progress = card.locator(".presentation-timer-progress");
+  const divider = page.getByTestId("presentation-layout-divider");
+
+  await expect(reading).toHaveText("7:00");
+  await expect(reading).toBeVisible();
+  await expect(progress).toBeVisible();
+  await expect(controls).toBeVisible();
+  await expect(controls).toHaveCSS("opacity", "0");
+  await expect(controls).toHaveCSS("pointer-events", "none");
+  await expect(controls).toHaveCSS("border-top-width", "1px");
+  await attachPresentationScreenshot(page, testInfo, "large-timer-rest");
+
+  const restGeometry = await readLargeTimerSurfaceGeometry(page);
+  await card.hover();
+  await expectLargeTimerControlsRevealed(page);
+  await attachPresentationScreenshot(page, testInfo, "large-timer-reveal");
+  const hoverGeometry = await readLargeTimerSurfaceGeometry(page);
+  expect(hoverGeometry).toEqual(restGeometry);
+
+  // Moving away does not leave a hover-only reveal behind. A real keyboard
+  // traversal from the layout divider still reveals the in-flow controls.
+  await page.mouse.move(4, 4);
+  await expect(controls).toHaveCSS("opacity", "0");
+  await divider.focus();
+  await page.keyboard.press("Tab");
+  const start = card.getByRole("button", { name: "Start or resume timer" });
+  await expect(start).toBeFocused();
+  await expectLargeTimerControlsRevealed(page);
+  await expect(start).toHaveCSS("outline-style", "solid");
+  await expect(start).toHaveCSS("outline-width", "2px");
+  expect(await readLargeTimerSurfaceGeometry(page)).toEqual(restGeometry);
+  await page.keyboard.press("Tab");
+  const adjust = card.getByRole("button", { name: "Adjust timer" });
+  await expect(adjust).toBeFocused();
+  const readingBeforeOptions = await reading.textContent();
+
+  // The options remain open while their trigger retains focus, even after
+  // the pointer leaves the card. Blurring outside the card closes them.
+  await adjust.press("Enter");
+  await expect(card.locator("#timer-options")).toBeVisible();
+  await expect(reading).toHaveText(readingBeforeOptions!);
+  await page.mouse.move(4, 4);
+  await expect(card.locator("#timer-options")).toBeVisible();
+  await expectLargeTimerControlsRevealed(page);
+  await page.keyboard.press("Tab");
+  await expect(card.getByRole("button", { name: "Minimize timer" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(card.getByRole("button", { name: "Reset timer" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(card.getByRole("button", { name: "Subtract one minute" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(card.getByRole("button", { name: "Add one minute" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(reading).toHaveText("8:00");
+  await expectLargeTimerControlsRevealed(page);
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await expect(page.getByTestId("button-teacher-controls")).toBeFocused();
+  await expect(card.locator("#timer-options")).toBeHidden();
+  await expect(controls).toHaveCSS("opacity", "0");
+  const exitGeometry = await readLargeTimerSurfaceGeometry(page);
+  expect(exitGeometry).toEqual(restGeometry);
+
+  // Reverse entry must reveal immediately as well, without focusing Start.
+  await page.keyboard.press("Shift+Tab");
+  const minimize = card.getByRole("button", { name: "Minimize timer" });
+  await expect(minimize).toBeFocused();
+  await expectLargeTimerControlsRevealed(page);
+  await expect(minimize).toHaveCSS("outline-width", "2px");
+
+  // Losing focus alone does not close options while the pointer is still on
+  // the card; leaving with both inputs does close them.
+  await card.hover();
+  await adjust.click();
+  await page.getByTestId("button-teacher-controls").focus();
+  await expect(card.locator("#timer-options")).toBeVisible();
+  await page.mouse.move(4, 4);
+  await expect(card.locator("#timer-options")).toBeHidden();
+  await expect(controls).toHaveCSS("opacity", "0");
+});
+
+test("keeps large timer controls visible and tappable on touch", async ({
+  browser,
+}, testInfo) => {
+  const context = await browser.newContext({
+    hasTouch: true,
+    isMobile: true,
+  });
+  const page = await context.newPage();
+
+  try {
+    await stubPresentationState(page, {
+      ...appState,
+      activities: [
+        {
+          ...longMixedDirectionActivity,
+          durationMinutes: 5,
+        },
+      ],
+    });
+    await page.emulateMedia({ reducedMotion: "reduce", media: "screen" });
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto("/present/activity-long-mixed-direction");
+    await settlePresentationSurface(page);
+
+    const card = page.getByTestId("presentation-surface").locator(".presentation-timer");
+    const controls = card.locator(".presentation-timer-controls");
+    const start = card.getByRole("button", { name: "Start or resume timer" });
+    const adjust = card.getByRole("button", { name: "Adjust timer" });
+    await expect(controls).toHaveCSS("opacity", "1");
+    await expect(controls).toHaveCSS("pointer-events", "auto");
+    await attachPresentationScreenshot(page, testInfo, "large-timer-touch");
+
+    await start.tap();
+    await expect(card.getByRole("button", { name: "Pause timer" })).toBeVisible();
+    await card.getByRole("button", { name: "Pause timer" }).tap();
+    await expect(card.getByRole("button", { name: "Start or resume timer" })).toBeVisible();
+
+    await adjust.tap();
+    const options = card.locator("#timer-options");
+    await expect(options).toBeVisible();
+    const beforeAdjust = await card.locator(".presentation-timer-reading").textContent();
+    await options.getByRole("button", { name: "Add one minute" }).tap();
+    await expect(card.locator(".presentation-timer-reading")).not.toHaveText(beforeAdjust!);
+    await adjust.tap();
+    await expect(options).toBeHidden();
+
+    await card.getByRole("button", { name: "Minimize timer" }).tap();
+    await expect(page.getByTestId("compact-timer-progress")).toBeVisible();
+  } finally {
+    await context.close();
+  }
+});
+
+test("keeps completed large timer keyboard order usable", async ({ page }) => {
+  await stubPresentationState(page, alarmAppState);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/present/activity-long-mixed-direction");
+  await settlePresentationSurface(page);
+
+  const card = page.getByTestId("presentation-surface").locator(".presentation-timer");
+  const divider = page.getByTestId("presentation-layout-divider");
+  await divider.focus();
+  await page.keyboard.press("Tab");
+  await expect(card.getByRole("button", { name: "Start or resume timer" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await page.evaluate(() => {
+    Date.now = () => 1_756_800_060_000;
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(card).toHaveClass(/presentation-timer--complete/);
+  await expect(card.getByRole("button", { name: "Start or resume timer" })).toBeDisabled();
+  const dismiss = card.getByRole("button", { name: "Dismiss alarm" });
+  const adjust = card.getByRole("button", { name: "Adjust timer" });
+
+  // Disabled Start is skipped by the browser's native tab order; Dismiss and
+  // Adjust remain adjacent and reversible with Shift+Tab.
+  await divider.focus();
+  await page.keyboard.press("Tab");
+  await expect(dismiss).toBeFocused();
+  await expectLargeTimerControlsRevealed(page);
+  await expect(dismiss).toHaveCSS("outline-width", "2px");
+  await page.keyboard.press("Tab");
+  await expect(adjust).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(dismiss).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(dismiss).toHaveCount(0);
+  await expect(card.locator(".presentation-timer-alarm-status")).toHaveCount(0);
+  await expect(card.locator(".presentation-timer-reading")).toHaveText("0:00");
+  await expect(card.locator(".presentation-timer-label")).toHaveText("Time is up");
+  await expect(card.locator(".presentation-timer-progress")).toBeVisible();
+  await divider.focus();
+  await page.keyboard.press("Tab");
+  await expect(adjust).toBeFocused();
+  await expectLargeTimerControlsRevealed(page);
+  await expect(adjust).toHaveCSS("outline-width", "2px");
+  await adjust.press("Enter");
+  await expect(card.locator("#timer-options")).toBeVisible();
 });
 
 test("exports long mixed-direction board text beside a visual without clipping", async ({
@@ -1483,7 +1716,7 @@ test("keeps Present disclosures reachable at zoom-equivalent viewport sizes", as
       pageMetrics.viewportWidth,
     );
 
-    await page.getByRole("button", { name: "Minimize timer" }).click();
+    await minimizeLargeTimer(page);
     // Close the deliberately opened footer dock before measuring the header.
     // Otherwise its focus/hover recovery can scroll back down during layout.
     await page.getByTestId("button-teacher-controls").press("Escape");
@@ -1614,7 +1847,7 @@ test("keeps compact timer primary actions inline at narrow classroom sizes", asy
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
     await page.goto("/present/activity-long-mixed-direction");
     await openTeacherControls(page);
-    await page.getByRole("button", { name: "Minimize timer" }).click();
+    await minimizeLargeTimer(page);
 
     const timerToggle = page.getByTestId("button-toggle-timer-controls");
     const timerPanel = page.locator("#presentation-timer-controls-panel");
@@ -1728,7 +1961,7 @@ test("keeps compact timer dismiss usable after the alarm starts", async ({ page 
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
     await page.goto("/present/activity-long-mixed-direction");
     await openTeacherControls(page);
-    await page.getByRole("button", { name: "Minimize timer" }).click();
+    await minimizeLargeTimer(page);
 
     const timerToggle = page.getByTestId("button-toggle-timer-controls");
     const timerPanel = page.locator("#presentation-timer-controls-panel");
@@ -1738,7 +1971,7 @@ test("keeps compact timer dismiss usable after the alarm starts", async ({ page 
     await timerPanel.getByRole("button", { name: "Start or resume timer" }).click();
 
     await page.evaluate(() => {
-      const completedAt = 1_756_800_001_000;
+      const completedAt = 1_756_800_060_000;
       Date.now = () => completedAt;
       document.dispatchEvent(new Event("visibilitychange"));
     });
@@ -1839,7 +2072,7 @@ test("keeps a multi-digit compact timer reading inside its themed ring", async (
   await page.setViewportSize({ width: 640, height: 400 });
   await page.goto("/present/activity-long-mixed-direction");
   await openTeacherControls(page);
-  await page.getByRole("button", { name: "Minimize timer" }).click();
+  await minimizeLargeTimer(page);
 
   const reading = page.locator(".presentation-time-reading");
   await expect(reading).toHaveText("100:00");
@@ -1947,7 +2180,7 @@ test("keeps compact readings clear inside a circular control", async (
     await page.goto(`/present/${reading.id}`);
     await settlePresentationSurface(page);
     await openTeacherControls(page);
-    await page.getByRole("button", { name: "Minimize timer" }).click();
+    await minimizeLargeTimer(page);
 
     const compactReading = page.getByTestId("presentation-surface").locator(
       ".presentation-time-reading",
@@ -2133,7 +2366,7 @@ test("restores hidden timer actions through the compact clock without duplicatin
     await expect(page.getByTestId("present-task")).toHaveText("Work quietly.");
 
     await openTeacherControls(page);
-    await page.getByRole("button", { name: "Minimize timer" }).click();
+    await minimizeLargeTimer(page);
   const timerToggle = page.getByTestId("button-toggle-timer-controls");
   const compactTimer = page.getByTestId("compact-timer-progress");
   const compactTimerPanel = page.locator("#presentation-timer-controls-panel");
@@ -2228,6 +2461,7 @@ test("keeps hidden timer recovery reachable below a tall Present board", async (
   await teacherToggle.click();
   await expect(teacherPanel).toBeVisible();
 
+  await page.locator(".presentation-timer").hover();
   await page.getByRole("button", { name: "Adjust" }).click();
   await page.getByRole("button", { name: "Hide timer from students" }).click();
 
@@ -2521,7 +2755,7 @@ test("returns focus to the compact timer trigger after teacher controls close", 
   await settlePresentationSurface(page);
 
   await openTeacherControls(page);
-  await page.getByRole("button", { name: "Minimize timer" }).click();
+    await minimizeLargeTimer(page);
   await page.getByTestId("button-teacher-controls").click();
   await page.mouse.move(10, 10);
 
@@ -3088,6 +3322,7 @@ test("fits the live student hierarchy to the pane with proportional whitespace",
   expect(roomy.taskLineHeight / roomy.taskFontSize).toBeGreaterThanOrEqual(1.19);
   expect(roomy.promptLineHeight / roomy.promptFontSize).toBeGreaterThanOrEqual(1.34);
   // Stable after ticking: typography is not refitted on each timer render.
+  await page.locator(".presentation-timer").hover();
   await page.getByRole("button", { name: "Start or resume timer", exact: true }).click();
   await page.waitForTimeout(1100);
   expect((await measureHierarchy()).taskFontSize).toBe(roomy.taskFontSize);

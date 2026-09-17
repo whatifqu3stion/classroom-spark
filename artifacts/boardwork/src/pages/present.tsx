@@ -538,6 +538,7 @@ export default function Present() {
         activity={activeDraft}
         controls={controls}
         timerControls={renderTimerControls()}
+        onLeaveLargeTimerControls={() => setTimerOptionsOpen(false)}
         showResourceLink={false}
         onShowTimer={() => {
           setTimerVisible(true);

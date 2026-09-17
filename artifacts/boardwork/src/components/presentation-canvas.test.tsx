@@ -40,6 +40,75 @@ const visualBalanceActivity: ActivityDraft = {
 };
 
 describe("PresentationCanvas timer visibility", () => {
+  it.each([true, false])(
+    "only closes large timer options after interaction leaves on hover devices (hover=%s)",
+    (canHover) => {
+      vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: canHover })));
+      try {
+        const onLeave = vi.fn();
+        render(
+          <PresentationCanvas
+            activity={activity}
+            timer={timer}
+            onLeaveLargeTimerControls={onLeave}
+            timerControls={
+              <div className="presentation-timer-controls">
+                <button>Adjust timer</button>
+                <button>Add one minute</button>
+              </div>
+            }
+            controls={<button>Outside clock</button>}
+          />,
+        );
+        const adjust = screen.getByRole("button", { name: "Adjust timer" });
+        const add = screen.getByRole("button", { name: "Add one minute" });
+        const outside = screen.getByRole("button", { name: "Outside clock" });
+        const card = adjust.closest(".presentation-timer")!;
+
+        act(() => adjust.focus());
+        fireEvent.pointerLeave(card);
+        expect(onLeave).not.toHaveBeenCalled();
+        act(() => add.focus());
+        expect(onLeave).not.toHaveBeenCalled();
+        act(() => outside.focus());
+        expect(onLeave).toHaveBeenCalledTimes(canHover ? 1 : 0);
+
+        onLeave.mockClear();
+        fireEvent.pointerLeave(card);
+        expect(onLeave).toHaveBeenCalledTimes(canHover ? 1 : 0);
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    },
+  );
+
+  it("keeps large timer options open when focus leaves but the card is still hovered", () => {
+    vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: true })));
+    try {
+      const onLeave = vi.fn();
+      render(
+        <PresentationCanvas
+          activity={activity}
+          timer={timer}
+          onLeaveLargeTimerControls={onLeave}
+          timerControls={<button>Adjust timer</button>}
+          controls={<button>Outside clock</button>}
+        />,
+      );
+      const adjust = screen.getByRole("button", { name: "Adjust timer" });
+      const card = adjust.closest(".presentation-timer")!;
+      const matches = vi.spyOn(card, "matches").mockReturnValue(true);
+      act(() => adjust.focus());
+      act(() => screen.getByRole("button", { name: "Outside clock" }).focus());
+      expect(onLeave).not.toHaveBeenCalled();
+      matches.mockRestore();
+      fireEvent.pointerLeave(card);
+      expect(onLeave).toHaveBeenCalledOnce();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("renders two visuals and forces the timer into compact mode", () => {
     const twoVisualActivity = {
       ...activity,
