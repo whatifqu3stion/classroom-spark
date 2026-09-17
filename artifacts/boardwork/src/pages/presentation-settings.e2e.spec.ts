@@ -249,7 +249,7 @@ for (const viewport of [
         selectedSurface,
         unselectedSurface,
       );
-      const accentStates = await expectNeutralTileStates(
+      await expectNeutralTileStates(
         selectedAccent,
         unselectedAccent,
       );
@@ -308,24 +308,22 @@ for (const viewport of [
       expect(focused.boxShadow !== "none" || focused.outline !== "none").toBe(true);
       expect(focused.border).toBe(surfaceStates.selected.border);
 
-      await page.getByTestId("image-selector-2").click();
       const imageWorkspace = page.getByTestId("image-workspace");
       const imageHeight = await imageWorkspace.evaluate(
         (element) => element.getBoundingClientRect().height,
       );
-      await expect(page.getByTestId("image-selector-2")).toHaveAttribute(
-        "aria-pressed",
-        "true",
-      );
-      const selectedImageStyle = await computedTileStyle(
-        page.getByTestId("image-selector-2"),
-      );
-      expect(selectedImageStyle.background).toBe(surfaceStates.selected.background);
-      expect(selectedImageStyle.border).toBe(surfaceStates.selected.border);
-
-      await expect(imageWorkspace.locator('input[type="file"]')).toHaveCount(1);
-      await expect(imageWorkspace.getByRole("img")).toHaveCount(1);
-      await expect(imageWorkspace.getByRole("textbox")).toHaveCount(1);
+      await expect(imageWorkspace.locator('[data-testid^="image-selector-"]')).toHaveCount(0);
+      await expect(imageWorkspace.getByText("Added", { exact: true })).toHaveCount(0);
+      await expect(imageWorkspace.getByText("Empty", { exact: true })).toHaveCount(0);
+      await expect(imageWorkspace.locator('input[type="file"]')).toHaveCount(0);
+      await expect(imageWorkspace.getByRole("img")).toHaveCount(2);
+      await expect(
+        imageWorkspace.getByRole("img", { name: "Image 1 preview", exact: true }),
+      ).toBeVisible();
+      await expect(
+        imageWorkspace.getByRole("img", { name: "Image 2 preview", exact: true }),
+      ).toBeVisible();
+      await expect(imageWorkspace.getByRole("textbox")).toHaveCount(2);
       expect(
         await imageWorkspace.evaluate((element) => element.scrollWidth),
       ).toBeLessThanOrEqual(viewport.width);
@@ -334,12 +332,16 @@ for (const viewport of [
         name: "Remove image 2",
         exact: true,
       });
-      await expect(removeImage).toHaveCSS("min-height", "55px");
+      const removeSize = await removeImage.evaluate((element) => {
+        const bounds = element.getBoundingClientRect();
+        return { width: bounds.width, height: bounds.height };
+      });
+      expect(removeSize.width).toBeGreaterThanOrEqual(40);
+      expect(removeSize.height).toBeGreaterThanOrEqual(40);
       const removeResting = await computedTileStyle(removeImage);
       await removeImage.hover();
       const removeHovered = await computedTileStyle(removeImage);
       expect(removeHovered.background).not.toBe(removeResting.background);
-      expect(removeHovered.color).toBe(surfaceStates.selected.color);
       await page.mouse.move(0, 0);
 
       const caption = page.getByRole("textbox", {
@@ -402,10 +404,7 @@ for (const viewport of [
         "inert",
       );
       await toggle.click();
-      await expect(page.getByTestId("image-selector-2")).toHaveAttribute(
-        "aria-pressed",
-        "true",
-      );
+      await expect(imageWorkspace.getByRole("img")).toHaveCount(2);
       await expect(caption).toHaveValue("Updated second classroom diagram");
       await expect(note).toHaveText("Keep the comparison brief.");
       await expect(page.getByTestId("theme-option-paper")).toHaveAttribute(

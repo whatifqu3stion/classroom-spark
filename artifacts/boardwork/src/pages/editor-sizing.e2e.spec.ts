@@ -99,7 +99,10 @@ for (const viewport of [
           prompts: ["Describe your reasoning. ".repeat(25)],
           teacherNote: "Remember to ask for evidence. ".repeat(30),
           savedContextSnapshot: [{ label: "Class routine", details: "Draw before explaining. ".repeat(20), category: "Routine" }],
-          visuals: [{ url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3C/svg%3E", description: "First" }],
+          visuals: [
+            { url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='100'%3E%3C/svg%3E", description: "Wide visual" },
+            { url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='320'%3E%3C/svg%3E", description: "Tall visual" },
+          ],
         }],
       };
       await page.goto("/activity/sizing-board");
@@ -112,6 +115,21 @@ for (const viewport of [
       }
       await toggle.scrollIntoViewIfNeeded();
       await toggle.click();
+       const imageWorkspace = page.getByTestId("image-workspace");
+       await expect(imageWorkspace.getByTestId("visual-preview")).toHaveCount(2);
+       await expect(imageWorkspace.getByRole("textbox")).toHaveCount(2);
+       await expect(imageWorkspace.locator('input[type="file"]')).toHaveCount(0);
+       const previewBoxes = await imageWorkspace.getByTestId("visual-preview").evaluateAll(
+         (images) => images.map((image) => {
+           const bounds = image.getBoundingClientRect();
+           return { left: bounds.left, right: bounds.right, top: bounds.top, bottom: bounds.bottom };
+         }),
+       );
+       if (viewport.width >= 1024) {
+         expect(previewBoxes[1].left).toBeGreaterThanOrEqual(previewBoxes[0].right - 1);
+       } else {
+         expect(previewBoxes[1].top).toBeGreaterThanOrEqual(previewBoxes[0].bottom - 1);
+       }
       const note = page.getByRole("textbox", { name: "Optional note for the teacher..." });
       await note.scrollIntoViewIfNeeded();
       await expect(note).toBeInViewport();
