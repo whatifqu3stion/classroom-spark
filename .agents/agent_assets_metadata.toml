@@ -14,3 +14,17 @@ mtime_ms = 1789588759858
 storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:9ad62490-af3f-41dd-9710-85fb8168a6bf/1934093f-9d4b-4dac-a1af-b840932c1b95/363573b0-b5d2-474b-9eb4-f283f1532cbe"
 storage_version_token = "1789588841260133"
 content_type = "image/png"
+
+[[outputs]]
+id = "S0GKv5BRuvweE6-1WIowU"
+uri = "file://artifacts/boardwork/evidence/reading-capacity/report.html"
+type = "html"
+title = "Classroom reading: before and after"
+description = "Side-by-side comparisons, measured task and prompt sizes, viewport results, and baseline reconstruction notes."
+logical_id = "175f0c56-cfd3-471a-a2b7-f48047a4f988"
+content_hash = "sha256:9646621ba081ac10c23edec65b27a97e38426d809d93f6689bee77b5536cbfbb"
+size = 1373112
+mtime_ms = 1789742450007
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:9ad62490-af3f-41dd-9710-85fb8168a6bf/175f0c56-cfd3-471a-a2b7-f48047a4f988/c5a00cab-e490-4c2f-a2f3-a228987cf712"
+storage_version_token = "1789742600134627"
+content_type = "text/html"

@@ -1914,6 +1914,26 @@
   @media (orientation: landscape) and (min-width: 700px) and (min-height: 500px) {
     .presentation-surface:not(.presentation-surface--export):not(
         .presentation-surface--editor-preview
+      ) {
+      padding-inline: clamp(1.5rem, 4vw, 4rem);
+    }
+
+    .presentation-surface:not(.presentation-surface--export):not(
+        .presentation-surface--editor-preview
+      )
+      .presentation-main {
+      column-gap: clamp(1.5rem, 2.5vw, 3rem);
+    }
+
+    .presentation-surface:not(.presentation-surface--export):not(
+        .presentation-surface--editor-preview
+      )
+      .presentation-content {
+      max-width: none;
+    }
+
+    .presentation-surface:not(.presentation-surface--export):not(
+        .presentation-surface--editor-preview
       )[data-text-fit-active="true"]
       .presentation-content {
       gap: var(--presentation-text-fit-content-gap, 1.5rem);
@@ -1940,7 +1960,7 @@
         .presentation-surface--editor-preview
       )[data-text-fit-active="true"]
       .presentation-prompt {
-      gap: var(--presentation-text-fit-prompt-gap, 1rem);
+      gap: min(1.375rem, var(--presentation-text-fit-prompt-gap, 1rem));
       font-size: var(--presentation-text-fit-prompt-size, 1.5rem);
       line-height: 1.35;
     }

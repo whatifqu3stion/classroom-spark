@@ -20,3 +20,9 @@ Choose growth from actual rendered space, not character-count density cutoffs, a
 **Why:** The teacher wants proportional whitespace and classroom-readable copy; an extra character must not suddenly shrink the whole board. Scrolling exceptional long content is preferable to tiny type.
 
 **How to apply:** Base capacity on viewport and fixed layout reserves rather than live content height. Preserve forced font invalidations when coalescing resize events; changing to an already-loaded typography also requires remeasurement.
+
+Treat student prompt size as a first-class fitting objective: hold spacing at a comfortable minimum while fitting type, then add only capped residual spacing. Do not let the task's cap stop prompt growth.
+
+**Why:** Coupled gap/type growth and an additional proportional reserve after layout reserves left useful projection capacity unused. A large headline alone does not improve the readability of students' next steps.
+
+**How to apply:** Judge changes with measured marked-text reproductions and separate type, spacing, and available-width effects. Keep provenance notes outside authored fixture captions: adding explanatory captions changes rail geometry and invalidates a screenshot comparison.

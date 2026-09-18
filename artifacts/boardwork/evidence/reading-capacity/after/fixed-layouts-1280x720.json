@@ -1,0 +1,72 @@
+{
+  "editorPreview": {
+    "surface": {
+      "x": 40,
+      "y": 40,
+      "width": 960,
+      "height": 540,
+      "top": 40,
+      "right": 1000,
+      "bottom": 580,
+      "left": 40
+    },
+    "content": {
+      "x": 128,
+      "y": 140.515625,
+      "width": 460.15625,
+      "height": 190.90625,
+      "top": 140.515625,
+      "right": 588.15625,
+      "bottom": 331.421875,
+      "left": 128
+    },
+    "task": {
+      "x": 128,
+      "y": 140.515625,
+      "width": 460.15625,
+      "height": 76.78125,
+      "top": 140.515625,
+      "right": 588.15625,
+      "bottom": 217.296875,
+      "left": 128
+    },
+    "taskFontSize": "20px",
+    "textFitActive": "false",
+    "textFitScale": "1"
+  },
+  "export": {
+    "surface": {
+      "x": -10000,
+      "y": 0,
+      "width": 1920,
+      "height": 1080,
+      "top": 0,
+      "right": -8080,
+      "bottom": 1080,
+      "left": -10000
+    },
+    "content": {
+      "x": -9864,
+      "y": 157.1875,
+      "width": 1055.125,
+      "height": 407.25,
+      "top": 157.1875,
+      "right": -8808.875,
+      "bottom": 564.4375,
+      "left": -9864
+    },
+    "task": {
+      "x": -9864,
+      "y": 157.1875,
+      "width": 1055.125,
+      "height": 190.3125,
+      "top": 157.1875,
+      "right": -8808.875,
+      "bottom": 347.5,
+      "left": -9864
+    },
+    "taskFontSize": "52px",
+    "textFitActive": "false",
+    "textFitScale": "1"
+  }
+}

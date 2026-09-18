@@ -52,8 +52,9 @@ const testId = (enabled: boolean, value: string) =>
   enabled ? { "data-testid": value } : {};
 
 const DEFAULT_CONTENT_RATIO = 0.64;
+const TIMER_ONLY_CONTENT_RATIO = 0.72;
 const MIN_CONTENT_RATIO = 0.42;
-const MAX_CONTENT_RATIO = 0.76;
+const MAX_CONTENT_RATIO = 0.78;
 const LAYOUT_STEP = 0.04;
 const MIN_CONTENT_WIDTH = 280;
 const MIN_RAIL_WIDTH = 240;
@@ -79,7 +80,9 @@ export function PresentationCanvas({
   surfaceRef,
   timer,
 }: PresentationCanvasProps) {
-  const [contentRatio, setContentRatio] = useState(DEFAULT_CONTENT_RATIO);
+  const [preferredContentRatio, setPreferredContentRatio] = useState<
+    number | null
+  >(null);
   const [layoutBounds, setLayoutBounds] = useState<LayoutRatioBounds>({
     min: MIN_CONTENT_RATIO,
     max: MAX_CONTENT_RATIO,
@@ -123,9 +126,16 @@ export function PresentationCanvas({
     hasLargeTimer: showLargeTimer,
   });
   const showLayoutDivider = !exportLayout && hasRightRail;
+  const defaultContentRatio =
+    !exportLayout && !editorPreview && railMode === "timer-only"
+      ? TIMER_ONLY_CONTENT_RATIO
+      : DEFAULT_CONTENT_RATIO;
   const effectiveContentRatio = Math.max(
     layoutBounds.min,
-    Math.min(layoutBounds.max, contentRatio),
+    Math.min(
+      layoutBounds.max,
+      preferredContentRatio ?? defaultContentRatio,
+    ),
   );
   const formatTimer = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
   const compactTimerTotalSeconds = Math.max(1, activity.durationMinutes * 60);
@@ -241,7 +251,6 @@ export function PresentationCanvas({
   const refreshLayoutBounds = () => {
     const nextBounds = getLayoutRatioBounds();
     setLayoutBounds(nextBounds);
-    setContentRatio((ratio) => clampContentRatio(ratio, nextBounds));
   };
 
   useEffect(() => {
@@ -275,7 +284,9 @@ export function PresentationCanvas({
     const contentWidth = clientX - bounds.left - gap;
     const nextBounds = getLayoutRatioBounds();
     setLayoutBounds(nextBounds);
-    setContentRatio(clampContentRatio(contentWidth / availableWidth, nextBounds));
+    // Keep the teacher's preferred split intact across viewport changes. The
+    // rendered value is clamped separately to preserve accessible pane widths.
+    setPreferredContentRatio(contentWidth / availableWidth);
   };
 
   const handleDividerKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -284,8 +295,11 @@ export function PresentationCanvas({
       const direction = event.key === "ArrowRight" ? 1 : -1;
       const nextBounds = getLayoutRatioBounds();
       setLayoutBounds(nextBounds);
-      setContentRatio((ratio) =>
-        clampContentRatio(ratio + direction * LAYOUT_STEP, nextBounds),
+      setPreferredContentRatio(
+        clampContentRatio(
+          effectiveContentRatio + direction * LAYOUT_STEP,
+          nextBounds,
+        ),
       );
       return;
     }
@@ -294,7 +308,7 @@ export function PresentationCanvas({
       event.preventDefault();
       const nextBounds = getLayoutRatioBounds();
       setLayoutBounds(nextBounds);
-      setContentRatio(clampContentRatio(DEFAULT_CONTENT_RATIO, nextBounds));
+      setPreferredContentRatio(null);
       return;
     }
 
@@ -302,7 +316,7 @@ export function PresentationCanvas({
       event.preventDefault();
       const nextBounds = getLayoutRatioBounds();
       setLayoutBounds(nextBounds);
-      setContentRatio(nextBounds.max);
+      setPreferredContentRatio(nextBounds.max);
       return;
     }
 
@@ -310,7 +324,7 @@ export function PresentationCanvas({
       event.preventDefault();
       const nextBounds = getLayoutRatioBounds();
       setLayoutBounds(nextBounds);
-      setContentRatio(clampContentRatio(DEFAULT_CONTENT_RATIO, nextBounds));
+      setPreferredContentRatio(null);
     }
   };
 
@@ -559,7 +573,7 @@ export function PresentationCanvas({
             aria-valuetext={`${Math.round(effectiveContentRatio * 100)}% student content, ${Math.round((1 - effectiveContentRatio) * 100)}% right rail`}
             tabIndex={0}
             onKeyDown={handleDividerKeyDown}
-            onDoubleClick={() => setContentRatio(DEFAULT_CONTENT_RATIO)}
+            onDoubleClick={() => setPreferredContentRatio(null)}
             onPointerDown={(event) => {
               event.preventDefault();
               setIsResizing(true);

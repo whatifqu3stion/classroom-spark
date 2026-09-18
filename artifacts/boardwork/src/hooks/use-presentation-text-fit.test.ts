@@ -17,12 +17,18 @@ describe("presentation text fit", () => {
     const main = surface.querySelector<HTMLElement>("main")!;
     const content = surface.querySelector<HTMLDivElement>(".presentation-content")!;
     const sizes = new Set<number>();
+    let probes = 0;
+    let markedProbes = 0;
     const dimensions = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect")
       .mockImplementation(function (this: HTMLElement) {
         const isContent = this.classList.contains("presentation-content");
         const probe = this.closest<HTMLElement>('[aria-hidden="true"]');
         const taskSize = Number.parseFloat(probe?.style.getPropertyValue("--presentation-text-fit-task-size") ?? "");
-        if (isContent && probe && Number.isFinite(taskSize)) sizes.add(taskSize);
+        if (isContent && probe && Number.isFinite(taskSize)) {
+          sizes.add(taskSize);
+          probes++;
+          if (this.querySelector("mark strong")) markedProbes++;
+        }
         return DOMRect.fromRect({
           x: 0, y: this.classList.contains("presentation-main") ? 40 : 0,
           width: isContent ? 620 : 1280,
@@ -31,20 +37,34 @@ describe("presentation text fit", () => {
       });
     vi.stubGlobal("innerWidth", 1280);
     vi.stubGlobal("innerHeight", 720);
-    const hook = renderHook(() => usePresentationTextFit({
+    const refs = {
       surfaceRef: { current: surface },
       mainRef: { current: main },
       contentRef: { current: content },
+    };
+    const hook = renderHook(({ contentVersion }) => usePresentationTextFit({
+      ...refs,
       exportLayout: false, editorPreview: false,
       hasAuthoredStudentContent: true,
-      contentVersion: "unchanged", hasRightRail: false,
-    }));
+      contentVersion, hasRightRail: false,
+    }), { initialProps: { contentVersion: "plain" } });
     try {
       act(() => vi.advanceTimersByTime(100));
       expect(sizes.size).toBeGreaterThan(2);
       expect(hook.result.current.active).toBe(true);
       expect(hook.result.current.scale).toBeGreaterThan(1);
-      expect(hook.result.current.taskSize).toBeLessThan(62);
+      expect(80 + hook.result.current.taskSize * 8).toBeLessThanOrEqual(620 * 0.96);
+      expect(hook.result.current.taskSize).toBeLessThan(77.5);
+      expect(document.querySelectorAll('.presentation-surface[aria-hidden="true"]')).toHaveLength(0);
+      const plainProbes = probes;
+      hook.rerender({ contentVersion: "plain" });
+      act(() => vi.advanceTimersByTime(100));
+      expect(probes).toBe(plainProbes);
+      content.innerHTML = "<mark><strong>A readable board</strong></mark>";
+      hook.rerender({ contentVersion: "bold-highlight" });
+      act(() => vi.advanceTimersByTime(100));
+      expect(probes).toBeGreaterThan(plainProbes);
+      expect(markedProbes).toBeGreaterThan(0);
       expect(document.querySelectorAll('.presentation-surface[aria-hidden="true"]')).toHaveLength(0);
     } finally {
       hook.unmount();
@@ -61,7 +81,7 @@ describe("presentation text fit", () => {
 
     expect(narrowBaseline.taskSize).toBeGreaterThanOrEqual(24);
     expect(narrowBaseline.promptSize).toBeGreaterThanOrEqual(24);
-    expect(narrowMaximum.taskSize).toBeLessThanOrEqual(30);
+    expect(narrowMaximum.taskSize).toBeLessThanOrEqual(35);
     expect(narrowMaximum.promptSize).toBeLessThanOrEqual(28);
   });
 
@@ -71,12 +91,60 @@ describe("presentation text fit", () => {
 
     expect(baseline.contentGap).toBeGreaterThanOrEqual(24);
     expect(baseline.contentGap).toBeLessThanOrEqual(40);
-    expect(baseline.promptPadding).toBeGreaterThanOrEqual(16);
+    expect(baseline.promptPadding).toBeGreaterThanOrEqual(12);
     expect(baseline.promptPadding).toBeLessThanOrEqual(22);
     expect(maximum.contentGap).toBeLessThanOrEqual(44);
     expect(maximum.promptPadding).toBeLessThanOrEqual(24);
-    expect(maximum.contentGap).toBeGreaterThanOrEqual(baseline.contentGap);
-    expect(maximum.promptPadding).toBeGreaterThanOrEqual(baseline.promptPadding);
+    expect(maximum.contentGap).toBe(baseline.contentGap);
+    expect(maximum.promptPadding).toBe(baseline.promptPadding);
+    expect(maximum.promptGap).toBe(baseline.promptGap);
+  });
+
+  it("spends capacity on type before bounded residual whitespace", () => {
+    const candidates: ReturnType<typeof getPresentationTextFitMetrics>[] = [];
+    const height = (metrics: ReturnType<typeof getPresentationTextFitMetrics>) =>
+      metrics.taskSize * 2 + metrics.promptSize * 4 +
+      metrics.contentGap + metrics.promptGap * 2 + metrics.promptPadding;
+    const result = choosePresentationTextFit({
+      paneWidth: 700, viewportWidth: 1280, viewportHeight: 720, usableHeight: 550,
+      measure: (metrics) => { candidates.push(metrics); return height(metrics); },
+    });
+    expect(height(result)).toBeLessThanOrEqual(550 - 22);
+    expect(result.promptSize).toBeGreaterThan(55);
+    const baseline = getPresentationTextFitMetrics(700, 1);
+    const firstSpacingGrowth = candidates.findIndex((candidate) =>
+      candidate.contentGap > baseline.contentGap);
+    expect(firstSpacingGrowth).toBeGreaterThanOrEqual(2);
+    expect(candidates.slice(0, firstSpacingGrowth).every((candidate) =>
+      candidate.promptGap === baseline.promptGap)).toBe(true);
+    expect(result.contentGap).toBeLessThanOrEqual(36);
+    expect(result.promptGap).toBeLessThanOrEqual(28);
+    expect(result.promptPadding).toBeLessThanOrEqual(20);
+    expect(candidates.length).toBeLessThanOrEqual(14);
+  });
+
+  it("does not let the task cap prevent prompt growth", () => {
+    const result = choosePresentationTextFit({
+      paneWidth: 1200, viewportWidth: 1920, viewportHeight: 1080,
+      usableHeight: 850, measure: ({ taskSize, promptSize }) => taskSize + promptSize,
+    });
+    expect(result.taskSize).toBe(86);
+    expect(result.promptSize).toBe(72);
+    expect(result.contentGap).toBe(36);
+    expect(result.promptGap).toBe(28);
+  });
+
+  it("measures marked/wrapped content rather than using character density", () => {
+    const fit = (richLineCount: number) => choosePresentationTextFit({
+      paneWidth: 640, viewportWidth: 1280, viewportHeight: 720,
+      usableHeight: 500,
+      measure: ({ taskSize, promptSize, contentGap, promptGap, promptPadding }) =>
+        taskSize * 2.56 + promptSize * richLineCount * 1.35 +
+        contentGap + promptGap * 2 + promptPadding,
+    });
+    expect(fit(6).promptSize).toBeLessThan(fit(3).promptSize);
+    expect(fit(6).promptSize).toBeGreaterThanOrEqual(24);
+    expect(fit(6)).toEqual(fit(6));
   });
 
   it("grows continuously into unused vertical room", () => {

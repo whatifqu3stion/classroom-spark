@@ -32,10 +32,10 @@ const MIN_DESKTOP_HEIGHT = 500;
 const MIN_TASK_SIZE = 24;
 const MIN_PROMPT_SIZE = 24;
 const MAX_TASK_SIZE = 86;
-const MAX_PROMPT_SIZE = 58;
+const MAX_PROMPT_SIZE = 72;
 const MIN_SCALE = 1;
-const MAX_SCALE = 2.4;
-const VERTICAL_RESERVE = 0.18;
+const MAX_SCALE = 3;
+const VERTICAL_RESERVE = 0.04;
 const FIT_ITERATIONS = 7;
 const SCALE_QUANTUM = 0.02;
 
@@ -49,9 +49,9 @@ const quantizeScale = (scale: number) =>
   Math.round(scale / SCALE_QUANTUM) * SCALE_QUANTUM;
 
 /**
- * Keep the type baseline readable on a narrow left pane, then allow width to
- * raise its ceiling. The width ceilings are intentional: a divider can leave
- * a pane that is tall enough for large type but too narrow for useful words.
+ * Grow type, not gaps. Broad width guardrails avoid huge words in a manually
+ * narrowed pane; actual rich-text wrapping decides the fit inside those limits.
+ * Task and prompt caps are independent, with a modest task-first hierarchy.
  */
 export function getPresentationTextFitMetrics(
   paneWidth: number,
@@ -59,13 +59,10 @@ export function getPresentationTextFitMetrics(
 ): PresentationTextFitMetrics {
   const width = Math.max(0, finiteOr(paneWidth, 0));
   const safeScale = Math.max(MIN_SCALE, finiteOr(scale, MIN_SCALE));
-  const taskBase = clamp(width * 0.055, MIN_TASK_SIZE, 48);
-  const promptBase = clamp(width * 0.04, MIN_PROMPT_SIZE, 36);
-  const taskWidthCeiling = clamp(width * 0.1, 28, MAX_TASK_SIZE);
-  const promptWidthCeiling = clamp(width * 0.075, 28, MAX_PROMPT_SIZE);
-  const contentGapBase = clamp(width * 0.04, 24, 40);
-  const promptGapBase = clamp(width * 0.032, 16, 34);
-  const promptPaddingBase = clamp(width * 0.022, 16, 22);
+  const taskBase = clamp(width * 0.05, MIN_TASK_SIZE, 44);
+  const promptBase = clamp(width * 0.042, MIN_PROMPT_SIZE, 36);
+  const taskWidthCeiling = clamp(width / 8, 30, MAX_TASK_SIZE);
+  const promptWidthCeiling = clamp(width / 10, 28, MAX_PROMPT_SIZE);
 
   return {
     taskSize: Math.min(taskWidthCeiling, taskBase * safeScale, MAX_TASK_SIZE),
@@ -74,9 +71,9 @@ export function getPresentationTextFitMetrics(
       promptBase * safeScale,
       MAX_PROMPT_SIZE,
     ),
-    contentGap: Math.min(44, contentGapBase * safeScale),
-    promptGap: Math.min(38, promptGapBase * safeScale),
-    promptPadding: Math.min(24, promptPaddingBase * safeScale),
+    contentGap: clamp(width * 0.035, 24, 32),
+    promptGap: clamp(width * 0.025, 14, 22),
+    promptPadding: clamp(width * 0.02, 12, 18),
   };
 }
 
@@ -131,30 +128,23 @@ export function choosePresentationTextFit(
   }
 
   const taskBase = getPresentationTextFitMetrics(paneWidth, 1);
-  const width = Math.max(0, finiteOr(paneWidth, 0));
-  const taskBaseUncapped = clamp(width * 0.055, MIN_TASK_SIZE, 48);
-  const promptBaseUncapped = clamp(width * 0.04, MIN_PROMPT_SIZE, 36);
-  const maxTaskAtWidth = clamp(width * 0.1, 28, MAX_TASK_SIZE);
-  const maxPromptAtWidth = clamp(width * 0.075, 28, MAX_PROMPT_SIZE);
-  const maxTaskScale = taskBaseUncapped
-    ? maxTaskAtWidth / taskBaseUncapped
-    : MIN_SCALE;
-  const maxPromptScale = promptBaseUncapped
-    ? maxPromptAtWidth / promptBaseUncapped
-    : MIN_SCALE;
-  const maxScale = Math.max(
-    MIN_SCALE,
-    Math.min(MAX_SCALE, maxTaskScale, maxPromptScale),
-  );
-  const targetHeight = Math.max(0, usableHeight * (1 - VERTICAL_RESERVE));
-  const fits = (scale: number) => {
-    const height = measure(getPresentationTextFitMetrics(paneWidth, scale));
-    return Number.isFinite(height) && height <= targetHeight + 1;
+  const maximum = getPresentationTextFitMetrics(paneWidth, MAX_SCALE);
+  // One reaching its cap must not prevent the other from continuing to grow.
+  const maxScale = Math.min(MAX_SCALE, Math.max(
+    maximum.taskSize / taskBase.taskSize,
+    maximum.promptSize / taskBase.promptSize,
+  ));
+  // Layout already charges outer padding, header, footer baseline and main
+  // padding. Keep a small, bounded additional breathing room, not another 18%.
+  const targetHeight = Math.max(0, usableHeight - clamp(usableHeight * VERTICAL_RESERVE, 12, 28));
+  const fits = (metrics: PresentationTextFitMetrics) => {
+    const height = measure(metrics);
+    return Number.isFinite(height) && height <= targetHeight;
   };
 
   // Growth-only: if the authored stack is already longer than the minimum
   // budget, retain the readable baseline and let the surface flow/scroll.
-  if (!fits(MIN_SCALE)) {
+  if (!fits(taskBase)) {
     return {
       active: true,
       scale: MIN_SCALE,
@@ -167,13 +157,15 @@ export function choosePresentationTextFit(
   let upper = maxScale;
   let best = MIN_SCALE;
 
-  for (let step = 0; step < FIT_ITERATIONS; step += 1) {
+  if (fits(maximum)) {
+    best = maxScale;
+  } else for (let step = 0; step < FIT_ITERATIONS; step += 1) {
     const candidate = quantizeScale((lower + upper) / 2);
     if (candidate <= lower || candidate >= upper) {
       break;
     }
 
-    if (fits(candidate)) {
+    if (fits(getPresentationTextFitMetrics(paneWidth, candidate))) {
       best = candidate;
       lower = candidate;
     } else {
@@ -182,15 +174,32 @@ export function choosePresentationTextFit(
   }
 
   const scale = clamp(
-    quantizeScale(Math.max(MIN_SCALE, best)),
+    Math.floor((Math.max(MIN_SCALE, best) + 1e-9) / SCALE_QUANTUM) * SCALE_QUANTUM,
     MIN_SCALE,
     maxScale,
   );
+  const typeMetrics = getPresentationTextFitMetrics(paneWidth, scale);
+  // Only spend room left AFTER type fitting on whitespace, and never stretch
+  // rows to fill the board. Re-measure because marker spacing affects wrapping.
+  const withSpacing = (amount: number): PresentationTextFitMetrics => ({
+    ...typeMetrics,
+    contentGap: typeMetrics.contentGap + (36 - typeMetrics.contentGap) * amount,
+    promptGap: typeMetrics.promptGap + (28 - typeMetrics.promptGap) * amount,
+    promptPadding: typeMetrics.promptPadding + (20 - typeMetrics.promptPadding) * amount,
+  });
+  let spacing = 0;
+  let spacingUpper = 1;
+  if (fits(withSpacing(1))) spacing = 1;
+  else for (let step = 0; step < 4; step += 1) {
+    const candidate = (spacing + spacingUpper) / 2;
+    if (fits(withSpacing(candidate))) spacing = candidate;
+    else spacingUpper = candidate;
+  }
   return {
     active: true,
     scale,
     roomState: roomStateForScale(scale),
-    ...getPresentationTextFitMetrics(paneWidth, scale),
+    ...withSpacing(spacing),
   };
 }
 
@@ -328,6 +337,8 @@ export function usePresentationTextFit(
       return [
         window.innerWidth,
         window.innerHeight,
+        window.visualViewport?.height ?? 0,
+        window.visualViewport?.offsetTop ?? 0,
         surfaceBounds.width,
         mainBounds.width,
         contentBounds.width,
@@ -420,7 +431,7 @@ export function usePresentationTextFit(
         }
         measurementRows.forEach((row) => {
           row.style.fontSize = `${metrics.promptSize}px`;
-          row.style.gap = `${metrics.promptGap}px`;
+          row.style.gap = `${Math.min(22, metrics.promptGap)}px`;
         });
         document.body.append(measurementSurface);
         try {
@@ -481,6 +492,7 @@ export function usePresentationTextFit(
     fontSet?.addEventListener("loadingerror", onFontReady);
     window.addEventListener("load", onFontReady);
     window.addEventListener("resize", onFontReady);
+    document.addEventListener("fullscreenchange", onFontReady);
     window.visualViewport?.addEventListener("resize", onFontReady);
     if (fontSet?.ready) {
       void fontSet.ready.then(onFontReady).catch(onFontReady);
@@ -496,6 +508,7 @@ export function usePresentationTextFit(
       fontSet?.removeEventListener("loadingerror", onFontReady);
       window.removeEventListener("load", onFontReady);
       window.removeEventListener("resize", onFontReady);
+      document.removeEventListener("fullscreenchange", onFontReady);
       window.visualViewport?.removeEventListener("resize", onFontReady);
     };
   }, [

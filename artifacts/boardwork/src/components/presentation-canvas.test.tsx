@@ -935,7 +935,7 @@ describe("PresentationCanvas timer visibility", () => {
     });
     expect(divider).toHaveAttribute("aria-orientation", "vertical");
     expect(divider).toHaveAttribute("aria-valuemin", "42");
-    expect(divider).toHaveAttribute("aria-valuemax", "76");
+    expect(divider).toHaveAttribute("aria-valuemax", "78");
     expect(divider).toHaveAttribute("aria-valuenow", "64");
     expect(divider).toHaveAttribute(
       "aria-valuetext",
@@ -950,7 +950,7 @@ describe("PresentationCanvas timer visibility", () => {
     fireEvent.keyDown(divider, { key: "ArrowRight" });
     expect(divider).toHaveAttribute("aria-valuenow", "68");
     fireEvent.keyDown(divider, { key: "End" });
-    expect(divider).toHaveAttribute("aria-valuenow", "76");
+    expect(divider).toHaveAttribute("aria-valuenow", "78");
     fireEvent.keyDown(divider, { key: "Home" });
     expect(divider).toHaveAttribute("aria-valuenow", "64");
 
@@ -965,6 +965,47 @@ describe("PresentationCanvas timer visibility", () => {
     expect(screen.queryByRole("separator")).not.toBeInTheDocument();
   });
 
+  it("widens timer-only reading by default while preserving manual preferences across rail modes", () => {
+    const timer = {
+      visible: true,
+      remainingSeconds: 300,
+      status: "idle" as const,
+    };
+    const imageActivity = {
+      ...activity,
+      visualUrl: "data:image/png;base64,saved-image",
+    };
+    const { rerender } = render(
+      <PresentationCanvas activity={activity} timer={timer} />,
+    );
+
+    const divider = screen.getByTestId("presentation-layout-divider");
+    expect(divider).toHaveAttribute("aria-valuenow", "72");
+    expect(screen.getByTestId("presentation-surface")).toHaveStyle({
+      "--presentation-content-flex": "0.72fr",
+      "--presentation-rail-flex": "0.28fr",
+    });
+
+    fireEvent.keyDown(divider, { key: "ArrowLeft" });
+    expect(divider).toHaveAttribute("aria-valuenow", "68");
+
+    rerender(
+      <PresentationCanvas activity={imageActivity} timer={timer} />,
+    );
+    expect(divider).toHaveAttribute("aria-valuenow", "68");
+
+    fireEvent.keyDown(divider, { key: "Home" });
+    expect(divider).toHaveAttribute("aria-valuenow", "64");
+
+    rerender(<PresentationCanvas activity={activity} timer={timer} />);
+    expect(divider).toHaveAttribute("aria-valuenow", "72");
+
+    rerender(
+      <PresentationCanvas activity={imageActivity} editorPreview timer={timer} />,
+    );
+    expect(divider).toHaveAttribute("aria-valuenow", "64");
+  });
+
   it("updates the divider from pointer dragging without changing authored activity", () => {
     const imageActivity = {
       ...activity,
@@ -975,14 +1016,15 @@ describe("PresentationCanvas timer visibility", () => {
     const main = screen.getByTestId("presentation-surface").querySelector(
       ".presentation-main",
     ) as HTMLElement;
+    let mainWidth = 1000;
     Object.defineProperty(main, "getBoundingClientRect", {
       configurable: true,
       value: () => ({
         left: 0,
         top: 0,
-        right: 1000,
+        right: mainWidth,
         bottom: 600,
-        width: 1000,
+        width: mainWidth,
         height: 600,
       }),
     });
@@ -1000,6 +1042,14 @@ describe("PresentationCanvas timer visibility", () => {
     });
     fireEvent.pointerUp(divider, { pointerId: 1, pointerType: "touch" });
 
+    expect(divider).toHaveAttribute("aria-valuenow", "70");
+
+    mainWidth = 560;
+    fireEvent(window, new Event("resize"));
+    expect(divider).toHaveAttribute("aria-valuenow", "57");
+
+    mainWidth = 1000;
+    fireEvent(window, new Event("resize"));
     expect(divider).toHaveAttribute("aria-valuenow", "70");
     expect(screen.queryByTestId("present-title")).not.toBeInTheDocument();
   });
