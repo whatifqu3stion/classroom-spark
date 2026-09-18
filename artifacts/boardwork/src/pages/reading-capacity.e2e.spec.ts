@@ -3,7 +3,6 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { installReadingCapacityFixture } from "../test/fixtures/reading-capacity-fixture";
 
-const evidenceDir = resolve("evidence/reading-capacity/after");
 const viewports = [
   { width: 1024, height: 525 },
   { width: 1280, height: 720 },
@@ -88,7 +87,37 @@ async function readGeometry(page: Page) {
   });
 }
 
-test.describe.configure({ mode: "serial" });
+// Keep independent fixtures running even if a single browser/viewport fails.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    const state = { probes: 0, unsafeProbes: 0 };
+    Object.assign(window, { __readingCapacitySafety: state });
+    const appendChild = Node.prototype.appendChild;
+    Node.prototype.appendChild = function <T extends Node>(child: T): T {
+      const result = appendChild.call(this, child) as T;
+      if (child instanceof HTMLElement &&
+          child.matches('.presentation-surface[aria-hidden="true"]')) {
+        // Inspect synchronously: the fitter removes probes before observers run.
+        state.probes += 1;
+        const style = getComputedStyle(child);
+        const bounds = child.getBoundingClientRect();
+        if (style.visibility !== "hidden" || !child.inert ||
+            bounds.right > 0 || child.querySelector("[data-testid], [id]")) {
+          state.unsafeProbes += 1;
+        }
+      }
+      return result;
+    };
+  });
+});
+
+test.afterEach(async ({ page }) => {
+  const safety = await page.evaluate(() => (window as typeof window & {
+    __readingCapacitySafety: { probes: number; unsafeProbes: number };
+  }).__readingCapacitySafety);
+  expect(safety.unsafeProbes, "candidate probes stay hidden, inert, and offscreen").toBe(0);
+  await expect(page.locator('.presentation-surface[aria-hidden="true"]')).toHaveCount(0);
+});
 
 for (const theme of themes) {
   for (const withVisual of [false, true]) {
@@ -96,7 +125,8 @@ for (const theme of themes) {
     for (const viewport of viewports) {
       test(`Design Critique after ${theme} ${mode} ${viewport.width}x${viewport.height}`, async ({
         page,
-      }) => {
+      }, testInfo) => {
+       const evidenceDir = resolve("evidence/reading-capacity/after", testInfo.project.name);
       await mkdir(evidenceDir, { recursive: true });
       const { activityId } = await installReadingCapacityFixture(page, withVisual, theme);
       await page.setViewportSize(viewport);
@@ -109,6 +139,13 @@ for (const theme of themes) {
       await expect(liveSurface.locator(".presentation-prompt u")).toHaveText("frustration");
       const geometry = await readGeometry(page);
       expect(geometry.document.scrollWidth).toBeLessThanOrEqual(viewport.width);
+       const overflow = await liveSurface.locator(
+         ".presentation-task, .presentation-prompts, .presentation-prompt",
+       ).evaluateAll((elements) => elements.some((element) =>
+         element.scrollWidth > element.clientWidth + 1 ||
+         element.scrollHeight > element.clientHeight + 1,
+       ));
+       expect(overflow, "authored marked text must not clip").toBe(false);
       if (viewport.width >= 1280) {
         expect(geometry.document.scrollHeight).toBeLessThanOrEqual(viewport.height);
         expect(geometry.content!.bottom).toBeLessThan(viewport.height - 24);
@@ -203,10 +240,10 @@ test("converges bounded probes across split, mode, font, and fullscreen changes"
       __readingCapacityProbeState: { count: number };
     }).__readingCapacityProbeState.count = 0;
   });
-  const expectBoundedAndQuiet = async (maximum = 20) => {
+  const expectBoundedAndQuiet = async (maximum = 20, minimum = 1) => {
     await page.waitForTimeout(250);
     const count = await probeCount();
-    expect(count).toBeGreaterThan(0);
+    expect(count).toBeGreaterThanOrEqual(minimum);
     expect(count).toBeLessThanOrEqual(maximum);
     await page.waitForTimeout(350);
     expect(await probeCount()).toBe(count);
@@ -241,6 +278,11 @@ test("converges bounded probes across split, mode, font, and fullscreen changes"
 
   await resetProbes();
   await page.getByTestId("button-teacher-controls").click();
+  // Opening the dock, removing the large timer and opening compact controls
+  // are separate layout transitions, not one measurement pass. Assert each
+  // settles independently rather than adding their budgets across actions.
+  await expectBoundedAndQuiet(40, 0);
+  await resetProbes();
   const timer = page.getByTestId("presentation-surface").locator(".presentation-timer");
   await timer.hover();
   await timer.getByRole("button", { name: "Adjust" }).click();
@@ -248,10 +290,12 @@ test("converges bounded probes across split, mode, font, and fullscreen changes"
   const liveSurface = page.getByTestId("presentation-surface");
   await expect(liveSurface.locator(".presentation-rail--image-only")).toBeVisible();
   await expect(page.getByTestId("button-show-timer")).toBeVisible();
+  await expectBoundedAndQuiet(40);
+  await resetProbes();
   await page.getByTestId("button-show-timer").click();
   await expect(liveSurface.locator(".presentation-rail--image-only")).toBeVisible();
   await expect(page.getByTestId("button-toggle-timer-controls")).toBeVisible();
-  await expectBoundedAndQuiet(40);
+  await expectBoundedAndQuiet(40, 0);
 
   await resetProbes();
   await page.evaluate(() => document.fonts.dispatchEvent(new Event("loadingdone")));
@@ -261,16 +305,21 @@ test("converges bounded probes across split, mode, font, and fullscreen changes"
   await page.getByTestId("button-fullscreen").click();
   await expect.poll(() => page.evaluate(() => Boolean(document.fullscreenElement)))
     .toBe(true);
-  await expectBoundedAndQuiet();
+  // Firefox emits fullscreen and viewport resize in separate frames. Like a
+  // normal resize, allow two bounded fits and still require complete quiet.
+  await expectBoundedAndQuiet(40);
+  await resetProbes();
   await page.evaluate(() => document.exitFullscreen());
   await expect.poll(() => page.evaluate(() => Boolean(document.fullscreenElement)))
     .toBe(false);
+  await expectBoundedAndQuiet(40);
   await expect(page.locator(
     '.presentation-surface[aria-hidden="true"]',
   )).toHaveCount(0);
 });
 
-test("fixed editor-preview and PNG-export baseline geometry", async ({ page }) => {
+test("fixed editor-preview and PNG-export baseline geometry", async ({ page }, testInfo) => {
+  const evidenceDir = resolve("evidence/reading-capacity/after", testInfo.project.name);
   await mkdir(evidenceDir, { recursive: true });
   const { activityId, activity } = await installReadingCapacityFixture(page, true);
   await page.setViewportSize({ width: 1280, height: 720 });
@@ -336,9 +385,29 @@ test("fixed editor-preview and PNG-export baseline geometry", async ({ page }) =
     resolve("evidence/reading-capacity/before/fixed-layouts-1280x720.json"),
     "utf8",
   ));
-  expect({ editorPreview: editorGeometry, export: exportGeometry }).toEqual(fixedBaseline);
+  const actual = { editorPreview: editorGeometry, export: exportGeometry };
+  if (testInfo.project.name === "chromium") {
+    expect(actual).toEqual(fixedBaseline);
+  } else {
+    for (const name of ["editorPreview", "export"] as const) {
+      const measured = actual[name];
+      const baseline = fixedBaseline[name];
+      // Engines quantize line boxes differently. Keep fixed frames, fonts and
+      // fitter opt-out exact; only interior rects get subpixel tolerance.
+      expect(measured.surface).toEqual(baseline.surface);
+      expect(measured.taskFontSize).toBe(baseline.taskFontSize);
+      expect(measured.textFitActive).toBe("false");
+      expect(measured.textFitScale).toBe("1");
+      for (const region of ["content", "task"] as const) {
+        for (const coordinate of Object.keys(baseline[region])) {
+          expect(Math.abs(measured[region][coordinate] - baseline[region][coordinate]),
+            `${name}.${region}.${coordinate}`).toBeLessThanOrEqual(0.1);
+        }
+      }
+    }
+  }
   await writeFile(
     resolve(evidenceDir, "fixed-layouts-1280x720.json"),
-    `${JSON.stringify({ editorPreview: editorGeometry, export: exportGeometry }, null, 2)}\n`,
+    `${JSON.stringify(actual, null, 2)}\n`,
   );
 });

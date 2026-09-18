@@ -21,7 +21,7 @@ timeoutMs = 120000
 
 [nix]
 channel = "stable-25_05"
-packages = ["glib", "nss", "nspr", "atk", "at-spi2-atk", "cups", "dbus", "expat", "libdrm", "mesa", "pango", "cairo", "alsa-lib", "gtk3", "xorg.libX11", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXext", "xorg.libXfixes", "xorg.libXrandr", "xorg.libxcb", "xorg.libxshmfence", "libgbm", "libxkbcommon"]
+packages = ["glib", "nss", "nspr", "atk", "at-spi2-atk", "cups", "dbus", "expat", "libdrm", "mesa", "pango", "cairo", "alsa-lib", "gtk3", "xorg.libX11", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXext", "xorg.libXfixes", "xorg.libXrandr", "xorg.libxcb", "xorg.libxshmfence", "libgbm", "libxkbcommon", "gtk4", "gst_all_1.gstreamer", "gst_all_1.gst-plugins-base", "gst_all_1.gst-plugins-good", "gst_all_1.gst-plugins-bad", "vulkan-loader", "icu", "libwebp", "libsoup_3", "libsecret", "libmanette", "libxslt", "woff2", "libevent", "icu74", "libxml2", "sqlite", "lcms2", "libopus", "flite", "libavif", "harfbuzzFull", "libepoxy", "libjpeg", "enchant2", "hyphen", "libglvnd", "x264", "libgcc", "libjpeg8", "libGL", "gst_all_1.gst-libav"]
 
 [userenv]
 

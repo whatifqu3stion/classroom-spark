@@ -9,7 +9,8 @@
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --config vitest.config.ts",
-    "test:e2e": "playwright install chromium && playwright test --config playwright.config.ts"
+    "test:e2e": "playwright install chromium && playwright test --config playwright.config.ts --project=chromium",
+    "test:reading-capacity:browsers": "playwright install chromium firefox webkit && playwright test --config playwright.config.ts reading-capacity.e2e.spec.ts"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",

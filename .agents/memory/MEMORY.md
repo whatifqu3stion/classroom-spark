@@ -29,3 +29,4 @@
 - [Command accessible names](command-accessible-names.md) — cmdk’s generated label can override input aria-label; assert resolved names and stabilize input modality for style checks.
 - [Technology setup compatibility](technology-setup-compatibility.md) — Simplify new-board choices without reinterpreting saved Computer available activities.
 - [Inline editor compatibility](inline-editor-compatibility.md) — Preserve plaintext whitespace on rich-editor adoption; check installed bubble-menu APIs and portal inheritance.
+- [Browser runtime preflight](browser-runtime-preflight.md) — WebKit's broad host-library check can fail even when headless WPE launches; verify actual rendering before an override.

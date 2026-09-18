@@ -5,6 +5,19 @@ export default defineConfig({
   testMatch: "*.e2e.spec.ts",
   fullyParallel: false,
   reporter: process.env.CI ? "line" : "list",
+  projects: [
+    { name: "chromium", use: { browserName: "chromium" } },
+    {
+      name: "firefox",
+      testMatch: "reading-capacity.e2e.spec.ts",
+      use: { browserName: "firefox" },
+    },
+    {
+      name: "webkit",
+      testMatch: "reading-capacity.e2e.spec.ts",
+      use: { browserName: "webkit" },
+    },
+  ],
   webServer: {
     command: "PORT=19516 BASE_PATH=/ pnpm run dev",
     url: "http://127.0.0.1:19516",
@@ -13,7 +26,6 @@ export default defineConfig({
   },
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:19516",
-    browserName: "chromium",
     headless: true,
     trace: "retain-on-failure",
   },
