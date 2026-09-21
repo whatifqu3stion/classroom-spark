@@ -281,6 +281,7 @@ export async function duplicateActivity(
       sourceChipIds: source.sourceChipIds,
       sourceActivityId: source.sourceActivityId ?? source.id,
       savedContextSnapshot: source.savedContextSnapshot,
+      curriculumSnapshot: source.curriculumSnapshot,
       style: source.style,
       presentationTheme: source.presentationTheme,
       favorite: false,

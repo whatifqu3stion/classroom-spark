@@ -8,6 +8,7 @@ export const classesTable = pgTable("classes", {
   grade: text("grade").notNull(),
   subject: text("subject").notNull(),
   curriculumFramework: text("curriculum_framework"),
+  programmeYear: text("programme_year"),
   curriculumDetails: text("curriculum_details"),
   generalContext: text("general_context"),
   arrivalRoutine: text("arrival_routine"),

@@ -106,7 +106,7 @@ It should:
 - select a legitimate 5–10 minute task;
 - avoid claiming knowledge of what students learned yesterday unless supplied.
 
-No semantic-vector recommendation system is needed. Simple recent-style avoidance is enough.
+No semantic-vector recommendation system is needed. A bounded curriculum planner selects an eligible skill, thinking task, response mode, and example context before prose generation, balancing their use across the last 20 boards. Exact and obvious near-duplicate tasks are rejected within the same two-attempt validation budget.
 
 ## Content quality rules
 
@@ -193,5 +193,5 @@ For school-facing output:
 - Keep OpenAI SDK calls and response handling inside the OpenAI adapter so provider/model changes do not touch UI code or generation orchestration.
 - Use strict structured output, then application Zod validation and deterministic duration/device/URL checks.
 - Permit one repair attempt only for malformed structured output; never fabricate fallback activity content.
-- Build canonical context server-side and include only the three most recent activity title/style summaries.
+- Build canonical context server-side and include at most 20 recent task/style summaries and their bounded focus metadata.
 - Do not build provider selection UI in MVP.

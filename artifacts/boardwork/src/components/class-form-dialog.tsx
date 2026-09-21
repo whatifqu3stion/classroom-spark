@@ -31,6 +31,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { CurriculumManager } from "@/components/curriculum/curriculum-manager";
 
 const PRESET_DURATIONS = [5, 7, 10] as const;
 const CUSTOM_DURATION_DEFAULT = 15;
@@ -40,6 +41,7 @@ const classProfileSchema = z.object({
   grade: z.string().trim().min(1, "Enter a grade or age level."),
   subject: z.string().trim().min(1, "Enter a subject."),
   curriculumFramework: z.string(),
+  programmeYear: z.string().max(80, "Must be under 80 characters."),
   curriculumDetails: z.string(),
   generalContext: z.string(),
   defaultDeviceMode: z.enum(["off", "on"]),
@@ -62,6 +64,7 @@ const getDefaultValues = (initialData?: ClassProfile | null): ClassProfileFormVa
   grade: initialData?.grade ?? "",
   subject: initialData?.subject ?? "",
   curriculumFramework: initialData?.curriculumFramework ?? "",
+  programmeYear: initialData?.programmeYear ?? "",
   curriculumDetails: initialData?.curriculumDetails ?? "",
   generalContext: initialData?.generalContext ?? "",
   defaultDeviceMode: initialData?.defaultDeviceMode ?? "off",
@@ -104,6 +107,7 @@ export function ClassFormDialog({
         grade: values.grade.trim(),
         subject: values.subject.trim(),
         curriculumFramework: optionalValue(values.curriculumFramework),
+        programmeYear: optionalValue(values.programmeYear),
         curriculumDetails: optionalValue(values.curriculumDetails),
         generalContext: optionalValue(values.generalContext),
         defaultDeviceMode: values.defaultDeviceMode,
@@ -295,9 +299,29 @@ export function ClassFormDialog({
 
                     <FormField
                       control={form.control}
-                      name="curriculumDetails"
+                      name="programmeYear"
                       render={({ field }) => (
                         <FormItem>
+                          <FormLabel>Programme Year / Band <span className="font-normal text-muted-foreground">(optional)</span></FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              dir="auto"
+                              className="boardwork-user-content"
+                              placeholder="e.g. MYP Year 2, KS3"
+                              data-testid="input-class-programme-year"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="curriculumDetails"
+                      render={({ field }) => (
+                        <FormItem className="sm:col-span-2">
                           <FormLabel>Curriculum details</FormLabel>
                           <FormControl>
                             <Input
@@ -449,6 +473,15 @@ export function ClassFormDialog({
             </DialogFooter>
           </form>
         </Form>
+        {initialData ? (
+          <div className="mt-6 pt-6 border-t border-border/40">
+            <CurriculumManager classId={initialData.id} />
+          </div>
+        ) : (
+          <div className="mt-6 pt-6 border-t border-border/40">
+            <p className="text-sm text-muted-foreground text-center">Save this class to add curriculum sources.</p>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -1,13 +1,14 @@
 import { Router, type IRouter } from "express";
 import { GetAppStateResponse } from "@workspace/api-zod";
 import { loadAppState } from "../lib/boardwork-repo";
+import { redactCurriculumSnapshot } from "../lib/curriculum-privacy";
 
 const router: IRouter = Router();
 
 router.get("/app-state", async (req, res): Promise<void> => {
   req.log.info("Loading app state");
   const state = await loadAppState();
-  res.json(GetAppStateResponse.parse(state));
+  res.json(GetAppStateResponse.parse({ ...state, activities: state.activities.map(redactCurriculumSnapshot) }));
 });
 
 export default router;

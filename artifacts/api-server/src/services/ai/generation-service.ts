@@ -31,6 +31,8 @@ import {
   SavedContextError,
   type SavedContextSnapshot,
 } from "../../lib/saved-context";
+import { readApprovedCurriculumSources } from "../../lib/curriculum-sources";
+import { isRepeatedActivity, planCurriculumActivity } from "./curriculum-planner";
 
 function optionalText(value: string | null | undefined): string | null {
   const trimmed = value?.trim();
@@ -159,11 +161,12 @@ async function buildGenerationContext(
         .select({
           task: activitiesTable.task,
           activityStyle: activitiesTable.style,
+          curriculumSnapshot: activitiesTable.curriculumSnapshot,
         })
         .from(activitiesTable)
         .where(eq(activitiesTable.classId, input.classId))
         .orderBy(desc(activitiesTable.createdAt))
-        .limit(3),
+        .limit(20),
       sourceActivityId
         ? db
             .select()
@@ -213,7 +216,7 @@ async function buildGenerationContext(
     }
   }
 
-  return {
+  const built = {
     chipIds,
     savedContextIds: resolvedSavedContextIds,
     savedContextSnapshot,
@@ -235,6 +238,7 @@ async function buildGenerationContext(
         subject: classProfile.subject,
         curriculumFramework: classProfile.curriculumFramework,
         curriculumDetails: classProfile.curriculumDetails,
+        programmeYear: classProfile.programmeYear,
         generalContext: classProfile.generalContext,
         arrivalRoutine: classProfile.arrivalRoutine,
       },
@@ -284,9 +288,24 @@ async function buildGenerationContext(
         ),
         surprise: input.surprise,
       },
-      recentActivities,
+      recentActivities: recentActivities.map(({ curriculumSnapshot, ...activity }) => ({
+        ...activity,
+        curriculumSnapshot: curriculumSnapshot ? { focus: curriculumSnapshot.focus } : null,
+      })),
     },
   };
+  // A historical remix preserves what that board used, even after source changes.
+  // Normal generation only considers the currently approved library.
+  const context: BoardworkGenerationContext = built.context;
+  const historicalBasisApplies = process.env.APP_PASSWORD && sourceActivity?.curriculumSnapshot &&
+    (!context.today.topic || context.today.topic === optionalText(sourceActivity.sourceTopic)) &&
+    (!context.today.goal || context.today.goal === optionalText(sourceActivity.sourceGoal));
+  context.curriculumPlan = sourceActivityId
+    ? historicalBasisApplies
+      ? sourceActivity!.curriculumSnapshot
+      : planCurriculumActivity(context, [])
+    : planCurriculumActivity(context, await readApprovedCurriculumSources(input.classId, input.unitId ?? null));
+  return { ...built, context };
 }
 
 export function validateApplicationContract(
@@ -346,11 +365,17 @@ export async function generateWithRepair(
         await provider.generate(
           context,
           attempt === 1
-            ? "Match the requested duration and device mode exactly. Use no URL except the exact teacher-provided URL. Stay within every schema length and item limit."
+            ? "Match the requested duration and device mode exactly. Use no URL except the exact teacher-provided URL. Stay within every schema length and item limit. Do not repeat a recent task: change the reasoning and response structure, not just a noun. Retain the requested focus and curriculum basis."
             : undefined,
         ),
         context,
       );
+      if (isRepeatedActivity(generated.task, context.recentActivities)) {
+        throw new GenerationError(
+          "malformed",
+          "This board was too similar to a recent activity. Try creating it again.",
+        );
+      }
       break;
     } catch (error) {
       firstError ??= error;
@@ -370,7 +395,7 @@ export async function generateWithRepair(
   return generated;
 }
 
-export async function generateAndSaveActivity(
+async function generateAndSaveActivityOnce(
   input: GenerateActivityInput,
   provider: BoardworkGenerationProvider,
 ) {
@@ -410,6 +435,7 @@ export async function generateAndSaveActivity(
         sourceChipIds: chipIds,
         sourceActivityId,
         savedContextSnapshot,
+        curriculumSnapshot: context.curriculumPlan ?? null,
         style:
           context.today.activityStyle ??
           generated.activityStyle ??
@@ -428,4 +454,21 @@ export async function generateAndSaveActivity(
   });
 
   return created;
+}
+
+const generatingClasses = new Set<string>();
+
+export async function generateAndSaveActivity(
+  input: GenerateActivityInput,
+  provider: BoardworkGenerationProvider,
+) {
+  if (generatingClasses.has(input.classId)) {
+    throw new GenerationError("conflict", "A board is already being generated for this class. Please wait.");
+  }
+  generatingClasses.add(input.classId);
+  try {
+    return await generateAndSaveActivityOnce(input, provider);
+  } finally {
+    generatingClasses.delete(input.classId);
+  }
 }

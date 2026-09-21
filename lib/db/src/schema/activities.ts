@@ -11,6 +11,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { classesTable } from "./classes";
 import { unitsTable } from "./units";
+import type { CurriculumSnapshot } from "./curriculum-sources";
 
 export type PresentationThemeSelection = {
   kind: "curated" | "custom";
@@ -82,6 +83,7 @@ export const activitiesTable = pgTable("activities", {
     .$type<SavedContextSnapshot[]>()
     .notNull()
     .default([]),
+  curriculumSnapshot: jsonb("curriculum_snapshot").$type<CurriculumSnapshot | null>(),
   style: text("style"),
   presentationTheme: jsonb("presentation_theme")
     .$type<PresentationThemeSelection | null>(),

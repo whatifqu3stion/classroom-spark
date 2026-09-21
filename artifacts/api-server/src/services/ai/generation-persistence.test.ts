@@ -125,6 +125,7 @@ describe.sequential("generation persistence", () => {
       "Historical task 4",
       "Historical task 3",
       "Historical task 2",
+      "Historical task 1",
     ]);
     expect(created).toMatchObject({
       contentFormatting: null,

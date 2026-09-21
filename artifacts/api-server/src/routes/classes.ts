@@ -4,6 +4,7 @@ import {
   db,
   classesTable,
   instructionalContextsTable,
+  curriculumSourcesTable,
 } from "@workspace/db";
 import {
   ListClassesResponse,
@@ -81,6 +82,10 @@ router.delete("/classes/:classId", async (req, res): Promise<void> => {
     return;
   }
 
+  const [source] = await db.select({ id: curriculumSourcesTable.id }).from(curriculumSourcesTable).where(eq(curriculumSourcesTable.classId, params.data.classId)).limit(1);
+  if (source) {
+    res.status(409).json({ error: "Delete this class's curriculum sources first so protected documents can be cleaned up." }); return;
+  }
   const deleted = await deleteClassCascade(params.data.classId);
   if (!deleted) {
     res.status(404).json({ error: "Class not found" });

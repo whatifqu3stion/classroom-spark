@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
-import { db, unitsTable } from "@workspace/db";
+import { db, unitsTable, curriculumSourcesTable } from "@workspace/db";
 import {
   ListUnitsResponse,
   CreateUnitBody,
@@ -87,6 +87,10 @@ router.delete("/units/:unitId", async (req, res): Promise<void> => {
     return;
   }
 
+  const [source] = await db.select({ id: curriculumSourcesTable.id }).from(curriculumSourcesTable).where(eq(curriculumSourcesTable.unitId, params.data.unitId)).limit(1);
+  if (source) {
+    res.status(409).json({ error: "Delete this unit's curriculum sources first so protected documents can be cleaned up." }); return;
+  }
   const [deleted] = await db
     .delete(unitsTable)
     .where(eq(unitsTable.id, params.data.unitId))

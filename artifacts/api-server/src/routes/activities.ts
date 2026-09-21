@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { redactCurriculumSnapshot } from "../lib/curriculum-privacy";
 import { eq, inArray } from "drizzle-orm";
 import {
   db,
@@ -76,7 +77,7 @@ router.get("/activities", async (req, res): Promise<void> => {
     : await db.select().from(activitiesTable).orderBy(activitiesTable.createdAt);
 
   res.json(
-    ListActivitiesResponse.parse(rows.map(withCanonicalPresentationVisuals)),
+    ListActivitiesResponse.parse(rows.map(withCanonicalPresentationVisuals).map(redactCurriculumSnapshot)),
   );
 });
 
@@ -198,7 +199,7 @@ router.post("/activities", async (req, res): Promise<void> => {
     return activity;
   });
 
-  res.status(201).json(CreateActivityResponse.parse(created));
+  res.status(201).json(CreateActivityResponse.parse(redactCurriculumSnapshot(created)));
 });
 
 router.get("/activities/:activityId", async (req, res): Promise<void> => {
@@ -218,7 +219,7 @@ router.get("/activities/:activityId", async (req, res): Promise<void> => {
     return;
   }
 
-  res.json(GetActivityResponse.parse(withCanonicalPresentationVisuals(row)));
+  res.json(GetActivityResponse.parse(redactCurriculumSnapshot(withCanonicalPresentationVisuals(row))));
 });
 
 router.patch("/activities/:activityId", async (req, res): Promise<void> => {
@@ -346,7 +347,7 @@ router.patch("/activities/:activityId", async (req, res): Promise<void> => {
 
   res.json(
     UpdateActivityResponse.parse(
-      updated ? withCanonicalPresentationVisuals(updated) : updated,
+      updated ? redactCurriculumSnapshot(withCanonicalPresentationVisuals(updated)) : updated,
     ),
   );
 });
@@ -391,7 +392,7 @@ router.post(
       return;
     }
 
-    res.status(201).json(DuplicateActivityResponse.parse(copy));
+    res.status(201).json(DuplicateActivityResponse.parse(redactCurriculumSnapshot(copy)));
   },
 );
 
@@ -420,7 +421,7 @@ router.patch(
       return;
     }
 
-    res.json(SetActivityFavoriteResponse.parse(updated));
+    res.json(SetActivityFavoriteResponse.parse(redactCurriculumSnapshot(updated)));
   },
 );
 

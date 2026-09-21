@@ -15,6 +15,11 @@ export interface ClassProfile {
   subject: string;
   /** @nullable */
   curriculumFramework?: string | null;
+  /**
+     * @maxLength 80
+     * @nullable
+     */
+  programmeYear?: string | null;
   /** @nullable */
   curriculumDetails?: string | null;
   /** @nullable */

@@ -8,6 +8,376 @@
 import * as zod from 'zod';
 
 
+export const ListCurriculumSourcesParams = zod.object({
+  "classId": zod.coerce.string().uuid()
+})
+
+export const listCurriculumSourcesResponseItemsItemObjectivesItemIdMax = 100;
+
+export const listCurriculumSourcesResponseItemsItemObjectivesItemLabelMax = 500;
+
+export const listCurriculumSourcesResponseItemsItemObjectivesItemExcerptMax = 2000;
+
+export const listCurriculumSourcesResponseItemsItemObjectivesItemLocatorMax = 200;
+
+
+
+export const ListCurriculumSourcesResponse = zod.object({
+  "ready": zod.boolean(),
+  "reason": zod.string().nullable(),
+  "capabilities": zod.object({
+  "accessConfigured": zod.boolean(),
+  "aiConfigured": zod.boolean(),
+  "storageConfigured": zod.boolean(),
+  "pdfUpload": zod.boolean(),
+  "discovery": zod.boolean(),
+  "discoveryFrameworks": zod.array(zod.string()),
+  "message": zod.string().nullable()
+}).optional(),
+  "items": zod.array(zod.object({
+  "id": zod.string(),
+  "classId": zod.string(),
+  "unitId": zod.string().nullable(),
+  "kind": zod.enum(['manual', 'pdf', 'web']),
+  "status": zod.enum(['draft', 'approved', 'inactive', 'delete_failed']),
+  "version": zod.number().int(),
+  "title": zod.string(),
+  "summary": zod.string(),
+  "subject": zod.string(),
+  "framework": zod.string().nullable(),
+  "programmeYear": zod.string().nullable(),
+  "objectives": zod.array(zod.object({
+  "id": zod.string().max(listCurriculumSourcesResponseItemsItemObjectivesItemIdMax),
+  "label": zod.string().min(1).max(listCurriculumSourcesResponseItemsItemObjectivesItemLabelMax),
+  "excerpt": zod.string().max(listCurriculumSourcesResponseItemsItemObjectivesItemExcerptMax),
+  "locator": zod.string().max(listCurriculumSourcesResponseItemsItemObjectivesItemLocatorMax),
+  "selected": zod.boolean()
+})),
+  "publisher": zod.string().nullable(),
+  "url": zod.string().nullable(),
+  "edition": zod.string().nullable(),
+  "retrievedAt": zod.string().nullable(),
+  "approvedAt": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}))
+})
+
+
+export const CreateCurriculumSourceParams = zod.object({
+  "classId": zod.coerce.string().uuid()
+})
+
+export const createCurriculumSourceBodyTitleMax = 200;
+
+export const createCurriculumSourceBodyTextMax = 40000;
+
+export const createCurriculumSourceBodyUrlMax = 2000;
+
+
+
+export const CreateCurriculumSourceBody = zod.object({
+  "kind": zod.enum(['manual', 'web']),
+  "title": zod.string().min(1).max(createCurriculumSourceBodyTitleMax),
+  "text": zod.string().min(1).max(createCurriculumSourceBodyTextMax).optional(),
+  "url": zod.string().max(createCurriculumSourceBodyUrlMax).optional(),
+  "unitId": zod.string().uuid().nullish()
+})
+
+export const createCurriculumSourceResponseObjectivesItemIdMax = 100;
+
+export const createCurriculumSourceResponseObjectivesItemLabelMax = 500;
+
+export const createCurriculumSourceResponseObjectivesItemExcerptMax = 2000;
+
+export const createCurriculumSourceResponseObjectivesItemLocatorMax = 200;
+
+
+
+export const CreateCurriculumSourceResponse = zod.object({
+  "id": zod.string(),
+  "classId": zod.string(),
+  "unitId": zod.string().nullable(),
+  "kind": zod.enum(['manual', 'pdf', 'web']),
+  "status": zod.enum(['draft', 'approved', 'inactive', 'delete_failed']),
+  "version": zod.number().int(),
+  "title": zod.string(),
+  "summary": zod.string(),
+  "subject": zod.string(),
+  "framework": zod.string().nullable(),
+  "programmeYear": zod.string().nullable(),
+  "objectives": zod.array(zod.object({
+  "id": zod.string().max(createCurriculumSourceResponseObjectivesItemIdMax),
+  "label": zod.string().min(1).max(createCurriculumSourceResponseObjectivesItemLabelMax),
+  "excerpt": zod.string().max(createCurriculumSourceResponseObjectivesItemExcerptMax),
+  "locator": zod.string().max(createCurriculumSourceResponseObjectivesItemLocatorMax),
+  "selected": zod.boolean()
+})),
+  "publisher": zod.string().nullable(),
+  "url": zod.string().nullable(),
+  "edition": zod.string().nullable(),
+  "retrievedAt": zod.string().nullable(),
+  "approvedAt": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+export const DiscoverCurriculumReferencesParams = zod.object({
+  "classId": zod.coerce.string().uuid()
+})
+
+export const DiscoverCurriculumReferencesResponseItem = zod.object({
+  "title": zod.string(),
+  "url": zod.string(),
+  "publisher": zod.string()
+})
+export const DiscoverCurriculumReferencesResponse = zod.array(DiscoverCurriculumReferencesResponseItem)
+
+
+export const uploadCurriculumPdfQueryTitleMax = 200;
+
+
+
+export const UploadCurriculumPdfQueryParams = zod.object({
+  "title": zod.string().max(uploadCurriculumPdfQueryTitleMax),
+  "unitId": zod.string().uuid().optional()
+})
+
+export const uploadCurriculumPdfResponseObjectivesItemIdMax = 100;
+
+export const uploadCurriculumPdfResponseObjectivesItemLabelMax = 500;
+
+export const uploadCurriculumPdfResponseObjectivesItemExcerptMax = 2000;
+
+export const uploadCurriculumPdfResponseObjectivesItemLocatorMax = 200;
+
+
+
+export const UploadCurriculumPdfResponse = zod.object({
+  "id": zod.string(),
+  "classId": zod.string(),
+  "unitId": zod.string().nullable(),
+  "kind": zod.enum(['manual', 'pdf', 'web']),
+  "status": zod.enum(['draft', 'approved', 'inactive', 'delete_failed']),
+  "version": zod.number().int(),
+  "title": zod.string(),
+  "summary": zod.string(),
+  "subject": zod.string(),
+  "framework": zod.string().nullable(),
+  "programmeYear": zod.string().nullable(),
+  "objectives": zod.array(zod.object({
+  "id": zod.string().max(uploadCurriculumPdfResponseObjectivesItemIdMax),
+  "label": zod.string().min(1).max(uploadCurriculumPdfResponseObjectivesItemLabelMax),
+  "excerpt": zod.string().max(uploadCurriculumPdfResponseObjectivesItemExcerptMax),
+  "locator": zod.string().max(uploadCurriculumPdfResponseObjectivesItemLocatorMax),
+  "selected": zod.boolean()
+})),
+  "publisher": zod.string().nullable(),
+  "url": zod.string().nullable(),
+  "edition": zod.string().nullable(),
+  "retrievedAt": zod.string().nullable(),
+  "approvedAt": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+export const GetCurriculumSourceParams = zod.object({
+  "classId": zod.coerce.string().uuid(),
+  "sourceId": zod.coerce.string().uuid()
+})
+
+export const getCurriculumSourceResponseObjectivesItemIdMax = 100;
+
+export const getCurriculumSourceResponseObjectivesItemLabelMax = 500;
+
+export const getCurriculumSourceResponseObjectivesItemExcerptMax = 2000;
+
+export const getCurriculumSourceResponseObjectivesItemLocatorMax = 200;
+
+
+
+export const GetCurriculumSourceResponse = zod.object({
+  "id": zod.string(),
+  "classId": zod.string(),
+  "unitId": zod.string().nullable(),
+  "kind": zod.enum(['manual', 'pdf', 'web']),
+  "status": zod.enum(['draft', 'approved', 'inactive', 'delete_failed']),
+  "version": zod.number().int(),
+  "title": zod.string(),
+  "summary": zod.string(),
+  "subject": zod.string(),
+  "framework": zod.string().nullable(),
+  "programmeYear": zod.string().nullable(),
+  "objectives": zod.array(zod.object({
+  "id": zod.string().max(getCurriculumSourceResponseObjectivesItemIdMax),
+  "label": zod.string().min(1).max(getCurriculumSourceResponseObjectivesItemLabelMax),
+  "excerpt": zod.string().max(getCurriculumSourceResponseObjectivesItemExcerptMax),
+  "locator": zod.string().max(getCurriculumSourceResponseObjectivesItemLocatorMax),
+  "selected": zod.boolean()
+})),
+  "publisher": zod.string().nullable(),
+  "url": zod.string().nullable(),
+  "edition": zod.string().nullable(),
+  "retrievedAt": zod.string().nullable(),
+  "approvedAt": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+export const UpdateCurriculumSourceParams = zod.object({
+  "classId": zod.coerce.string().uuid(),
+  "sourceId": zod.coerce.string().uuid()
+})
+
+
+export const updateCurriculumSourceBodyTitleMax = 200;
+
+export const updateCurriculumSourceBodySummaryMax = 2000;
+
+export const updateCurriculumSourceBodySubjectMax = 100;
+
+export const updateCurriculumSourceBodyFrameworkMax = 100;
+
+export const updateCurriculumSourceBodyProgrammeYearMax = 80;
+
+export const updateCurriculumSourceBodyObjectivesItemIdMax = 100;
+
+export const updateCurriculumSourceBodyObjectivesItemLabelMax = 500;
+
+export const updateCurriculumSourceBodyObjectivesItemExcerptMax = 2000;
+
+export const updateCurriculumSourceBodyObjectivesItemLocatorMax = 200;
+
+export const updateCurriculumSourceBodyObjectivesMax = 60;
+
+
+
+export const UpdateCurriculumSourceBody = zod.object({
+  "version": zod.number().int().min(1),
+  "title": zod.string().min(1).max(updateCurriculumSourceBodyTitleMax).optional(),
+  "summary": zod.string().max(updateCurriculumSourceBodySummaryMax).optional(),
+  "subject": zod.string().min(1).max(updateCurriculumSourceBodySubjectMax).optional(),
+  "framework": zod.string().max(updateCurriculumSourceBodyFrameworkMax).nullish(),
+  "programmeYear": zod.string().max(updateCurriculumSourceBodyProgrammeYearMax).nullish(),
+  "status": zod.enum(['draft', 'approved', 'inactive']).optional(),
+  "objectives": zod.array(zod.object({
+  "id": zod.string().max(updateCurriculumSourceBodyObjectivesItemIdMax),
+  "label": zod.string().min(1).max(updateCurriculumSourceBodyObjectivesItemLabelMax),
+  "excerpt": zod.string().max(updateCurriculumSourceBodyObjectivesItemExcerptMax),
+  "locator": zod.string().max(updateCurriculumSourceBodyObjectivesItemLocatorMax),
+  "selected": zod.boolean()
+})).max(updateCurriculumSourceBodyObjectivesMax).optional()
+})
+
+export const updateCurriculumSourceResponseObjectivesItemIdMax = 100;
+
+export const updateCurriculumSourceResponseObjectivesItemLabelMax = 500;
+
+export const updateCurriculumSourceResponseObjectivesItemExcerptMax = 2000;
+
+export const updateCurriculumSourceResponseObjectivesItemLocatorMax = 200;
+
+
+
+export const UpdateCurriculumSourceResponse = zod.object({
+  "id": zod.string(),
+  "classId": zod.string(),
+  "unitId": zod.string().nullable(),
+  "kind": zod.enum(['manual', 'pdf', 'web']),
+  "status": zod.enum(['draft', 'approved', 'inactive', 'delete_failed']),
+  "version": zod.number().int(),
+  "title": zod.string(),
+  "summary": zod.string(),
+  "subject": zod.string(),
+  "framework": zod.string().nullable(),
+  "programmeYear": zod.string().nullable(),
+  "objectives": zod.array(zod.object({
+  "id": zod.string().max(updateCurriculumSourceResponseObjectivesItemIdMax),
+  "label": zod.string().min(1).max(updateCurriculumSourceResponseObjectivesItemLabelMax),
+  "excerpt": zod.string().max(updateCurriculumSourceResponseObjectivesItemExcerptMax),
+  "locator": zod.string().max(updateCurriculumSourceResponseObjectivesItemLocatorMax),
+  "selected": zod.boolean()
+})),
+  "publisher": zod.string().nullable(),
+  "url": zod.string().nullable(),
+  "edition": zod.string().nullable(),
+  "retrievedAt": zod.string().nullable(),
+  "approvedAt": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+export const DeleteCurriculumSourceParams = zod.object({
+  "classId": zod.coerce.string().uuid(),
+  "sourceId": zod.coerce.string().uuid()
+})
+
+export const DeleteCurriculumSourceResponse = zod.void()
+
+
+export const RefreshCurriculumSourceParams = zod.object({
+  "classId": zod.coerce.string().uuid(),
+  "sourceId": zod.coerce.string().uuid()
+})
+
+
+
+
+export const RefreshCurriculumSourceBody = zod.object({
+  "version": zod.number().int().min(1)
+})
+
+export const refreshCurriculumSourceResponseObjectivesItemIdMax = 100;
+
+export const refreshCurriculumSourceResponseObjectivesItemLabelMax = 500;
+
+export const refreshCurriculumSourceResponseObjectivesItemExcerptMax = 2000;
+
+export const refreshCurriculumSourceResponseObjectivesItemLocatorMax = 200;
+
+
+
+export const RefreshCurriculumSourceResponse = zod.object({
+  "id": zod.string(),
+  "classId": zod.string(),
+  "unitId": zod.string().nullable(),
+  "kind": zod.enum(['manual', 'pdf', 'web']),
+  "status": zod.enum(['draft', 'approved', 'inactive', 'delete_failed']),
+  "version": zod.number().int(),
+  "title": zod.string(),
+  "summary": zod.string(),
+  "subject": zod.string(),
+  "framework": zod.string().nullable(),
+  "programmeYear": zod.string().nullable(),
+  "objectives": zod.array(zod.object({
+  "id": zod.string().max(refreshCurriculumSourceResponseObjectivesItemIdMax),
+  "label": zod.string().min(1).max(refreshCurriculumSourceResponseObjectivesItemLabelMax),
+  "excerpt": zod.string().max(refreshCurriculumSourceResponseObjectivesItemExcerptMax),
+  "locator": zod.string().max(refreshCurriculumSourceResponseObjectivesItemLocatorMax),
+  "selected": zod.boolean()
+})),
+  "publisher": zod.string().nullable(),
+  "url": zod.string().nullable(),
+  "edition": zod.string().nullable(),
+  "retrievedAt": zod.string().nullable(),
+  "approvedAt": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+export const GetCurriculumPdfParams = zod.object({
+  "classId": zod.coerce.string().uuid(),
+  "sourceId": zod.coerce.string().uuid()
+})
+
+export const GetCurriculumPdfResponse = zod.unknown()
+
+
 /**
  * Returns server health status
  * @summary Health check
@@ -21,6 +391,8 @@ export const HealthCheckResponse = zod.object({
  * Returns all classes, instructional contexts, chips, activities, and the most recently used class id so the frontend can restore workspace state.
  * @summary Bootstrap application state
  */
+export const getAppStateResponseClassesItemProgrammeYearMax = 80;
+
 export const getAppStateResponseClassesItemDefaultDurationMultipleOf = 1;
 
 export const getAppStateResponseActivitiesItemContentFormattingOneTaskItemTextMax = 100000;
@@ -56,6 +428,7 @@ export const GetAppStateResponse = zod.object({
   "grade": zod.string(),
   "subject": zod.string(),
   "curriculumFramework": zod.string().nullish(),
+  "programmeYear": zod.string().max(getAppStateResponseClassesItemProgrammeYearMax).nullish(),
   "curriculumDetails": zod.string().nullish(),
   "generalContext": zod.string().nullish(),
   "arrivalRoutine": zod.string().nullish(),
@@ -136,6 +509,30 @@ export const GetAppStateResponse = zod.object({
   "category": zod.string().max(getAppStateResponseActivitiesItemSavedContextSnapshotItemCategoryMax).nullish(),
   "details": zod.string().max(getAppStateResponseActivitiesItemSavedContextSnapshotItemDetailsMax).nullish()
 })).optional(),
+  "curriculumSnapshot": zod.union([zod.object({
+  "version": zod.literal(1),
+  "focus": zod.object({
+  "objective": zod.string(),
+  "thinkingTask": zod.string(),
+  "responseMode": zod.string(),
+  "context": zod.string(),
+  "combinationKey": zod.string()
+}),
+  "sources": zod.array(zod.object({
+  "sourceId": zod.string(),
+  "version": zod.number().int(),
+  "title": zod.string(),
+  "kind": zod.enum(['manual', 'pdf', 'web']),
+  "subject": zod.string(),
+  "programmeYear": zod.string().nullable(),
+  "publisher": zod.string().nullable(),
+  "url": zod.string().nullable(),
+  "locator": zod.string(),
+  "excerpt": zod.string(),
+  "objective": zod.string(),
+  "retrievedAt": zod.string().nullable()
+}))
+}),zod.null()]).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
@@ -161,6 +558,8 @@ export const GetAppStateResponse = zod.object({
 /**
  * @summary List classes
  */
+export const listClassesResponseProgrammeYearMax = 80;
+
 export const listClassesResponseDefaultDurationMultipleOf = 1;
 
 
@@ -171,6 +570,7 @@ export const ListClassesResponseItem = zod.object({
   "grade": zod.string(),
   "subject": zod.string(),
   "curriculumFramework": zod.string().nullish(),
+  "programmeYear": zod.string().max(listClassesResponseProgrammeYearMax).nullish(),
   "curriculumDetails": zod.string().nullish(),
   "generalContext": zod.string().nullish(),
   "arrivalRoutine": zod.string().nullish(),
@@ -187,6 +587,8 @@ export const ListClassesResponse = zod.array(ListClassesResponseItem)
  * @summary Create a class
  */
 
+export const createClassBodyProgrammeYearMax = 80;
+
 export const createClassBodyDefaultDurationMultipleOf = 1;
 
 
@@ -196,6 +598,7 @@ export const CreateClassBody = zod.object({
   "grade": zod.string(),
   "subject": zod.string(),
   "curriculumFramework": zod.string().nullish(),
+  "programmeYear": zod.string().max(createClassBodyProgrammeYearMax).nullish(),
   "curriculumDetails": zod.string().nullish(),
   "generalContext": zod.string().nullish(),
   "arrivalRoutine": zod.string().nullish(),
@@ -203,6 +606,8 @@ export const CreateClassBody = zod.object({
   "defaultDuration": zod.number().min(1).multipleOf(createClassBodyDefaultDurationMultipleOf),
   "color": zod.string().nullish()
 })
+
+export const createClassResponseProgrammeYearMax = 80;
 
 export const createClassResponseDefaultDurationMultipleOf = 1;
 
@@ -214,6 +619,7 @@ export const CreateClassResponse = zod.object({
   "grade": zod.string(),
   "subject": zod.string(),
   "curriculumFramework": zod.string().nullish(),
+  "programmeYear": zod.string().max(createClassResponseProgrammeYearMax).nullish(),
   "curriculumDetails": zod.string().nullish(),
   "generalContext": zod.string().nullish(),
   "arrivalRoutine": zod.string().nullish(),
@@ -233,6 +639,8 @@ export const UpdateClassParams = zod.object({
 })
 
 
+export const updateClassBodyProgrammeYearMax = 80;
+
 export const updateClassBodyDefaultDurationMultipleOf = 1;
 
 
@@ -242,6 +650,7 @@ export const UpdateClassBody = zod.object({
   "grade": zod.string().optional(),
   "subject": zod.string().optional(),
   "curriculumFramework": zod.string().nullish(),
+  "programmeYear": zod.string().max(updateClassBodyProgrammeYearMax).nullish(),
   "curriculumDetails": zod.string().nullish(),
   "generalContext": zod.string().nullish(),
   "arrivalRoutine": zod.string().nullish(),
@@ -249,6 +658,8 @@ export const UpdateClassBody = zod.object({
   "defaultDuration": zod.number().min(1).multipleOf(updateClassBodyDefaultDurationMultipleOf).optional(),
   "color": zod.string().nullish()
 })
+
+export const updateClassResponseProgrammeYearMax = 80;
 
 export const updateClassResponseDefaultDurationMultipleOf = 1;
 
@@ -260,6 +671,7 @@ export const UpdateClassResponse = zod.object({
   "grade": zod.string(),
   "subject": zod.string(),
   "curriculumFramework": zod.string().nullish(),
+  "programmeYear": zod.string().max(updateClassResponseProgrammeYearMax).nullish(),
   "curriculumDetails": zod.string().nullish(),
   "generalContext": zod.string().nullish(),
   "arrivalRoutine": zod.string().nullish(),
@@ -564,6 +976,30 @@ export const GenerateActivityResponse = zod.object({
   "category": zod.string().max(generateActivityResponseSavedContextSnapshotItemCategoryMax).nullish(),
   "details": zod.string().max(generateActivityResponseSavedContextSnapshotItemDetailsMax).nullish()
 })).optional(),
+  "curriculumSnapshot": zod.union([zod.object({
+  "version": zod.literal(1),
+  "focus": zod.object({
+  "objective": zod.string(),
+  "thinkingTask": zod.string(),
+  "responseMode": zod.string(),
+  "context": zod.string(),
+  "combinationKey": zod.string()
+}),
+  "sources": zod.array(zod.object({
+  "sourceId": zod.string(),
+  "version": zod.number().int(),
+  "title": zod.string(),
+  "kind": zod.enum(['manual', 'pdf', 'web']),
+  "subject": zod.string(),
+  "programmeYear": zod.string().nullable(),
+  "publisher": zod.string().nullable(),
+  "url": zod.string().nullable(),
+  "locator": zod.string(),
+  "excerpt": zod.string(),
+  "objective": zod.string(),
+  "retrievedAt": zod.string().nullable()
+}))
+}),zod.null()]).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
@@ -894,6 +1330,30 @@ export const ListActivitiesResponseItem = zod.object({
   "category": zod.string().max(listActivitiesResponseSavedContextSnapshotItemCategoryMax).nullish(),
   "details": zod.string().max(listActivitiesResponseSavedContextSnapshotItemDetailsMax).nullish()
 })).optional(),
+  "curriculumSnapshot": zod.union([zod.object({
+  "version": zod.literal(1),
+  "focus": zod.object({
+  "objective": zod.string(),
+  "thinkingTask": zod.string(),
+  "responseMode": zod.string(),
+  "context": zod.string(),
+  "combinationKey": zod.string()
+}),
+  "sources": zod.array(zod.object({
+  "sourceId": zod.string(),
+  "version": zod.number().int(),
+  "title": zod.string(),
+  "kind": zod.enum(['manual', 'pdf', 'web']),
+  "subject": zod.string(),
+  "programmeYear": zod.string().nullable(),
+  "publisher": zod.string().nullable(),
+  "url": zod.string().nullable(),
+  "locator": zod.string(),
+  "excerpt": zod.string(),
+  "objective": zod.string(),
+  "retrievedAt": zod.string().nullable()
+}))
+}),zod.null()]).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
@@ -1070,6 +1530,30 @@ export const CreateActivityResponse = zod.object({
   "category": zod.string().max(createActivityResponseSavedContextSnapshotItemCategoryMax).nullish(),
   "details": zod.string().max(createActivityResponseSavedContextSnapshotItemDetailsMax).nullish()
 })).optional(),
+  "curriculumSnapshot": zod.union([zod.object({
+  "version": zod.literal(1),
+  "focus": zod.object({
+  "objective": zod.string(),
+  "thinkingTask": zod.string(),
+  "responseMode": zod.string(),
+  "context": zod.string(),
+  "combinationKey": zod.string()
+}),
+  "sources": zod.array(zod.object({
+  "sourceId": zod.string(),
+  "version": zod.number().int(),
+  "title": zod.string(),
+  "kind": zod.enum(['manual', 'pdf', 'web']),
+  "subject": zod.string(),
+  "programmeYear": zod.string().nullable(),
+  "publisher": zod.string().nullable(),
+  "url": zod.string().nullable(),
+  "locator": zod.string(),
+  "excerpt": zod.string(),
+  "objective": zod.string(),
+  "retrievedAt": zod.string().nullable()
+}))
+}),zod.null()]).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
@@ -1171,6 +1655,30 @@ export const GetActivityResponse = zod.object({
   "category": zod.string().max(getActivityResponseSavedContextSnapshotItemCategoryMax).nullish(),
   "details": zod.string().max(getActivityResponseSavedContextSnapshotItemDetailsMax).nullish()
 })).optional(),
+  "curriculumSnapshot": zod.union([zod.object({
+  "version": zod.literal(1),
+  "focus": zod.object({
+  "objective": zod.string(),
+  "thinkingTask": zod.string(),
+  "responseMode": zod.string(),
+  "context": zod.string(),
+  "combinationKey": zod.string()
+}),
+  "sources": zod.array(zod.object({
+  "sourceId": zod.string(),
+  "version": zod.number().int(),
+  "title": zod.string(),
+  "kind": zod.enum(['manual', 'pdf', 'web']),
+  "subject": zod.string(),
+  "programmeYear": zod.string().nullable(),
+  "publisher": zod.string().nullable(),
+  "url": zod.string().nullable(),
+  "locator": zod.string(),
+  "excerpt": zod.string(),
+  "objective": zod.string(),
+  "retrievedAt": zod.string().nullable()
+}))
+}),zod.null()]).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
@@ -1347,6 +1855,30 @@ export const UpdateActivityResponse = zod.object({
   "category": zod.string().max(updateActivityResponseSavedContextSnapshotItemCategoryMax).nullish(),
   "details": zod.string().max(updateActivityResponseSavedContextSnapshotItemDetailsMax).nullish()
 })).optional(),
+  "curriculumSnapshot": zod.union([zod.object({
+  "version": zod.literal(1),
+  "focus": zod.object({
+  "objective": zod.string(),
+  "thinkingTask": zod.string(),
+  "responseMode": zod.string(),
+  "context": zod.string(),
+  "combinationKey": zod.string()
+}),
+  "sources": zod.array(zod.object({
+  "sourceId": zod.string(),
+  "version": zod.number().int(),
+  "title": zod.string(),
+  "kind": zod.enum(['manual', 'pdf', 'web']),
+  "subject": zod.string(),
+  "programmeYear": zod.string().nullable(),
+  "publisher": zod.string().nullable(),
+  "url": zod.string().nullable(),
+  "locator": zod.string(),
+  "excerpt": zod.string(),
+  "objective": zod.string(),
+  "retrievedAt": zod.string().nullable()
+}))
+}),zod.null()]).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
@@ -1468,6 +2000,30 @@ export const DuplicateActivityResponse = zod.object({
   "category": zod.string().max(duplicateActivityResponseSavedContextSnapshotItemCategoryMax).nullish(),
   "details": zod.string().max(duplicateActivityResponseSavedContextSnapshotItemDetailsMax).nullish()
 })).optional(),
+  "curriculumSnapshot": zod.union([zod.object({
+  "version": zod.literal(1),
+  "focus": zod.object({
+  "objective": zod.string(),
+  "thinkingTask": zod.string(),
+  "responseMode": zod.string(),
+  "context": zod.string(),
+  "combinationKey": zod.string()
+}),
+  "sources": zod.array(zod.object({
+  "sourceId": zod.string(),
+  "version": zod.number().int(),
+  "title": zod.string(),
+  "kind": zod.enum(['manual', 'pdf', 'web']),
+  "subject": zod.string(),
+  "programmeYear": zod.string().nullable(),
+  "publisher": zod.string().nullable(),
+  "url": zod.string().nullable(),
+  "locator": zod.string(),
+  "excerpt": zod.string(),
+  "objective": zod.string(),
+  "retrievedAt": zod.string().nullable()
+}))
+}),zod.null()]).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),
@@ -1573,6 +2129,30 @@ export const SetActivityFavoriteResponse = zod.object({
   "category": zod.string().max(setActivityFavoriteResponseSavedContextSnapshotItemCategoryMax).nullish(),
   "details": zod.string().max(setActivityFavoriteResponseSavedContextSnapshotItemDetailsMax).nullish()
 })).optional(),
+  "curriculumSnapshot": zod.union([zod.object({
+  "version": zod.literal(1),
+  "focus": zod.object({
+  "objective": zod.string(),
+  "thinkingTask": zod.string(),
+  "responseMode": zod.string(),
+  "context": zod.string(),
+  "combinationKey": zod.string()
+}),
+  "sources": zod.array(zod.object({
+  "sourceId": zod.string(),
+  "version": zod.number().int(),
+  "title": zod.string(),
+  "kind": zod.enum(['manual', 'pdf', 'web']),
+  "subject": zod.string(),
+  "programmeYear": zod.string().nullable(),
+  "publisher": zod.string().nullable(),
+  "url": zod.string().nullable(),
+  "locator": zod.string(),
+  "excerpt": zod.string(),
+  "objective": zod.string(),
+  "retrievedAt": zod.string().nullable()
+}))
+}),zod.null()]).optional(),
   "style": zod.string().nullish(),
   "presentationTheme": zod.union([zod.object({
   "kind": zod.enum(['curated', 'custom']),

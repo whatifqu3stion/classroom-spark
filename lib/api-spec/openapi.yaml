@@ -27,6 +27,120 @@ tags:
   - name: generation
     description: Server-side Boardwork activity generation
 paths:
+  /classes/{classId}/curriculum:
+    parameters:
+      - {name: classId, in: path, required: true, schema: {type: string, format: uuid}}
+    get:
+      operationId: listCurriculumSources
+      responses:
+        "200":
+          description: Sources and readiness
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CurriculumSourceList"}
+    post:
+      operationId: createCurriculumSource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CurriculumSourceInput"}
+      responses:
+        "201":
+          description: Draft
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CurriculumSource"}
+  /classes/{classId}/curriculum/discover:
+    parameters:
+      - {name: classId, in: path, required: true, schema: {type: string, format: uuid}}
+    post:
+      operationId: discoverCurriculumReferences
+      responses:
+        "200":
+          description: Retrieved candidates; not approved curriculum
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: "#/components/schemas/CurriculumReference"}
+  /classes/{classId}/curriculum/pdf:
+    parameters:
+      - {name: classId, in: path, required: true, schema: {type: string, format: uuid}}
+      - {name: title, in: query, required: true, schema: {type: string, maxLength: 200}}
+      - {name: unitId, in: query, schema: {type: string, format: uuid}}
+    post:
+      operationId: uploadCurriculumPdf
+      requestBody:
+        required: true
+        content:
+          application/pdf:
+            schema: {$ref: "#/components/schemas/CurriculumPdf"}
+      responses:
+        "201":
+          description: Extracted draft
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CurriculumSource"}
+  /classes/{classId}/curriculum/{sourceId}:
+    parameters:
+      - {name: classId, in: path, required: true, schema: {type: string, format: uuid}}
+      - {name: sourceId, in: path, required: true, schema: {type: string, format: uuid}}
+    get:
+      operationId: getCurriculumSource
+      responses:
+        "200":
+          description: Source
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CurriculumSource"}
+    patch:
+      operationId: updateCurriculumSource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CurriculumSourceUpdate"}
+      responses:
+        "200":
+          description: Updated source
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CurriculumSource"}
+    delete:
+      operationId: deleteCurriculumSource
+      responses:
+        "204":
+          description: Deleted; historical board snapshots retained
+  /classes/{classId}/curriculum/{sourceId}/refresh:
+    parameters:
+      - {name: classId, in: path, required: true, schema: {type: string, format: uuid}}
+      - {name: sourceId, in: path, required: true, schema: {type: string, format: uuid}}
+    post:
+      operationId: refreshCurriculumSource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CurriculumVersionInput"}
+      responses:
+        "200":
+          description: New draft requiring review
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/CurriculumSource"}
+  /classes/{classId}/curriculum/{sourceId}/file:
+    parameters:
+      - {name: classId, in: path, required: true, schema: {type: string, format: uuid}}
+      - {name: sourceId, in: path, required: true, schema: {type: string, format: uuid}}
+    get:
+      operationId: getCurriculumPdf
+      responses:
+        "200":
+          description: Protected original PDF
+          content:
+            application/pdf:
+              schema: {$ref: "#/components/schemas/CurriculumPdf"}
   /healthz:
     get:
       operationId: healthCheck
@@ -799,6 +913,140 @@ components:
       schema:
         type: string
   schemas:
+    CurriculumPdf:
+      type: string
+      format: binary
+    CurriculumObjective:
+      type: object
+      required: [id, label, excerpt, locator, selected]
+      properties:
+        id: {type: string, maxLength: 100}
+        label: {type: string, minLength: 1, maxLength: 500}
+        excerpt: {type: string, maxLength: 2000}
+        locator: {type: string, maxLength: 200}
+        selected: {type: boolean}
+    CurriculumReference:
+      type: object
+      required: [title, url, publisher]
+      properties:
+        title: {type: string}
+        url: {type: string}
+        publisher: {type: string}
+    CurriculumSource:
+      type: object
+      required: [id, classId, unitId, kind, status, version, title, summary, subject, framework, programmeYear, objectives, publisher, url, edition, retrievedAt, approvedAt, createdAt, updatedAt]
+      properties:
+        id: {type: string}
+        classId: {type: string}
+        unitId: {type: [string, "null"]}
+        kind: {type: string, enum: [manual, pdf, web]}
+        status: {type: string, enum: [draft, approved, inactive, delete_failed]}
+        version: {type: integer}
+        title: {type: string}
+        summary: {type: string}
+        subject: {type: string}
+        framework: {type: [string, "null"]}
+        programmeYear: {type: [string, "null"]}
+        objectives:
+          type: array
+          items: {$ref: "#/components/schemas/CurriculumObjective"}
+        publisher: {type: [string, "null"]}
+        url: {type: [string, "null"]}
+        edition: {type: [string, "null"]}
+        retrievedAt: {type: [string, "null"]}
+        approvedAt: {type: [string, "null"]}
+        createdAt: {type: string}
+        updatedAt: {type: string}
+    CurriculumSourceList:
+      type: object
+      required: [ready, reason, items]
+      properties:
+        ready: {type: boolean}
+        reason: {type: [string, "null"]}
+        capabilities:
+          $ref: "#/components/schemas/CurriculumCapabilities"
+        items:
+          type: array
+          items: {$ref: "#/components/schemas/CurriculumSource"}
+    CurriculumCapabilities:
+      type: object
+      required: [accessConfigured, aiConfigured, storageConfigured, pdfUpload, discovery, discoveryFrameworks, message]
+      properties:
+        accessConfigured: {type: boolean}
+        aiConfigured: {type: boolean}
+        storageConfigured: {type: boolean}
+        pdfUpload: {type: boolean}
+        discovery: {type: boolean}
+        discoveryFrameworks:
+          type: array
+          items: {type: string}
+        message: {type: [string, "null"]}
+    CurriculumSourceInput:
+      type: object
+      additionalProperties: false
+      required: [kind, title]
+      properties:
+        kind: {type: string, enum: [manual, web]}
+        title: {type: string, minLength: 1, maxLength: 200}
+        text: {type: string, minLength: 1, maxLength: 40000}
+        url: {type: string, maxLength: 2000}
+        unitId: {type: [string, "null"], format: uuid}
+    CurriculumVersionInput:
+      type: object
+      additionalProperties: false
+      required: [version]
+      properties:
+        version: {type: integer, minimum: 1}
+    CurriculumSourceUpdate:
+      type: object
+      additionalProperties: false
+      required: [version]
+      properties:
+        version: {type: integer, minimum: 1}
+        title: {type: string, minLength: 1, maxLength: 200}
+        summary: {type: string, maxLength: 2000}
+        subject: {type: string, minLength: 1, maxLength: 100}
+        framework: {type: [string, "null"], maxLength: 100}
+        programmeYear: {type: [string, "null"], maxLength: 80}
+        status: {type: string, enum: [draft, approved, inactive]}
+        objectives:
+          type: array
+          maxItems: 60
+          items: {$ref: "#/components/schemas/CurriculumObjective"}
+    CurriculumFocus:
+      type: object
+      required: [objective, thinkingTask, responseMode, context, combinationKey]
+      properties:
+        objective: {type: string}
+        thinkingTask: {type: string}
+        responseMode: {type: string}
+        context: {type: string}
+        combinationKey: {type: string}
+    CurriculumSourceSnapshot:
+      type: object
+      required: [sourceId, version, title, kind, subject, programmeYear, publisher, url, locator, excerpt, objective, retrievedAt]
+      properties:
+        sourceId: {type: string}
+        version: {type: integer}
+        title: {type: string}
+        kind: {type: string, enum: [manual, pdf, web]}
+        subject: {type: string}
+        programmeYear: {type: [string, "null"]}
+        publisher: {type: [string, "null"]}
+        url: {type: [string, "null"]}
+        locator: {type: string}
+        excerpt: {type: string}
+        objective: {type: string}
+        retrievedAt: {type: [string, "null"]}
+    CurriculumSnapshot:
+      type: object
+      required: [version, focus, sources]
+      properties:
+        version: {type: integer, enum: [1]}
+        focus: {$ref: "#/components/schemas/CurriculumFocus"}
+        sources:
+          type: array
+          items: {$ref: "#/components/schemas/CurriculumSourceSnapshot"}
     HealthStatus:
       type: object
       properties:
@@ -913,6 +1161,9 @@ components:
           type: string
         curriculumFramework:
           type: ["string", "null"]
+        programmeYear:
+          type: ["string", "null"]
+          maxLength: 80
         curriculumDetails:
           type: ["string", "null"]
         generalContext:
@@ -950,6 +1201,9 @@ components:
           type: string
         curriculumFramework:
           type: ["string", "null"]
+        programmeYear:
+          type: ["string", "null"]
+          maxLength: 80
         curriculumDetails:
           type: ["string", "null"]
         generalContext:
@@ -975,6 +1229,9 @@ components:
           type: string
         curriculumFramework:
           type: ["string", "null"]
+        programmeYear:
+          type: ["string", "null"]
+          maxLength: 80
         curriculumDetails:
           type: ["string", "null"]
         generalContext:
@@ -1398,6 +1655,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/SavedContextSnapshot"
+        curriculumSnapshot:
+          anyOf:
+            - {$ref: "#/components/schemas/CurriculumSnapshot"}
+            - {type: "null"}
         style:
           type: ["string", "null"]
         presentationTheme:

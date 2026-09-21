@@ -64,6 +64,9 @@ async function buildAll() {
       "@azure/*",
       "@opentelemetry/*",
       "@google-cloud/*",
+      // Curriculum parsing resolves this package at runtime inside a terminated worker.
+      "pdfjs-dist",
+      "pdfjs-dist/*",
       "@google/*",
       "googleapis",
       "firebase-admin",

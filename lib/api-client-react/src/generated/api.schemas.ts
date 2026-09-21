@@ -5,6 +5,216 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type CurriculumPdf = Blob;
+
+export interface CurriculumObjective {
+  /** @maxLength 100 */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 500
+     */
+  label: string;
+  /** @maxLength 2000 */
+  excerpt: string;
+  /** @maxLength 200 */
+  locator: string;
+  selected: boolean;
+}
+
+export interface CurriculumReference {
+  title: string;
+  url: string;
+  publisher: string;
+}
+
+export type CurriculumSourceKind = typeof CurriculumSourceKind[keyof typeof CurriculumSourceKind];
+
+
+export const CurriculumSourceKind = {
+  manual: 'manual',
+  pdf: 'pdf',
+  web: 'web',
+} as const;
+
+export type CurriculumSourceStatus = typeof CurriculumSourceStatus[keyof typeof CurriculumSourceStatus];
+
+
+export const CurriculumSourceStatus = {
+  draft: 'draft',
+  approved: 'approved',
+  inactive: 'inactive',
+  delete_failed: 'delete_failed',
+} as const;
+
+export interface CurriculumSource {
+  id: string;
+  classId: string;
+  /** @nullable */
+  unitId: string | null;
+  kind: CurriculumSourceKind;
+  status: CurriculumSourceStatus;
+  version: number;
+  title: string;
+  summary: string;
+  subject: string;
+  /** @nullable */
+  framework: string | null;
+  /** @nullable */
+  programmeYear: string | null;
+  objectives: CurriculumObjective[];
+  /** @nullable */
+  publisher: string | null;
+  /** @nullable */
+  url: string | null;
+  /** @nullable */
+  edition: string | null;
+  /** @nullable */
+  retrievedAt: string | null;
+  /** @nullable */
+  approvedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CurriculumCapabilities {
+  accessConfigured: boolean;
+  aiConfigured: boolean;
+  storageConfigured: boolean;
+  pdfUpload: boolean;
+  discovery: boolean;
+  discoveryFrameworks: string[];
+  /** @nullable */
+  message: string | null;
+}
+
+export interface CurriculumSourceList {
+  ready: boolean;
+  /** @nullable */
+  reason: string | null;
+  capabilities?: CurriculumCapabilities;
+  items: CurriculumSource[];
+}
+
+export type CurriculumSourceInputKind = typeof CurriculumSourceInputKind[keyof typeof CurriculumSourceInputKind];
+
+
+export const CurriculumSourceInputKind = {
+  manual: 'manual',
+  web: 'web',
+} as const;
+
+export interface CurriculumSourceInput {
+  kind: CurriculumSourceInputKind;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  title: string;
+  /**
+     * @minLength 1
+     * @maxLength 40000
+     */
+  text?: string;
+  /** @maxLength 2000 */
+  url?: string;
+  /** @nullable */
+  unitId?: string | null;
+}
+
+export interface CurriculumVersionInput {
+  /** @minimum 1 */
+  version: number;
+}
+
+export type CurriculumSourceUpdateStatus = typeof CurriculumSourceUpdateStatus[keyof typeof CurriculumSourceUpdateStatus];
+
+
+export const CurriculumSourceUpdateStatus = {
+  draft: 'draft',
+  approved: 'approved',
+  inactive: 'inactive',
+} as const;
+
+export interface CurriculumSourceUpdate {
+  /** @minimum 1 */
+  version: number;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  title?: string;
+  /** @maxLength 2000 */
+  summary?: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  subject?: string;
+  /**
+     * @maxLength 100
+     * @nullable
+     */
+  framework?: string | null;
+  /**
+     * @maxLength 80
+     * @nullable
+     */
+  programmeYear?: string | null;
+  status?: CurriculumSourceUpdateStatus;
+  /** @maxItems 60 */
+  objectives?: CurriculumObjective[];
+}
+
+export interface CurriculumFocus {
+  objective: string;
+  thinkingTask: string;
+  responseMode: string;
+  context: string;
+  combinationKey: string;
+}
+
+export type CurriculumSourceSnapshotKind = typeof CurriculumSourceSnapshotKind[keyof typeof CurriculumSourceSnapshotKind];
+
+
+export const CurriculumSourceSnapshotKind = {
+  manual: 'manual',
+  pdf: 'pdf',
+  web: 'web',
+} as const;
+
+export interface CurriculumSourceSnapshot {
+  sourceId: string;
+  version: number;
+  title: string;
+  kind: CurriculumSourceSnapshotKind;
+  subject: string;
+  /** @nullable */
+  programmeYear: string | null;
+  /** @nullable */
+  publisher: string | null;
+  /** @nullable */
+  url: string | null;
+  locator: string;
+  excerpt: string;
+  objective: string;
+  /** @nullable */
+  retrievedAt: string | null;
+}
+
+export type CurriculumSnapshotVersion = typeof CurriculumSnapshotVersion[keyof typeof CurriculumSnapshotVersion];
+
+
+export const CurriculumSnapshotVersion = {
+  NUMBER_1: 1,
+} as const;
+
+export interface CurriculumSnapshot {
+  version: CurriculumSnapshotVersion;
+  focus: CurriculumFocus;
+  sources: CurriculumSourceSnapshot[];
+}
+
 export interface HealthStatus {
   status: string;
 }
@@ -98,6 +308,11 @@ export interface ClassProfile {
   subject: string;
   /** @nullable */
   curriculumFramework?: string | null;
+  /**
+     * @maxLength 80
+     * @nullable
+     */
+  programmeYear?: string | null;
   /** @nullable */
   curriculumDetails?: string | null;
   /** @nullable */
@@ -119,6 +334,11 @@ export interface ClassProfileInput {
   subject: string;
   /** @nullable */
   curriculumFramework?: string | null;
+  /**
+     * @maxLength 80
+     * @nullable
+     */
+  programmeYear?: string | null;
   /** @nullable */
   curriculumDetails?: string | null;
   /** @nullable */
@@ -138,6 +358,11 @@ export interface ClassProfileUpdate {
   subject?: string;
   /** @nullable */
   curriculumFramework?: string | null;
+  /**
+     * @maxLength 80
+     * @nullable
+     */
+  programmeYear?: string | null;
   /** @nullable */
   curriculumDetails?: string | null;
   /** @nullable */
@@ -420,6 +645,7 @@ export interface Activity {
   /** @nullable */
   sourceActivityId?: string | null;
   savedContextSnapshot?: SavedContextSnapshot[];
+  curriculumSnapshot?: CurriculumSnapshot | null;
   /** @nullable */
   style?: string | null;
   presentationTheme?: PresentationThemeSelection | null;
@@ -593,6 +819,14 @@ export interface AppState {
 }
 
 export type ClassIdQueryParamParameter = string;
+
+export type UploadCurriculumPdfParams = {
+/**
+ * @maxLength 200
+ */
+title: string;
+unitId?: string;
+};
 
 export type ListSavedContextsParams = {
 classId: ClassIdQueryParamParameter;

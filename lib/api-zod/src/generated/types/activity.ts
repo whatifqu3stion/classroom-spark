@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { BoardContentFormatting } from './boardContentFormatting';
+import type { CurriculumSnapshot } from './curriculumSnapshot';
 import type { DeviceMode } from './deviceMode';
 import type { Duration } from './duration';
 import type { PresentationThemeSelection } from './presentationThemeSelection';
@@ -52,6 +53,7 @@ export interface Activity {
   /** @nullable */
   sourceActivityId?: string | null;
   savedContextSnapshot?: SavedContextSnapshot[];
+  curriculumSnapshot?: CurriculumSnapshot | null;
   /** @nullable */
   style?: string | null;
   presentationTheme?: PresentationThemeSelection | null;

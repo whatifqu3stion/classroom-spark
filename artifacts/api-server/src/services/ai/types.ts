@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { generatedActivityStyleValues } from "@workspace/api-zod";
+import type { CurriculumPlan } from "./curriculum-planner";
 
 export const generatedActivityStyles = generatedActivityStyleValues;
 
@@ -24,6 +25,7 @@ export interface BoardworkGenerationContext {
     subject: string;
     curriculumFramework: string | null;
     curriculumDetails: string | null;
+    programmeYear?: string | null;
     generalContext: string | null;
     arrivalRoutine: string | null;
   };
@@ -65,7 +67,9 @@ export interface BoardworkGenerationContext {
   recentActivities: Array<{
     task: string;
     activityStyle: string | null;
+    curriculumSnapshot?: Pick<CurriculumPlan, "focus"> | null;
   }>;
+  curriculumPlan?: CurriculumPlan | null;
 }
 
 export interface BoardworkGenerationProvider {

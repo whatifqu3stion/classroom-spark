@@ -64,6 +64,13 @@
       "when": 1789671906067,
       "tag": "0008_lively_ikaris",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790025706454,
+      "tag": "0009_wise_richard_fisk",
+      "breakpoints": true
     }
   ]
 }

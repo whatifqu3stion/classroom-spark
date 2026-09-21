@@ -27,6 +27,7 @@ import { ClassFormDialog } from "@/components/class-form-dialog";
 import { UnitFormDialog, UnitFormValues } from "@/components/unit-form-dialog";
 import { SavedContextControl } from "@/components/saved-context/saved-context-control";
 import { ClassColorDot } from "@/components/class-color-dot";
+import { CurriculumManager } from "@/components/curriculum/curriculum-manager";
 import { HelpTooltip } from "@/components/ui/tooltip";
 import { Settings, Plus, Play, Shuffle, FilePlus, MonitorOff, MonitorSmartphone, Loader2, AlertCircle } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -405,6 +406,7 @@ export default function Home() {
           id: newActivity.id,
           classId: newActivity.classId,
           savedContextSnapshot: newActivity.savedContextSnapshot,
+          curriculumSnapshot: newActivity.curriculumSnapshot,
           savedContextIds: undefined,
         };
         initializedForId.current = newActivity.id;

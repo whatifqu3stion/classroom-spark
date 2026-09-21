@@ -178,6 +178,8 @@ May ask students to:
 
 For MVP, Boardwork should **not** browse the web automatically or invent URLs.
 
+The deliberate exception is teacher-initiated **Find official sources** in class curriculum setup. This searches public publisher material, retrieves the document, and creates a reviewable draft. It never runs during daily generation and does not give students a new resource URL. Only explicitly approved, applicable excerpts can ground future boards. Publisher retrieval and teacher approval do not establish standards compliance.
+
 If a URL is needed, teacher enters it. AI can build an activity around the provided resource.
 
 ## 9. Generated-board content model

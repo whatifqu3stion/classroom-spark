@@ -288,7 +288,7 @@ describe.sequential("saved context persistence", () => {
       {
         async generate(generationContext) {
           replayed = JSON.stringify(generationContext.today.savedContext);
-          return generatedActivity;
+          return { ...generatedActivity, task: "Compare two possible explanations and justify the stronger one with evidence." };
         },
       },
     );

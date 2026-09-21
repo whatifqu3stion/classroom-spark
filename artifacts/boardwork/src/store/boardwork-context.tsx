@@ -24,6 +24,7 @@ export interface ClassProfile {
   grade: string;
   subject: string;
   curriculumFramework?: string | null;
+  programmeYear?: string | null;
   curriculumDetails?: string | null;
   generalContext?: string | null;
   arrivalRoutine?: string | null;
@@ -67,6 +68,7 @@ export interface ActivityDraft {
   /** Captured setup IDs used only when creating an unsaved board. */
   savedContextIds?: string[];
   savedContextSnapshot?: Activity["savedContextSnapshot"];
+  curriculumSnapshot?: Activity["curriculumSnapshot"];
   style?: string | null;
   presentationTheme?: PresentationThemeSelection | null;
   favorite?: boolean;

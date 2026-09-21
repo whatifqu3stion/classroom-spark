@@ -11,6 +11,7 @@ import { getSafeResourceUrl } from "@/lib/resource-url";
 import { PresentationThemePicker } from "@/components/presentation-theme-picker";
 import { PresentationImageEditor } from "@/components/presentation-image-editor";
 import { SavedContextSnapshotDetails } from "@/components/saved-context/saved-context-snapshot-details";
+import { CurriculumSnapshotDetails } from "@/components/curriculum/curriculum-snapshot-details";
 import { FormulaPreview, FormulaText } from "@/components/formula-text";
 import { FormattedFormulaPreview } from "@/components/formatted-board-text";
 import { normalizeFormulaRuns } from "@/lib/inline-formatting";
@@ -396,6 +397,12 @@ export function BoardEditor({
           <SavedContextSnapshotDetails
             key={draft.id ?? "unsaved"}
             snapshot={draft.savedContextSnapshot}
+          />
+
+          <CurriculumSnapshotDetails
+            key={(draft.id ?? "unsaved") + "-curriculum"}
+            snapshot={draft.curriculumSnapshot}
+            classId={draft.classId}
           />
 
             <section className="presentation-visual-editor-section mt-8 border-t pt-6" data-testid="presentation-visual-section">
