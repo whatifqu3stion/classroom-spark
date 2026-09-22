@@ -40,7 +40,19 @@ Use a modern, highly legible sans-serif with excellent UI metrics.
 Preferred: **Inter** or **Geist Sans**.
 
 ### Student presentation
-Use the same family unless a strong projector-legibility reason suggests otherwise.
+Use the fixed Bitter / Open Sans pairing, scoped to presentation surfaces:
+- Main instruction: Bitter semibold (600), with 1.18 line-height so wrapped
+  instructions read as one connected block.
+- Prompts and supporting text: Open Sans medium (500), retaining existing
+  prompt leading and list/section spacing.
+- Small eyebrow labels: Open Sans bold (700).
+- Authored bold: real 700 weights in both families; retain mathematical and
+  timer numeral font treatments.
+
+Apply the same instruction leading in editor preview, live Present (including
+adaptive fitting), and fixed PNG export. Keep the teacher interface on Inter.
+Bundle used presentation faces locally with license attribution and wait for
+them before PNG capture; do not add a font picker or runtime font CDN.
 
 Rules:
 - large title

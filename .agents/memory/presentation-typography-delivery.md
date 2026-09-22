@@ -40,17 +40,30 @@ presentation content.
 heading/body variables. Any future font-delivery change should verify both the
 normal UI baseline and the presentation/export fallback behavior independently.
 
-Presentation surfaces use one fixed original pairing: Inter 700 for headings and
-Inter 500 for body copy, with explicit script-capable and system fallbacks.
-Legacy `typographyId` values remain accepted in stored/API data but are ignored
-by presentation resolution and new local preferences.
+Keep one fixed presentation pairing rather than restoring a typography picker.
+The teacher's explicit Bitter/Open Sans choice on 2026-09-22 supersedes the
+earlier Inter-only presentation decision; it does not change the Inter teacher
+interface or authorize bringing back historical selectable pairings.
 
-**Why:** Experimental pairings were not reliably distinguishable across editor
-preview, Present, and PNG export, so a single predictable treatment is safer
-for classroom use while preserving backward-compatible data shapes.
+**Why:** Earlier selectable pairings were not reliably distinguishable across
+preview, Present, and PNG. The new request deliberately chooses one contrasting
+instruction/supporting-text pairing, with tighter instruction leading to make
+multi-line directions feel connected.
 
-**How to apply:** Request only Inter 500/700 for presentation export; retain
-other Inter weights only when needed by the teacher application shell.
+**How to apply:** Preserve saved appearance compatibility and keep the pairing
+consistent across themes and rendering modes. Verify actual rendered prose,
+not just a family token or successful font URL.
+
+Variable-font platform names can describe their default instance rather than
+the selected weight.
+
+**Why:** Chromium reported the locally rendered Bitter variable face as
+“Bitter Thin” even when CSS selected 600/700. Exact platform-family equality
+incorrectly classified a loaded, rendered custom font as a fallback.
+
+**How to apply:** Inspect the text-owning node, confirm custom glyph use and
+the family identity, and check computed weight separately. Do not infer the
+selected variable weight from the platform/PostScript face name.
 
 Formula-aware text wrappers must inherit the surrounding presentation font;
 apply the math fallback only to spans that actually contain parsed formula

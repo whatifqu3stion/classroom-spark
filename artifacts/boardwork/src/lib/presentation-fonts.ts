@@ -1,10 +1,11 @@
 /**
- * Presentation uses Boardwork's original Inter pairing. Legacy appearance
- * families intentionally fall through to the explicit system/script stacks in
- * the theme catalog.
+ * Load the fixed Bitter instruction / Open Sans supporting-text pairing,
+ * including authored bold and semibold labels, before measuring PNG export.
+ * Inter remains independently available for the teacher interface.
  */
 export const PRESENTATION_FONT_REQUESTS = [
-  { family: "Inter", weights: [500, 700] },
+  { family: "Bitter", weights: [600, 700] },
+  { family: "Open Sans", weights: [500, 600, 700] },
 ] as const;
 
 export const PRESENTATION_FONT_FAMILIES = PRESENTATION_FONT_REQUESTS.map(

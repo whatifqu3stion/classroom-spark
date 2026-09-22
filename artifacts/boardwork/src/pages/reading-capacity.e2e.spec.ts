@@ -386,25 +386,20 @@ test("fixed editor-preview and PNG-export baseline geometry", async ({ page }, t
     "utf8",
   ));
   const actual = { editorPreview: editorGeometry, export: exportGeometry };
-  if (testInfo.project.name === "chromium") {
-    expect(actual).toEqual(fixedBaseline);
-  } else {
-    for (const name of ["editorPreview", "export"] as const) {
-      const measured = actual[name];
-      const baseline = fixedBaseline[name];
-      // Engines quantize line boxes differently. Keep fixed frames, fonts and
-      // fitter opt-out exact; only interior rects get subpixel tolerance.
-      expect(measured.surface).toEqual(baseline.surface);
-      expect(measured.taskFontSize).toBe(baseline.taskFontSize);
-      expect(measured.textFitActive).toBe("false");
-      expect(measured.textFitScale).toBe("1");
-      for (const region of ["content", "task"] as const) {
-        for (const coordinate of Object.keys(baseline[region])) {
-          expect(Math.abs(measured[region][coordinate] - baseline[region][coordinate]),
-            `${name}.${region}.${coordinate}`).toBeLessThanOrEqual(0.1);
-        }
-      }
-    }
+  for (const name of ["editorPreview", "export"] as const) {
+    const measured = actual[name];
+    const baseline = fixedBaseline[name];
+    // The historical Inter baseline still owns fixed frame geometry and size,
+    // not intrinsic line boxes: Bitter/Open Sans intentionally change wrapping.
+    expect(measured.surface).toEqual(baseline.surface);
+    expect(measured.taskFontSize).toBe(baseline.taskFontSize);
+    expect(measured.textFitActive).toBe("false");
+    expect(measured.textFitScale).toBe("1");
+    expect(measured.task.left).toBeGreaterThanOrEqual(measured.content.left - 0.1);
+    expect(measured.task.right).toBeLessThanOrEqual(measured.content.right + 0.1);
+    expect(measured.task.top).toBeGreaterThanOrEqual(measured.content.top - 0.1);
+    expect(measured.task.bottom).toBeLessThanOrEqual(measured.content.bottom + 0.1);
+    expect(measured.content.bottom).toBeLessThanOrEqual(measured.surface.bottom + 0.1);
   }
   await writeFile(
     resolve(evidenceDir, "fixed-layouts-1280x720.json"),

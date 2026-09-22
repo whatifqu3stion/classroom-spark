@@ -14,7 +14,7 @@ beforeEach(() => {
 });
 
 describe("presentation typography systems", () => {
-  it("exposes only the original Boardwork presentation pairing", () => {
+  it("exposes only the fixed Boardwork presentation pairing", () => {
     expect(presentationTypographySystems.map(({ id }) => id)).toEqual([
       "boardwork",
     ]);
@@ -23,9 +23,9 @@ describe("presentation typography systems", () => {
   it("keeps Boardwork as the stable default system", () => {
     const typography = getCuratedPresentationTheme("boardwork").typography;
 
-    expect(typography.heading.family).toContain("'Inter'");
-    expect(typography.body.family).toContain("'Inter'");
-    expect(typography.heading.weight).toBe(700);
+    expect(typography.heading.family).toContain("'Bitter'");
+    expect(typography.body.family).toContain("'Open Sans'");
+    expect(typography.heading.weight).toBe(600);
     expect(typography.body.weight).toBe(500);
     expect(typography.headingScale).toBe(1);
   });
@@ -45,7 +45,8 @@ describe("presentation typography systems", () => {
 
     expect(typography.body.family).toContain("'Noto Sans Arabic'");
     expect(typography.body.family).toContain("system-ui");
-    expect(typography.heading.family).toContain("sans-serif");
+    expect(typography.heading.family).toContain("'Noto Sans Arabic'");
+    expect(typography.heading.family).toMatch(/, serif$/);
   });
 
   it("ignores legacy typography choices without changing the surface", () => {
@@ -57,8 +58,8 @@ describe("presentation typography systems", () => {
     });
 
     expect(typography.id).toBe("boardwork");
-    expect(typography.heading.family).toContain("'Inter'");
-    expect(typography.body.family).toContain("'Inter'");
+    expect(typography.heading.family).toContain("'Bitter'");
+    expect(typography.body.family).toContain("'Open Sans'");
     expect(getCuratedPresentationTheme("paper-v2", "sage").colors.background).toBe(
       "#F3EEE4",
     );

@@ -86,6 +86,8 @@ const SANS_SYSTEM_FALLBACK =
   "'Segoe UI', 'Helvetica Neue', Arial, system-ui, sans-serif";
 const sansFamily = (family: string) =>
   `${family}, ${SCRIPT_FONT_FALLBACK}, ${SANS_SYSTEM_FALLBACK}`;
+const serifFamily = (family: string) =>
+  `${family}, ${SCRIPT_FONT_FALLBACK}, Georgia, 'Times New Roman', serif`;
 
 // Background surfaces are intentionally restrained. Accent colors are a
 // secondary semantic system: they mark links, progress, controls, and small
@@ -201,12 +203,12 @@ export const presentationSurfaceThemes = [
 ] as const satisfies readonly PresentationSurfaceTheme[];
 
 export const presentationTypographySystems = [
-  // This is the original Boardwork presentation treatment. Keep the
-  // heading/body pairing fixed so preview, Present, and PNG export agree.
+  // Keep the student instruction/supporting-text pairing fixed so preview,
+  // Present, and PNG export agree without changing saved appearance IDs.
   {
     id: "boardwork",
-    heading: { family: sansFamily("'Inter'"), weight: 700 },
-    body: { family: sansFamily("'Inter'"), weight: 500 },
+    heading: { family: serifFamily("'Bitter'"), weight: 600 },
+    body: { family: sansFamily("'Open Sans'"), weight: 500 },
     headingLetterSpacing: "-0.045em",
     headingScale: 1,
   },

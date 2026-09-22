@@ -610,10 +610,10 @@ describe("PresentationCanvas timer visibility", () => {
     expect(surface.style.getPropertyValue("--presentation-bg")).toBe("#FDFCF8");
     expect(surface.style.getPropertyValue("--presentation-accent")).toBe("#334155");
     expect(surface.style.getPropertyValue("--presentation-font-heading")).toContain(
-      "'Inter'",
+      "'Bitter'",
     );
     expect(surface.style.getPropertyValue("--presentation-font-body")).toContain(
-      "'Inter'",
+      "'Open Sans'",
     );
 
     rerender(
@@ -632,8 +632,8 @@ describe("PresentationCanvas timer visibility", () => {
 
     expect(surface.style.getPropertyValue("--presentation-bg")).toBe("#FDFCF8");
     expect(surface.style.getPropertyValue("--presentation-accent")).toBe("#334155");
-    expect(surface.style.getPropertyValue("--presentation-font-heading")).toContain("'Inter'");
-    expect(surface.style.getPropertyValue("--presentation-font-body")).toContain("'Inter'");
+    expect(surface.style.getPropertyValue("--presentation-font-heading")).toContain("'Bitter'");
+    expect(surface.style.getPropertyValue("--presentation-font-body")).toContain("'Open Sans'");
   });
 
   it("keeps the fixed pairing identical in editor preview and PNG export", () => {

@@ -36,6 +36,22 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: "Bitter";
+  src: url("/fonts/Bitter[wght].ttf") format("truetype");
+  font-weight: 600 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Open Sans";
+  src: url("/fonts/OpenSans[wdth,wght].ttf") format("truetype");
+  font-weight: 500 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme inline {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -362,7 +378,6 @@
 
   .presentation-surface--editor-preview .presentation-task {
     font-size: clamp(0.76rem, 2.35vw, 1.25rem);
-    line-height: 1.28;
   }
 
   .presentation-surface--editor-preview .presentation-prompts {
@@ -442,8 +457,8 @@
 
   .presentation-eyebrow {
     letter-spacing: 0.12em;
-    font-family: var(--presentation-font-heading, var(--app-font-sans));
-    font-weight: var(--presentation-heading-weight, 700);
+    font-family: var(--presentation-font-body, var(--app-font-sans));
+    font-weight: 700;
     line-height: 1.2;
   }
 
@@ -1218,10 +1233,10 @@
   .presentation-task {
     max-width: 48ch;
     color: var(--presentation-primary-text, rgb(23 23 23 / 88%));
-    font-family: var(--presentation-font-body, var(--app-font-sans));
+    font-family: var(--presentation-font-heading, var(--app-font-serif));
     font-size: clamp(1.55rem, 3.7vw, 3rem);
-    font-weight: var(--presentation-body-weight, 500);
-    line-height: 1.28;
+    font-weight: var(--presentation-heading-weight, 600);
+    line-height: 1.18;
     overflow-wrap: anywhere;
   }
 
@@ -1945,7 +1960,6 @@
       )[data-text-fit-active="true"]
       .presentation-task {
       font-size: var(--presentation-text-fit-task-size, 1.5rem);
-      line-height: 1.28;
     }
 
     .presentation-surface:not(.presentation-surface--export):not(
@@ -2054,7 +2068,6 @@
   .presentation-surface--export .presentation-task {
     max-width: 58ch;
     font-size: 52px;
-    line-height: 1.22;
   }
 
   .presentation-surface--export .presentation-prompts {

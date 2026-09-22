@@ -19,7 +19,7 @@ describe("presentation font handling", () => {
       backgroundColor: "#ffffff",
     });
     expect(options).not.toHaveProperty("skipFonts");
-    expect(PRESENTATION_FONT_FAMILIES).toEqual(["Inter"]);
+    expect(PRESENTATION_FONT_FAMILIES).toEqual(["Bitter", "Open Sans"]);
   });
 
   it("waits for requested script-capable fonts before capture", async () => {
@@ -30,8 +30,12 @@ describe("presentation font handling", () => {
     await waitForPresentationFonts();
 
     expect(load).toHaveBeenCalled();
-    expect(load).toHaveBeenCalledWith('500 1em "Inter"');
-    expect(load).toHaveBeenCalledWith('700 1em "Inter"');
+    expect(load).toHaveBeenCalledTimes(5);
+    expect(load).toHaveBeenCalledWith('600 1em "Bitter"');
+    expect(load).toHaveBeenCalledWith('700 1em "Bitter"');
+    expect(load).toHaveBeenCalledWith('500 1em "Open Sans"');
+    expect(load).toHaveBeenCalledWith('600 1em "Open Sans"');
+    expect(load).toHaveBeenCalledWith('700 1em "Open Sans"');
     expect(load).not.toHaveBeenCalledWith('400 1em "Inter"');
     expect(load).not.toHaveBeenCalledWith('600 1em "Inter"');
     expect(load).not.toHaveBeenCalledWith('500 1em "DM Sans"');
@@ -54,7 +58,25 @@ describe("presentation font handling", () => {
 
     expect(stylesheet).not.toMatch(/fonts\.googleapis\.com|fonts\.gstatic\.com/);
     expect(stylesheet).toContain('src: url("/fonts/inter-400.ttf")');
+    expect(stylesheet).toContain('src: url("/fonts/Bitter[wght].ttf")');
+    expect(stylesheet).toContain('src: url("/fonts/OpenSans[wdth,wght].ttf")');
+    expect(stylesheet).toContain("--app-font-sans: 'Inter', sans-serif;");
     expect(stylesheet).not.toContain("DM Sans");
     expect(stylesheet).not.toContain("Atkinson Hyperlegible");
+  });
+
+  it("uses one tight instruction leading across preview, live and export", async () => {
+    const stylesheet = await readFile("src/index.css", "utf8");
+    const taskRules = [...stylesheet.matchAll(/([^{}]*\.presentation-task)\s*\{([^{}]*)\}/g)];
+    const leading = taskRules.flatMap(([, , declarations]) =>
+      [...declarations.matchAll(/line-height:\s*([^;]+);/g)].map((match) => match[1]),
+    );
+    expect(leading).toEqual(["1.18"]);
+    const base = taskRules.find(([ , selector]) => selector.trim() === ".presentation-task")![2];
+    expect(base).toContain("var(--presentation-font-heading, var(--app-font-serif))");
+    expect(base).toContain("var(--presentation-heading-weight, 600)");
+    const eyebrow = stylesheet.match(/\.presentation-eyebrow\s*\{([^}]+)\}/)![1];
+    expect(eyebrow).toContain("var(--presentation-font-body, var(--app-font-sans))");
+    expect(eyebrow).toContain("font-weight: 700");
   });
 });
