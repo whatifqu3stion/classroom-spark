@@ -72,8 +72,8 @@ export function getPresentationTextFitMetrics(
       MAX_PROMPT_SIZE,
     ),
     contentGap: clamp(width * 0.035, 24, 32),
-    promptGap: clamp(width * 0.025, 14, 22),
-    promptPadding: clamp(width * 0.02, 12, 18),
+    promptGap: clamp(width * 0.02, 12, 18),
+    promptPadding: clamp(width * 0.04, 24, 36),
   };
 }
 
@@ -180,12 +180,13 @@ export function choosePresentationTextFit(
   );
   const typeMetrics = getPresentationTextFitMetrics(paneWidth, scale);
   // Only spend room left AFTER type fitting on whitespace, and never stretch
-  // rows to fill the board. Re-measure because marker spacing affects wrapping.
+  // rows to fill the board. Keep divider clearance larger than row gaps, even
+  // for highlighted first lines. Re-measure because marker spacing affects wrapping.
   const withSpacing = (amount: number): PresentationTextFitMetrics => ({
     ...typeMetrics,
     contentGap: typeMetrics.contentGap + (36 - typeMetrics.contentGap) * amount,
-    promptGap: typeMetrics.promptGap + (28 - typeMetrics.promptGap) * amount,
-    promptPadding: typeMetrics.promptPadding + (20 - typeMetrics.promptPadding) * amount,
+    promptGap: typeMetrics.promptGap + (22 - typeMetrics.promptGap) * amount,
+    promptPadding: typeMetrics.promptPadding + (40 - typeMetrics.promptPadding) * amount,
   });
   let spacing = 0;
   let spacingUpper = 1;

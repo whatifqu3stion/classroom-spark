@@ -1,0 +1,63 @@
+{
+  "viewport": {
+    "width": 1640,
+    "height": 1020
+  },
+  "surface": {
+    "x": 0,
+    "y": 0,
+    "width": 1640,
+    "height": 1020,
+    "right": 1640,
+    "bottom": 1020
+  },
+  "task": {
+    "x": 64,
+    "y": 120.3125,
+    "width": 914.546875,
+    "height": 316.71875,
+    "right": 978.546875,
+    "bottom": 437.03125
+  },
+  "prompts": {
+    "x": 64,
+    "y": 473.03125,
+    "width": 914.546875,
+    "height": 322.15625,
+    "right": 978.546875,
+    "bottom": 795.1875
+  },
+  "rows": [
+    {
+      "x": 64,
+      "y": 495.03125,
+      "width": 914.546875,
+      "height": 62.796875,
+      "right": 978.546875,
+      "bottom": 557.828125
+    },
+    {
+      "x": 64,
+      "y": 585.828125,
+      "width": 914.546875,
+      "height": 118.5625,
+      "right": 978.546875,
+      "bottom": 704.390625
+    },
+    {
+      "x": 64,
+      "y": 732.390625,
+      "width": 914.546875,
+      "height": 62.796875,
+      "right": 978.546875,
+      "bottom": 795.1875
+    }
+  ],
+  "paddingTop": 20,
+  "rowGap": 28,
+  "promptFontSize": 43.92,
+  "promptLineHeight": 59.292,
+  "promptWeight": "500",
+  "fit": "true",
+  "room": "comfortable"
+}

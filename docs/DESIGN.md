@@ -213,13 +213,14 @@ left content pane after the optional divider, not on total viewport width:
 
 - the readable desktop baseline is at least 24px for both task and prompts;
   narrow/mobile flow keeps its established smaller baseline;
-- task and prompt type, line-height, and their block/list gaps grow together;
+- task and prompt type grow first at fixed leading; only remaining capacity
+  can add bounded spacing, never stretch rows to fill the board;
 - width-derived ceilings prevent a narrow divider pane from producing giant
-  isolated words (roughly 86px for tasks and 58px for prompts at the widest
+  isolated words (86px for tasks and 72px for prompts at the widest
   useful pane);
 - the vertical candidate budget reserves the arrival/header rows, main
-  padding, footer minimum, safe-area space, and approximately 18% of the
-  remaining room;
+  padding, footer minimum, safe-area space, and a bounded 4% of the remaining
+  room (12–28px);
 - long authored stacks keep the readable baseline and flow/scroll rather than
   shrinking below it.
 
@@ -231,7 +232,24 @@ and only stable pane/viewport/arrival/header geometry, font readiness, and
 divider changes trigger another fit. Supporting footer text above its minimum
 height is normalized out of the student budget, so a materials note cannot
 change student-facing type. The fit is live-only; editor previews and fixed
-PNG export retain their established geometry.
+PNG export retain their established fixed frames and type sizes.
+
+### Thinking-prompt spacing
+
+Questions form one supporting group, not extra mandatory responses. Keep more
+space below the horizontal divider than between prompt rows, including above
+an authored first-line highlight. Do not independently enlarge the task-to-divider
+gap. Wrapped lines retain 1.35 leading and hanging bullet alignment.
+
+- Live adaptive fit starts with 24–36px divider padding and 12–18px row gaps;
+  residual space is capped at 40px and 22px respectively, after type fitting.
+- Static/narrow layouts preserve the same section-over-row hierarchy.
+- Editor preview uses 11.2–17.6px divider padding and 6.4–9.6px row gaps.
+- The fixed 1920×1080 PNG uses 32px divider padding and 14px row gaps.
+
+Retain Bitter/Open Sans, medium-weight unmarked prompt text, theme-colored
+bullets, and all teacher-authored bold, underline, and highlights. No positional
+formatting rule belongs on the first prompt.
 
 ### Example structure
 DO NOW                                      7 MIN

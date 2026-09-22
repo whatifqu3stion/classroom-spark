@@ -381,8 +381,8 @@
   }
 
   .presentation-surface--editor-preview .presentation-prompts {
-    gap: clamp(0.45rem, 1.25vw, 0.75rem);
-    padding-top: clamp(0.35rem, 0.8vw, 0.55rem);
+    gap: clamp(0.4rem, 1vw, 0.6rem);
+    padding-top: clamp(0.7rem, 1.6vw, 1.1rem);
   }
 
   .presentation-surface--editor-preview .presentation-prompt {
@@ -1084,6 +1084,14 @@
     justify-content: center;
   }
 
+  .presentation-rail--compact-timer {
+    justify-content: flex-start;
+  }
+
+  .presentation-rail--compact-timer > .presentation-time--compact {
+    align-self: flex-end;
+  }
+
   /*
    * The main region is the useful responsive boundary: it accounts for the
    * live divider, the rail, and the preview frame rather than guessing from
@@ -1243,9 +1251,10 @@
   .presentation-prompts {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: clamp(0.85rem, 1.8vw, 1.2rem);
+    /* Separate the supporting group from the task more than its own rows. */
+    gap: clamp(0.75rem, 1.5vw, 1rem);
     border-top: 2px solid var(--presentation-accent, hsl(var(--primary)));
-    padding-top: clamp(0.85rem, 1.5vw, 1.25rem);
+    padding-top: clamp(1.7rem, 3vw, 2.5rem);
   }
 
   .presentation-prompt {
@@ -1734,6 +1743,14 @@
       grid-template-columns: minmax(0, 1fr);
     }
 
+    .presentation-rail--compact-timer {
+      align-content: start;
+    }
+
+    .presentation-rail--compact-timer > .presentation-time--compact {
+      justify-self: end;
+    }
+
     .presentation-visual img {
       max-height: 28vh;
     }
@@ -1788,8 +1805,8 @@
     }
 
     .presentation-prompts {
-      gap: clamp(0.75rem, 1.8vh, 1.2rem);
-      padding-top: clamp(0.75rem, 1.4vh, 1rem);
+      gap: clamp(0.65rem, 1.5vh, 1rem);
+      padding-top: clamp(1.5rem, 2.8vh, 2rem);
     }
 
     .presentation-prompt {
@@ -1844,8 +1861,8 @@
     }
 
     .presentation-prompts {
-      gap: clamp(0.65rem, 1.3vh, 0.9rem);
-      padding-top: clamp(0.45rem, 0.9vh, 0.7rem);
+      gap: clamp(0.55rem, 1.1vh, 0.75rem);
+      padding-top: clamp(1.15rem, 1.8vh, 1.4rem);
     }
 
     .presentation-prompt {
@@ -1905,8 +1922,8 @@
     }
 
     .presentation-prompts {
-      gap: 0.55rem;
-      padding-top: 0.4rem;
+      gap: 0.5rem;
+      padding-top: 1rem;
     }
 
     .presentation-prompt {
@@ -1966,8 +1983,8 @@
         .presentation-surface--editor-preview
       )[data-text-fit-active="true"]
       .presentation-prompts {
-      gap: var(--presentation-text-fit-prompt-gap, 1rem);
-      padding-top: var(--presentation-text-fit-prompt-padding, 1rem);
+      gap: var(--presentation-text-fit-prompt-gap, 0.75rem);
+      padding-top: var(--presentation-text-fit-prompt-padding, 1.5rem);
     }
 
     .presentation-surface:not(.presentation-surface--export):not(
@@ -2071,8 +2088,8 @@
   }
 
   .presentation-surface--export .presentation-prompts {
-    gap: 16px;
-    padding-top: 16px;
+    gap: 14px;
+    padding-top: 32px;
   }
 
   .presentation-surface--export .presentation-prompt {

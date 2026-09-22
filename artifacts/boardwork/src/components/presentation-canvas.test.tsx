@@ -40,6 +40,31 @@ const visualBalanceActivity: ActivityDraft = {
 };
 
 describe("PresentationCanvas timer visibility", () => {
+  it.each(["Observe & Notice", ""])(
+    "keeps a minimized visual-board timer in the rail without adding a header (%s)",
+    (eyebrow) => {
+      const { rerender } = render(
+        <PresentationCanvas activity={{ ...visualBalanceActivity, eyebrow }} timer={timer} />,
+      );
+      const headerCount = screen.getByTestId("presentation-surface")
+        .querySelectorAll(".presentation-header").length;
+      rerender(
+        <PresentationCanvas
+          activity={{ ...visualBalanceActivity, eyebrow }}
+          timer={timer}
+          timerMinimized
+        />,
+      );
+      expect(screen.getByTestId("presentation-surface")
+        .querySelectorAll(".presentation-header")).toHaveLength(headerCount);
+      expect(screen.getByRole("complementary")).toContainElement(
+        screen.getByTestId("compact-timer-progress"),
+      );
+      expect(screen.queryByTestId("presentation-timer")).not.toBeInTheDocument();
+      expect(screen.getAllByRole("progressbar")).toHaveLength(1);
+    },
+  );
+
   it.each([true, false])(
     "only closes large timer options after interaction leaves on hover devices (hover=%s)",
     (canHover) => {

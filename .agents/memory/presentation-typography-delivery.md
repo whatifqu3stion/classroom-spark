@@ -76,3 +76,13 @@ look identical even when its surface variables and local fonts are correct.
 **How to apply:** Keep the wrapper typography-neutral and scope the explicit
 math stack to rendered formula spans. Verify both plain prose and a real
 formula in the editor preview and Present view.
+
+Do not equate a bullet marker's scroll height with visible clipping.
+
+**Why:** Chromium's Open Sans bullet font box can extend 2–3px beyond its
+line box while overflow remains visible. Treating every list descendant's
+scrollHeight as clipped content falsely failed otherwise readable boards.
+
+**How to apply:** Check prose overflow, horizontal bounds, actual group/surface
+containment, and any clipping ancestors separately. Preserve marker alignment
+and leading rather than changing typography solely to satisfy that proxy.

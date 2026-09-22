@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" role="img" aria-label="Synthetic classroom object">
+  <rect width="600" height="600" fill="#ddd5df"/>
+  <rect x="75" y="75" width="450" height="450" rx="18" fill="#73506d"/>
+  <circle cx="300" cy="300" r="105" fill="#f7f3f0"/>
+</svg>

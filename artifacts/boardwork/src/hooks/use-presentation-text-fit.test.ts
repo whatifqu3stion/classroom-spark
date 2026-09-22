@@ -91,10 +91,10 @@ describe("presentation text fit", () => {
 
     expect(baseline.contentGap).toBeGreaterThanOrEqual(24);
     expect(baseline.contentGap).toBeLessThanOrEqual(40);
-    expect(baseline.promptPadding).toBeGreaterThanOrEqual(12);
-    expect(baseline.promptPadding).toBeLessThanOrEqual(22);
+    expect(baseline.promptPadding).toBeGreaterThanOrEqual(24);
+    expect(baseline.promptPadding).toBeLessThanOrEqual(36);
     expect(maximum.contentGap).toBeLessThanOrEqual(44);
-    expect(maximum.promptPadding).toBeLessThanOrEqual(24);
+    expect(maximum.promptPadding).toBeLessThanOrEqual(36);
     expect(maximum.contentGap).toBe(baseline.contentGap);
     expect(maximum.promptPadding).toBe(baseline.promptPadding);
     expect(maximum.promptGap).toBe(baseline.promptGap);
@@ -118,8 +118,10 @@ describe("presentation text fit", () => {
     expect(candidates.slice(0, firstSpacingGrowth).every((candidate) =>
       candidate.promptGap === baseline.promptGap)).toBe(true);
     expect(result.contentGap).toBeLessThanOrEqual(36);
-    expect(result.promptGap).toBeLessThanOrEqual(28);
-    expect(result.promptPadding).toBeLessThanOrEqual(20);
+    expect(result.promptGap).toBeLessThanOrEqual(22);
+    expect(result.promptPadding).toBeLessThanOrEqual(40);
+    expect(candidates.every(({ promptPadding, promptGap }) =>
+      promptPadding >= promptGap * 1.8)).toBe(true);
     expect(candidates.length).toBeLessThanOrEqual(14);
   });
 
@@ -131,7 +133,41 @@ describe("presentation text fit", () => {
     expect(result.taskSize).toBe(86);
     expect(result.promptSize).toBe(72);
     expect(result.contentGap).toBe(36);
-    expect(result.promptGap).toBe(28);
+    expect(result.promptGap).toBe(22);
+    expect(result.promptPadding).toBe(40);
+  });
+
+  it.each([280, 620, 900, 1600])(
+    "keeps section separation larger than row gaps at pane width %s",
+    (paneWidth) => {
+      for (const usableHeight of [180, 400, 850]) {
+        const result = choosePresentationTextFit({
+          paneWidth, viewportWidth: 1920, viewportHeight: 1080, usableHeight,
+          measure: ({ taskSize, promptSize, contentGap, promptGap, promptPadding }) =>
+            taskSize * 3 + promptSize * 5 * 1.35 +
+            contentGap + promptGap * 2 + promptPadding,
+        });
+        expect(result.promptPadding).toBeGreaterThanOrEqual(result.promptGap * 1.8);
+        expect(result.promptSize).toBeGreaterThanOrEqual(24);
+        expect(result.promptGap).toBeLessThanOrEqual(22);
+        expect(result.promptPadding).toBeLessThanOrEqual(40);
+      }
+    },
+  );
+
+  it("does not charge absent prompts to the task-only measured stack", () => {
+    const measurements: number[] = [];
+    const result = choosePresentationTextFit({
+      paneWidth: 700, viewportWidth: 1280, viewportHeight: 720, usableHeight: 300,
+      measure: ({ taskSize }) => {
+        measurements.push(taskSize * 2.36);
+        return taskSize * 2.36;
+      },
+    });
+    // The fit rounds down to its stable scale quantum even when the cap fits.
+    expect(result.taskSize).toBeGreaterThan(85);
+    expect(result.taskSize).toBeLessThanOrEqual(86);
+    expect(Math.max(...measurements)).toBeLessThan(300 - 12);
   });
 
   it("measures marked/wrapped content rather than using character density", () => {

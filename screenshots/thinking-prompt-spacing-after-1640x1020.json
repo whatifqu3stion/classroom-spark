@@ -1,0 +1,76 @@
+{
+  "paddingTop": 40,
+  "rowGap": 22,
+  "listTop": 473.03125,
+  "listBottom": 803.1875,
+  "rowRects": [
+    {
+      "top": 515.03125,
+      "bottom": 577.828125,
+      "left": 64,
+      "right": 978.546875
+    },
+    {
+      "top": 599.828125,
+      "bottom": 718.390625,
+      "left": 64,
+      "right": 978.546875
+    },
+    {
+      "top": 740.390625,
+      "bottom": 803.1875,
+      "left": 64,
+      "right": 978.546875
+    }
+  ],
+  "markerRects": [
+    {
+      "top": 515.03125,
+      "bottom": 577.828125,
+      "left": 64,
+      "right": 82
+    },
+    {
+      "top": 599.828125,
+      "bottom": 662.625,
+      "left": 64,
+      "right": 82
+    },
+    {
+      "top": 740.390625,
+      "bottom": 803.1875,
+      "left": 64,
+      "right": 82
+    }
+  ],
+  "textRects": [
+    {
+      "top": 515.03125,
+      "bottom": 574.3125,
+      "left": 104,
+      "right": 692
+    },
+    {
+      "top": 599.828125,
+      "bottom": 718.390625,
+      "left": 104,
+      "right": 978.546875
+    },
+    {
+      "top": 740.390625,
+      "bottom": 799.671875,
+      "left": 104,
+      "right": 831
+    }
+  ],
+  "promptWeight": "500",
+  "promptLeading": 1.35,
+  "taskWeight": "600",
+  "taskLeading": 1.18,
+  "promptFontSize": 43.92,
+  "fit": "true",
+  "overflowDetails": [],
+  "surfaceBottom": 1020,
+  "markClearance": 41,
+  "clipped": false
+}

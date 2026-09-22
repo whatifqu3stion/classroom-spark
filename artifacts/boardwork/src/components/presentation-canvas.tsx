@@ -119,7 +119,9 @@ export function PresentationCanvas({
     Boolean(timer?.visible && effectiveTimerMinimized);
   const showHiddenTimerRecovery =
     !exportLayout && !editorPreview && Boolean(timer && !timer.visible && onShowTimer);
-  const showHeaderTimer = showCompactTimer || showHiddenTimerRecovery;
+  const showRailCompactTimer = showCompactTimer && hasVisual;
+  const showHeaderTimer =
+    showHiddenTimerRecovery || (showCompactTimer && !hasVisual);
   const hasRightRail = hasVisual || showLargeTimer;
   const railMode = getPresentationRailMode({
     hasVisual,
@@ -164,8 +166,8 @@ export function PresentationCanvas({
     const panel = compactControlsRef.current;
     if (!showCompactTimer || !timerControlsOpen || !panel) return;
 
-    // Arrival/header text and the enlarged circle determine the actual panel
-    // origin. A fixed viewport subtraction cannot account for all three.
+    // The timer's live placement and the enlarged circle determine the actual
+    // panel origin. A fixed viewport subtraction cannot account for both.
     const fitPanel = () => {
       const top = panel.getBoundingClientRect().top;
       const viewport = window.visualViewport;
@@ -183,6 +185,8 @@ export function PresentationCanvas({
       : null;
     const header = panel.closest(".presentation-header");
     if (header) observer?.observe(header);
+    const rail = panel.closest(".presentation-rail");
+    if (rail) observer?.observe(rail);
     const surface = surfaceElementRef.current;
     if (surface) {
       observer?.observe(surface);
@@ -328,6 +332,128 @@ export function PresentationCanvas({
     }
   };
 
+  const renderTimerAffordance = () => (
+    <div
+      className={cn(
+        "presentation-time",
+        showCompactTimer && "presentation-time--compact",
+        showCompactTimer &&
+          timerControlsOpen &&
+          "presentation-time--compact-open",
+        showHiddenTimerRecovery && "presentation-time--hidden",
+      )}
+      {...testId(includeTestIds, "present-time")}
+    >
+      {showHiddenTimerRecovery ? (
+        <button
+          type="button"
+          className="presentation-time-toggle"
+          onClick={onShowTimer}
+          aria-label="Show timer to students"
+          title="Show timer to students"
+          data-testid={includeTestIds ? "button-show-timer" : undefined}
+        >
+          <Clock className="presentation-time-toggle-icon" aria-hidden="true" />
+        </button>
+      ) : (
+        <div
+          className={cn(
+            "presentation-time-compact-shell",
+            timer?.status === "idle" && "presentation-time-compact-shell--idle",
+            timer?.status === "running" && "presentation-time-compact-shell--running",
+            timer?.status === "paused" && "presentation-time-compact-shell--paused",
+            timer?.status === "completed" && "presentation-time-compact-shell--completed",
+          )}
+          data-testid={includeTestIds ? "compact-timer-progress" : undefined}
+        >
+          <svg
+            className="presentation-time-compact-ring"
+            viewBox="0 0 52 52"
+            role="progressbar"
+            aria-label="Time remaining"
+            aria-valuemin={0}
+            aria-valuemax={compactTimerTotalSeconds}
+            aria-valuenow={compactTimerRemainingSeconds}
+            aria-valuetext={
+              timer?.status === "completed"
+                ? "Time is up"
+                : `${formatTimer(compactTimerRemainingSeconds)} remaining`
+            }
+          >
+            <circle
+              className="presentation-time-compact-ring-track"
+              cx="26"
+              cy="26"
+              r="22"
+              pathLength="100"
+            />
+            <circle
+              className="presentation-time-compact-ring-progress"
+              cx="26"
+              cy="26"
+              r="22"
+              pathLength="100"
+              style={{ strokeDashoffset: compactTimerProgressOffset }}
+            />
+          </svg>
+          <button
+            type="button"
+            className="presentation-time-compact-toggle"
+            onClick={onToggleTimerControls}
+            aria-expanded={timerControlsOpen}
+            aria-controls={timerControls ? "presentation-timer-controls-panel" : undefined}
+            aria-label={timerControlsOpen ? "Hide timer controls" : "Show timer controls"}
+            title={timerControlsOpen ? "Hide timer controls" : "Show timer controls"}
+            data-testid={includeTestIds ? "button-toggle-timer-controls" : undefined}
+          >
+            <span
+              className="presentation-time-reading"
+              aria-live="polite"
+              aria-atomic="true"
+              style={
+                {
+                  "--presentation-time-reading-scale": compactTimerReadingScale,
+                } as CSSProperties
+              }
+            >
+              {compactTimerReading}
+            </span>
+          </button>
+          {timerControls && (
+            <div
+              ref={compactControlsRef}
+              id="presentation-timer-controls-panel"
+              className={cn(
+                "presentation-time-compact-controls",
+                timerControlsOpen && "presentation-time-compact-controls--open",
+              )}
+              role="group"
+              aria-label="Timer controls"
+              aria-hidden={!timerControlsOpen}
+              {...testId(includeTestIds, "present-timer-controls-panel")}
+              onKeyDown={(event) => {
+                if (event.key !== "Escape") return;
+
+                event.preventDefault();
+                onCloseTimerControls?.();
+                if (!onCloseTimerControls) onToggleTimerControls?.();
+                const compactPanel = event.currentTarget;
+                requestAnimationFrame(() => {
+                  compactPanel
+                    .closest(".presentation-time")
+                    ?.querySelector<HTMLButtonElement>(".presentation-time-compact-toggle")
+                    ?.focus();
+                });
+              }}
+            >
+              {timerControls}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div
       ref={setSurfaceRefs}
@@ -402,127 +528,7 @@ export function PresentationCanvas({
               </div>
             </div>
           )}
-          {showHeaderTimer && (
-            <div
-              className={cn(
-                "presentation-time",
-                showCompactTimer && "presentation-time--compact",
-                showCompactTimer &&
-                  timerControlsOpen &&
-                  "presentation-time--compact-open",
-                showHiddenTimerRecovery && "presentation-time--hidden",
-              )}
-              {...testId(includeTestIds, "present-time")}
-            >
-              {showHiddenTimerRecovery ? (
-                <button
-                  type="button"
-                  className="presentation-time-toggle"
-                  onClick={onShowTimer}
-                  aria-label="Show timer to students"
-                  title="Show timer to students"
-                  data-testid={includeTestIds ? "button-show-timer" : undefined}
-                >
-                  <Clock className="presentation-time-toggle-icon" aria-hidden="true" />
-                </button>
-              ) : (
-                <div
-                  className={cn(
-                    "presentation-time-compact-shell",
-                    timer?.status === "idle" && "presentation-time-compact-shell--idle",
-                    timer?.status === "running" && "presentation-time-compact-shell--running",
-                    timer?.status === "paused" && "presentation-time-compact-shell--paused",
-                    timer?.status === "completed" && "presentation-time-compact-shell--completed",
-                  )}
-                  data-testid={includeTestIds ? "compact-timer-progress" : undefined}
-                >
-                  <svg
-                    className="presentation-time-compact-ring"
-                    viewBox="0 0 52 52"
-                    role="progressbar"
-                    aria-label="Time remaining"
-                    aria-valuemin={0}
-                    aria-valuemax={compactTimerTotalSeconds}
-                    aria-valuenow={compactTimerRemainingSeconds}
-                    aria-valuetext={
-                      timer?.status === "completed"
-                        ? "Time is up"
-                        : `${formatTimer(compactTimerRemainingSeconds)} remaining`
-                    }
-                  >
-                    <circle
-                      className="presentation-time-compact-ring-track"
-                      cx="26"
-                      cy="26"
-                      r="22"
-                      pathLength="100"
-                    />
-                    <circle
-                      className="presentation-time-compact-ring-progress"
-                      cx="26"
-                      cy="26"
-                      r="22"
-                      pathLength="100"
-                      style={{ strokeDashoffset: compactTimerProgressOffset }}
-                    />
-                  </svg>
-                  <button
-                    type="button"
-                    className="presentation-time-compact-toggle"
-                    onClick={onToggleTimerControls}
-                    aria-expanded={timerControlsOpen}
-                    aria-controls={timerControls ? "presentation-timer-controls-panel" : undefined}
-                    aria-label={timerControlsOpen ? "Hide timer controls" : "Show timer controls"}
-                    title={timerControlsOpen ? "Hide timer controls" : "Show timer controls"}
-                    data-testid={includeTestIds ? "button-toggle-timer-controls" : undefined}
-                  >
-                    <span
-                      className="presentation-time-reading"
-                      aria-live="polite"
-                      aria-atomic="true"
-                      style={
-                        {
-                          "--presentation-time-reading-scale": compactTimerReadingScale,
-                        } as CSSProperties
-                      }
-                    >
-                      {compactTimerReading}
-                    </span>
-                  </button>
-                  {timerControls && (
-                    <div
-                      ref={compactControlsRef}
-                      id="presentation-timer-controls-panel"
-                      className={cn(
-                        "presentation-time-compact-controls",
-                        timerControlsOpen && "presentation-time-compact-controls--open",
-                      )}
-                      role="group"
-                      aria-label="Timer controls"
-                      aria-hidden={!timerControlsOpen}
-                      {...testId(includeTestIds, "present-timer-controls-panel")}
-                      onKeyDown={(event) => {
-                        if (event.key !== "Escape") return;
-
-                        event.preventDefault();
-                        onCloseTimerControls?.();
-                        if (!onCloseTimerControls) onToggleTimerControls?.();
-                        const compactPanel = event.currentTarget;
-                        requestAnimationFrame(() => {
-                          compactPanel
-                            .closest(".presentation-time")
-                            ?.querySelector<HTMLButtonElement>(".presentation-time-compact-toggle")
-                            ?.focus();
-                        });
-                      }}
-                    >
-                      {timerControls}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+          {showHeaderTimer && renderTimerAffordance()}
         </header>
       )}
 
@@ -596,7 +602,11 @@ export function PresentationCanvas({
         )}
         {(hasVisual || showLargeTimer) && (
           <aside
-            className={cn("presentation-rail", `presentation-rail--${railMode}`)}
+            className={cn(
+              "presentation-rail",
+              `presentation-rail--${railMode}`,
+              showRailCompactTimer && "presentation-rail--compact-timer",
+            )}
             data-rail-mode={railMode}
             data-rail-invariants={`${PRESENTATION_RAIL_INVARIANTS.visualCard} ${PRESENTATION_RAIL_INVARIANTS.intrinsicImage} ${PRESENTATION_RAIL_INVARIANTS.largeTimer}`}
           >
@@ -636,6 +646,7 @@ export function PresentationCanvas({
                 ))}
               </div>
             )}
+            {showRailCompactTimer && renderTimerAffordance()}
             {showLargeTimer && timer && (
               <div
                 className={cn(
