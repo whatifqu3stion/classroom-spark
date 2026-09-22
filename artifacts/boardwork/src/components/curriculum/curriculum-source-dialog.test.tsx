@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { act, render, screen, fireEvent } from "@testing-library/react";
 import { CurriculumSourceDialog } from "./curriculum-source-dialog";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
@@ -70,7 +70,7 @@ describe("CurriculumSourceDialog", () => {
     };
 
     // Simulate success
-    onSuccess(updatedSource);
+    await act(async () => onSuccess(updatedSource));
 
     // Should set query data and invalidate
     expect(mockSetQueryData).toHaveBeenCalledWith(

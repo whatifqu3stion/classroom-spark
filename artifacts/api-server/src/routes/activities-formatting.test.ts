@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import supertest from "supertest";
 import { eq } from "drizzle-orm";
 import { activitiesTable, classesTable, db } from "@workspace/db";
@@ -7,8 +7,20 @@ import app from "../app";
 
 describe.sequential("activity inline formatting persistence", () => {
   let classId: string;
+  let request: ReturnType<typeof supertest.agent>;
 
   beforeEach(async () => {
+    vi.stubEnv("APP_PASSWORD", "isolated-formatting-test-password");
+    vi.stubEnv(
+      "SESSION_SECRET",
+      "isolated-formatting-test-secret-at-least-32-characters",
+    );
+    request = supertest.agent(app);
+    const login = await request
+      .post("/api/auth/login")
+      .send({ password: "isolated-formatting-test-password" });
+    expect(login.status).toBe(200);
+
     classId = randomUUID();
     await db.insert(classesTable).values({
       id: classId,
@@ -22,6 +34,7 @@ describe.sequential("activity inline formatting persistence", () => {
 
   afterEach(async () => {
     await db.delete(classesTable).where(eq(classesTable.id, classId));
+    vi.unstubAllEnvs();
   });
 
   it("round-trips formatting through create, get, app state, and duplicate", async () => {
@@ -33,7 +46,7 @@ describe.sequential("activity inline formatting persistence", () => {
       ],
       prompts: [[{ text: "What changed?", bold: true }]],
     };
-    const created = await supertest(app).post("/api/activities").send({
+    const created = await request.post("/api/activities").send({
       classId,
       task: "Observe carefully",
       prompts: ["What changed?"],
@@ -44,13 +57,13 @@ describe.sequential("activity inline formatting persistence", () => {
     expect(created.status).toBe(201);
     expect(created.body.contentFormatting).toEqual(contentFormatting);
 
-    const fetched = await supertest(app).get(
+    const fetched = await request.get(
       `/api/activities/${created.body.id}`,
     );
     expect(fetched.status).toBe(200);
     expect(fetched.body.contentFormatting).toEqual(contentFormatting);
 
-    const state = await supertest(app).get("/api/app-state");
+    const state = await request.get("/api/app-state");
     expect(state.status).toBe(200);
     expect(
       state.body.activities.find(
@@ -58,7 +71,7 @@ describe.sequential("activity inline formatting persistence", () => {
       ).contentFormatting,
     ).toEqual(contentFormatting);
 
-    const duplicate = await supertest(app).post(
+    const duplicate = await request.post(
       `/api/activities/${created.body.id}/duplicate`,
     );
     expect(duplicate.status).toBe(201);
@@ -66,7 +79,7 @@ describe.sequential("activity inline formatting persistence", () => {
   });
 
   it("rejects explicitly mismatched formatting", async () => {
-    const response = await supertest(app).post("/api/activities").send({
+    const response = await request.post("/api/activities").send({
       classId,
       task: "Canonical",
       contentFormatting: {
@@ -81,7 +94,7 @@ describe.sequential("activity inline formatting persistence", () => {
   });
 
   it("rejects arbitrary formatting properties rather than dropping them", async () => {
-    const response = await supertest(app).post("/api/activities").send({
+    const response = await request.post("/api/activities").send({
       classId,
       task: "Canonical",
       contentFormatting: {
@@ -112,7 +125,7 @@ describe.sequential("activity inline formatting persistence", () => {
       })
       .returning();
 
-    const taskUpdate = await supertest(app)
+    const taskUpdate = await request
       .patch(`/api/activities/${activity.id}`)
       .send({ task: "Replacement" });
     expect(taskUpdate.status).toBe(200);
@@ -121,7 +134,7 @@ describe.sequential("activity inline formatting persistence", () => {
       prompts: [[{ text: "Prompt", underline: true }]],
     });
 
-    const mismatchedUpdate = await supertest(app)
+    const mismatchedUpdate = await request
       .patch(`/api/activities/${activity.id}`)
       .send({
         contentFormatting: {
@@ -131,7 +144,7 @@ describe.sequential("activity inline formatting persistence", () => {
       });
     expect(mismatchedUpdate.status).toBe(400);
 
-    const promptsUpdate = await supertest(app)
+    const promptsUpdate = await request
       .patch(`/api/activities/${activity.id}`)
       .send({ prompts: ["New prompt"] });
     expect(promptsUpdate.status).toBe(200);
@@ -153,7 +166,7 @@ describe.sequential("activity inline formatting persistence", () => {
         deviceMode: "off",
       })
       .returning();
-    const response = await supertest(app)
+    const response = await request
       .patch(`/api/activities/${activity.id}`)
       .send({ contentFormatting: null });
     expect(response.status).toBe(200);

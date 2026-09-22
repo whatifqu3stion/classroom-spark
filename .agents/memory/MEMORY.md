@@ -31,3 +31,4 @@
 - [Inline editor compatibility](inline-editor-compatibility.md) — Preserve plaintext whitespace on rich-editor adoption; check installed bubble-menu APIs and portal inheritance.
 - [Browser runtime preflight](browser-runtime-preflight.md) — WebKit's broad host-library check can fail even when headless WPE launches; verify actual rendering before an override.
 - [Portal form boundaries](portal-form-boundaries.md) — Portalled management dialogs must stay outside an enclosing settings form to avoid unintended parent submissions.
+- [Versioned lifecycle fixtures](versioned-lifecycle-fixtures.md) — Approval/edit fixtures must advance versions and enforce conflicts, or mocks hide stale replacement requests.

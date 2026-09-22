@@ -6,32 +6,50 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { useCreateCurriculumSource, useUpdateCurriculumSource, useDiscoverCurriculumReferences, getListCurriculumSourcesQueryKey } from "@workspace/api-client-react";
+import { useCreateCurriculumSource, useUpdateCurriculumSource, useDiscoverCurriculumReferences, getListCurriculumSourcesQueryKey, getGetCurriculumSourceQueryKey, type CurriculumSource } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, FileText, Globe, UploadCloud } from "lucide-react";
 
+type ReplacementSource = Pick<CurriculumSource, "id" | "version">;
+type ImportFormProps = {
+  classId: string;
+  unitId: string | null;
+  replacement?: ReplacementSource;
+  initialTitle?: string;
+  onSuccess: () => void;
+  onReplacementError: (message: string) => void;
+};
+
 function handleReplacementSuccess(
-  newSource: any,
-  replaceSourceId: string | undefined,
+  newSource: CurriculumSource,
+  replacement: ReplacementSource | undefined,
   updateMut: ReturnType<typeof useUpdateCurriculumSource>,
   queryClient: ReturnType<typeof useQueryClient>,
   classId: string,
   onSuccess: () => void,
-  toast: ReturnType<typeof useToast>['toast']
+  toast: ReturnType<typeof useToast>['toast'],
+  onReplacementError: ImportFormProps["onReplacementError"],
 ) {
-  if (replaceSourceId) {
-    if (newSource.id === replaceSourceId || newSource.status !== 'draft') {
+  queryClient.invalidateQueries({ queryKey: getListCurriculumSourcesQueryKey(classId) });
+  if (replacement) {
+    if (newSource.id === replacement.id || newSource.status !== 'draft') {
       toast({ 
         title: "Already saved", 
         description: "This exact content is already your current source. Choose different content or edit the existing source." 
       });
       return;
     }
-    // We assume version 1 for simplicity of deactivation in this UI context (or the backend handles it gracefully if status is merely being flipped inactive).
-    updateMut.mutate({ classId, sourceId: replaceSourceId, data: { version: 1, status: 'inactive' } }, {
-      onSettled: () => {
+    updateMut.mutate({ classId, sourceId: replacement.id, data: { version: replacement.version, status: 'inactive' } }, {
+      onSuccess: (updatedSource) => {
+        queryClient.setQueryData(getGetCurriculumSourceQueryKey(classId, replacement.id), updatedSource);
         queryClient.invalidateQueries({ queryKey: getListCurriculumSourcesQueryKey(classId) });
         onSuccess();
+      },
+      onError: () => {
+        queryClient.invalidateQueries({ queryKey: getGetCurriculumSourceQueryKey(classId, replacement.id) });
+        const message = "The new draft was saved, but the previous source could not be deactivated and may still be used for boards. Close this dialog and review the previous source's latest version, then retry with the same text or PDF. The saved draft will be reused.";
+        onReplacementError(message);
+        toast({ title: "Replacement not completed", description: message, variant: "destructive" });
       }
     });
   } else {
@@ -46,7 +64,7 @@ export function CurriculumAddDialog({
   classId,
   unitId,
   isApiReady,
-  replaceSourceId,
+  replacement,
   initialTitle,
   onReplaced
 }: {
@@ -55,23 +73,25 @@ export function CurriculumAddDialog({
   classId: string;
   unitId: string | null;
   isApiReady: boolean;
-  replaceSourceId?: string;
+  replacement?: ReplacementSource;
   initialTitle?: string;
   onReplaced?: () => void;
 }) {
   const [tab, setTab] = useState<"manual" | "pdf" | "web">("manual");
+  const [replacementError, setReplacementError] = useState<string | null>(null);
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{replaceSourceId ? "Replace Curriculum Source" : "Add Curriculum Source"}</DialogTitle>
+          <DialogTitle>{replacement ? "Replace Curriculum Source" : "Add Curriculum Source"}</DialogTitle>
           <DialogDescription>
-            {replaceSourceId 
+            {replacement
               ? "Import a new curriculum document. Once successful, the old source will be deactivated." 
               : "Import curriculum to ground generated activities in your real class framework."}
           </DialogDescription>
         </DialogHeader>
+        {replacementError && <p role="alert" className="text-sm text-destructive">{replacementError}</p>}
 
         <Tabs value={tab} onValueChange={(v: any) => setTab(v)} className="w-full mt-2">
           <TabsList className="grid w-full grid-cols-3">
@@ -81,13 +101,13 @@ export function CurriculumAddDialog({
           </TabsList>
 
           <TabsContent value="manual" className="mt-4">
-            <ManualAddForm classId={classId} unitId={unitId} onSuccess={onReplaced || (() => onOpenChange(false))} replaceSourceId={replaceSourceId} initialTitle={initialTitle} />
+            <ManualAddForm classId={classId} unitId={unitId} onSuccess={onReplaced || (() => onOpenChange(false))} replacement={replacement} initialTitle={initialTitle} onReplacementError={setReplacementError} />
           </TabsContent>
           <TabsContent value="pdf" className="mt-4">
-            <PdfUploadForm classId={classId} unitId={unitId} onSuccess={onReplaced || (() => onOpenChange(false))} replaceSourceId={replaceSourceId} initialTitle={initialTitle} />
+            <PdfUploadForm classId={classId} unitId={unitId} onSuccess={onReplaced || (() => onOpenChange(false))} replacement={replacement} initialTitle={initialTitle} onReplacementError={setReplacementError} />
           </TabsContent>
           <TabsContent value="web" className="mt-4">
-            <WebDiscoverForm classId={classId} unitId={unitId} onSuccess={onReplaced || (() => onOpenChange(false))} replaceSourceId={replaceSourceId} />
+            <WebDiscoverForm classId={classId} unitId={unitId} onSuccess={onReplaced || (() => onOpenChange(false))} replacement={replacement} onReplacementError={setReplacementError} />
           </TabsContent>
         </Tabs>
       </DialogContent>
@@ -95,7 +115,7 @@ export function CurriculumAddDialog({
   );
 }
 
-function ManualAddForm({ classId, unitId, replaceSourceId, initialTitle, onSuccess }: { classId: string; unitId: string | null; replaceSourceId?: string; initialTitle?: string; onSuccess: () => void }) {
+function ManualAddForm({ classId, unitId, replacement, initialTitle, onSuccess, onReplacementError }: ImportFormProps) {
   const [title, setTitle] = useState(initialTitle || "");
   const [text, setText] = useState("");
   const createMut = useCreateCurriculumSource();
@@ -116,7 +136,7 @@ function ManualAddForm({ classId, unitId, replaceSourceId, initialTitle, onSucce
       }
     }, {
       onSuccess: (newSource) => {
-        handleReplacementSuccess(newSource, replaceSourceId, updateMut, queryClient, classId, onSuccess, toast);
+        handleReplacementSuccess(newSource, replacement, updateMut, queryClient, classId, onSuccess, toast, onReplacementError);
       },
       onError: () => {
         toast({ title: "Could not save source", variant: "destructive" });
@@ -135,8 +155,8 @@ function ManualAddForm({ classId, unitId, replaceSourceId, initialTitle, onSucce
         <Textarea id="manual-text" value={text} onChange={e => setText(e.target.value)} placeholder="Paste standards, objectives, or syllabus text here..." className="min-h-[200px]" required />
       </div>
       <div className="flex justify-end">
-        <Button type="submit" disabled={createMut.isPending || !title.trim() || !text.trim()}>
-          {createMut.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+        <Button type="submit" disabled={createMut.isPending || updateMut.isPending || !title.trim() || !text.trim()}>
+          {createMut.isPending || updateMut.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
           Save Draft
         </Button>
       </div>
@@ -144,7 +164,7 @@ function ManualAddForm({ classId, unitId, replaceSourceId, initialTitle, onSucce
   );
 }
 
-function PdfUploadForm({ classId, unitId, replaceSourceId, initialTitle, onSuccess }: { classId: string; unitId: string | null; replaceSourceId?: string; initialTitle?: string; onSuccess: () => void }) {
+function PdfUploadForm({ classId, unitId, replacement, initialTitle, onSuccess, onReplacementError }: ImportFormProps) {
   const [title, setTitle] = useState(initialTitle || "");
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -176,7 +196,7 @@ function PdfUploadForm({ classId, unitId, replaceSourceId, initialTitle, onSucce
       }
       
       const newSource = await res.json();
-      handleReplacementSuccess(newSource, replaceSourceId, updateMut, queryClient, classId, onSuccess, toast);
+      handleReplacementSuccess(newSource, replacement, updateMut, queryClient, classId, onSuccess, toast, onReplacementError);
     } catch (err) {
       toast({ title: "Upload failed", description: "Scanned or oversized PDFs may not be supported. Try a smaller text-based PDF.", variant: "destructive" });
     } finally {
@@ -196,8 +216,8 @@ function PdfUploadForm({ classId, unitId, replaceSourceId, initialTitle, onSucce
         <p className="text-xs text-muted-foreground mt-1">Text-based PDFs only. Scanned images are not supported.</p>
       </div>
       <div className="flex justify-end">
-        <Button type="submit" disabled={uploading || !title.trim() || !file}>
-          {uploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+        <Button type="submit" disabled={uploading || updateMut.isPending || !title.trim() || !file}>
+          {uploading || updateMut.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
           Upload & Extract
         </Button>
       </div>
@@ -205,7 +225,7 @@ function PdfUploadForm({ classId, unitId, replaceSourceId, initialTitle, onSucce
   );
 }
 
-function WebDiscoverForm({ classId, unitId, replaceSourceId, onSuccess }: { classId: string; unitId: string | null; replaceSourceId?: string; onSuccess: () => void }) {
+function WebDiscoverForm({ classId, unitId, replacement, onSuccess, onReplacementError }: ImportFormProps) {
   const discoverMut = useDiscoverCurriculumReferences();
   const createMut = useCreateCurriculumSource();
   const updateMut = useUpdateCurriculumSource();
@@ -231,7 +251,7 @@ function WebDiscoverForm({ classId, unitId, replaceSourceId, onSuccess }: { clas
       }
     }, {
       onSuccess: (newSource) => {
-        handleReplacementSuccess(newSource, replaceSourceId, updateMut, queryClient, classId, onSuccess, toast);
+        handleReplacementSuccess(newSource, replacement, updateMut, queryClient, classId, onSuccess, toast, onReplacementError);
       },
       onError: () => {
         toast({ title: "Import failed", variant: "destructive" });
@@ -269,7 +289,7 @@ function WebDiscoverForm({ classId, unitId, replaceSourceId, onSuccess }: { clas
                         {result.url}
                       </a>
                     </div>
-                    <Button size="sm" onClick={() => handleImport(result)} disabled={createMut.isPending}>
+                    <Button size="sm" onClick={() => handleImport(result)} disabled={createMut.isPending || updateMut.isPending}>
                       Import
                     </Button>
                   </div>

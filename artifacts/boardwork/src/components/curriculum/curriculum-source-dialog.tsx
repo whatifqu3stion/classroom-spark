@@ -330,7 +330,7 @@ export function CurriculumSourceDialog({
         classId={classId}
         unitId={source.unitId}
         isApiReady={true}
-        replaceSourceId={sourceId}
+        replacement={{ id: sourceId, version: source.version }}
         initialTitle={source.title}
         onReplaced={() => {
           setReplaceDialogOpen(false);

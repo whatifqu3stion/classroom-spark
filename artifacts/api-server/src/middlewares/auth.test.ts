@@ -20,11 +20,7 @@ const STRONG_PASSWORD = "hunter2-correcthorsebatterystaple";
 
 function setEnv(vars: Record<string, string | undefined>) {
   for (const [k, v] of Object.entries(vars)) {
-    if (v === undefined) {
-      delete process.env[k];
-    } else {
-      process.env[k] = v;
-    }
+    vi.stubEnv(k, v);
   }
 }
 
@@ -87,7 +83,7 @@ async function req(
 
 describe("validateAuthConfig", () => {
   afterEach(() => {
-    clearAuth();
+    vi.unstubAllEnvs();
     vi.useRealTimers();
   });
 
@@ -126,6 +122,10 @@ describe("requireAuth — gate disabled", () => {
     app = await makeApp();
   });
 
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("allows unauthenticated access to protected routes", async () => {
     const { status } = await req(app, "GET", "/api/protected");
     expect(status).toBe(200);
@@ -149,7 +149,7 @@ describe("requireAuth — gate enabled", () => {
   });
 
   afterEach(() => {
-    clearAuth();
+    vi.unstubAllEnvs();
     vi.useRealTimers();
   });
 
@@ -279,7 +279,7 @@ describe("token expiry — server-side enforcement", () => {
   });
 
   afterEach(() => {
-    clearAuth();
+    vi.unstubAllEnvs();
     vi.useRealTimers();
   });
 
