@@ -27,3 +27,6 @@ packages = ["glib", "nss", "nspr", "atk", "at-spi2-atk", "cups", "dbus", "expat"
 
 [userenv.shared]
 AI_MODEL = "gpt-5.6-luna"
+
+[objectStorage]
+defaultBucketID = "replit-objstore-3f640d61-a6fc-4323-961b-c945daf356d8"
