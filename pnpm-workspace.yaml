@@ -32,11 +32,10 @@ catalog:
 
 autoInstallPeers: false
 
-onlyBuiltDependencies:
-  - '@swc/core'
-  - esbuild
-  - msw
-  - unrs-resolver
+# pnpm 11 uses allowBuilds; legacy onlyBuiltDependencies is ignored.
+allowBuilds:
+  esbuild@0.27.3: true
+  msw@2.15.0: false
 
 overrides:
   # Patch the runtime advisories identified during the security review.
