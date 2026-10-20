@@ -287,7 +287,7 @@ export default function Present() {
       <div className="min-h-screen flex flex-col items-center justify-center bg-background text-center p-8">
         <h2 className="text-2xl font-bold mb-4">No Active Board</h2>
         <p className="text-muted-foreground mb-8">Generate an activity before presenting.</p>
-        <Link href="/" className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 gap-2">
+        <Link href="/app" className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 gap-2">
           <ChevronLeft className="w-4 h-4" />
           Back to Workspace
         </Link>

@@ -332,7 +332,7 @@ export default function History() {
                    Create a board to see it here.
                 </p>
                 <Button asChild variant="outline">
-                  <Link href="/" data-testid="link-history-empty-workspace">Back to Workspace</Link>
+                  <Link href="/app" data-testid="link-history-empty-workspace">Back to Workspace</Link>
                 </Button>
               </>
             )}

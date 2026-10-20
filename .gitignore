@@ -57,3 +57,8 @@ test-results/
 # Standalone runtime data
 /data/
 /backups/
+
+# Local design validation evidence
+**/.impeccable/review/
+**/.impeccable/mocks/
+**/.impeccable/build/

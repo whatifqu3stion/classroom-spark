@@ -531,7 +531,7 @@ export default function Home() {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
         if (navigateHome) {
-          setLocation("/");
+          setLocation("/app");
         }
       },
       onError: () => {
@@ -589,7 +589,7 @@ export default function Home() {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
           setDeleteClassAlertOpen(false);
-          setLocation("/");
+          setLocation("/app");
         },
         onError: () => {
           toast({
@@ -718,7 +718,7 @@ export default function Home() {
       presentationTheme: getLastUsedPresentationTheme(),
     };
 
-    setLocation("/");
+    setLocation("/app");
     latestDraftRef.current = blankDraft;
     setLocalDraft(blankDraft);
     setSaveStatus("idle");

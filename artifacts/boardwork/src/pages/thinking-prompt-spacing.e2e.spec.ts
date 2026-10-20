@@ -26,7 +26,7 @@ async function mountThinkingPrompt(page: Page, options: MountOptions = {}) {
     wrapped: options.wrapped,
     visual: true,
   });
-  await page.goto("/");
+  await page.goto("/app");
   await page.evaluate(async ({ activity, options }) => {
     const reactPath = "/node_modules/.vite/deps/react.js";
     const domPath = "/node_modules/.vite/deps/react-dom_client.js";

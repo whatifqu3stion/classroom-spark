@@ -256,7 +256,7 @@ test("keeps long class header controls separate at an intermediate scaled width"
     }),
   );
   await page.setViewportSize({ width: 1024, height: 800 });
-  await page.goto("/");
+  await page.goto("/app");
   await page.evaluate(() => {
     document.documentElement.style.fontSize = "125%";
   });
@@ -422,7 +422,7 @@ for (const viewport of viewports) {
       width: viewport.width,
       height: viewport.height,
     });
-    await page.goto("/");
+    await page.goto("/app");
 
   const workspace = page.getByTestId("creation-workspace");
     const controls = page.getByTestId("creation-controls");
@@ -467,7 +467,7 @@ for (const viewport of viewports) {
 
 test("keeps creation examples very faint compared with entered text", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto("/");
+  await page.goto("/app");
 
   const topic = page.getByTestId("input-topic");
   const styles = await topic.evaluate((element) => {
@@ -494,7 +494,7 @@ test("keeps creation examples very faint compared with entered text", async ({ p
 
 test("keeps the workspace canvas warm while separating white panels", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto("/");
+  await page.goto("/app");
   await expect(page.getByTestId("creation-controls")).toBeVisible();
   await expect(page.getByTestId("editor-workspace-panel")).toBeVisible();
 
@@ -573,7 +573,7 @@ test("keeps the workspace canvas warm while separating white panels", async ({ p
 
 test("keeps creation examples readable in dark mode", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto("/");
+  await page.goto("/app");
   await page.evaluate(() => {
     document.documentElement.classList.add("dark");
   });
@@ -795,7 +795,7 @@ test("lets keyboard users complete board setup without losing focus", async ({ p
   const viewport = { width: 1024, height: 800 };
 
   await page.setViewportSize(viewport);
-  await page.goto("/");
+  await page.goto("/app");
 
   await page.getByTestId("segment-computer_required").click();
 
@@ -876,7 +876,7 @@ test("lets keyboard users complete board setup without losing focus", async ({ p
 
 test("keeps the empty editor preview visually quiet", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto("/");
+  await page.goto("/app");
 
     const editorPanel = page.getByTestId("editor-workspace-panel");
     const emptyState = page.getByTestId("empty-editor-state");
@@ -961,7 +961,7 @@ test("keeps the empty editor preview contained when text is enlarged", async ({ 
   const viewport = { width: 1024, height: 800 };
 
   await page.setViewportSize(viewport);
-  await page.goto("/");
+  await page.goto("/app");
   await page.evaluate(() => {
     document.documentElement.style.fontSize = "150%";
   });
@@ -1062,7 +1062,7 @@ for (const viewport of [
 ] as const) {
   test(`keeps one editor frame when a blank board is created at ${viewport.name} width`, async ({ page }) => {
     await page.setViewportSize(viewport);
-    await page.goto("/");
+    await page.goto("/app");
 
     const editorPanel = page.getByTestId("editor-workspace-panel");
     const emptyState = page.getByTestId("empty-editor-state");
@@ -1092,7 +1092,7 @@ for (const viewport of [
 test("keeps one editor frame when a blank board is created with enlarged text", async ({ page }) => {
   const viewport = { width: 1024, height: 800 };
   await page.setViewportSize(viewport);
-  await page.goto("/");
+  await page.goto("/app");
   await page.evaluate(() => {
     document.documentElement.style.fontSize = "150%";
   });

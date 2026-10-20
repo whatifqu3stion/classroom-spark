@@ -1,0 +1,465 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-20T19:09:00.143847Z",
+  "title": "Design System: Boardwork — landing extension (/ only)",
+  "extensions": {
+    "colorMeta": {
+      "landing-primary": {
+        "role": "primary",
+        "displayName": "Primary",
+        "canonical": "hsl(174 20% 16%)",
+        "tonalRamp": [
+          "oklch(15% 0.02178 188.33)",
+          "oklch(26% 0.02178 188.33)",
+          "oklch(38% 0.02178 188.33)",
+          "oklch(49% 0.02178 188.33)",
+          "oklch(61% 0.02178 188.33)",
+          "oklch(72% 0.02178 188.33)",
+          "oklch(84% 0.02178 188.33)",
+          "oklch(95% 0.02178 188.33)"
+        ]
+      },
+      "landing-primary-foreground": {
+        "role": "neutral",
+        "displayName": "Primary Foreground",
+        "canonical": "hsl(0 0% 100%)",
+        "tonalRamp": [
+          "oklch(15% 0.00000 89.88)",
+          "oklch(26% 0.00000 89.88)",
+          "oklch(38% 0.00000 89.88)",
+          "oklch(49% 0.00000 89.88)",
+          "oklch(61% 0.00000 89.88)",
+          "oklch(72% 0.00000 89.88)",
+          "oklch(84% 0.00000 89.88)",
+          "oklch(95% 0.00000 89.88)"
+        ]
+      },
+      "landing-canvas": {
+        "role": "neutral",
+        "displayName": "Canvas",
+        "canonical": "hsl(40 28% 96.5%)",
+        "tonalRamp": [
+          "oklch(15% 0.00477 84.56)",
+          "oklch(26% 0.00477 84.56)",
+          "oklch(38% 0.00477 84.56)",
+          "oklch(49% 0.00477 84.56)",
+          "oklch(61% 0.00477 84.56)",
+          "oklch(72% 0.00477 84.56)",
+          "oklch(84% 0.00477 84.56)",
+          "oklch(95% 0.00477 84.56)"
+        ]
+      },
+      "landing-ink": {
+        "role": "primary",
+        "displayName": "Ink",
+        "canonical": "#20302f",
+        "tonalRamp": [
+          "oklch(15% 0.02129 191.21)",
+          "oklch(26% 0.02129 191.21)",
+          "oklch(38% 0.02129 191.21)",
+          "oklch(49% 0.02129 191.21)",
+          "oklch(61% 0.02129 191.21)",
+          "oklch(72% 0.02129 191.21)",
+          "oklch(84% 0.02129 191.21)",
+          "oklch(95% 0.02129 191.21)"
+        ]
+      },
+      "landing-subtle-ink": {
+        "role": "neutral",
+        "displayName": "Subtle Ink",
+        "canonical": "#465453",
+        "tonalRamp": [
+          "oklch(15% 0.01765 191.22)",
+          "oklch(26% 0.01765 191.22)",
+          "oklch(38% 0.01765 191.22)",
+          "oklch(49% 0.01765 191.22)",
+          "oklch(61% 0.01765 191.22)",
+          "oklch(72% 0.01765 191.22)",
+          "oklch(84% 0.01765 191.22)",
+          "oklch(95% 0.01765 191.22)"
+        ]
+      },
+      "landing-paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#fffefa",
+        "tonalRamp": [
+          "oklch(15% 0.00537 95.10)",
+          "oklch(26% 0.00537 95.10)",
+          "oklch(38% 0.00537 95.10)",
+          "oklch(49% 0.00537 95.10)",
+          "oklch(61% 0.00537 95.10)",
+          "oklch(72% 0.00537 95.10)",
+          "oklch(84% 0.00537 95.10)",
+          "oklch(95% 0.00537 95.10)"
+        ]
+      },
+      "landing-sky": {
+        "role": "secondary",
+        "displayName": "Sky",
+        "canonical": "#cde9f8",
+        "tonalRamp": [
+          "oklch(15% 0.03594 231.12)",
+          "oklch(26% 0.03594 231.12)",
+          "oklch(38% 0.03594 231.12)",
+          "oklch(49% 0.03594 231.12)",
+          "oklch(61% 0.03594 231.12)",
+          "oklch(72% 0.03594 231.12)",
+          "oklch(84% 0.03594 231.12)",
+          "oklch(95% 0.03594 231.12)"
+        ]
+      },
+      "landing-sage": {
+        "role": "secondary",
+        "displayName": "Sage",
+        "canonical": "#dcebdc",
+        "tonalRamp": [
+          "oklch(15% 0.02560 145.36)",
+          "oklch(26% 0.02560 145.36)",
+          "oklch(38% 0.02560 145.36)",
+          "oklch(49% 0.02560 145.36)",
+          "oklch(61% 0.02560 145.36)",
+          "oklch(72% 0.02560 145.36)",
+          "oklch(84% 0.02560 145.36)",
+          "oklch(95% 0.02560 145.36)"
+        ]
+      },
+      "landing-peach": {
+        "role": "secondary",
+        "displayName": "Peach",
+        "canonical": "#f6e4d9",
+        "tonalRamp": [
+          "oklch(15% 0.02470 53.68)",
+          "oklch(26% 0.02470 53.68)",
+          "oklch(38% 0.02470 53.68)",
+          "oklch(49% 0.02470 53.68)",
+          "oklch(61% 0.02470 53.68)",
+          "oklch(72% 0.02470 53.68)",
+          "oklch(84% 0.02470 53.68)",
+          "oklch(95% 0.02470 53.68)"
+        ]
+      },
+      "landing-lavender": {
+        "role": "secondary",
+        "displayName": "Lavender",
+        "canonical": "#dde1f6",
+        "tonalRamp": [
+          "oklch(15% 0.02888 277.22)",
+          "oklch(26% 0.02888 277.22)",
+          "oklch(38% 0.02888 277.22)",
+          "oklch(49% 0.02888 277.22)",
+          "oklch(61% 0.02888 277.22)",
+          "oklch(72% 0.02888 277.22)",
+          "oklch(84% 0.02888 277.22)",
+          "oklch(95% 0.02888 277.22)"
+        ]
+      },
+      "landing-butter": {
+        "role": "secondary",
+        "displayName": "Butter",
+        "canonical": "#f8e8a4",
+        "tonalRamp": [
+          "oklch(15% 0.08784 96.49)",
+          "oklch(26% 0.08784 96.49)",
+          "oklch(38% 0.08784 96.49)",
+          "oklch(49% 0.08784 96.49)",
+          "oklch(61% 0.08784 96.49)",
+          "oklch(72% 0.08784 96.49)",
+          "oklch(84% 0.08784 96.49)",
+          "oklch(95% 0.08784 96.49)"
+        ]
+      },
+      "landing-mint": {
+        "role": "secondary",
+        "displayName": "Mint",
+        "canonical": "#cde4cf",
+        "tonalRamp": [
+          "oklch(15% 0.03742 147.72)",
+          "oklch(26% 0.03742 147.72)",
+          "oklch(38% 0.03742 147.72)",
+          "oklch(49% 0.03742 147.72)",
+          "oklch(61% 0.03742 147.72)",
+          "oklch(72% 0.03742 147.72)",
+          "oklch(84% 0.03742 147.72)",
+          "oklch(95% 0.03742 147.72)"
+        ]
+      },
+      "landing-line": {
+        "role": "neutral",
+        "displayName": "Line",
+        "canonical": "#d7dfdc",
+        "tonalRamp": [
+          "oklch(15% 0.00951 171.77)",
+          "oklch(26% 0.00951 171.77)",
+          "oklch(38% 0.00951 171.77)",
+          "oklch(49% 0.00951 171.77)",
+          "oklch(61% 0.00951 171.77)",
+          "oklch(72% 0.00951 171.77)",
+          "oklch(84% 0.00951 171.77)",
+          "oklch(95% 0.00951 171.77)"
+        ]
+      },
+      "landing-nav-background": {
+        "role": "neutral",
+        "displayName": "Nav Background",
+        "canonical": "rgb(255 254 250 / 94%)",
+        "tonalRamp": [
+          "oklch(15% 0.00537 95.10)",
+          "oklch(26% 0.00537 95.10)",
+          "oklch(38% 0.00537 95.10)",
+          "oklch(49% 0.00537 95.10)",
+          "oklch(61% 0.00537 95.10)",
+          "oklch(72% 0.00537 95.10)",
+          "oklch(84% 0.00537 95.10)",
+          "oklch(95% 0.00537 95.10)"
+        ]
+      },
+      "landing-selection": {
+        "role": "secondary",
+        "displayName": "Selection",
+        "canonical": "#b6dac8",
+        "tonalRamp": [
+          "oklch(15% 0.04539 163.67)",
+          "oklch(26% 0.04539 163.67)",
+          "oklch(38% 0.04539 163.67)",
+          "oklch(49% 0.04539 163.67)",
+          "oklch(61% 0.04539 163.67)",
+          "oklch(72% 0.04539 163.67)",
+          "oklch(84% 0.04539 163.67)",
+          "oklch(95% 0.04539 163.67)"
+        ]
+      },
+      "landing-hero-surface": {
+        "role": "secondary",
+        "displayName": "Hero Surface",
+        "canonical": "#d3cff3",
+        "tonalRamp": [
+          "oklch(15% 0.04956 290.42)",
+          "oklch(26% 0.04956 290.42)",
+          "oklch(38% 0.04956 290.42)",
+          "oklch(49% 0.04956 290.42)",
+          "oklch(61% 0.04956 290.42)",
+          "oklch(72% 0.04956 290.42)",
+          "oklch(84% 0.04956 290.42)",
+          "oklch(95% 0.04956 290.42)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "landing-display": {
+        "displayName": "Display",
+        "purpose": "Homepage / and illustrative landing preview only."
+      },
+      "landing-headline": {
+        "displayName": "Headline",
+        "purpose": "Homepage / and illustrative landing preview only."
+      },
+      "landing-feature": {
+        "displayName": "Feature",
+        "purpose": "Homepage / and illustrative landing preview only."
+      },
+      "landing-title": {
+        "displayName": "Title",
+        "purpose": "Homepage / and illustrative landing preview only."
+      },
+      "landing-board-task": {
+        "displayName": "Board Task",
+        "purpose": "Homepage / and illustrative landing preview only."
+      },
+      "landing-body": {
+        "displayName": "Body",
+        "purpose": "Homepage / and illustrative landing preview only."
+      },
+      "landing-lead": {
+        "displayName": "Lead",
+        "purpose": "Homepage / and illustrative landing preview only."
+      },
+      "landing-small": {
+        "displayName": "Small",
+        "purpose": "Homepage / and illustrative landing preview only."
+      },
+      "landing-caption": {
+        "displayName": "Caption",
+        "purpose": "Homepage / and illustrative landing preview only."
+      }
+    },
+    "shadows": [
+      {
+        "name": "landing-window",
+        "value": "0 22px 54px -22px rgb(32 48 47 / 30%), 0 5px 12px -5px rgb(32 48 47 / 12%)",
+        "purpose": "Landing interactive demo window only."
+      },
+      {
+        "name": "landing-paper",
+        "value": "0 10px 24px -12px rgb(32 48 47 / 25%)",
+        "purpose": "Landing class-context and daily-intention paper notes only."
+      },
+      {
+        "name": "landing-nav",
+        "value": "0 10px 22px -12px rgb(32 48 47 / 25%)",
+        "purpose": "Landing fixed paper navigation only."
+      }
+    ],
+    "motion": [
+      {
+        "name": "landing-fast",
+        "value": "160ms",
+        "purpose": "Link and CTA arrow hover transforms."
+      },
+      {
+        "name": "landing-menu",
+        "value": "200ms",
+        "purpose": "Compact navigation disclosure and FAQ chevron."
+      },
+      {
+        "name": "landing-example",
+        "value": "180ms",
+        "purpose": "Subject example transition."
+      },
+      {
+        "name": "landing-reveal",
+        "value": "720ms",
+        "purpose": "Visible-default title and once-only section entrances."
+      },
+      {
+        "name": "landing-hero",
+        "value": "900ms",
+        "purpose": "Visible-default demo-window entrance."
+      },
+      {
+        "name": "landing-stagger",
+        "value": "80ms",
+        "purpose": "Bounded entrance offsets."
+      },
+      {
+        "name": "landing-ease",
+        "value": "cubic-bezier(0.16,1,0.3,1)",
+        "purpose": "Shared landing easing."
+      },
+      {
+        "name": "landing-hero-image-scroll",
+        "value": "0px–48px",
+        "purpose": "Bounded hero artwork translation; disabled for reduced motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "landing-compact",
+        "value": "64rem"
+      },
+      {
+        "name": "landing-stack",
+        "value": "56rem"
+      },
+      {
+        "name": "landing-mobile",
+        "value": "40rem"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Landing primary button",
+      "kind": "button",
+      "refersTo": "landing-button-primary",
+      "description": "Homepage workspace action; shared Button landing size.",
+      "html": "<button class=\"ds-landing-primary\">Open your workspace <svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M7 17 17 7M7 7h10v10\"/></svg></button>",
+      "css": ".ds-landing-primary{display:inline-flex;align-items:center;justify-content:center;gap:var(--landing-space-2);height:3rem;padding:0 var(--landing-space-6);border:0;border-radius:var(--landing-radius-pill);background:hsl(174 20% 16%);color:white;font:500 .875rem var(--landing-font-body);cursor:pointer}.ds-landing-primary svg{width:var(--landing-icon-size);height:var(--landing-icon-size)}.ds-landing-primary:hover{background:hsl(174 20% 16% / 90%)}.ds-landing-primary:focus-visible{outline:2px solid var(--landing-ink);outline-offset:var(--landing-space-1);}.ds-landing-primary:disabled{opacity:.5;pointer-events:none}"
+    },
+    {
+      "name": "Landing preview ghost button",
+      "kind": "button",
+      "refersTo": "landing-button-preview",
+      "description": "Shared ghost Button for the illustrative classroom preview.",
+      "html": "<button class=\"ds-landing-preview\"><svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M8 3H5a2 2 0 0 0-2 2v3m13-5h3a2 2 0 0 1 2 2v3M3 16v3a2 2 0 0 0 2 2h3m13-5v3a2 2 0 0 1-2 2h-3\"/></svg>Preview board</button>",
+      "css": ".ds-landing-preview{display:inline-flex;align-items:center;justify-content:center;gap:var(--landing-space-2);min-height:var(--landing-touch-target);padding:.5rem 1rem;border:0;border-radius:6px;background:transparent;color:var(--landing-ink);font:500 .875rem var(--landing-font-body);cursor:pointer}.ds-landing-preview svg{width:var(--landing-icon-size);height:var(--landing-icon-size)}.ds-landing-preview:hover{background:hsl(40 30% 94%);color:hsl(215 25% 27%)}.ds-landing-preview:focus-visible{outline:2px solid var(--landing-ink);outline-offset:var(--landing-space-1)}.ds-landing-preview:disabled{opacity:.5;pointer-events:none}"
+    },
+    {
+      "name": "Landing text link",
+      "kind": "button",
+      "refersTo": "landing-text-link",
+      "description": "Quiet in-page action with a short arrow response.",
+      "html": "<a class=\"ds-landing-link\" href=\"#example-board\">Try the example boards <svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M7 17 17 7M7 7h10v10\"/></svg></a>",
+      "css": ".ds-landing-link{display:inline-flex;align-items:center;gap:var(--landing-space-2);min-height:var(--landing-touch-target);color:var(--landing-ink);font:500 var(--landing-text-small) var(--landing-font-body);text-decoration:none;text-underline-offset:var(--landing-space-1)}.ds-landing-link svg{width:var(--landing-icon-size);height:var(--landing-icon-size);transition:transform var(--landing-motion-fast,.16s) var(--landing-ease,cubic-bezier(0.16,1,0.3,1))}.ds-landing-link:hover{text-decoration:underline}.ds-landing-link:hover svg{transform:translate(2px,-2px)}.ds-landing-link:focus-visible{outline:2px solid var(--landing-ink);outline-offset:var(--landing-space-1);}@media(prefers-reduced-motion:reduce){.ds-landing-link svg{transition:none}}"
+    },
+    {
+      "name": "Landing floating navigation",
+      "kind": "nav",
+      "refersTo": "landing-nav",
+      "description": "Paper navigation; compact disclosure replaces links below 56rem in the application.",
+      "html": "<nav class=\"ds-landing-nav\" aria-label=\"Homepage navigation\"><a class=\"ds-landing-brand\" href=\"/\">Boardwork</a><a href=\"#how-it-works\">How it works</a><a href=\"#questions\">Questions</a></nav>",
+      "css": ".ds-landing-nav{display:flex;align-items:center;gap:var(--landing-space-5);padding:var(--landing-space-2) var(--landing-space-3);max-width:var(--landing-nav-width);border-radius:var(--landing-radius-section);background:var(--landing-nav-background);color:var(--landing-ink);box-shadow:var(--landing-shadow-nav);font:400 var(--landing-text-small) var(--landing-font-body)}.ds-landing-nav a{display:inline-flex;align-items:center;min-height:var(--landing-touch-target);color:inherit;text-decoration:none}.ds-landing-nav .ds-landing-brand{font-size:1rem;font-weight:600;letter-spacing:-.025em;margin-right:auto}.ds-landing-nav a:hover{text-decoration:underline}.ds-landing-nav a:focus-visible{outline:2px solid var(--landing-ink);outline-offset:var(--landing-space-1);}"
+    },
+    {
+      "name": "Landing subject tabs",
+      "kind": "chip",
+      "description": "Shared Tabs visuals; selected surface and semantics accompany the subject color.",
+      "html": "<div class=\"ds-landing-tabs\" role=\"tablist\" aria-label=\"Example subject\"><button role=\"tab\" aria-selected=\"true\">Science</button><button role=\"tab\" aria-selected=\"false\">Design</button><button role=\"tab\" aria-selected=\"false\">Language</button></div>",
+      "css": ".ds-landing-tabs{display:inline-flex;align-items:center;padding:var(--landing-space-1);border-radius:.5rem;background:hsl(40 10% 95%);font-family:var(--landing-font-body)}.ds-landing-tabs button{min-height:var(--landing-touch-target);padding:.25rem var(--landing-space-5);border:0;border-radius:6px;background:transparent;color:hsl(220 10% 40%);font:500 .875rem var(--landing-font-body);cursor:pointer}.ds-landing-tabs button[aria-selected=true]{background:hsl(40 28% 96.5%);color:hsl(220 10% 15%);box-shadow:0 1px 3px 0 rgb(0 0 0 / 10%),0 1px 2px -1px rgb(0 0 0 / 10%)}.ds-landing-tabs button:focus-visible{outline:2px solid var(--landing-ink);outline-offset:var(--landing-space-1);}"
+    },
+    {
+      "name": "Landing example board",
+      "kind": "card",
+      "refersTo": "landing-board",
+      "description": "Semantic illustrative classroom task; static preview, without real timer or generation.",
+      "html": "<article class=\"ds-landing-board\"><div class=\"ds-landing-board-top\"><span>Start here</span><span>7 min</span></div><h3>Which cell is in trouble?</h3><p>Sketch a cell in fresh water and a cell in very salty water. Predict how each one changes.</p><ul><li>Show the direction water moves.</li><li>Use osmosis to explain your prediction.</li></ul><footer>Notebook + pencil</footer></article>",
+      "css": ".ds-landing-board{display:flex;flex-direction:column;min-height:var(--landing-demo-board-height);padding:var(--landing-space-6) var(--landing-space-8);border-radius:var(--landing-radius-panel);background:var(--landing-sky);color:var(--landing-ink);font-family:var(--landing-font-board)}.ds-landing-board-top{display:flex;justify-content:space-between;font:600 var(--landing-text-caption) var(--landing-font-body)}.ds-landing-board h3{margin:var(--landing-space-4) 0 var(--landing-space-3);font:600 var(--landing-text-board)/1.18 var(--landing-font-display);letter-spacing:-.025em}.ds-landing-board p{max-width:65ch;margin:0;font-size:var(--landing-text-task);font-weight:500;line-height:1.55}.ds-landing-board ul{display:grid;gap:var(--landing-space-1);padding-left:var(--landing-space-5);margin:var(--landing-space-4) 0 var(--landing-space-5);font-size:var(--landing-text-small);line-height:1.5}.ds-landing-board footer{margin-top:auto;padding-top:var(--landing-space-4);border-top:1px solid color-mix(in srgb,var(--landing-ink) 16%,transparent);font-size:var(--landing-text-caption)}"
+    },
+    {
+      "name": "Landing saved example",
+      "kind": "card",
+      "refersTo": "landing-saved-board",
+      "description": "Quiet library example, not an interactive card or fabricated saved record.",
+      "html": "<article class=\"ds-landing-saved\"><span>Grade 8 · Design</span><h3>One toy. Two possibilities.</h3><p>Sketch two ways to make a cardboard toy move. Circle the idea you would test first.</p><footer>5 min</footer></article>",
+      "css": ".ds-landing-saved{display:flex;flex-direction:column;min-height:var(--landing-library-height);padding:var(--landing-space-6);border-radius:var(--landing-radius-panel);background:var(--landing-sage);color:var(--landing-ink);font-family:var(--landing-font-body)}.ds-landing-saved>span{font-size:var(--landing-text-caption);font-weight:500}.ds-landing-saved h3{margin:var(--landing-space-5) 0 0;font:600 var(--landing-text-task)/1.25 var(--landing-font-display);letter-spacing:-.02em}.ds-landing-saved p{margin:var(--landing-space-4) 0 0;font-size:var(--landing-text-small);line-height:var(--landing-leading-body)}.ds-landing-saved footer{margin-top:auto;padding-top:var(--landing-space-8);font-size:var(--landing-text-caption)}"
+    },
+    {
+      "name": "Landing FAQ trigger",
+      "kind": "custom",
+      "description": "Static drop-in rendering of the shared Accordion trigger and open answer.",
+      "html": "<div class=\"ds-landing-faq\"><button aria-expanded=\"true\" aria-controls=\"ds-landing-answer\">Do students need accounts?<svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"m6 9 6 6 6-6\"/></svg></button><div id=\"ds-landing-answer\" role=\"region\">No. Students view the board you present in class.</div></div>",
+      "css": ".ds-landing-faq{border-bottom:1px solid var(--landing-line);color:var(--landing-ink);font-family:var(--landing-font-body)}.ds-landing-faq button{display:flex;align-items:center;justify-content:space-between;gap:var(--landing-space-5);width:100%;min-height:var(--landing-touch-target);padding:var(--landing-space-5) 0;border:0;background:transparent;color:inherit;text-align:left;font:500 var(--landing-text-body)/1.5 var(--landing-font-body);cursor:pointer}.ds-landing-faq button:hover{text-decoration:underline}.ds-landing-faq button:focus-visible{outline:2px solid var(--landing-ink);outline-offset:var(--landing-space-1);}.ds-landing-faq svg{width:1rem;height:1rem;transition:transform var(--landing-motion-menu,.2s) var(--landing-ease,cubic-bezier(0.16,1,0.3,1))}.ds-landing-faq button[aria-expanded=true] svg{transform:rotate(180deg)}.ds-landing-faq [role=region]{padding-bottom:1rem;font-size:var(--landing-text-small);line-height:var(--landing-leading-body)}@media(prefers-reduced-motion:reduce){.ds-landing-faq svg{transition:none}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The everyday art of starting class",
+    "overview": "This extension applies only to the public homepage at `/`, its illustrative examples, and its classroom-preview dialog. The original specification above continues to govern the teacher workspace at `/app`, plus `/history`, `/activity/:id`, `/present`, and `/present/:id`. The workspace visual restyle and README/portfolio work are deferred. The frontmatter records landing tokens only; it does not replace the app’s tokens.\n\nThe chosen Craft reference informs an airy composition, a floating navigation pill, generous paper surfaces, and light serif headings. The user’s later grainy purple/blue reference supplies the hero material: pale lavender and periwinkle with blue/cyan at the edges and lower field. The visual language remains connected to Boardwork through its local Bitter, Inter, Open Sans and BrandMark. This is a source-led adaptation, not an approved generated full-page comp.",
+    "keyCharacteristics": [
+      "A readable HTML board is the central product object.",
+      "Warm paper, pastel demonstration fields and dark green-charcoal text.",
+      "Fine-grained original purple/blue hero material with a calm light center.",
+      "Restrained, once-only motion and explicit reduced-motion behavior."
+    ],
+    "rules": [
+      {
+        "name": "The Surface Boundary Rule",
+        "body": "The homepage may use the approved original organic gradient, soft paper shadows and once-only entrances. These are exceptions to the app-only gradient and state-only motion guidance above; they do not authorize gradients, ambient motion or decorative depth in operating or presentation surfaces.",
+        "section": "colors"
+      },
+      {
+        "name": "The Product Type Rule",
+        "body": "Use the existing locally bundled families. Light Bitter display on the landing page does not change the workspace’s Inter or the student presentation’s Bitter/Open Sans pairing.",
+        "section": "typography"
+      },
+      {
+        "name": "The Material Depth Rule",
+        "body": "Landing shadows describe floating navigation, the demo window and overlapping paper notes. Student-facing Present and exported boards retain their existing flat framing.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do scope new marketing styles to the landing page and landing dialog, using the declared `--landing-*` tokens.",
+      "Do retain a light central hero field, dark legible copy and the two dominant purple/blue hue families.",
+      "Do keep illustrative boards as semantic HTML with selectable subjects, accessible preview controls and truthful example labels.",
+      "Do use visible keyboard focus, at least 44px principal controls, balanced headings and responsive stacking.",
+      "Do disable entrance transforms, parallax, transitions and smooth scrolling for reduced motion."
+    ],
+    "donts": [
+      "Don’t apply this landing extension to the teacher workspace, live Present or PNG export.",
+      "Don’t ship Craft’s fonts, imagery, logos or copied product claims.",
+      "Don’t convert the grainy hero into a rainbow, animated glow or generic AI motif.",
+      "Don’t animate continuously or hide essential content until an entrance runs.",
+      "Don’t add invented adoption figures, customer evidence, pricing or live-generation claims to the illustrative surface."
+    ]
+  }
+}
