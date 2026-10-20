@@ -27,7 +27,7 @@ describe.sequential("curriculum generation persistence with isolated fixtures", 
   };
   const input = () => ({ classId, chipIds: [], deviceMode: "off" as const, durationMinutes: 5, surprise: false });
   beforeEach(async () => {
-    vi.stubEnv("APP_PASSWORD", "isolated-test-only");
+    vi.stubEnv("DEPLOYMENT_ACCESS_PROTECTED", "true");
     classId = randomUUID(); sourceId = randomUUID(); seen = []; calls = 0;
     await db.insert(classesTable).values({ id: classId, name: "Curriculum fixture", grade: "7", subject: "Design",
       curriculumFramework: "MYP", programmeYear: "2", defaultDeviceMode: "off", defaultDuration: 5 });
@@ -70,7 +70,7 @@ describe.sequential("curriculum generation persistence with isolated fixtures", 
     await db.update(curriculumSourcesTable).set({ programmeYear: "2" }).where(eq(curriculumSourcesTable.id, sourceId));
     const grounded = await generateAndSaveActivity(input(), provider);
     expect(grounded.curriculumSnapshot?.sources).toHaveLength(1);
-    vi.stubEnv("APP_PASSWORD", "");
+    vi.stubEnv("DEPLOYMENT_ACCESS_PROTECTED", "");
     const remixed = await generateAndSaveActivity({ ...input(), sourceActivityId: grounded.id }, provider);
     expect(remixed.curriculumSnapshot?.sources).toEqual([]);
   });

@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   invalidateQueries: vi.fn(),
   toast: vi.fn(),
   activityId: undefined as string | undefined,
+  aiState: { hasKey: true, requests: 0, inputTokens: 0, outputTokens: 0, unreportedRequests: 0 },
 }));
 
 vi.mock("@/store/boardwork-context", async (importOriginal) => ({
@@ -134,6 +135,9 @@ vi.mock("@/components/class-color-dot", () => ({
 }));
 
 vi.mock("@workspace/api-client-react", () => ({
+  getAIState: () => mocks.aiState,
+  openAISettings: vi.fn(),
+  subscribeAIState: () => () => {},
   useCreateClass: () => ({ mutate: vi.fn() }),
   useUpdateClass: () => ({ mutate: mocks.updateClass, mutateAsync: vi.fn() }),
   useDeleteClass: () => ({ mutate: vi.fn() }),

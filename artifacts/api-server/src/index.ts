@@ -1,11 +1,8 @@
 import app from "./app";
 import { logger } from "./lib/logger";
-import { validateAuthConfig } from "./middlewares/auth";
+import { pool } from "@workspace/db";
 
-// Fail closed if APP_PASSWORD is set without a strong SESSION_SECRET
-validateAuthConfig();
-
-const rawPort = process.env["PORT"];
+const rawPort = process.env["PORT"] || "8080";
 
 if (!rawPort) {
   throw new Error(
@@ -19,7 +16,7 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-app.listen(port, (err) => {
+const server = app.listen(port, "0.0.0.0", (err) => {
   if (err) {
     logger.error({ err }, "Error listening on port");
     process.exit(1);
@@ -27,3 +24,12 @@ app.listen(port, (err) => {
 
   logger.info({ port }, "Server listening");
 });
+
+for (const signal of ["SIGTERM", "SIGINT"] as const) {
+  process.once(signal, () => {
+    server.close(() => {
+      void pool.end().then(() => process.exit(0));
+    });
+    setTimeout(() => process.exit(1), 10_000).unref();
+  });
+}

@@ -1,0 +1,35 @@
+name: Standalone Docker smoke
+on:
+  pull_request:
+  push:
+    branches: [main, feat/byok-usage]
+permissions:
+  contents: read
+jobs:
+  standalone:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Configure a fresh test database
+        run: |
+          python3 - <<'PY'
+          import secrets
+          from pathlib import Path
+          Path('.env').write_text('POSTGRES_PASSWORD=' + secrets.token_hex(32) + '\n')
+          PY
+      - name: Build and start the standalone app
+        run: docker compose up --build --detach --wait --wait-timeout 180
+      - name: Verify database, routes, and BYOK without paid calls
+        run: node scripts/smoke-standalone.mjs
+      - name: Verify repeat startup and migration idempotence
+        run: |
+          docker compose restart app
+          docker compose up --detach --wait --wait-timeout 90
+          node scripts/smoke-standalone.mjs
+      - name: Show service diagnostics on failure
+        if: failure()
+        run: docker compose logs --tail=100
+      - name: Remove the disposable test stack
+        if: always()
+        run: docker compose down --volumes

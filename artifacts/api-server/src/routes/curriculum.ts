@@ -3,7 +3,7 @@ import { z } from "zod";
 import { and, eq, isNull } from "drizzle-orm";
 import { db, classesTable, curriculumSourcesTable, unitsTable, type CurriculumSource } from "@workspace/db";
 import { CreateCurriculumSourceBody, UpdateCurriculumSourceBody, RefreshCurriculumSourceBody } from "@workspace/api-zod";
-import { requireAuth } from "../middlewares/auth";
+import { deploymentAccessProtected } from "../lib/deployment-access";
 import { manualObjectives, publicSource, sourceHash, validateObjectiveEdits } from "../lib/curriculum-sources";
 import { extractPdf, extractObjectives, discoverReferences, fetchReference, storePdf, readPdf, deletePdf, CurriculumImportError, curriculumCapabilities } from "../services/curriculum/imports";
 
@@ -83,13 +83,13 @@ async function insertSource(values: typeof curriculumSourcesTable.$inferInsert) 
 }
 
 router.use(base, (req, res, next) => {
-  if (!process.env.APP_PASSWORD) {
+  if (!deploymentAccessProtected()) {
     if (req.method === "GET" && (req.path === "/" || req.path === "")) {
       res.json({ ready: false, reason: "setup_required", items: [] }); return;
     }
-    res.status(503).json({ error: "setup_required", message: "Configure the existing APP_PASSWORD access gate before managing private curriculum sources." }); return;
+    res.status(503).json({ error: "setup_required", message: "Protect this deployment with host sign-in before managing private curriculum sources." }); return;
   }
-  requireAuth()(req, res, next);
+  next();
 });
 router.get(base, handle(async (req, res) => {
   const profile = await profileFor(req);

@@ -1,3 +1,4 @@
+import { createAIResponse, hasAIKey, AIRequestError } from "@workspace/integrations-openai-ai-server";
 import type { BoardworkGenerationProvider } from "./types";
 import {
   getActivityStyleGuidance,
@@ -130,6 +131,9 @@ export function sanitizeGeneratedActivity(value: unknown): unknown {
 
 function providerError(error: unknown): GenerationError {
   if (error instanceof GenerationError) return error;
+  if (error instanceof AIRequestError) {
+    return new GenerationError(error.status === 429 ? "rate_limit" : error.status === 502 ? "provider" : "configuration", error.message);
+  }
 
   const details =
     error && typeof error === "object"
@@ -169,23 +173,13 @@ export class OpenAIGenerationProvider implements BoardworkGenerationProvider {
     context: BoardworkGenerationContext,
     repairFeedback?: string,
   ): Promise<GeneratedActivity> {
-    if (
-      !process.env.AI_INTEGRATIONS_OPENAI_BASE_URL ||
-      !process.env.AI_INTEGRATIONS_OPENAI_API_KEY
-    ) {
-      throw new GenerationError(
-        "configuration",
-        "OpenAI access is not configured for this Repl.",
-      );
+    if (!hasAIKey()) {
+      throw new GenerationError("configuration", "Add your OpenAI API key in AI settings before creating a board.");
     }
-
     try {
-      const { openai } = await import(
-        "@workspace/integrations-openai-ai-server"
-      );
       const input = buildOpenAIInput(context, repairFeedback);
 
-      const response = await openai.responses.create(
+      const response = await createAIResponse(
         {
           model: this.model,
           instructions: SYSTEM_INSTRUCTIONS,
@@ -207,7 +201,7 @@ export class OpenAIGenerationProvider implements BoardworkGenerationProvider {
         { signal: AbortSignal.timeout(45_000), maxRetries: 0 },
       );
 
-      if (!response.output_text) {
+      if (response.status !== "completed" || !response.output_text) {
         throw new GenerationError(
           "malformed",
           "OpenAI returned no structured activity.",

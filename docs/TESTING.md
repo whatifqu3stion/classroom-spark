@@ -2,11 +2,15 @@
 
 A feature is not “done” because it exists. The following behaviors should work end to end.
 
-## A. Access protection
-- [ ] Published app is not openly usable by an unintended visitor.
-- [ ] Deployment-level privacy/password protection is used if available.
-- [x] If fallback `APP_PASSWORD` is needed, it is checked server-side.
-- [x] No API key or app password appears in client code, rendered HTML, or user-visible logs.
+## A. BYOK and access protection
+- [x] Missing visitor key never falls back to an owner environment key.
+- [x] Visitor keys are request-local and never saved to database or browser storage.
+- [x] Concurrent visitors cannot inherit each other's keys or token counters.
+- [x] Returned provider usage includes repair calls and failed responses when available.
+- [x] Private curriculum stays disabled without an explicit protected-deployment assertion.
+- [ ] Operator verifies actual host-level access protection before enabling private sources.
+- [ ] Operator deploys BYOK and revokes/removes the old owner key/integration.
+- [ ] Direct paid end-to-end generation is verified by the operator with their own key; automated tests use synthetic transports only.
 
 ## B. Class setup
 - [x] Teacher can create a class with name, grade, and subject.

@@ -20,9 +20,9 @@ Discovery is teacher-initiated and cached. Refreshing a web source produces a dr
 
 ## PDFs and access
 
-PDF bytes live in private App Storage, not database records or presentation-image routes. The database keeps bounded text/page metadata and a private storage reference. File downloads resolve a source ID within its class; clients cannot submit arbitrary storage paths.
+PDF bytes live in private local storage backed by a persistent volume, not database records or presentation-image routes. The database keeps bounded text/page metadata and a private storage reference. File downloads resolve a source ID within its class; clients cannot submit arbitrary storage paths.
 
-The existing signed-session `APP_PASSWORD` gate must be configured before curriculum operations are enabled. Without it, the library reports a setup requirement rather than exposing private material. No account or authentication migration is introduced.
+Curriculum operations require externally enforced account access and the explicit `DEPLOYMENT_ACCESS_PROTECTED=true` assertion. Without it, the library reports a setup requirement and private historical excerpts are redacted. BYOK does not provide login or per-user data isolation. See [standalone deployment](STANDALONE.md).
 
 The first version supports text PDFs and ordinary table text with page attribution. Image-only, encrypted, corrupt, over-limit or materially incomplete documents fail with a recovery message. Paste the relevant text or upload a smaller readable section; OCR is not included. Processing is bounded and synchronous, so a reload cannot leave an endless pending job.
 

@@ -447,10 +447,9 @@ describe("Boardwork generation contract", () => {
     expect(calls).toBe(2);
   });
 
-  it("fails generation configuration lazily when the model is absent", () => {
-    vi.stubEnv("AI_MODEL", "");
-    expect(() => createGenerationProvider()).toThrowError(
-      expect.objectContaining({ code: "configuration" }),
-    );
+  it("builds the BYOK provider without owner integration credentials", () => {
+    vi.stubEnv("BYOK_MODEL", "");
+    vi.stubEnv("AI_INTEGRATIONS_OPENAI_API_KEY", "");
+    expect(() => createGenerationProvider()).not.toThrow();
   });
 });

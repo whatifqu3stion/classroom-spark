@@ -98,7 +98,7 @@ Contains:
 ## 5. Primary workflow
 
 ### A. First-time setup
-1. Teacher signs in.
+1. Teacher opens the workspace; host-level sign-in protects private deployments.
 2. Teacher creates a class.
 3. Teacher enters grade, subject, and useful course context.
 4. Teacher optionally adds persistent chips.
@@ -138,7 +138,7 @@ Teacher can generate activities ahead of time, save them, and open them from His
 - practice goal
 - persistent arrival instructions on/off
 
-Do not expose model settings, temperature, prompt engineering, tokens, or technical AI language.
+Keep model settings and prompt controls out of the classroom workflow. A subtle teacher-only usage line below Create board shows reported tokens this visit; details and the visitor’s API key live in AI settings.
 
 ## 7. Activity styles
 These are guidance categories, not rigid templates.

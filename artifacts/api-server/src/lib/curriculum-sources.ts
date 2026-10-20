@@ -1,3 +1,4 @@
+import { deploymentAccessProtected } from "./deployment-access";
 import { createHash } from "node:crypto";
 import { and, eq, isNull, or } from "drizzle-orm";
 import { db, classesTable, curriculumSourcesTable, type CurriculumObjective, type CurriculumSource } from "@workspace/db";
@@ -9,7 +10,7 @@ export const normalizeProgrammeYear = (value: string | null | undefined) =>
 
 export async function readApprovedCurriculumSources(classId: string, unitId?: string | null) {
   // A disabled private-source boundary must never quietly use private content.
-  if (!process.env.APP_PASSWORD) return [];
+  if (!deploymentAccessProtected()) return [];
   const [profile] = await db.select().from(classesTable).where(eq(classesTable.id, classId));
   if (!profile) return [];
   const rows = await db.select().from(curriculumSourcesTable).where(and(

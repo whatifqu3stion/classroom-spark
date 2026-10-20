@@ -1,3 +1,4 @@
+import { fetchWithAI } from "@workspace/api-client-react";
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -182,7 +183,7 @@ function PdfUploadForm({ classId, unitId, replacement, initialTitle, onSuccess, 
       url.searchParams.set("title", title.trim());
       if (unitId) url.searchParams.set("unitId", unitId);
       
-      const res = await fetch(url.toString(), {
+      const res = await fetchWithAI(url.toString(), {
         method: "POST",
         credentials: "include",
         headers: {

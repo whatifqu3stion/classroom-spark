@@ -1,3 +1,4 @@
+import { deploymentAccessProtected } from "../../lib/deployment-access";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import {
   activitiesTable,
@@ -297,7 +298,7 @@ async function buildGenerationContext(
   // A historical remix preserves what that board used, even after source changes.
   // Normal generation only considers the currently approved library.
   const context: BoardworkGenerationContext = built.context;
-  const historicalBasisApplies = process.env.APP_PASSWORD && sourceActivity?.curriculumSnapshot &&
+  const historicalBasisApplies = deploymentAccessProtected() && sourceActivity?.curriculumSnapshot &&
     (!context.today.topic || context.today.topic === optionalText(sourceActivity.sourceTopic)) &&
     (!context.today.goal || context.today.goal === optionalText(sourceActivity.sourceGoal));
   context.curriculumPlan = sourceActivityId
