@@ -1,0 +1,1 @@
+Original procedural neutral paper grain. A 256 by 256 pixel grayscale tile of independent Gaussian samples, mean 128, standard deviation 32, clamped to 0–255. Python random.Random seed 2601020; opaque L-mode PNG. No color gradient, shapes, pattern, light falloff, lettering or UI. Used only on the far workspace background at 4.5% opacity, never on cards or controls.

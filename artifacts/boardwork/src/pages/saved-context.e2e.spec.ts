@@ -164,7 +164,7 @@ for (const width of [390, 1280]) {
       const fixture = await installFixture(page);
       await page.setViewportSize({ width, height: 844 });
       await page.emulateMedia({ colorScheme: theme, reducedMotion: "reduce" });
-      await page.goto("/");
+      await page.goto("/app");
       await page.evaluate((dark) => document.documentElement.classList.toggle("dark", dark), theme === "dark");
       await page.getByTestId("button-add-context-empty").click();
       const dialog = page.getByRole("dialog");
@@ -316,7 +316,7 @@ test("keeps saved context snapshots through library edits, archive, history copy
     document.addEventListener("DOMContentLoaded", () => document.documentElement.classList.add("dark"));
   });
   try {
-    await page.goto("/");
+    await page.goto("/app");
     await expect(page.locator("html")).toHaveClass(/dark/);
     await page.getByTestId("button-add-context-empty").click();
     await expect(page.getByTestId(`context-row-${otherId}`)).toHaveCount(0);

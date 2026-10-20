@@ -323,7 +323,7 @@ test("fixed editor-preview and PNG-export baseline geometry", async ({ page }, t
   await mkdir(evidenceDir, { recursive: true });
   const { activityId, activity } = await installReadingCapacityFixture(page, true);
   await page.setViewportSize({ width: 1280, height: 720 });
-  await page.goto("/");
+  await page.goto("/app");
   await page.evaluate(async (fixtureActivity) => {
     const reactPath = "/node_modules/.vite/deps/react.js";
     const reactDomPath = "/node_modules/.vite/deps/react-dom_client.js";

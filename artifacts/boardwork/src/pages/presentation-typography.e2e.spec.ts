@@ -12,7 +12,7 @@ async function mount(page: Page, options: {
   task?: string;
 }) {
   const { activity } = await installReadingCapacityFixture(page, options.visual);
-  await page.goto("/");
+  await page.goto("/app");
   await expect(page.getByTestId("presentation-preview-surface")).toHaveCount(0);
   const shellFamily = await page.locator("body").evaluate((body) => getComputedStyle(body).fontFamily);
   expect(shellFamily).toContain("Inter");

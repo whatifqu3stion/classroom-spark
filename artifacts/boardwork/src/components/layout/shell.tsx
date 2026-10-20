@@ -15,23 +15,24 @@ export function Shell({ children }: ShellProps) {
   const isHistory = location === "/history";
 
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-background selection:bg-primary/20">
-      <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md">
+    <div className="workspace-shell min-h-[100dvh] flex flex-col bg-background selection:bg-primary/20">
+      <header className="workspace-header sticky top-0 z-40 border-b">
         <div className="container mx-auto px-4 md:px-8 h-14 flex items-center justify-between">
-          <Link href="/" className="font-semibold text-foreground tracking-tight flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
+          <Link href="/app" className="workspace-brand font-semibold text-foreground tracking-tight flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
             <BrandMark />
             Boardwork
           </Link>
-          <nav className="flex items-center gap-1 sm:gap-2">
+          <nav className="workspace-navigation flex items-center gap-1 sm:gap-2">
             <AISettings />
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
-                  href="/"
+                  href="/app"
                   aria-label="Workspace"
                   data-testid="nav-workspace"
+                  aria-current={!isHistory ? "page" : undefined}
                   className={cn(
-                    "flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                    "workspace-nav-item flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
                     !isHistory ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   )}
                 >
@@ -47,8 +48,9 @@ export function Shell({ children }: ShellProps) {
                   href="/history"
                   aria-label="History"
                   data-testid="nav-history"
+                  aria-current={isHistory ? "page" : undefined}
                   className={cn(
-                    "flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                    "workspace-nav-item flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
                     isHistory ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   )}
                 >

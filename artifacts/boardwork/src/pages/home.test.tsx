@@ -1016,9 +1016,9 @@ describe("Home presentation defaults", () => {
       "items-center",
       "text-center",
     );
-    expect(emptyState).toHaveClass("bg-muted/20");
+    expect(emptyState).toHaveClass("bg-card");
     expect(emptyState).not.toHaveClass("border-dashed", "border-2", "rounded-[14px]");
-    expect(editorPanel).toHaveClass("boardwork-editor-panel", "rounded-[14px]", "border");
+    expect(editorPanel).toHaveClass("boardwork-editor-panel", "border");
     expect(editorPanel).toHaveClass("shadow-teacher-card");
     expect(screen.getByTestId("creation-controls")).toHaveClass("shadow-teacher-card");
     expect(screen.getByTestId("button-generate")).toHaveClass("shadow-sm");
@@ -1039,7 +1039,7 @@ describe("Home presentation defaults", () => {
 
     const workspace = screen.getByTestId("creation-workspace");
     const editorPanel = within(workspace).getByTestId("editor-workspace-panel");
-    expect(editorPanel).toHaveClass("boardwork-editor-panel", "rounded-[14px]", "border");
+    expect(editorPanel).toHaveClass("boardwork-editor-panel", "border");
     expect(screen.getByTestId("empty-editor-state")).toBeInTheDocument();
     expect(editorPanel).toHaveClass("min-h-[500px]");
     expect(editorPanel).not.toHaveClass("lg:self-start", "lg:max-h-full");
@@ -1048,7 +1048,7 @@ describe("Home presentation defaults", () => {
 
     expect(screen.getByTestId("board-editor-draft")).toBeInTheDocument();
     expect(screen.queryByTestId("empty-editor-state")).not.toBeInTheDocument();
-    expect(editorPanel).toHaveClass("boardwork-editor-panel", "rounded-[14px]", "border");
+    expect(editorPanel).toHaveClass("boardwork-editor-panel", "border");
     expect(editorPanel).toHaveClass("w-full", "min-h-0", "flex-col", "lg:self-start", "lg:max-h-full");
     expect(editorPanel).not.toHaveClass("min-h-[500px]");
   });

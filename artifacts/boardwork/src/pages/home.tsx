@@ -531,7 +531,7 @@ export default function Home() {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
         if (navigateHome) {
-          setLocation("/");
+          setLocation("/app");
         }
       },
       onError: () => {
@@ -589,7 +589,7 @@ export default function Home() {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetAppStateQueryKey() });
           setDeleteClassAlertOpen(false);
-          setLocation("/");
+          setLocation("/app");
         },
         onError: () => {
           toast({
@@ -718,7 +718,7 @@ export default function Home() {
       presentationTheme: getLastUsedPresentationTheme(),
     };
 
-    setLocation("/");
+    setLocation("/app");
     latestDraftRef.current = blankDraft;
     setLocalDraft(blankDraft);
     setSaveStatus("idle");
@@ -783,7 +783,7 @@ export default function Home() {
       <Shell>
         <div className="flex min-h-[calc(100dvh-3.5rem)] items-center justify-center px-6 py-16">
           <div className="w-full max-w-md text-center">
-            <h1 className="mb-2 text-2xl font-bold tracking-tight">Create your first class</h1>
+            <h1 className="boardwork-page-title mb-2 text-2xl font-bold tracking-tight">Create your first class</h1>
             <p className="mx-auto mb-7 max-w-sm text-muted-foreground">
               Add the essentials now. Add more class context later if you need it.
             </p>
@@ -814,11 +814,11 @@ export default function Home() {
 
           {/* Left Column: Generator Controls */}
           <div
-            className="boardwork-creation-panel flex min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-[14px] border bg-card shadow-teacher-card lg:h-full lg:w-[400px]"
+            className="boardwork-creation-panel flex min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-[var(--workspace-panel-radius)] border bg-card shadow-teacher-card lg:h-full lg:w-[400px]"
             data-testid="creation-controls"
           >
             <div
-              className="boardwork-class-header flex min-w-0 flex-shrink-0 items-center justify-between gap-2 border-b px-5 py-4 lg:px-6"
+              className="boardwork-class-header flex min-w-0 flex-shrink-0 items-center justify-between gap-2 border-b bg-[var(--workspace-chrome)] px-5 py-4 lg:px-6"
               data-testid="creation-class-header"
             >
               <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -1128,7 +1128,7 @@ export default function Home() {
 
           {/* Right Column: Editor */}
           <div
-            className={`boardwork-editor-panel flex min-w-0 overflow-hidden rounded-[14px] border bg-card shadow-teacher-card ${
+            className={`boardwork-editor-panel flex min-w-0 overflow-hidden rounded-[var(--workspace-panel-radius)] border bg-card shadow-teacher-card ${
               localDraft
                 ? "w-full min-h-0 flex-col lg:max-h-full lg:flex-1 lg:self-start"
                 : "min-h-[500px] flex-1 lg:min-h-0 lg:pb-0"
@@ -1158,7 +1158,7 @@ export default function Home() {
               />
             ) : (
               <div
-                className="board-editor-empty-state h-full min-w-0 w-full flex-1 flex flex-col items-center justify-center bg-muted/20 text-muted-foreground p-8 text-center"
+                className="board-editor-empty-state h-full min-w-0 w-full flex-1 flex flex-col items-center justify-center bg-card text-muted-foreground p-8 text-center"
                 data-testid="empty-editor-state"
               >
                 <div

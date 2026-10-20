@@ -1,0 +1,21 @@
+{
+  "file": "workspace-mobile.webp",
+  "source": "workspace-mobile.png",
+  "route": "/activity/sample-osmosis",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "deviceScaleFactor": 2,
+  "element": "editor-workspace-panel",
+  "data": "Prewritten illustrative classroom fixtures; no student records or API credentials",
+  "createdAt": "2026-10-20T21:39:38.158Z",
+  "width": 716,
+  "height": 1378,
+  "bytes": 34422,
+  "captureScript": "artifacts/boardwork/scripts/capture-product-screenshots.mjs",
+  "sourceCommit": "d75ef36229883e4c8dd00bafb23c552657d71260",
+  "processing": "Lossless WebP conversion only; original rendered UI, no compositing",
+  "kind": "product-screenshot",
+  "prompt": "Source: actual Boardwork UI at /activity/sample-osmosis, source commit d75ef36229883e4c8dd00bafb23c552657d71260. Captured by artifacts/boardwork/scripts/capture-product-screenshots.mjs at 390x844, device scale 2. Prewritten illustrative classroom fixtures. No student records, API keys, or AI-generated imagery. Lossless WebP conversion of the browser screenshot; no compositing."
+}
