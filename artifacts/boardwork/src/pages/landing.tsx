@@ -18,10 +18,7 @@ import {
   ArrowRight,
   ArrowUpRight,
   Check,
-  CheckCheck,
-  Clock3,
   Expand,
-  FolderHeart,
   Menu,
   Monitor,
   NotebookPen,
@@ -61,54 +58,70 @@ const motionTokens = {
   "--landing-ease": `cubic-bezier(${EASE.join(",")})`,
 } as CSSProperties;
 
-const examples = [
+const productImages = {
+  workspace: {
+    file: "workspace.webp",
+    mobile: "workspace-mobile.webp",
+    width: 2560,
+    height: 1920,
+    mobileWidth: 716,
+    mobileHeight: 1378,
+    label: "Workspace",
+    alt: "Boardwork editor with the osmosis task, editable reasoning prompts, notebook materials, save status, and the Present Screen action.",
+  },
+  setup: {
+    file: "setup.webp",
+    width: 800,
+    height: 1712,
+    label: "Class setup",
+    alt: "Actual setup controls: Grade 6 Science, an osmosis topic, the Cells & systems unit, No computer selected, and Create board or Start blank actions.",
+  },
+  present: {
+    file: "present.webp",
+    mobile: "present-mobile.webp",
+    width: 2560,
+    height: 1600,
+    mobileWidth: 780,
+    mobileHeight: 1688,
+    label: "Classroom view",
+    alt: "The same osmosis activity in the student-facing presentation: large instructions, two reasoning prompts, notebook materials, and a seven-minute timer.",
+  },
+  history: {
+    file: "history.webp",
+    mobile: "history-mobile.webp",
+    width: 2560,
+    height: 1600,
+    mobileWidth: 780,
+    mobileHeight: 1688,
+    label: "Saved boards",
+    alt: "Boardwork History with class and subject filters, favorite activities, and saved Science, Design, and Language tasks ready to reopen or present.",
+  },
+} as const;
+type ProductImage = (typeof productImages)[keyof typeof productImages];
+const productViews = [
   {
-    id: "science",
-    subject: "Science",
-    className: "Grade 6 · Science",
-    unit: "Cells & systems",
-    duration: 7,
-    title: "Which cell is in trouble?",
-    task: "Sketch a cell in fresh water and a cell in very salty water. Predict how each one changes.",
-    prompts: [
-      "Show the direction water moves.",
-      "Use osmosis to explain your prediction.",
-    ],
-    materials: "Notebook + pencil",
-    theme: "sky",
+    id: "prepare",
+    label: "Prepare",
+    image: productImages.workspace,
+    description: "Add today's focus. Review and edit the task before class.",
   },
   {
-    id: "design",
-    subject: "Design",
-    className: "Grade 8 · Design",
-    unit: "Designing for others",
-    duration: 5,
-    title: "One toy. Two possibilities.",
-    task: "Sketch two ways to make a cardboard toy move. Circle the idea you would test first.",
-    prompts: [
-      "What makes it easy for a younger child to use?",
-      "What would you change after the first test?",
-    ],
-    materials: "Sketchbook + pencil",
-    theme: "sage",
+    id: "present",
+    label: "Present",
+    image: productImages.present,
+    description:
+      "Give students a clear task, reasoning prompts, and time to work.",
   },
   {
-    id: "language",
-    subject: "Language",
-    className: "Grade 7 · Language",
-    unit: "Voice & perspective",
-    duration: 5,
-    title: "Same scene. A different story.",
-    task: "Describe a rainy morning in three sentences. Make it feel hopeful without using the word happy.",
-    prompts: [
-      "Choose one detail your reader can hear.",
-      "Underline the word that does the most work.",
-    ],
-    materials: "Notebook + pencil",
-    theme: "peach",
+    id: "reuse",
+    label: "Reuse",
+    image: productImages.history,
+    description:
+      "Find a saved board by class or subject. Adapt it for the next lesson.",
   },
 ] as const;
-type Example = (typeof examples)[number];
+const productImagePath = (file: string) =>
+  `${import.meta.env.BASE_URL}images/landing/product/${file}`;
 
 function Reveal({
   children,
@@ -133,124 +146,123 @@ function Reveal({
   );
 }
 
-function ExampleBoard({
-  example,
-  large = false,
+function ProductPicture({
+  image,
+  eager = false,
 }: {
-  example: Example;
-  large?: boolean;
+  image: ProductImage;
+  eager?: boolean;
 }) {
   return (
-    <div
-      className={`landing-board landing-board--${example.theme}${large ? " landing-board--large" : ""}`}
-    >
-      <div className="landing-board-top">
-        <span>Start here</span>
-        <span>
-          <Clock3 aria-hidden="true" /> {example.duration} min
-        </span>
-      </div>
-      <h3>{example.title}</h3>
-      <p className="landing-board-task">{example.task}</p>
-      <ul>
-        {example.prompts.map((prompt) => (
-          <li key={prompt}>{prompt}</li>
-        ))}
-      </ul>
-      <div className="landing-board-bottom">
-        <NotebookPen aria-hidden="true" />
-        <span>{example.materials}</span>
-        <span>Get settled. Get curious.</span>
-      </div>
-    </div>
+    <picture className="landing-product-picture">
+      {"mobile" in image && (
+        <source
+          media="(max-width: 40rem)"
+          srcSet={productImagePath(image.mobile)}
+          width={image.mobileWidth}
+          height={image.mobileHeight}
+        />
+      )}
+      <img
+        src={productImagePath(image.file)}
+        width={image.width}
+        height={image.height}
+        alt={image.alt}
+        loading={eager ? "eager" : "lazy"}
+        decoding="async"
+      />
+    </picture>
   );
 }
 
-function BoardDemo() {
-  const [subject, setSubject] = useState("science");
+function ScreenshotPreview({
+  image,
+  eager = false,
+}: {
+  image: ProductImage;
+  eager?: boolean;
+}) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <button
+          className="landing-shot-trigger"
+          aria-label={`Enlarge ${image.label.toLowerCase()} screenshot`}
+        >
+          <ProductPicture image={image} eager={eager} />
+          <span className="landing-shot-expand">
+            <Expand aria-hidden="true" /> Enlarge
+          </span>
+        </button>
+      </DialogTrigger>
+      <DialogContent className="landing-classroom-dialog landing-screenshot-dialog">
+        <DialogTitle>{image.label} in Boardwork</DialogTitle>
+        <DialogDescription>
+          Actual app with sample classroom content. Scroll to explore the
+          full-size screenshot.
+        </DialogDescription>
+        <div
+          className="landing-screenshot-scroll"
+          tabIndex={0}
+          role="region"
+          aria-label={`${image.label} full-size screenshot`}
+        >
+          <img
+            src={productImagePath(image.file)}
+            width={image.width}
+            height={image.height}
+            alt={image.alt}
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ProductDemo() {
+  const [view, setView] = useState("prepare");
   const reduced = useReducedMotion();
   const current =
-    examples.find((example) => example.id === subject) ?? examples[0];
+    productViews.find((item) => item.id === view) ?? productViews[0];
   return (
     <figure className="landing-demo landing-glass" id="example-board">
-      <div className="landing-demo-toolbar">
-        <span className="landing-demo-brand">
-          <BrandMark /> Boardwork
-        </span>
-        <span className="landing-demo-mode">
-          A little context. A clear first task.
-        </span>
-        <span className="landing-demo-status">
-          <CheckCheck aria-hidden="true" /> Ready for class
-        </span>
-      </div>
-      <Tabs
-        value={subject}
-        onValueChange={setSubject}
-        className="landing-demo-workspace"
-      >
-        <div className="landing-demo-controls">
-          <span>Try a subject</span>
-          <TabsList
-            aria-label="Example subject"
-            className="landing-subject-tabs"
-          >
-            {examples.map((example) => (
-              <TabsTrigger key={example.id} value={example.id}>
-                {example.subject}
+      <Tabs value={view} onValueChange={setView}>
+        <div className="landing-demo-toolbar">
+          <span className="landing-demo-brand">Inside Boardwork</span>
+          <TabsList aria-label="Product views" className="landing-view-tabs">
+            {productViews.map((item) => (
+              <TabsTrigger key={item.id} value={item.id}>
+                {item.label}
               </TabsTrigger>
             ))}
           </TabsList>
         </div>
-        {examples.map((example) => (
+        {productViews.map((item) => (
           <TabsContent
-            key={example.id}
-            value={example.id}
-            className="landing-demo-content"
+            key={item.id}
+            value={item.id}
+            className="landing-product-content"
           >
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={example.id}
-                initial={reduced ? false : { opacity: 0.65, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={reduced ? undefined : { opacity: 0.65 }}
-                transition={{
-                  duration: reduced ? 0 : MOTION.example,
-                  ease: EASE,
-                }}
-              >
-                <div className="landing-demo-context">
-                  <span>{example.className}</span>
-                  <span>{example.unit}</span>
-                </div>
-                <ExampleBoard example={example} />
-              </motion.div>
-            </AnimatePresence>
+            <motion.div
+              initial={reduced ? false : { opacity: 0.65 }}
+              animate={{ opacity: 1 }}
+              transition={{
+                duration: reduced ? 0 : MOTION.example,
+                ease: EASE,
+              }}
+            >
+              <ScreenshotPreview
+                image={item.image}
+                eager={item.id === "prepare"}
+              />
+            </motion.div>
           </TabsContent>
         ))}
-        <div className="landing-demo-footer">
-          <figcaption>
-            Illustrative activities · explore without an API key
-          </figcaption>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="ghost" className="landing-preview-button">
-                <Expand aria-hidden="true" /> Preview board
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="landing-classroom-dialog">
-              <DialogTitle className="sr-only">
-                Classroom preview: {current.title}
-              </DialogTitle>
-              <DialogDescription className="sr-only">
-                An illustrative student-facing board. This preview does not
-                generate or save an activity.
-              </DialogDescription>
-              <ExampleBoard example={current} large />
-            </DialogContent>
-          </Dialog>
-        </div>
       </Tabs>
+      <figcaption className="landing-demo-footer">
+        <span>{current.description}</span>
+        <span>Actual app · sample classroom content</span>
+      </figcaption>
     </figure>
   );
 }
@@ -389,8 +401,9 @@ export default function Landing() {
               minutes matter.
             </motion.h1>
             <p>
-              A thoughtful first task for them.
-              <br />A little breathing room for you.
+              Create a purposeful first task students can begin on their own.
+              <br className="landing-desktop-break" /> Keep your attention on
+              arrivals, attendance, and the room.
             </p>
             <div className="landing-hero-actions">
               <Button asChild size="landing">
@@ -398,12 +411,12 @@ export default function Landing() {
                   Open your workspace <ArrowRight aria-hidden="true" />
                 </Link>
               </Button>
-              <a className="landing-text-link" href="#how-it-works">
-                Take a look around <ArrowDown aria-hidden="true" />
+              <a className="landing-text-link" href="#example-board">
+                See it in action <ArrowDown aria-hidden="true" />
               </a>
             </div>
             <span className="landing-hero-note">
-              For the everyday art of starting class.
+              Do Nows, bell-ringers, and warm-ups. One teacher workspace.
             </span>
           </div>
           <motion.div
@@ -420,7 +433,7 @@ export default function Landing() {
               ease: EASE,
             }}
           >
-            <BoardDemo />
+            <ProductDemo />
           </motion.div>
         </section>
 
@@ -435,23 +448,23 @@ export default function Landing() {
               They know where to begin.
             </h2>
             <p>
-              Attendance. A question at the door. The missing pencil.
-              <br className="landing-desktop-break" /> Boardwork gives students
-              something worthwhile to start while you get everyone settled.
+              Students are arriving. Attendance needs taking. Someone has a
+              question. A visible first task gives the class a place to begin
+              while you attend to the people in front of you.
             </p>
           </Reveal>
           <ul className="landing-benefits">
             <li>
               <NotebookPen aria-hidden="true" />
-              <span>Notebook-friendly tasks</span>
+              <span>Tasks they can start independently</span>
             </li>
             <li>
               <PencilLine aria-hidden="true" />
-              <span>Always yours to edit</span>
+              <span>Less setup between classes</span>
             </li>
             <li>
               <Monitor aria-hidden="true" />
-              <span>Ready for the projector</span>
+              <span>A routine you can build on</span>
             </li>
           </ul>
         </section>
@@ -461,56 +474,31 @@ export default function Landing() {
           className="landing-feature landing-feature--context landing-container"
           aria-labelledby="context-heading"
         >
-          <Reveal className="landing-context-visual">
-            <div className="landing-class-note">
-              <span className="landing-note-label">Your class, remembered</span>
-              <h3>Grade 8 Design</h3>
-              <p>
-                Thoughtful makers.
-                <br />
-                Curious problem-solvers.
-              </p>
-              <dl>
-                <div>
-                  <dt>Current unit</dt>
-                  <dd>Designing for others</dd>
-                </div>
-                <div>
-                  <dt>Starting routine</dt>
-                  <dd>Sketchbook open. Ideas welcome.</dd>
-                </div>
-              </dl>
-            </div>
-            <div className="landing-daily-note">
-              <span>Today’s intention</span>
-              <p>
-                Compare two possibilities.
-                <br />
-                Choose one to test.
-              </p>
-              <div>
-                <span>5 minutes</span>
-                <span>Devices off</span>
-              </div>
-            </div>
-            <span className="landing-visual-caption">
-              Illustrative class context
-            </span>
+          <Reveal className="landing-setup-visual">
+            <figure className="landing-product-figure landing-product-figure--setup">
+              <ScreenshotPreview image={productImages.setup} />
+              <figcaption>
+                Saved class. Reusable unit. Today's focus.
+              </figcaption>
+            </figure>
           </Reveal>
           <Reveal className="landing-feature-copy" delay={MOTION.stagger}>
             <h2 id="context-heading">
-              A small prompt.{" "}
-              <br />A meaningful start.
+              Your class context. <br />
+              Ready for the next task.
             </h2>
             <p>
-              Your subject, your class, your current unit. Keep the useful
-              context, add what matters today, and create an independent task
-              students can actually begin.
+              Keep your class details and reusable units ready. Add today's
+              topic, choose the time available and whether students need a
+              computer, then create a draft.
             </p>
-            <p>Review it. Change a sentence. Make it yours.</p>
-            <a className="landing-text-link" href="#example-board">
-              Try the example boards <ArrowUpRight aria-hidden="true" />
-            </a>
+            <p>
+              Review and edit every word before presenting. You can also start
+              with a blank board and write the task yourself.
+            </p>
+            <Link className="landing-text-link" href="/app">
+              Prepare a board <ArrowRight aria-hidden="true" />
+            </Link>
           </Reveal>
         </section>
 
@@ -521,33 +509,31 @@ export default function Landing() {
         >
           <Reveal className="landing-feature-copy">
             <h2 id="present-heading">
-              Built for{" "}
-              <br />
-              the back row.
+              A first task <br />
+              they can follow.
             </h2>
             <p>
-              Big, clear instructions. A focused task. Space to think. Move from
-              your workspace to a student-facing board without the editing
-              controls.
+              Put the instructions, supporting prompts, and a timer on your
+              classroom display. Students can see what to do and how long they
+              have.
             </p>
             <p>
-              Present it in class, use the timer, or export a PNG for your
-              slides.
+              Use the opening minutes to revisit prior learning, make a
+              prediction, or explain an idea. Notebook-based tasks let students
+              get started without opening a device.
             </p>
             <span className="landing-feature-detail">
-              <Monitor aria-hidden="true" /> Students view the board. No student
-              accounts.
+              <Monitor aria-hidden="true" /> Present in class or export a PNG
+              for your slides.
             </span>
           </Reveal>
           <Reveal className="landing-projector-visual" delay={MOTION.stagger}>
-            <div className="landing-projector-heading">
-              <span>Classroom view</span>
-              <span>Design · 5 min</span>
-            </div>
-            <ExampleBoard example={examples[1]} />
-            <span className="landing-visual-caption">
-              Illustrative presentation · designed to be read at a glance
-            </span>
+            <figure className="landing-product-figure">
+              <ScreenshotPreview image={productImages.present} />
+              <figcaption>
+                The same activity, ready for the classroom display.
+              </figcaption>
+            </figure>
           </Reveal>
         </section>
 
@@ -557,40 +543,24 @@ export default function Landing() {
         >
           <Reveal className="landing-section-heading">
             <h2 id="library-heading">
-              Good ideas deserve
-              <br />
-              another class.
+              Tomorrow has <br />a starting point.
             </h2>
             <p>
-              Save the boards that worked. Reopen, edit, favorite,
-              <br className="landing-desktop-break" /> or remix them when you
-              need a starting point.
+              Favorite the boards you want to revisit. Filter by class or
+              subject,
+              <br className="landing-desktop-break" /> then reopen, edit, or
+              duplicate a task for another lesson.
             </p>
           </Reveal>
-          <div className="landing-library-shelf">
-            {examples.map((example, index) => (
-              <Reveal
-                key={example.id}
-                className={`landing-saved-board landing-saved-board--${example.theme}`}
-                delay={index * MOTION.stagger}
-              >
-                <span className="landing-saved-subject">
-                  {example.className}
-                </span>
-                <h3>{example.title}</h3>
-                <p>{example.task}</p>
-                <div>
-                  <span>
-                    <Clock3 aria-hidden="true" /> {example.duration} min
-                  </span>
-                  <FolderHeart aria-hidden="true" />
-                </div>
-              </Reveal>
-            ))}
-          </div>
-          <p className="landing-example-caption">
-            Example boards, shown to illustrate the saved-board workflow.
-          </p>
+          <Reveal className="landing-library-product">
+            <figure className="landing-product-figure">
+              <ScreenshotPreview image={productImages.history} />
+              <figcaption>
+                History in the app · sample Science, Design, and Language
+                activities.
+              </figcaption>
+            </figure>
+          </Reveal>
         </section>
 
         <section
@@ -599,14 +569,16 @@ export default function Landing() {
         >
           <Reveal>
             <h2 id="key-heading">
-              A little AI help.
-              <br />A lot of teacher say.
+              Your judgment.
+              <br />
+              Your final say.
             </h2>
           </Reveal>
           <Reveal className="landing-key-copy" delay={MOTION.stagger}>
             <p>
-              Bring your own OpenAI key when you want help getting started. Keep
-              editing, saving, presenting, and exporting without one.
+              Use your own OpenAI key for help drafting an activity, or start
+              with a blank board. Editing, saving, presenting, and exporting
+              work without a key.
             </p>
             <ul>
               <li>
@@ -615,7 +587,7 @@ export default function Landing() {
               </li>
               <li>
                 <Check aria-hidden="true" />
-                <span>A quiet token-usage indicator keeps you informed.</span>
+                <span>See token use for this visit beneath Create board.</span>
               </li>
               <li>
                 <Check aria-hidden="true" />
@@ -689,11 +661,13 @@ export default function Landing() {
         >
           <Reveal>
             <h2 id="close-heading">
-              A calmer start.
+              A clearer start.
               <br />
               More room to teach.
             </h2>
-            <p>Let the first task do a little of the heavy lifting.</p>
+            <p>
+              Give students a place to begin, and yourself room to welcome them.
+            </p>
             <Button asChild size="landing">
               <Link href="/app">
                 Open your workspace <ArrowRight aria-hidden="true" />

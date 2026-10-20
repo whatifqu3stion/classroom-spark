@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("the public landing and example boards do not load teacher data or call AI", async ({
+test("the public product tour shows real UI captures without teacher data or AI requests", async ({
   page,
 }) => {
   const apiRequests: string[] = [];
@@ -12,21 +12,38 @@ test("the public landing and example boards do not load teacher data or call AI"
   await expect(
     page.getByRole("heading", { name: "Make the first minutes matter." }),
   ).toBeVisible();
-  await page.getByRole("tab", { name: "Design", exact: true }).click();
-  await expect(
-    page.getByRole("tabpanel").getByText("One toy. Two possibilities."),
-  ).toBeVisible();
-  await page
-    .getByRole("button", { name: "Preview board", exact: true })
-    .click();
+  await expect(page.getByRole("tabpanel").getByRole("img")).toHaveAttribute(
+    "src",
+    /\/product\/workspace\.webp$/,
+  );
+  await page.getByRole("tab", { name: "Present", exact: true }).click();
+  await expect(page.getByRole("tabpanel").getByRole("img")).toHaveAttribute(
+    "src",
+    /\/product\/present\.webp$/,
+  );
+  await expect(page.locator(".landing-demo-footer")).toContainText(
+    "Give students a clear task, reasoning prompts, and time to work.",
+  );
+  const preview = page.getByRole("tabpanel").getByRole("button", {
+    name: "Enlarge classroom view screenshot",
+    exact: true,
+  });
+  await preview.click();
   await expect(page.getByRole("dialog")).toContainText(
-    "One toy. Two possibilities.",
+    "Classroom view in Boardwork",
+  );
+  await expect(page.getByRole("dialog").getByRole("img")).toHaveAttribute(
+    "src",
+    /\/product\/present\.webp$/,
   );
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).not.toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Preview board", exact: true }),
-  ).toBeFocused();
+  await expect(preview).toBeFocused();
+  await page.getByRole("tab", { name: "Reuse", exact: true }).click();
+  await expect(page.getByRole("tabpanel").getByRole("img")).toHaveAttribute(
+    "src",
+    /\/product\/history\.webp$/,
+  );
   await page
     .getByRole("button", {
       name: "Can I make a board without AI?",
@@ -51,6 +68,14 @@ test("compact navigation supports Escape and anchor selection without overflow",
 }) => {
   await page.setViewportSize({ width: 360, height: 800 });
   await page.goto("/");
+  await expect
+    .poll(() =>
+      page
+        .getByRole("tabpanel")
+        .getByRole("img")
+        .evaluate((image: HTMLImageElement) => image.currentSrc),
+    )
+    .toContain("workspace-mobile.webp");
   const trigger = page.getByRole("button", {
     name: "Open navigation",
     exact: true,
@@ -77,13 +102,20 @@ test("compact navigation supports Escape and anchor selection without overflow",
   ).toBe(true);
 });
 
-test("the example remains usable with reduced motion", async ({ page }) => {
+test("the product tour remains usable with reduced motion and keyboard tabs", async ({
+  page,
+}) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await page.getByRole("tab", { name: "Language", exact: true }).click();
+  await page.getByRole("tab", { name: "Prepare", exact: true }).focus();
+  await page.keyboard.press("ArrowRight");
   await expect(
-    page.getByRole("tabpanel").getByText("Same scene. A different story."),
-  ).toBeVisible();
+    page.getByRole("tab", { name: "Present", exact: true }),
+  ).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("tabpanel").getByRole("img")).toHaveAttribute(
+    "src",
+    /\/product\/present\.webp$/,
+  );
   expect(
     await page
       .locator(".landing-hero-art")

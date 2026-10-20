@@ -8,9 +8,6 @@ colors:
   landing-ink: "#20302f"
   landing-subtle-ink: "#465453"
   landing-paper: "#fffefa"
-  landing-sky: "#cde9f8"
-  landing-sage: "#dcebdc"
-  landing-peach: "#f6e4d9"
   landing-lavender: "#dde1f6"
   landing-butter: "#f8e8a4"
   landing-mint: "#cde4cf"
@@ -48,17 +45,6 @@ typography:
     fontWeight: 400
     lineHeight: 1.08
     letterSpacing: "-0.035em"
-  landing-title:
-    fontFamily: "Bitter, Georgia, serif"
-    fontSize: "clamp(1.5rem, 2.3vw, 2.125rem)"
-    fontWeight: 600
-    lineHeight: 1.18
-    letterSpacing: "-0.025em"
-  landing-board-task:
-    fontFamily: "Open Sans, Inter, sans-serif"
-    fontSize: "clamp(1rem, 1.5vw, 1.25rem)"
-    fontWeight: 500
-    lineHeight: 1.55
   landing-body:
     fontFamily: "Inter, sans-serif"
     fontSize: "1rem"
@@ -97,7 +83,6 @@ rounded:
   landing-nav: "2rem"
   landing-panel: "1rem"
   landing-pill: "999px"
-  landing-control: "6px"
   workspace-panel: 1rem
   workspace-control: 0.5rem
   workspace-popover: 0.75rem
@@ -120,12 +105,6 @@ components:
     rounded: "{rounded.landing-pill}"
     padding: "0 1.5rem"
     height: "3rem"
-  landing-button-preview:
-    backgroundColor: "transparent"
-    textColor: "{colors.landing-ink}"
-    rounded: "{rounded.landing-control}"
-    padding: "0.5rem 1rem"
-    height: "2.75rem"
   landing-text-link:
     textColor: "{colors.landing-ink}"
     height: "2.75rem"
@@ -139,16 +118,16 @@ components:
     backgroundColor: "{colors.landing-glass-chrome-background}"
     textColor: "{colors.landing-ink}"
     rounded: "{rounded.landing-panel}"
-  landing-board:
-    backgroundColor: "{colors.landing-sky}"
+  landing-screenshot-trigger:
+    backgroundColor: "{colors.landing-paper}"
     textColor: "{colors.landing-ink}"
     rounded: "{rounded.landing-panel}"
-    padding: "1.5rem 2rem"
-  landing-saved-board:
-    backgroundColor: "{colors.landing-sky}"
-    textColor: "{colors.landing-ink}"
+    width: "100%"
+  landing-screenshot-dialog:
+    backgroundColor: "{colors.landing-paper}"
     rounded: "{rounded.landing-panel}"
     padding: "1.5rem"
+    width: "min(75rem, calc(100vw - 2rem))"
   landing-feature-context:
     backgroundColor: "{colors.landing-lavender}"
     rounded: "{rounded.landing-section}"
@@ -502,13 +481,13 @@ If the latter, simplify.
 
 **Creative North Star: "The everyday art of starting class"**
 
-This extension applies only to the public homepage at `/`, its illustrative examples, and its classroom-preview dialog. The original specification above continues to govern the teacher workspace at `/app`, plus `/history`, `/activity/:id`, `/present`, and `/present/:id`. The workspace cohesion refinement is documented below; README/portfolio work remains deferred. Frontmatter names beginning `landing-` govern marketing roles, while `workspace-` names record the shared palette and operating-surface roles.
+This extension applies only to the public homepage at `/`, its actual-product screenshot tour, and its screenshot-enlargement dialogs. The original specification above continues to govern the teacher workspace at `/app`, plus `/history`, `/activity/:id`, `/present`, and `/present/:id`. The workspace cohesion refinement is documented below; README/portfolio work remains deferred. Frontmatter names beginning `landing-` govern marketing roles, while `workspace-` names record the shared palette and operating-surface roles.
 
-The chosen Craft reference informs an airy composition, a floating navigation pill, generous paper surfaces, and light serif headings. The user’s later grainy purple/blue reference supplies the hero material: pale lavender and periwinkle with blue/cyan at the edges and lower field. The visual language remains connected to Boardwork through its local Bitter, Inter, Open Sans and BrandMark. This is a source-led adaptation, not an approved generated full-page comp.
+The chosen Craft reference informs an airy composition, a floating navigation pill, generous paper surfaces, and light serif headings. The user’s later grainy purple/blue reference supplies the hero material: pale lavender and periwinkle with blue/cyan at the edges and lower field. The visual language remains connected to Boardwork through its local Bitter, Inter, Open Sans and BrandMark. The tour now shows screenshots of the refined app with prewritten sample classroom content; it replaces the illustrative HTML subject boards and overlapping paper mockups.
 
 **Key Characteristics:**
 
-- A readable HTML board is the central product object.
+- Actual workspace, setup, presentation and history screenshots make the product tangible.
 - Warm paper, pastel demonstration fields and dark green-charcoal text.
 - Fine-grained original purple/blue hero material with a calm light center.
 - Restrained, once-only motion and explicit reduced-motion behavior.
@@ -516,7 +495,7 @@ The chosen Craft reference informs an airy composition, a floating navigation pi
 
 ## Colors
 
-The landing palette combines warm paper and green-charcoal ink with pastel classroom examples. Frontmatter values are normative, derived from `src/index.css`; all names beginning `landing-` are scoped to this extension.
+The landing palette combines warm paper and green-charcoal ink with lavender setup, butter presentation and a sage-toned closing field. Frontmatter values are normative, derived from `src/index.css`; all names beginning `landing-` are scoped to this extension. Colors inside product screenshots belong to the captured app and its selected presentation theme.
 
 ### Primary
 
@@ -525,30 +504,27 @@ The landing palette combines warm paper and green-charcoal ink with pastel class
 
 ### Secondary
 
-- **Sky, sage and peach:** illustrative Science, Design and Language boards, respectively; subject names and content carry the distinction alongside color.
 - **Lavender and butter:** contextual demonstrations and classroom-presentation sections. **Mint:** the closing action field.
 - **Hero surface:** the pale lavender fallback beneath the original raster. It is not a CSS approximation of the raster’s grain or organic transitions.
 
 ### Neutral
 
 - **Canvas:** inherits the incumbent warm background, recorded as its current resolved HSL value in frontmatter.
-- **Paper:** demo window, notes and preview dialog. **Line:** understated toolbar and section separators.
-- **Navigation background:** 64% warm paper, with a 20px backdrop blur and 1.3 saturation. **Demo chrome:** 68% paper with a quieter 12px blur. **Selected subject:** 80% paper and the same fine highlight. The track mixes 30% landing lavender into paper. A shared white sheen and 70% white edge describe the glass surface.
+- **Paper:** demo frame, screenshot affordances, captions and enlargement dialog. **Line:** understated toolbar and section separators.
+- **Navigation background:** 64% warm paper, with a 20px backdrop blur and 1.3 saturation. **Demo chrome:** 68% paper with a quieter 12px blur. **Selected product-view tab:** 80% paper and the same fine highlight. The track mixes 30% landing lavender into paper. A shared white sheen and 70% white edge describe the glass surface.
 - **Selection:** sage text-selection backing with landing ink.
 
 **The Surface Boundary Rule.** The homepage may use the approved original organic gradient, restrained glass on navigation and demo chrome, soft paper shadows and once-only entrances. These are exceptions to the app-only gradient and state-only motion guidance above; they do not authorize gradients, ambient motion or decorative depth in operating or presentation surfaces.
 
 ## Typography
 
-**Display Font:** local Bitter, with Georgia/serif fallback. Its existing variable-face registration now covers weights 400–700; the homepage uses 400 for major headings, with 500/600 inside examples.
+**Display Font:** local Bitter, with Georgia/serif fallback. Its existing variable-face registration covers weights 400–700; the homepage uses 400 for major headings.
 
-**Body Font:** local Inter, with sans-serif fallback, using the existing 400/500/600/700 faces.
+**Body Font:** local Inter, with sans-serif fallback, using the existing 400/500/600/700 faces. The screenshot-dialog title uses Inter semibold at the lead size and 1.5 leading.
 
-**Board Font:** local Open Sans, with Inter/sans-serif fallback, using the existing 500–700 registration. The actual example title uses Bitter; tasks, prompts and footers use Open Sans; small board-header context switches back to Inter.
+The frontmatter holds the current reusable marketing type roles. Display sizes are fluid: hero 44–76px, section 33.6–52px and feature 32–46px at a 16px root. Major headings share 1.08 leading and −0.035em tracking. Body is 16px with 1.65 leading, hero lead is 18px with 1.5 leading, small text is 14px and captions are 12px.
 
-The frontmatter holds the reusable type roles. Display sizes are fluid: hero 44–76px, section 33.6–52px, feature 32–46px and board title 24–34px at a 16px root. Major headings share 1.08 leading and −0.035em tracking. Board titles use 1.18 leading and −0.025em tracking; tasks use 1.55 leading. Body is 16px with 1.65 leading, hero lead is 18px with 1.5 leading, small text is 14px and captions are 12px.
-
-Example task measure is at most 65ch; feature body measure is 40ch on larger screens and 65ch after stacking. Board titles become 1.65rem on small screens. The illustrative projector uses its observed 1.75rem title/1.05rem task treatment on desktop and larger token roles when stacked; this miniature is not the live Present type-fit system. Keep word spaces when responsive line breaks disappear.
+Hero copy measures at most 65ch; feature body measure is 40ch on larger screens and 65ch after stacking. Keep word spaces when responsive line breaks disappear. Student-facing Bitter/Open Sans and teacher-control Inter are pixels in the actual-product captures; no miniature HTML board type system is maintained on the landing page.
 
 **The Product Type Rule.** Use the existing locally bundled families. Light Bitter display on the landing page does not change the workspace’s Inter or the student presentation’s Bitter/Open Sans pairing.
 
@@ -556,65 +532,77 @@ Example task measure is at most 65ch; feature body measure is 40ch on larger scr
 
 The content container is at most 67.5rem (1080px), with 3rem total horizontal inset. Navigation is at most 57.5rem (920px), with 4rem total inset, fixed 2rem below the viewport top at layer 45. The hero is at most 100rem wide, inset 1rem per side with 8.5rem top/3rem bottom padding; the nested demo is at most 64.5rem wide. These are landing proportions rather than a workspace layout prescription.
 
-Spacing resolves from the existing Tailwind 0.25rem base. The frontmatter records the reused 1/2/3/4/5/6/8/10/12/16/20 steps. Vertical section rhythm is `clamp(4rem, 8vw, 7.5rem)`. Feature panels use 4rem padding, a 3rem gap and alternating 1.1:1 or 0.8:1.2 column proportions; library examples form three columns with a 1.25rem gap. Context notes overlap at −3° and +4°; these are readable illustrative objects, not controls.
+Spacing resolves from the existing Tailwind 0.25rem base. The frontmatter records the reused 1/2/3/4/5/6/8/10/12/16/20 steps. Vertical section rhythm is `clamp(4rem, 8vw, 7.5rem)`. Feature panels use 4rem padding, a 3rem gap and alternating 1.1:1 or 0.8:1.2 column proportions. The setup screenshot is centered within a maximum 22rem figure; the reuse section shows one full-width history screenshot with a 2.5rem heading-to-image gap.
 
-- **At 64rem and below:** feature padding drops to 2.5rem, gaps tighten, and the extra demo-toolbar line is hidden.
-- **At 56rem and below:** desktop links and navigation CTA yield to a 44px menu control. Feature, key-disclosure and FAQ grids stack; context copy comes first; the note illustration stays within 28rem. Feature heading line breaks are removed, preserving word spacing.
-- **At 40rem and below:** hero inset is 0.5rem, top/bottom padding is 6.75rem/1.5rem, and content/nav total inset is 2rem. Hero actions and demo controls stack; subject tabs share full width; library boards become one column. Secondary demo status/unit/footer details are hidden, while core task and actions remain. Feature padding is 2rem × 1.5rem. The preview dialog scrolls within `calc(100dvh - 2rem)`.
+The hero reserves a stable screenshot area using `--landing-product-aspect` (4 / 3), switching to `--landing-product-aspect-compact` (358 / 689) at 40rem. Images use containment, so the full captured UI stays visible. The setup width comes from `--landing-setup-width` (22rem). These geometry values remain in CSS and the sidecar’s component snippets because the frontmatter component schema has no aspect-ratio property.
 
-Principal links, tabs, menu, preview, FAQ triggers and dialog close have at least the 2.75rem (44px) landing target. The primary landing Button is 3rem (48px) tall. The page clips decorative horizontal excess; its content must still fit at 360px and remain usable with zoom. In-page destinations reserve 5rem scroll margin beneath fixed navigation.
+- **At 64rem and below:** feature padding drops to 2.5rem and gaps tighten.
+- **At 56rem and below:** desktop links and navigation CTA yield to a 44px menu control. Feature, key-disclosure and FAQ grids stack; context copy comes first. Feature heading line breaks are removed, preserving word spacing.
+- **At 40rem and below:** hero inset is 0.5rem, top/bottom padding is 6.75rem/1.5rem, and content/nav total inset is 2rem. Hero actions and the demo toolbar stack; product-view tabs share full width; the demo caption stacks. Workspace, presentation and history pictures select actual compact app captures. Feature padding is 2rem × 1.5rem. The screenshot dialog scrolls within `calc(100dvh - 2rem)`.
+
+Principal links, tabs, menu, screenshot triggers, FAQ triggers and dialog close have at least the 2.75rem (44px) landing target. The primary landing Button is 3rem (48px) tall. The page clips decorative horizontal excess; its content must still fit at 360px and remain usable with zoom. In-page destinations reserve 5rem scroll margin beneath fixed navigation.
 
 ## Elevation & Depth
 
-This marketing surface uses soft downward shadows around the product window, floating navigation and paper notes, with tonal fields separating sections. It retains the app’s warm canvas without imposing landing elevation on operational boards.
+This marketing surface uses soft downward shadows around the product frame, floating navigation and screenshot figures, with tonal fields separating sections. It retains the app’s warm canvas without imposing landing elevation on operational boards.
 
 ### Shadow Vocabulary
 
-- **Window:** `0 22px 54px -22px rgb(32 48 47 / 30%), 0 5px 12px -5px rgb(32 48 47 / 12%)`; the main interactive product example.
-- **Paper:** `0 10px 24px -12px rgb(32 48 47 / 25%)`; class context and daily-intention notes.
+- **Window:** `0 22px 54px -22px rgb(32 48 47 / 30%), 0 5px 12px -5px rgb(32 48 47 / 12%)`; the hero product frame and section screenshot figures.
+- **Paper:** `0 10px 24px -12px rgb(32 48 47 / 25%)`; the floating Enlarge affordance.
 - **Navigation:** `0 12px 28px -14px rgb(32 48 47 / 28%), 0 2px 6px -3px rgb(32 48 47 / 8%)`; the fixed navigation surface.
 - **Glass rim:** `inset 0 1px 0 rgb(255 255 255 / 88%), inset 0 -1px 0 rgb(32 48 47 / 8%)`; a bright upper edge and a quiet lower lip.
-- **Glass control:** `0 2px 5px -2px rgb(32 48 47 / 18%)`; the selected subject tab.
+- **Glass control:** `0 2px 5px -2px rgb(32 48 47 / 18%)`; the selected product-view tab.
 
-**The Material Depth Rule.** Landing shadows describe floating navigation, the demo window and overlapping paper notes. The navigation and demo frame share a static glass material with a fine highlight and soft inner reflection; the board-reading area stays opaque paper. Student-facing Present and exported boards retain their existing flat framing.
+**The Material Depth Rule.** Landing shadows describe floating navigation, the product frame, screenshot figures and the Enlarge affordance. The navigation and demo frame share a static glass material with a fine highlight and soft inner reflection; screenshot and caption surfaces stay opaque paper. Student-facing Present and exported boards retain their existing flat framing.
 
 ## Shapes
 
-Broad marketing sections use the 1.5rem radius; demo windows, board samples, saved examples and notes use 1rem. Action pills use the 999px landing token, while the shared Button landing size uses a fully rounded silhouette. Landing navigation uses a 2rem radius that also fits its expanded compact menu. Subject tabs use the shared pill token and a selected glass highlight. The shared dialog retains its 14px outer radius, with 1rem board corners inside. Thin separators group content without boxing every block. Keep these nested forms limited to actual product examples and paper overlaps.
+Broad marketing sections use the 1.5rem radius; the demo frame and section screenshots use 1rem. Action pills use the 999px landing token, while the shared Button landing size uses a fully rounded silhouette. Landing navigation uses a 2rem radius that also fits its expanded compact menu. Product-view tabs use the shared pill token and a selected glass highlight. The shared Dialog uses its current 1rem outer radius; its screenshot scroll region uses the shared 0.5rem control radius. Thin separators group content without boxing every block.
 
 ## Components
 
 ### Buttons and links
 
-Use the existing Button with `size="landing"`: 48px height, 24px inline padding, 8px icon gap, Inter 14px medium text, a dark primary surface and white text. The existing 90%-opacity primary hover remains. The preview uses the shared ghost variant at a 44px minimum height, including the shared accent hover. Text links use landing ink, 14px medium text, an underline on hover and an 8px icon gap. Their arrows shift 2px right/up in 160ms; navigation CTA arrows share that treatment.
+Use the existing Button with `size="landing"`: 48px height, 24px inline padding, 8px icon gap, Inter 14px medium text, a dark primary surface and white text. The existing 90%-opacity primary hover remains. Text links use landing ink, 14px medium text, an underline on hover and an 8px icon gap. Their arrows shift 2px right/up in 160ms; navigation CTA arrows share that treatment.
 
-Landing anchors and buttons show a 2px solid landing-ink focus outline with 4px offset, alongside shared focus behavior where applicable. The skip link becomes visible on focus. Color changes do not carry essential state alone.
+Landing anchors and buttons show a 2px solid landing-ink focus outline with 4px offset, alongside shared focus behavior where applicable. Screenshot triggers move this outline 4px inward to remain visible inside clipped frames. The skip link becomes visible on focus. Color changes do not carry essential state alone.
 
 ### Navigation
 
 Reuse BrandMark and the Boardwork name. The glass navigation has no invented dropdown destinations. The shared `landing-glass` class provides opaque paper first, then uses `@supports` to add the shared translucent fill, sheen, border, inner rim, blur and saturation. Reduced transparency, increased contrast and forced-color preferences restore opaque paper and remove backdrop filtering. Forced colors retain a system-color border and a visible selected-tab border. Blur does not animate. Its compact disclosure uses semantic expanded/controls state, closes after link selection, and closes with Escape while restoring focus to the trigger. Mobile link rows are at least 44px high.
 
-### Subject tabs and example boards
+### Product-view tabs and screenshot figures
 
-The existing Tabs primitive supplies keyboard navigation and selected state. The landing-only pill track and selected highlight echo the navigation glass; demo chrome picks up the purple/blue field, while the example workspace and board surfaces remain opaque. Landing overrides retain 44px controls and remove generic all-property transitions. Selecting a subject changes context and board content together; the change is a short opacity/5px translation. Demo window, board and illustrative captions are HTML, not a screenshot. Board padding is 24px × 32px on desktop and 20px on small screens. Its supporting list remains a coherent group, and materials sit below a quiet rule.
+The existing Tabs primitive supplies keyboard navigation and selected state. Prepare shows the real workspace/editor; Present shows the same osmosis activity with instructions, reasoning prompts and a seven-minute timer; Reuse shows History filters, favorites and saved activities. The pill track and selected highlight echo navigation glass. Landing overrides retain 44px controls and remove generic all-property transitions. A tab switch fades its screenshot from 0.65 to 1 opacity over 180ms; it no longer translates subject-board content.
 
-### Classroom preview and FAQ
+`ProductPicture` renders explicit image dimensions, descriptive alt text and responsive compact sources at 40rem. The first workspace image is eager; secondary inline images are lazy and decode asynchronously. The hero figure pairs a view-specific value caption with “Actual app · sample classroom content.” Separate section figures show real class/unit/topic controls, classroom presentation and history. Screenshot-image, preview and figure-caption styles are landing-scoped; captured workspace and presentation source styles remain governed by their own contracts.
 
-The existing Dialog supplies accessible title/description, modal focus management and focus return. Its landing width is `min(75rem, calc(100vw - 2rem))`; padding is 20px, dropping to 12px on mobile, and the close control is 44px square. The dark shared overlay and dialog transitions remain shared infrastructure; reduced motion suppresses their animation.
+Each `ScreenshotPreview` is a full-image button with a descriptive Enlarge label and a paper-pill affordance at the lower right. The affordance shifts upward 2px on hover or keyboard focus using the fast motion token. The screenshot itself remains unchanged. The shared implementation serves the hero and all three section figures.
 
-The existing Accordion supplies semantic, keyboard-operable FAQ disclosure. Triggers use body size, 1.5 leading and 20px vertical padding, with quiet separators. Landing disables height animation; only the chevron rotates with the 200ms menu timing. Keep the BYOK/privacy explanation readable in the same type system rather than building a separate settings interface.
+### Screenshot enlargement and FAQ
+
+The existing Dialog supplies an accessible title/description, modal focus management, Escape dismissal and focus return. Its landing width is `min(75rem, calc(100vw - 2rem))`; the screenshot variant uses 24px padding, dropping to 12px on mobile, and a 44px close control. The dark shared overlay and dialog transitions remain shared infrastructure; reduced motion suppresses their animation.
+
+The dialog always loads the desktop capture. Its named, focusable scroll region has a maximum height of 70dvh, contained overscroll, visible focus and an image width of `max(100%, 64.5rem)` with no max-width clamp. This preserves a larger readable view, with keyboard scrolling when it exceeds the dialog; it does not claim a one-to-one source-pixel display. The description identifies the actual app and sample content.
+
+The existing Accordion supplies semantic, keyboard-operable FAQ disclosure. Triggers use body size, 1.5 leading and 20px vertical padding, with quiet separators. Landing disables height animation; only the chevron rotates with the 200ms menu timing. Keep the existing BYOK cost/key handling and shared-installation/access-protection disclosures readable in the same type system.
 
 ### Motion
 
-`MOTION` and `EASE` in `landing.tsx` are the source of truth: fast 160ms, menu 200ms, example 180ms, reveal 720ms, hero 900ms and stagger 80ms; easing is `cubic-bezier(0.16,1,0.3,1)`. The component exports fast/menu/example/ease CSS variables for state styles. Only transform, opacity and filter animate. The hero title starts visibly at 0.9 opacity with a short settling motion; the demo settles from a slight rotation; section entrances run once, also from visible defaults. Hero artwork translates only 0–48px as the hero scrolls. No loop or scroll hijack is part of this extension.
+`MOTION` and `EASE` in `landing.tsx` are the source of truth: fast 160ms, menu 200ms, example 180ms, reveal 720ms, hero 900ms and stagger 80ms; easing is `cubic-bezier(0.16,1,0.3,1)`. The component exports fast/menu/example/ease CSS variables for state styles. Only transform, opacity and filter animate. The hero title starts visibly at 0.9 opacity with a short settling motion; the demo settles from a slight rotation; section entrances run once, also from visible defaults. Hero artwork translates only 0–48px as the hero scrolls. Product-view changes use opacity only. No loop or scroll hijack is part of this extension.
 
 `useReducedMotion` disables the Framer Motion entrance/parallax paths. The CSS reduced-motion rule removes landing/dialog animation and transitions and restores automatic scrolling; smooth anchor scrolling is enabled only for no-preference. Do not move essential information behind an entrance trigger.
 
-### Original hero material
+### Image provenance
 
-The sole shipping landing raster is `public/images/landing/classroom-gradient.webp`: 1536 × 1024, 146380 bytes. It is an original generated background derived from the supplied grain/color reference, without the reference’s lettering, branding or UI. Fine film grain and organic purple/blue transitions are pixels in the raster; headline, controls and demo stay semantic HTML. The source is decorative (`alt=""`), uses cover positioning and has a pale fallback surface.
+The decorative hero remains `public/images/landing/classroom-gradient.webp`: 1536 × 1024, 146380 bytes. It is an original generated background derived from the supplied grain/color reference, without the reference’s lettering, branding or UI. Fine film grain and organic purple/blue transitions are pixels in the raster; headline and controls remain semantic HTML. It uses `alt=""`, cover positioning, high fetch priority and a pale fallback surface.
 
-The exact generation prompt is retained at `.impeccable/assets/classroom-gradient.prompt.txt`; the public `classroom-gradient.webp.json` sidecar carries that prompt and `createdAt: 2026-10-20T18:56:26.480Z`. These paths are relative to `artifacts/boardwork`. Craft imagery and proprietary fonts remain research-only. The image must keep a calm light central field for dark copy; no unsupported product proof is baked into it.
+The exact generation prompt remains at `.impeccable/assets/classroom-gradient.prompt.txt`; the public `classroom-gradient.webp.json` sidecar carries that prompt and `createdAt: 2026-10-20T18:56:26.480Z`. Craft imagery and proprietary fonts remain research-only.
+
+Seven product screenshots now ship under `public/images/landing/product/`: workspace (2560 × 1920), setup controls (800 × 1712), presentation and history (each 2560 × 1600), plus compact workspace (716 × 1378), presentation and history (each 780 × 1688). Their WebPs total 932320 bytes. Each has a `.webp.json` provenance sidecar recording source route, viewport or captured element, scale, dimensions, bytes, source commit and origin description; the image metadata also embeds its provenance.
+
+`scripts/capture-product-screenshots.mjs` captures the current UI locally with prewritten sample state, blocks external and unknown API calls, and uses no paid generation. PNG originals are converted losslessly to WebP without compositing. These are product captures with sample content, not generated product imagery or evidence of classroom outcomes. All paths in this image-provenance section are relative to `artifacts/boardwork`.
 
 ## Do's and Don'ts
 
@@ -622,10 +610,10 @@ The exact generation prompt is retained at `.impeccable/assets/classroom-gradien
 
 - Do scope new marketing styles to the landing page and landing dialog, using the declared `--landing-*` tokens.
 - Do retain a light central hero field, dark legible copy and the two dominant purple/blue hue families.
-- Do keep illustrative boards as semantic HTML with selectable subjects, accessible preview controls and truthful example labels.
+- Do show the current app in product screenshots, label sample classroom content, provide descriptive alt text and accessible enlargement, and preserve image provenance.
 - Do use visible keyboard focus, at least 44px principal controls, balanced headings and responsive stacking.
 - Do disable entrance transforms, parallax, transitions and smooth scrolling for reduced motion.
-- Do limit glass to navigation, demo chrome and the selected subject; honor opaque fallbacks and contrast/transparency preferences.
+- Do limit glass to navigation, demo chrome and the selected product-view tab; honor opaque fallbacks and contrast/transparency preferences.
 
 ### Don't:
 
@@ -633,7 +621,7 @@ The exact generation prompt is retained at `.impeccable/assets/classroom-gradien
 - Don’t ship Craft’s fonts, imagery, logos or copied product claims.
 - Don’t convert the grainy hero into a rainbow, animated glow or generic AI motif.
 - Don’t animate continuously or hide essential content until an entrance runs.
-- Don’t add invented adoption figures, customer evidence, pricing or live-generation claims to the illustrative surface.
+- Don’t add invented adoption figures, customer evidence, pricing, measured learning gains or live-generation claims to the product tour.
 
 ---
 
