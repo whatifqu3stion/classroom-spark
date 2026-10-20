@@ -1,0 +1,38 @@
+name: classroom-spark
+services:
+  app:
+    build: .
+    init: true
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${APP_PORT:-8080}:8080"
+    environment:
+      PGHOST: db
+      PGPORT: "5432"
+      PGDATABASE: boardwork
+      PGUSER: boardwork
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      BYOK_MODEL: ${BYOK_MODEL:-gpt-5-mini}
+      DEPLOYMENT_ACCESS_PROTECTED: ${DEPLOYMENT_ACCESS_PROTECTED:-false}
+    volumes:
+      - pdfs:/data
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:16-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: boardwork
+      POSTGRES_USER: boardwork
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+volumes:
+  postgres:
+  pdfs:

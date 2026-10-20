@@ -48,3 +48,12 @@ Thumbs.db
 .cache/
 .local/
 test-results/
+
+# Local credentials
+.env
+.env.*
+!.env.example
+
+# Standalone runtime data
+/data/
+/backups/

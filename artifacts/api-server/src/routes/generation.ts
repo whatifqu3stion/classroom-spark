@@ -7,6 +7,7 @@ import {
 import { generateAndSaveActivity } from "../services/ai/generation-service";
 import { createGenerationProvider } from "../services/ai/provider-factory";
 import { GenerationError } from "../services/ai/types";
+import { hasAIKey } from "@workspace/integrations-openai-ai-server";
 
 const router: IRouter = Router();
 const inFlightClassIds = new Set<string>();
@@ -32,6 +33,10 @@ function errorStatus(error: GenerationError): number {
 }
 
 router.post("/generate", async (req, res): Promise<void> => {
+  if (!hasAIKey()) {
+    res.status(400).json({ error: "Add your OpenAI API key in AI settings before creating a board." });
+    return;
+  }
   const parsed = GenerateActivityBody.safeParse(sanitizeUnicodeValue(req.body));
   if (!parsed.success) {
     res.status(400).json({ error: "Check the generation details and try again." });

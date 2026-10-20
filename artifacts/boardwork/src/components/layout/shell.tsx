@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { History, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BrandMark } from "@/components/brand-mark";
+import { AISettings } from "@/components/ai-settings";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ShellProps {
@@ -22,6 +23,7 @@ export function Shell({ children }: ShellProps) {
             Boardwork
           </Link>
           <nav className="flex items-center gap-1 sm:gap-2">
+            <AISettings />
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link

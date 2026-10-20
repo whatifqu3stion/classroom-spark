@@ -107,10 +107,10 @@ Preferred:
 - selective shadcn/ui
 - Lucide React
 - Zod
-- Replit PostgreSQL
+- PostgreSQL
 - Drizzle ORM
 
-Keep one deployable Replit project.
+Keep one portable app service, one PostgreSQL database, and a persistent PDF volume.
 
 Do not add a global state library unless needed.
 
@@ -125,24 +125,20 @@ Do not add a global state library unless needed.
 - avoid speculative architecture
 
 ## Access protection
-For the single-user MVP:
-- prefer Replit deployment privacy/password protection if available;
-- otherwise use one server-side `APP_PASSWORD` stored in Replit Secrets.
-
-Do not rely on a client-only password screen.
-
-Do not add Replit Auth or multi-user ownership until explicitly requested.
+No custom app password or session cookie is used. BYOK is payment configuration, not authentication.
+Use deployment-level sign-in for a private teacher workspace. Do not add multi-user ownership until requested.
+Private curriculum endpoints and excerpts remain unavailable unless the host enforces access and the operator explicitly sets `DEPLOYMENT_ACCESS_PROTECTED=true`. That flag does not implement authentication.
 
 ## AI
 AI calls are server-side only.
 
-Never expose the API key to client code.
+Never bundle an owner key. The visitor enters their key in a masked field; keep it in page memory only.
 
 Keep model name configurable with environment variables.
 
 Keep provider-specific logic behind a small adapter.
 
-Stage 3 uses OpenAI through Replit AI Integrations. The route injects the provider through a provider-neutral generation interface, and `AI_MODEL` selects the model (`gpt-5.6-luna` for the initial implementation).
+AI generation now uses request-only BYOK through the direct OpenAI Responses API. The route still injects the provider through the provider-neutral generation interface; `BYOK_MODEL` selects a direct model (default `gpt-5-mini`).
 
 Return structured activity data validated with Zod.
 
@@ -181,15 +177,11 @@ Use the database, not the published filesystem.
 
 Successful saved activities should survive refresh.
 
-## Secrets
-Expected:
-- `AI_API_KEY`
-- `AI_MODEL`
-- `APP_PASSWORD` only if the fallback access gate is needed
-
-Provider-specific key variable names are acceptable if documented.
-
-Never hard-code or log secrets.
+## Secrets and BYOK
+AI requests use the visitor's OpenAI key, held only in page memory until refresh. Forward it for the current request only, to the fixed OpenAI endpoint; never persist or log it.
+Never fall back to `AI_API_KEY`, `OPENAI_API_KEY`, or `AI_INTEGRATIONS_OPENAI_API_KEY`. Remove/revoke the old owner integration in Replit/provider settings after deployment.
+`BYOK_MODEL` optionally selects a direct OpenAI model; default `gpt-5-mini`. `DATABASE_URL` and private storage configuration remain server-only.
+Reported token usage is local to this visit and includes repair calls; it is not a bill or account balance. See `docs/BYOK.md`.
 
 ## Export
 PNG export comes **after** the core classroom loop is stable.

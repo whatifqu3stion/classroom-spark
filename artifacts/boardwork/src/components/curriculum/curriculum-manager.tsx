@@ -37,7 +37,7 @@ export function CurriculumManager({ classId }: { classId: string }) {
           <div className="space-y-1">
             <h4 className="text-sm font-medium">Curriculum setup required</h4>
             <p className="text-xs text-muted-foreground">
-              Your workspace needs an app password to fetch official sources, extract PDFs, or save manual text. 
+              Private curriculum sources need a deployment protected by host sign-in. An API key pays for AI requests; it does not protect saved documents.
               Existing class context and Saved Context chips remain fully usable.
             </p>
           </div>

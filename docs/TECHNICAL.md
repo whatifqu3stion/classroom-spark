@@ -2,7 +2,7 @@
 
 ## Technical philosophy
 Optimize for:
-- fastest reliable Replit build
+- reliable portable Node.js build
 - one codebase
 - simple deployment
 - easy Agent maintenance
@@ -18,7 +18,7 @@ Do not introduce services merely because they are fashionable.
 - TypeScript
 - Vite
 - React Router
-- Node.js + Express API in the same Replit project
+- Node.js + Express API serving the frontend from the same origin
 
 ### UI
 - Tailwind CSS
@@ -31,7 +31,7 @@ Do not construct every surface as a Card.
 
 ### Data
 Add after the Stage 1 UX is accepted:
-- Replit PostgreSQL
+- PostgreSQL
 - Drizzle ORM
 - checked-in migrations
 
@@ -39,8 +39,8 @@ Add after the Stage 1 UX is accepted:
 For the immediate single-user MVP, do not build full authentication/account infrastructure.
 
 Preferred:
-1. Replit deployment privacy/password protection, if available on the active plan
-2. otherwise a simple server-side password backed by `APP_PASSWORD` in Replit Secrets
+1. host-level account access protection, if available on the active plan
+2. no app-password fallback; keep private curriculum disabled unless host-level access is enforced
 
 Full user accounts and per-user ownership are a later productization step.
 
@@ -48,8 +48,8 @@ Full user accounts and per-user ownership are a later productization step.
 Add after the UX/persistence stages:
 - provider-neutral server generation service
 - injected provider interface with a server-only OpenAI adapter
-- OpenAI access through Replit AI Integrations
-- model configured by `AI_MODEL` (`gpt-5.6-luna` for Stage 3)
+- direct OpenAI access with the visitor’s request-local key; no owner integration fallback
+- model configured by `BYOK_MODEL` (default `gpt-5-mini`)
 - strict structured JSON response plus application Zod validation
 - one controlled malformed-output repair attempt
 - validated-only activity persistence
@@ -66,7 +66,7 @@ Stage 4 uses a client-side DOM-to-image capture of a dedicated fixed 1920×1080 
 ## Why this stack
 Boardwork is a modest CRUD + generation application.
 
-Explicit client/server boundaries are easy to reason about and debug in Replit.
+Explicit client/server boundaries are easy to reason about and debug independently of a hosting provider.
 
 If Agent prefers an equivalent supported full-stack architecture, it may adjust only if it preserves:
 - TypeScript
@@ -99,20 +99,18 @@ If Agent prefers an equivalent supported full-stack architecture, it may adjust 
     schemas/
     types/
   docs/
-  replit.md
+  DEVELOPMENT.md
 ```
 
 Exact generated structure may differ.
 
-## Environment variables
-At minimum when real AI is connected:
-- `AI_API_KEY`
-- `AI_MODEL`
+## Environment variables and BYOK
+- `DATABASE_URL` and `PORT` configure the API server.
+- `BYOK_MODEL` optionally selects a direct OpenAI model (default `gpt-5-mini`).
+- `DEPLOYMENT_ACCESS_PROTECTED=true` is only an operator assertion after host-level sign-in is enforced; it enables the existing private curriculum features. It does not authenticate requests.
+- `PDF_STORAGE_DIR` configures private curriculum PDF storage.
 
-Optional fallback access protection:
-- `APP_PASSWORD`
-
-Never expose secrets to client code.
+The owner key is never used, even if old environment variables are still present. Visitors supply an OpenAI API key in a request header; it stays in page memory and the request's async context only. Never send it to an arbitrary origin or persist it. See [BYOK setup](BYOK.md).
 
 ## Data model
 
@@ -271,14 +269,14 @@ Rules:
 - never display secrets or raw stack traces
 
 ## Security
-- secrets only in environment variables
+- host infrastructure secrets only in environment variables; visitor AI keys only in request memory
 - access protection outside client-only state
 - Zod validation for request bodies
 - no arbitrary HTML from AI
 - no `dangerouslySetInnerHTML` for generated content
 - validate teacher-provided URLs
 - prevent duplicate generation requests
-- do not log API keys/passwords
+- do not log visitor API keys or upstream error objects
 
 ## Performance
 Prioritize:

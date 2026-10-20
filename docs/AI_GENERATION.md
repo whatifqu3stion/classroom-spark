@@ -186,9 +186,9 @@ For school-facing output:
 
 ## AI architecture
 - AI request originates from the server only.
-- API key lives only in Replit Secrets / server environment.
-- Never send the secret to browser code.
-- Keep model name configurable through an environment variable.
+- Visitor API key lives only in page memory and the current server request; never in database/browser storage.
+- Never bundle an owner API key or fall back to an owner integration. Forward the visitor key only to the fixed OpenAI endpoint.
+- Keep the direct OpenAI model configurable through `BYOK_MODEL` (default `gpt-5-mini`).
 - Route composition injects a provider through the provider-neutral Boardwork generation interface.
 - Keep OpenAI SDK calls and response handling inside the OpenAI adapter so provider/model changes do not touch UI code or generation orchestration.
 - Use strict structured output, then application Zod validation and deterministic duration/device/URL checks.

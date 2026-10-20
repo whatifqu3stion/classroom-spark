@@ -10,16 +10,7 @@ describe.sequential("activity inline formatting persistence", () => {
   let request: ReturnType<typeof supertest.agent>;
 
   beforeEach(async () => {
-    vi.stubEnv("APP_PASSWORD", "isolated-formatting-test-password");
-    vi.stubEnv(
-      "SESSION_SECRET",
-      "isolated-formatting-test-secret-at-least-32-characters",
-    );
     request = supertest.agent(app);
-    const login = await request
-      .post("/api/auth/login")
-      .send({ password: "isolated-formatting-test-password" });
-    expect(login.status).toBe(200);
 
     classId = randomUUID();
     await db.insert(classesTable).values({

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import supertest from "supertest";
 import app from "./app";
 import {
@@ -9,14 +9,6 @@ import {
 } from "@workspace/api-zod";
 
 describe("API request body limits", () => {
-  beforeEach(() => {
-    vi.stubEnv("APP_PASSWORD", "");
-  });
-
-  afterEach(() => {
-    vi.unstubAllEnvs();
-  });
-
   it("returns a safe JSON 413 response for oversized activity payloads", async () => {
     const response = await supertest(app)
       .post("/api/healthz")

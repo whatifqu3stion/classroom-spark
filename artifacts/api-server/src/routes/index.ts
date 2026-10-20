@@ -5,15 +5,11 @@ import classesRouter from "./classes";
 import chipsRouter from "./chips";
 import activitiesRouter from "./activities";
 import generationRouter from "./generation";
-import authRouter from "./auth";
 import unitsRouter from "./units";
 import savedContextRouter from "./saved-context";
 import curriculumRouter from "./curriculum";
 
 const router: IRouter = Router();
-
-// Auth routes first (login/status are exempt from requireAuth in middleware)
-router.use(authRouter);
 
 router.use(healthRouter);
 router.use(appStateRouter);

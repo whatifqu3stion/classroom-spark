@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useLocation, useRoute } from "wouter";
 import { Shell } from "@/components/layout/shell";
+import { AIUsageControl } from "@/components/ai-settings";
 import {
   useBoardwork,
   DeviceMode,
@@ -48,6 +49,8 @@ import {
   getListSavedContextsQueryKey,
   ActivityInput,
   GenerateActivityInput,
+  getAIState,
+  openAISettings,
 } from "@workspace/api-client-react";
 import { ACTIVITY_PAYLOAD_TOO_LARGE_ERROR } from "@workspace/api-zod";
 import {
@@ -648,6 +651,7 @@ export default function Home() {
 
   const handleGenerate = async (surprise: boolean = false) => {
     if (isGenerating || !activeClassId || !activeClass || durationError) return;
+    if (!getAIState().hasKey) { openAISettings(); return; }
     setLastGenerationWasSurprise(surprise);
     setGenerationError(null);
     setIsGenerating(true);
@@ -1071,6 +1075,7 @@ export default function Home() {
                 )}
                 {isGenerating ? "Creating board..." : "Create board"}
               </Button>
+              <AIUsageControl />
               <div className="grid grid-cols-2 gap-3">
                 <Button
                   variant="outline"

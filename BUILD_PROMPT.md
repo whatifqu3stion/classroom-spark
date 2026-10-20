@@ -1,8 +1,8 @@
-# Initial Replit Agent Build Prompt
+# Initial development Build Prompt
 
 Build **Boardwork**, a polished single-user classroom MVP for teachers to create excellent 5–10 minute independent start-of-class activities (“Do Nows,” bell-ringers, entry tasks).
 
-Before coding, read this prompt, the root `replit.md`, and the supporting files in `/docs`.
+Before coding, read this prompt, the root `DEVELOPMENT.md`, and the supporting files in `/docs`.
 
 ## Core product loop
 **Choose class → optionally add today’s context → select reusable chips → Generate / Surprise Me / Start Blank → quick edit → Present.**
@@ -33,11 +33,10 @@ This first version is for one teacher.
 
 Do not build user accounts, invitations, profiles, or per-user ownership.
 
-Preferred:
-- use Replit deployment privacy/password protection if available on the active plan;
-- otherwise implement one simple **server-side** app password using an `APP_PASSWORD` value stored in Replit Secrets.
-
-Never rely on a client-only password check.
+Use account access enforced by the hosting layer for any public deployment.
+Do not implement an app password. BYOK authorizes AI requests, not access to
+the shared teacher workspace. Keep the service local until external access
+protection is configured.
 
 ### 2. Classes
 Teacher can create/edit/delete classes.
@@ -217,12 +216,12 @@ Use:
 - shadcn/ui selectively
 - Lucide React
 - Zod
-- Replit PostgreSQL
+- PostgreSQL
 - Drizzle ORM
 
-One Replit project, one deployment.
+One portable app service, one PostgreSQL database, and a private PDF volume.
 
-If current Replit constraints strongly favor an equivalent supported full-stack structure, you may adjust the framework architecture, but preserve:
+If the chosen host requires an equivalent supported full-stack structure, preserve:
 - TypeScript
 - server-only secrets
 - PostgreSQL persistence
@@ -232,7 +231,7 @@ If current Replit constraints strongly favor an equivalent supported full-stack 
 
 ## Security
 - AI keys server-side only
-- secrets in Replit Secrets / environment variables
+- infrastructure secrets in server environment variables; visitor AI keys in request memory only
 - access protection outside the client
 - Zod validation on API inputs and AI outputs
 - never render arbitrary HTML from AI
@@ -269,7 +268,7 @@ Report:
 
 ### Stage 2 — Persistence
 After Stage 1 is accepted:
-1. add Replit PostgreSQL + Drizzle
+1. add PostgreSQL + Drizzle
 2. persist classes/chips/activities
 3. autosave edits
 4. add history/reuse/remix

@@ -1,5 +1,4 @@
 import express, { type ErrorRequestHandler, type Express } from "express";
-import cors from "cors";
 import pinoHttp from "pino-http";
 import {
   ACTIVITY_PAYLOAD_TOO_LARGE_ERROR,
@@ -7,7 +6,8 @@ import {
 } from "@workspace/api-zod";
 import router from "./routes";
 import { logger } from "./lib/logger";
-import { cookieMiddleware, requireAuth } from "./middlewares/auth";
+import { byokContext } from "./middlewares/byok";
+import { serveFrontend } from "./lib/serve-frontend";
 
 const app: Express = express();
 
@@ -30,7 +30,8 @@ app.use(
     },
   }),
 );
-app.use(cors({ origin: true, credentials: true }));
+// Same-origin frontend only; never reflect arbitrary credentialed CORS origins.
+app.use("/api", byokContext);
 app.use(express.json({ limit: ACTIVITY_REQUEST_BODY_LIMIT_BYTES }));
 app.use(
   express.urlencoded({
@@ -38,10 +39,9 @@ app.use(
     limit: ACTIVITY_REQUEST_BODY_LIMIT_BYTES,
   }),
 );
-app.use(cookieMiddleware());
-app.use("/api", requireAuth());
-
 app.use("/api", router);
+app.use("/api", (_req, res) => { res.status(404).json({ error: "Not found" }); });
+if (process.env.STATIC_DIR) serveFrontend(app, process.env.STATIC_DIR);
 
 const bodyParserErrorHandler: ErrorRequestHandler = (error, _req, res, next) => {
   if (error?.type === "entity.too.large") {

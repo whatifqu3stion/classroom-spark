@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   invalidateQueries: vi.fn(),
   setLocation: vi.fn(),
   toast: vi.fn(),
+  aiState: { hasKey: false, settingsOpen: false, requests: 0, inputTokens: 0, outputTokens: 0, unreportedRequests: 0 },
 }));
 
 vi.mock("@/store/boardwork-context", () => ({
@@ -25,6 +26,10 @@ vi.mock("@tanstack/react-query", () => ({
 }));
 
 vi.mock("@workspace/api-client-react", () => ({
+  subscribeAIState: () => () => {},
+  getAIState: () => mocks.aiState,
+  openAISettings: vi.fn(),
+  setAIKey: vi.fn(),
   useClearNonFavoriteActivities: () => ({ isPending: false, mutate: mocks.clearMutate }),
   useDeleteActivity: () => ({ isPending: false, mutate: mocks.deleteMutate }),
   useDuplicateActivity: () => ({ isPending: false, mutate: mocks.duplicateMutate }),
