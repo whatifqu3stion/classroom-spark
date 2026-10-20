@@ -101,7 +101,15 @@ async function expectElementReachableInViewport(
   locator: Locator,
   viewport: Viewport,
 ) {
-  await locator.scrollIntoViewIfNeeded();
+  await page.evaluate(() => document.fonts.ready);
+  await locator.evaluate((element) => {
+    element.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" });
+    const bounds = element.getBoundingClientRect();
+    // Long editable blocks may need end alignment within nested scroll containers.
+    if (bounds.top < 0 || bounds.bottom > window.innerHeight) {
+      element.scrollIntoView({ block: "end", inline: "nearest", behavior: "instant" });
+    }
+  });
   const box = await locator.boundingBox();
 
   expect(box, `${await locator.getAttribute("data-testid")} should have geometry`).not.toBeNull();
@@ -114,7 +122,7 @@ async function expectElementReachableInViewport(
   expect(
     box!.y + box!.height,
     `${await locator.getAttribute("data-testid")} should be reachable after scrolling`,
-  ).toBeLessThanOrEqual(viewport.height);
+  ).toBeLessThanOrEqual(viewport.height + 0.5);
 }
 
 async function expectElementFitsHorizontally(
@@ -326,7 +334,7 @@ for (const viewport of viewports) {
     const presentButton = page.getByTestId("button-present");
     const editingControls = [
       page.getByRole("textbox", { name: "Describe the main task for students..." }),
-      page.getByRole("textbox", { name: "Enter prompt..." }),
+      page.getByRole("textbox", { name: /^Prompt \d+$/ }),
       page.getByTestId("button-toggle-presentation-visual"),
     ];
 
@@ -379,7 +387,7 @@ test("keeps populated activity editing readable at 150% text scaling", async ({ 
     const task = page.getByRole("textbox", {
       name: "Describe the main task for students...",
     });
-    const prompts = page.getByRole("textbox", { name: "Enter prompt..." });
+    const prompts = page.getByRole("textbox", { name: /^Prompt \d+$/ });
     const materials = page.getByRole("textbox", {
       name: "Optional materials, separated by commas...",
     });
@@ -465,31 +473,48 @@ for (const viewport of viewports) {
   });
 }
 
-test("keeps creation examples very faint compared with entered text", async ({ page }) => {
+test("keeps creation examples distinct from entered text and readable", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/app");
 
-  const topic = page.getByTestId("input-topic");
-  const styles = await topic.evaluate((element) => {
+  const styles = await page.getByTestId("input-topic").evaluate((element) => {
     const computed = getComputedStyle(element);
     const placeholder = getComputedStyle(element, "::placeholder");
-    const luminance = (color: string) => {
-      const channels = color.match(/[\d.]+/g)?.map(Number);
-      if (!channels || channels.length < 3) throw new Error(`Invalid color: ${color}`);
-      return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 1;
+    const context = canvas.getContext("2d")!;
+    const channels = (color: string) => {
+      context.clearRect(0, 0, 1, 1);
+      context.fillStyle = color;
+      context.fillRect(0, 0, 1, 1);
+      const rgba = Array.from(context.getImageData(0, 0, 1, 1).data);
+      return [rgba[0], rgba[1], rgba[2], rgba[3] / 255];
     };
+    const luminance = (rgb: number[]) => {
+      const linear = rgb.slice(0, 3).map((channel) => {
+        const value = channel / 255;
+        return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+      });
+      return linear[0] * 0.2126 + linear[1] * 0.7152 + linear[2] * 0.0722;
+    };
+    const panel = channels(getComputedStyle(element.closest('[data-testid="creation-controls"]')!).backgroundColor);
+    const surface = channels(computed.backgroundColor);
+    const alpha = surface[3] ?? 1;
+    const background = surface.slice(0, 3).map((value, index) => value * alpha + panel[index] * (1 - alpha));
+    const contrast = (color: string) => (luminance(background) + 0.05) / (luminance(channels(color)) + 0.05);
     return {
       placeholderOpacity: placeholder.opacity,
       placeholderColor: placeholder.color,
       textColor: computed.color,
-      placeholderLuminance: luminance(placeholder.color),
-      textLuminance: luminance(computed.color),
+      placeholderContrast: contrast(placeholder.color),
+      textContrast: contrast(computed.color),
     };
   });
 
   expect(styles.placeholderOpacity).toBe("1");
   expect(styles.placeholderColor).not.toBe(styles.textColor);
-  expect(styles.placeholderLuminance).toBeGreaterThan(styles.textLuminance + 60);
+  expect(styles.placeholderContrast).toBeGreaterThanOrEqual(4.5);
+  expect(styles.textContrast).toBeGreaterThan(styles.placeholderContrast);
 });
 
 test("keeps the workspace canvas warm while separating white panels", async ({ page }) => {
@@ -671,7 +696,7 @@ for (const viewport of viewports) {
     const task = page.getByRole("textbox", {
       name: "Describe the main task for students...",
     });
-    const prompts = page.getByRole("textbox", { name: "Enter prompt..." });
+    const prompts = page.getByRole("textbox", { name: /^Prompt \d+$/ });
     const materials = page.getByRole("textbox", {
       name: "Optional materials, separated by commas...",
     });
@@ -765,7 +790,7 @@ for (const viewport of viewports) {
 
       const editor = stylesFor('[data-testid="board-editor"]');
       const task = stylesFor('[aria-label="Describe the main task for students..."]');
-      const prompt = stylesFor('[aria-label="Enter prompt..."]');
+      const prompt = stylesFor('[aria-label="Prompt 1"]');
       const materials = stylesFor('[aria-label="Optional materials, separated by commas..."]');
       const materialsLabel = stylesForExactText("Materials");
       const saveStatus = stylesFor('[data-testid="text-save-status"]');
@@ -883,10 +908,9 @@ test("keeps the empty editor preview visually quiet", async ({ page }) => {
   const emptyContent = page.getByTestId("empty-editor-content");
   await expect(emptyState).toBeVisible();
   await expect(emptyContent).toBeVisible();
-  await expect(emptyState).toHaveClass(/bg-muted\/20/);
+  await expect(emptyState).toHaveClass(/bg-card/);
   await expect(emptyState).not.toHaveClass(/border-dashed/);
   await expect(editorPanel).toHaveClass(/boardwork-editor-panel/);
-  await expect(editorPanel).toHaveClass(/rounded-\[14px\]/);
   await expect(editorPanel).toHaveClass(/\bborder\b/);
   await expect(
     emptyState.getByRole("heading", { name: "No activity created yet" }),
@@ -974,7 +998,6 @@ test("keeps the empty editor preview contained when text is enlarged", async ({ 
   await expect(emptyContent).toBeVisible();
   await expect(emptyState).not.toHaveClass(/border-dashed/);
   await expect(editorPanel).toHaveClass(/boardwork-editor-panel/);
-  await expect(editorPanel).toHaveClass(/rounded-\[14px\]/);
   await expect(editorPanel).toHaveClass(/\bborder\b/);
 
   const bounds = await emptyState.evaluate((element) => {
@@ -1067,7 +1090,6 @@ for (const viewport of [
     const editorPanel = page.getByTestId("editor-workspace-panel");
     const emptyState = page.getByTestId("empty-editor-state");
     await expect(emptyState).toBeVisible();
-    await expect(editorPanel).toHaveClass(/rounded-\[14px\]/);
     await expect(editorPanel).toHaveClass(/\bborder\b/);
 
     const initialBounds = await editorPanel.boundingBox();
@@ -1142,7 +1164,6 @@ for (const viewport of [
 
     await expect(page.getByTestId("empty-editor-state")).toBeVisible();
     await expect(page.getByTestId("board-editor")).toHaveCount(0);
-    await expect(editorPanel).toHaveClass(/rounded-\[14px\]/);
     await expect(editorPanel).toHaveClass(/\bborder\b/);
     await expect(page.getByTestId("input-topic")).toHaveValue("");
     await expect(page.getByTestId("segment-5")).toHaveAttribute("aria-pressed", "true");

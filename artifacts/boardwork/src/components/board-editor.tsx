@@ -158,9 +158,9 @@ export function BoardEditor({
     : "Add a task before presenting.";
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-auto flex-col overflow-hidden bg-background" data-testid="board-editor">
+    <div className="flex min-h-0 min-w-0 flex-auto flex-col overflow-hidden bg-card" data-testid="board-editor">
       <div
-        className="flex shrink-0 flex-col gap-3 border-b bg-card px-5 py-4 sm:flex-row sm:items-center sm:justify-between lg:px-6"
+        className="flex shrink-0 flex-col gap-3 border-b bg-[var(--workspace-chrome)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between lg:px-6"
         data-testid="board-editor-header"
       >
         <div className="min-w-0 flex-1">

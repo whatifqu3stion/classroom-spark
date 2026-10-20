@@ -1,6 +1,6 @@
 ---
-name: "Boardwork — landing extension"
-description: "Landing-only tokens for /; incumbent teacher workspace and presentation guidance remains below."
+name: "Boardwork — landing and workspace"
+description: "Shared Boardwork palette and materials, with scoped landing and teacher-workspace roles; presentation contracts remain intact."
 colors:
   landing-primary: "hsl(174 20% 16%)"
   landing-primary-foreground: "hsl(0 0% 100%)"
@@ -21,6 +21,14 @@ colors:
   landing-glass-edge: "rgb(255 255 255 / 70%)"
   landing-selection: "#b6dac8"
   landing-hero-surface: "#d3cff3"
+  workspace-canvas: hsl(40 28% 96.5%)
+  workspace-ink: hsl(176.25 20% 15.6863%)
+  workspace-muted-ink: hsl(175.7143 9.0909% 30.1961%)
+  workspace-paper: hsl(48 100% 99.0196%)
+  workspace-chrome: color-mix(in srgb, hsl(230.4 58.9744% 91.5686%) 18%, hsl(48 100% 99.0196%))
+  workspace-selected: color-mix(in srgb, hsl(230.4 58.9744% 91.5686%) 65%, hsl(48 100% 99.0196%))
+  workspace-control-border: hsl(168 9% 54%)
+  workspace-focus: hsl(250 30% 42%)
 typography:
   landing-display:
     fontFamily: "Bitter, Georgia, serif"
@@ -67,12 +75,32 @@ typography:
   landing-caption:
     fontFamily: "Inter, sans-serif"
     fontSize: "0.75rem"
+  workspace-page-title:
+    fontFamily: Bitter, Georgia, serif
+    fontSize: 2rem
+    fontWeight: 400
+    lineHeight: 1.2
+    letterSpacing: -0.025em
+  workspace-empty-title:
+    fontFamily: Bitter, Georgia, serif
+    fontSize: 1.5rem
+    fontWeight: 400
+    lineHeight: 1.2
+    letterSpacing: -0.025em
+  workspace-label:
+    fontFamily: Inter, sans-serif
+    fontSize: 0.875rem
+    fontWeight: 500
+    lineHeight: 1.4286
 rounded:
   landing-section: "1.5rem"
   landing-nav: "2rem"
   landing-panel: "1rem"
   landing-pill: "999px"
   landing-control: "6px"
+  workspace-panel: 1rem
+  workspace-control: 0.5rem
+  workspace-popover: 0.75rem
 spacing:
   landing-1: "0.25rem"
   landing-2: "0.5rem"
@@ -133,6 +161,28 @@ components:
     backgroundColor: "{colors.landing-mint}"
     rounded: "{rounded.landing-section}"
     padding: "5rem 1.5rem"
+  workspace-panel:
+    backgroundColor: '{colors.workspace-paper}'
+    textColor: '{colors.workspace-ink}'
+    rounded: '{rounded.workspace-panel}'
+  workspace-navigation:
+    backgroundColor: '{colors.workspace-paper}'
+    textColor: '{colors.workspace-ink}'
+    height: 3.5rem
+  workspace-create-button:
+    backgroundColor: '{colors.workspace-ink}'
+    textColor: '{colors.landing-primary-foreground}'
+    rounded: '{rounded.workspace-control}'
+    height: 2.75rem
+  workspace-selected-control:
+    backgroundColor: '{colors.workspace-selected}'
+    textColor: '{colors.workspace-ink}'
+    rounded: '{rounded.workspace-control}'
+  workspace-dialog:
+    backgroundColor: '{colors.workspace-paper}'
+    textColor: '{colors.workspace-ink}'
+    rounded: '{rounded.workspace-panel}'
+    padding: 1.5rem
 ---
 
 # Boardwork — UX & Visual Design Specification
@@ -187,7 +237,7 @@ Use the fixed Bitter / Open Sans pairing, scoped to presentation surfaces:
   timer numeral font treatments.
 
 Apply the same instruction leading in editor preview, live Present (including
-adaptive fitting), and fixed PNG export. Keep the teacher interface on Inter.
+adaptive fitting), and fixed PNG export. Keep teacher controls and editable content on Inter; reserve light Bitter for page and empty-state headings in the workspace refinement below.
 Bundle used presentation faces locally with license attribution and wait for
 them before PNG capture; do not add a font picker or runtime font CDN.
 
@@ -207,7 +257,7 @@ Default to a refined light neutral interface.
 Suggested palette direction:
 - warm white / soft neutral background
 - charcoal text rather than pure black
-- muted slate secondary text
+- muted green-charcoal secondary text
 - one confident accent color
 - gentle semantic colors only where needed
 
@@ -452,7 +502,7 @@ If the latter, simplify.
 
 **Creative North Star: "The everyday art of starting class"**
 
-This extension applies only to the public homepage at `/`, its illustrative examples, and its classroom-preview dialog. The original specification above continues to govern the teacher workspace at `/app`, plus `/history`, `/activity/:id`, `/present`, and `/present/:id`. The workspace visual restyle and README/portfolio work are deferred. The frontmatter records landing tokens only; it does not replace the app’s tokens.
+This extension applies only to the public homepage at `/`, its illustrative examples, and its classroom-preview dialog. The original specification above continues to govern the teacher workspace at `/app`, plus `/history`, `/activity/:id`, `/present`, and `/present/:id`. The workspace cohesion refinement is documented below; README/portfolio work remains deferred. Frontmatter names beginning `landing-` govern marketing roles, while `workspace-` names record the shared palette and operating-surface roles.
 
 The chosen Craft reference informs an airy composition, a floating navigation pill, generous paper surfaces, and light serif headings. The user’s later grainy purple/blue reference supplies the hero material: pale lavender and periwinkle with blue/cyan at the edges and lower field. The visual language remains connected to Boardwork through its local Bitter, Inter, Open Sans and BrandMark. This is a source-led adaptation, not an approved generated full-page comp.
 
@@ -536,7 +586,7 @@ Broad marketing sections use the 1.5rem radius; demo windows, board samples, sav
 
 ### Buttons and links
 
-Use the existing Button with `size="landing"`: 48px height, 24px inline padding, 8px icon gap, Inter 14px medium text, a dark primary surface and white text. The existing 90%-opacity primary hover remains. The preview uses the shared ghost variant at a 44px minimum height, including its existing warm accent hover. Text links use landing ink, 14px medium text, an underline on hover and an 8px icon gap. Their arrows shift 2px right/up in 160ms; navigation CTA arrows share that treatment.
+Use the existing Button with `size="landing"`: 48px height, 24px inline padding, 8px icon gap, Inter 14px medium text, a dark primary surface and white text. The existing 90%-opacity primary hover remains. The preview uses the shared ghost variant at a 44px minimum height, including the shared accent hover. Text links use landing ink, 14px medium text, an underline on hover and an 8px icon gap. Their arrows shift 2px right/up in 160ms; navigation CTA arrows share that treatment.
 
 Landing anchors and buttons show a 2px solid landing-ink focus outline with 4px offset, alongside shared focus behavior where applicable. The skip link becomes visible on focus. Color changes do not carry essential state alone.
 
@@ -584,3 +634,73 @@ The exact generation prompt is retained at `.impeccable/assets/classroom-gradien
 - Don’t convert the grainy hero into a rainbow, animated glow or generic AI motif.
 - Don’t animate continuously or hide essential content until an entrance runs.
 - Don’t add invented adoption figures, customer evidence, pricing or live-generation claims to the illustrative surface.
+
+---
+
+# Workspace cohesion extension — operating routes
+
+## Overview
+
+**Creative North Star: "The everyday art of starting class"**
+
+The teacher workspace now shares the landing page’s warm paper, green-charcoal ink, restrained lavender selection and soft material edges. It retains the existing setup/editor columns, stacked mobile layout, field order, sticky creation actions, history workflow and save behavior. This is a visual refinement of the working UI, not a new information architecture.
+
+**Key Characteristics:**
+
+- Smooth, opaque reading and form surfaces above a quiet neutral background.
+- Familiar Inter controls with light Bitter reserved for page and empty-state headings.
+- Matching dark primary actions, pale lavender selection and visible keyboard focus.
+- Existing class colors, presentation themes, timer behavior and export geometry remain user-controlled.
+
+## Colors
+
+The `workspace-` frontmatter colors resolve the actual shared CSS roles in `src/index.css`. The warm canvas is retained. Ink, muted ink, paper and lavender now match the established Boardwork family; the control border and purple focus ring keep input boundaries and focus legible. Header/panel chrome and selection use constant mixed colors, never a gradient.
+
+**The Operating Surface Rule.** Grain belongs only to the far workspace background. Cards, fields, overlays and board-reading surfaces stay opaque and smooth. Main-app surfaces use solid colors, with no gradient treatment.
+
+The sticky navigation uses a uniform 94% paper fill and static 12px backdrop blur as a modest echo of the landing glass. It has no sheen gradient or texture of its own. The fallback is opaque paper. Reduced transparency, increased contrast and forced colors remove backdrop filtering and the background grain; selected and focus states retain system-color outlines under forced colors.
+
+## Typography
+
+Teacher controls, labels, dialogs, history rows and editable content continue to use the locally bundled Inter. Page headings and the empty editor heading use the existing Bitter face at weight 400; the three new frontmatter roles record their fixed rem sizes and leading. Functional labels retain the compact UI scale rather than inheriting marketing display sizes. Empty-state guidance now uses full ink/muted-ink roles for readable contrast.
+
+Student task/prompt fonts remain the existing Bitter/Open Sans pairing. Theme selection, projector fitting and fixed PNG typography are governed by the original presentation specification, not by workspace heading styles.
+
+## Layout
+
+Keep the existing slim sticky header: a 3.5rem inner row plus its 1px separator. Desktop retains the 400px setup pane, existing gap and dominant editor; mobile retains the same vertical order and sticky creation actions. History remains a filter row and lightweight saved-board list. No controls, destinations, workflows or factual copy are added or moved.
+
+Navigation targets are at least 44px. Coarse-pointer input adds the same minimum target height to workspace controls without changing desktop density. At enlarged text, long editable blocks scroll into reach; short-height windows may use the full existing pane cap. Dialogs, selects and popovers continue to escape through their existing portals.
+
+## Elevation & Depth
+
+Paper panel shadow resolves from `--teacher-card-shadow`; dialogs and popovers use the new `--workspace-dialog-shadow` and `--workspace-popover-shadow` tokens through Tailwind’s shared shadow aliases. The selected-control rim is a quiet inset highlight plus a short downward shadow, with no gradient or animation. Keep outer workspace panels at one frame; the nested editor remains borderless.
+
+The grain is a static 61647-byte, 256 × 256 monochrome PNG at `public/images/workspace/neutral-grain.png`, repeated at the 12rem material-size token and rendered at 4.5% opacity. Only `.workspace-shell::before` references it, behind content at layer −1 with pointer events disabled. It is not mounted in Present or the exported board. The reproducible seed-2601020 Gaussian recipe and provenance text are retained in `.impeccable/assets/neutral-grain.recipe.py` and `.impeccable/assets/neutral-grain.prompt.txt`; the PNG also embeds that provenance. It contains no color field or directional light falloff.
+
+## Shapes
+
+Shared buttons and inputs use 8px control corners. Main workspace frames and dialogs use 16px corners; menus, popovers and selects use 12px. These are token-based rem values and scale with text zoom. Navigation and history selectors use the established pill shape; controls otherwise keep their familiar silhouettes.
+
+## Components
+
+Reuse Shell, BrandMark, Button, SegmentedControl, Input/Textarea, Select, Dialog/AlertDialog, Popover, DropdownMenu, Saved Context, BoardEditor and PresentationCanvas. Add styling hooks and `aria-current` to the existing workspace/history links; keep their destinations and behavior.
+
+Generator and editor headers use smooth solid chrome; editor content uses opaque paper. Selected technology/duration/history states share the lavender fill and tactile rim. Class, unit, AI-key and context overlays inherit the same smooth paper, border, focus and shadow vocabulary. The live presentation’s teacher controls adopt the shared corner treatment while student surfaces and timer/export calculations retain their existing styles.
+
+No new entrance, background motion or animation library is introduced. Existing reduced-motion support remains in force.
+
+## Do's and Don'ts
+
+### Do:
+
+- Do preserve the existing workspace layout, actions, content, save model and keyboard behavior.
+- Do confine neutral grain to the far background and keep UI surfaces smooth and opaque.
+- Do use the shared ink, paper, selection, border, focus and corner tokens across operating controls and portals.
+- Do preserve user-selected class colors and presentation themes, along with the student-reading and PNG contracts.
+
+### Don't:
+
+- Don’t carry the landing gradient or sheen treatment onto main-app surfaces.
+- Don’t add grain to cards, fields, dialogs, editable text, student boards or PNG exports.
+- Don’t turn operational labels into display typography or add marketing motion to the workflow.

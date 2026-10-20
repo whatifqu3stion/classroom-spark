@@ -96,6 +96,8 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --shadow-teacher-card: var(--teacher-card-shadow);
+  --shadow-workspace-dialog: var(--workspace-dialog-shadow);
+  --shadow-workspace-popover: var(--workspace-popover-shadow);
 }
 
 :root {
@@ -178,59 +180,75 @@
   --landing-daily-width: 17.5rem;
   --landing-library-height: 19rem;
   --landing-dialog-width: 75rem;
+  /* Operate surfaces share the brand, with flat UI and grain behind it only. */
+  --workspace-paper: hsl(var(--card));
+  --workspace-chrome: color-mix(in srgb, hsl(var(--accent)) 18%, hsl(var(--card)));
+  --workspace-selected: color-mix(in srgb, hsl(var(--accent)) 65%, hsl(var(--card)));
+  --workspace-track: color-mix(in srgb, hsl(var(--accent)) 24%, hsl(var(--card)));
+  --workspace-panel-radius: var(--landing-radius-panel);
+  --workspace-control-radius: 0.5rem;
+  --workspace-title-size: 2rem;
+  --workspace-empty-title-size: 1.5rem;
+  --workspace-grain-size: 12rem;
+  --workspace-grain-opacity: 0.045;
+  --workspace-nav-fill: hsl(var(--card) / 94%);
+  --workspace-nav-blur: 12px;
+  --workspace-control-rim: inset 0 1px 0 hsl(var(--card) / 85%), 0 2px 4px -2px rgb(32 48 47 / 16%);
+  --workspace-dialog-shadow: 0 20px 60px -24px rgb(32 48 47 / 32%), 0 4px 14px -6px rgb(32 48 47 / 16%);
+  --workspace-popover-shadow: 0 12px 32px -16px rgb(32 48 47 / 24%), 0 2px 8px -4px rgb(32 48 47 / 12%);
   --app-font-sans: 'Inter', sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: Menlo, monospace;
   --radius: 0.5rem;
   
   --background: 40 28% 96.5%; /* Slightly stronger warm-white canvas to lift white panels */
-  --foreground: 220 10% 15%; /* Charcoal */
-  --border: 40 20% 90%; 
-  --input: 40 20% 90%;
-  --ring: 215 25% 27%; 
+  --foreground: 176.25 20% 15.6863%; /* Landing green-charcoal, #20302f. */
+  --border: 157.5 11.1111% 85.8824%;
+  --input: 168 9% 54%;
+  --ring: 250 30% 42%;
 
-  --card: 0 0% 100%;
-  --card-foreground: 220 10% 15%;
-  --card-border: 40 20% 92%;
+  --card: 48 100% 99.0196%; /* Smooth warm paper, #fffefa. */
+  --card-foreground: var(--foreground);
+  --card-border: var(--border);
 
-  --popover: 0 0% 100%;
-  --popover-foreground: 220 10% 15%;
-  --popover-border: 40 20% 90%;
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+  --popover-border: var(--border);
 
-  --primary: 215 25% 27%; /* Sophisticated dark slate */
+  --primary: var(--foreground);
   --primary-foreground: 0 0% 100%;
-  --primary-border: 215 25% 20%;
+  --primary-border: 176.25 20% 12%;
 
-  --secondary: 40 20% 94%;
-  --secondary-foreground: 220 10% 20%;
-  --secondary-border: 40 20% 88%;
+  --secondary: 234 45% 96%;
+  --secondary-foreground: var(--foreground);
+  --secondary-border: var(--border);
 
   --muted: 40 10% 95%;
-  --muted-foreground: 220 10% 40%;
+  --muted-foreground: 175.7143 9.0909% 30.1961%;
   --muted-border: 40 10% 90%;
 
-  --accent: 40 30% 94%;
-  --accent-foreground: 215 25% 27%;
-  --accent-border: 40 30% 88%;
+  --accent: 230.4 58.9744% 91.5686%; /* Landing lavender, #dde1f6. */
+  --accent-foreground: var(--foreground);
+  --accent-border: 230.4 26% 72%;
 
   --destructive: 0 70% 50%;
   --destructive-foreground: 0 0% 100%;
   --destructive-border: 0 70% 40%;
 
   --sidebar: 40 33% 98%;
-  --sidebar-foreground: 220 10% 15%;
-  --sidebar-border: 40 20% 90%;
-  --sidebar-primary: 215 25% 27%;
+  --sidebar-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 40 20% 94%;
-  --sidebar-accent-foreground: 220 10% 20%;
-  --sidebar-ring: 215 25% 27%;
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-ring: var(--ring);
   
   --shadow-2xs: 0px 1px 2px 0px rgba(0,0,0,0.02);
   --shadow-xs: 0px 1px 3px 0px rgba(0,0,0,0.04);
   --shadow-sm: 0px 2px 4px 0px rgba(0,0,0,0.04);
   --shadow-md: 0px 4px 8px -2px rgba(0,0,0,0.05);
-  --teacher-card-shadow: 0 2px 2px -1px rgb(0 0 0 / 10%), 0 5px 5px -3px rgb(0 0 0 / 12%);
+  --teacher-card-shadow: 0 10px 24px -18px rgb(32 48 47 / 25%), 0 2px 6px -3px rgb(32 48 47 / 12%);
 }
 
 .dark {
@@ -2241,11 +2259,123 @@
 }
 
 .board-editor-empty-state-title {
-  color: hsl(var(--foreground) / 0.55);
+  color: hsl(var(--foreground));
 }
 
 .board-editor-empty-state-copy {
-  color: hsl(var(--muted-foreground) / 0.55);
+  color: hsl(var(--muted-foreground));
+}
+
+/* Familiar workspace geometry; the texture is a separate, farthest layer. */
+.workspace-shell {
+  position: relative;
+  isolation: isolate;
+  caret-color: hsl(var(--primary));
+  scrollbar-color: hsl(var(--muted-foreground)) hsl(var(--background));
+}
+.workspace-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: url("/images/workspace/neutral-grain.png");
+  background-repeat: repeat;
+  background-size: var(--workspace-grain-size) var(--workspace-grain-size);
+  opacity: var(--workspace-grain-opacity);
+  pointer-events: none;
+}
+.workspace-shell ::selection {
+  color: var(--landing-ink);
+  background: var(--landing-selection);
+}
+.workspace-header {
+  background: var(--workspace-paper);
+  box-shadow: 0 1px 0 hsl(var(--border) / 45%);
+}
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .workspace-header {
+    background: var(--workspace-nav-fill);
+    -webkit-backdrop-filter: blur(var(--workspace-nav-blur));
+    backdrop-filter: blur(var(--workspace-nav-blur));
+  }
+}
+.workspace-brand {
+  min-height: var(--landing-touch-target);
+  color: hsl(var(--foreground));
+}
+.workspace-navigation :is(a, button) {
+  min-width: var(--landing-touch-target);
+  min-height: var(--landing-touch-target);
+  border-radius: var(--landing-radius-pill);
+}
+.workspace-nav-item[aria-current="page"] {
+  color: hsl(var(--foreground));
+  background: var(--workspace-selected);
+  box-shadow: var(--workspace-control-rim);
+}
+.workspace-shell :is(.boardwork-page-title, .board-editor-empty-state-title) {
+  font-family: var(--landing-font-display);
+  font-size: var(--workspace-title-size);
+  font-weight: var(--landing-display-weight);
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.workspace-shell .board-editor-empty-state-title {
+  font-size: var(--workspace-empty-title-size);
+}
+.boardwork-segmented-control,
+.boardwork-history-tabs {
+  border-color: hsl(var(--border));
+  background: var(--workspace-track);
+}
+.boardwork-segmented-control > button[aria-pressed="true"],
+.boardwork-history-tabs > button[aria-selected="true"] {
+  color: hsl(var(--foreground));
+  background: var(--workspace-selected);
+  border-color: color-mix(in srgb, hsl(var(--primary)) 40%, var(--workspace-paper));
+  box-shadow: var(--workspace-control-rim);
+}
+.boardwork-history-tabs {
+  border-radius: var(--landing-radius-pill);
+}
+.boardwork-history-tabs > button {
+  min-height: 2.25rem;
+  border-radius: var(--landing-radius-pill);
+}
+.presentation-controls {
+  border-radius: var(--workspace-panel-radius);
+}
+.presentation-controls-toggle,
+.presentation-control {
+  border-radius: var(--workspace-control-radius);
+}
+@media (pointer: coarse) {
+  .workspace-shell :is(button, [role="combobox"], input:not([type="checkbox"]), .boardwork-history-tabs > button) {
+    min-height: var(--landing-touch-target);
+  }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active) {
+  .workspace-shell::before {
+    display: none;
+  }
+  .workspace-header {
+    background: var(--workspace-paper);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+@media (forced-colors: active) {
+  .workspace-shell :is(a, button, input, textarea, [role="combobox"]):focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+  .workspace-nav-item[aria-current="page"],
+  .boardwork-segmented-control > button[aria-pressed="true"],
+  .boardwork-history-tabs > button[aria-selected="true"] {
+    outline: 1px solid Highlight;
+    outline-offset: -1px;
+  }
 }
 
 /* Marketing is scoped separately from the teacher's operating surfaces. */

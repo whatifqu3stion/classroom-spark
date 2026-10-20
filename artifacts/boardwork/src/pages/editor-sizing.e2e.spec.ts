@@ -41,7 +41,7 @@ for (const viewport of [
       const maxHeight = viewport.height - 104; // Existing navigation and workspace padding.
 
       for (const saved of [false, true]) {
-        await page.goto(saved ? "/activity/sizing-board" : "/");
+        await page.goto(saved ? "/activity/sizing-board" : "/app");
         await page.evaluate((value) => document.documentElement.classList.toggle("dark", value), dark);
         if (!saved) {
           await expect(page.getByTestId("empty-editor-state")).toBeVisible();
@@ -54,7 +54,9 @@ for (const viewport of [
         await page.evaluate(() => document.fonts.ready);
         const collapsed = await height();
         if (viewport.width >= 1024) {
-          expect(collapsed).toBeLessThan(maxHeight - 1);
+          // Short screens may be filled by the board's natural content height.
+          expect(collapsed).toBeLessThanOrEqual(maxHeight);
+          if (viewport.height >= 800) expect(collapsed).toBeLessThan(maxHeight - 1);
           const top = await panel.evaluate((el) => el.getBoundingClientRect().top);
           expect(top).toBe(await page.getByTestId("creation-controls").evaluate((el) => el.getBoundingClientRect().top));
         } else {

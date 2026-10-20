@@ -27,7 +27,7 @@ export function SegmentedControl<T extends string | number>({
       role={ariaLabel ? "group" : undefined}
       aria-label={ariaLabel}
       className={cn(
-        "grid min-h-10 min-w-0 w-full items-center rounded-lg border border-input bg-muted/50 p-1 text-muted-foreground",
+        "boardwork-segmented-control grid min-h-10 min-w-0 w-full items-center rounded-lg border border-input bg-muted/50 p-1 text-muted-foreground",
         className
       )}
     >

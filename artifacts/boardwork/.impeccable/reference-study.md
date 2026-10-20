@@ -1,6 +1,6 @@
 # Landing reference study and implementation notes
 
-Scope: the new Boardwork homepage. README/portfolio documentation and the existing workspace's visual update are explicitly deferred.
+Scope: the new Boardwork homepage. README/portfolio documentation remains deferred. The later workspace cohesion pass is recorded in the workspace surface brief and DESIGN.md.
 
 ## Evidence
 

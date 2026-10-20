@@ -173,12 +173,12 @@ export default function History() {
     <Shell>
       <div className="container mx-auto px-4 md:px-8 py-8 max-w-5xl min-h-[calc(100dvh-3.5rem)]">
         <div className="flex flex-col gap-4 mb-8 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">History</h1>
+          <h1 className="boardwork-page-title text-2xl font-bold tracking-tight text-foreground">History</h1>
           <div className="flex flex-wrap items-center gap-2">
             <div
               role="tablist"
               aria-label="History view"
-              className="inline-flex items-center rounded-md border bg-muted/30 p-1"
+              className="boardwork-history-tabs inline-flex items-center rounded-md border bg-muted/30 p-1"
             >
               <button
                 type="button"
@@ -228,7 +228,7 @@ export default function History() {
           </div>
         </div>
 
-        <div className="mb-6 flex flex-col gap-3 rounded-xl border bg-muted/10 p-3 sm:flex-row sm:items-end" data-testid="history-filters">
+        <div className="mb-6 flex flex-col gap-3 rounded-[var(--workspace-panel-radius)] border bg-[var(--workspace-chrome)] p-3 sm:flex-row sm:items-end" data-testid="history-filters">
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             <label htmlFor="history-class-filter" className="text-xs font-medium text-muted-foreground">
               Class
@@ -348,7 +348,7 @@ export default function History() {
                 .map((chipId) => chips.find((chip) => chip.id === chipId)?.label)
                 .filter((label): label is string => Boolean(label));
               return (
-                <div key={activity.id} className="group flex min-w-0 items-center justify-between rounded-[14px] border bg-card p-4 shadow-teacher-card transition-colors hover:border-foreground/20" data-testid={`history-item-${activity.id}`}>
+                <div key={activity.id} className="boardwork-history-item group flex min-w-0 items-center justify-between rounded-[var(--workspace-panel-radius)] border bg-card p-4 shadow-teacher-card transition-colors hover:border-foreground/20" data-testid={`history-item-${activity.id}`}>
                   <div className="flex items-center gap-4 min-w-0 flex-1">
                      <Tooltip>
                        <TooltipTrigger asChild>

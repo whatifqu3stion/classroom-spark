@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-20T20:13:08.600996Z",
-  "title": "Design System: Boardwork — landing extension (/ only)",
+  "generatedAt": "2026-10-20T20:57:26.664140Z",
+  "title": "Design System: Boardwork — landing and workspace",
   "extensions": {
     "colorMeta": {
       "landing-primary": {
@@ -288,6 +288,126 @@
           "oklch(84% 0.00000 89.88)",
           "oklch(95% 0.00000 89.88)"
         ]
+      },
+      "workspace-canvas": {
+        "role": "neutral",
+        "displayName": "Canvas",
+        "canonical": "hsl(40 28% 96.5%)",
+        "tonalRamp": [
+          "oklch(15% 0.00477 84.56)",
+          "oklch(26% 0.00477 84.56)",
+          "oklch(38% 0.00477 84.56)",
+          "oklch(49% 0.00477 84.56)",
+          "oklch(61% 0.00477 84.56)",
+          "oklch(72% 0.00477 84.56)",
+          "oklch(84% 0.00477 84.56)",
+          "oklch(95% 0.00477 84.56)"
+        ]
+      },
+      "workspace-ink": {
+        "role": "primary",
+        "displayName": "Ink",
+        "canonical": "hsl(176.25 20% 15.6863%)",
+        "tonalRamp": [
+          "oklch(15% 0.02129 191.21)",
+          "oklch(26% 0.02129 191.21)",
+          "oklch(38% 0.02129 191.21)",
+          "oklch(49% 0.02129 191.21)",
+          "oklch(61% 0.02129 191.21)",
+          "oklch(72% 0.02129 191.21)",
+          "oklch(84% 0.02129 191.21)",
+          "oklch(95% 0.02129 191.21)"
+        ]
+      },
+      "workspace-muted-ink": {
+        "role": "neutral",
+        "displayName": "Muted Ink",
+        "canonical": "hsl(175.7143 9.0909% 30.1961%)",
+        "tonalRamp": [
+          "oklch(15% 0.01765 191.22)",
+          "oklch(26% 0.01765 191.22)",
+          "oklch(38% 0.01765 191.22)",
+          "oklch(49% 0.01765 191.22)",
+          "oklch(61% 0.01765 191.22)",
+          "oklch(72% 0.01765 191.22)",
+          "oklch(84% 0.01765 191.22)",
+          "oklch(95% 0.01765 191.22)"
+        ]
+      },
+      "workspace-paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "hsl(48 100% 99.0196%)",
+        "tonalRamp": [
+          "oklch(15% 0.00537 95.10)",
+          "oklch(26% 0.00537 95.10)",
+          "oklch(38% 0.00537 95.10)",
+          "oklch(49% 0.00537 95.10)",
+          "oklch(61% 0.00537 95.10)",
+          "oklch(72% 0.00537 95.10)",
+          "oklch(84% 0.00537 95.10)",
+          "oklch(95% 0.00537 95.10)"
+        ]
+      },
+      "workspace-chrome": {
+        "role": "neutral",
+        "displayName": "Chrome",
+        "canonical": "color-mix(in srgb, hsl(230.4 58.9744% 91.5686%) 18%, hsl(48 100% 99.0196%))",
+        "tonalRamp": [
+          "oklch(15% 0.00074 293.83)",
+          "oklch(26% 0.00074 293.83)",
+          "oklch(38% 0.00074 293.83)",
+          "oklch(49% 0.00074 293.83)",
+          "oklch(61% 0.00074 293.83)",
+          "oklch(72% 0.00074 293.83)",
+          "oklch(84% 0.00074 293.83)",
+          "oklch(95% 0.00074 293.83)"
+        ]
+      },
+      "workspace-selected": {
+        "role": "secondary",
+        "displayName": "Selected",
+        "canonical": "color-mix(in srgb, hsl(230.4 58.9744% 91.5686%) 65%, hsl(48 100% 99.0196%))",
+        "tonalRamp": [
+          "oklch(15% 0.01691 277.73)",
+          "oklch(26% 0.01691 277.73)",
+          "oklch(38% 0.01691 277.73)",
+          "oklch(49% 0.01691 277.73)",
+          "oklch(61% 0.01691 277.73)",
+          "oklch(72% 0.01691 277.73)",
+          "oklch(84% 0.01691 277.73)",
+          "oklch(95% 0.01691 277.73)"
+        ]
+      },
+      "workspace-control-border": {
+        "role": "neutral",
+        "displayName": "Control Border",
+        "canonical": "hsl(168 9% 54%)",
+        "tonalRamp": [
+          "oklch(15% 0.02484 182.11)",
+          "oklch(26% 0.02484 182.11)",
+          "oklch(38% 0.02484 182.11)",
+          "oklch(49% 0.02484 182.11)",
+          "oklch(61% 0.02484 182.11)",
+          "oklch(72% 0.02484 182.11)",
+          "oklch(84% 0.02484 182.11)",
+          "oklch(95% 0.02484 182.11)"
+        ]
+      },
+      "workspace-focus": {
+        "role": "secondary",
+        "displayName": "Focus",
+        "canonical": "hsl(250 30% 42%)",
+        "tonalRamp": [
+          "oklch(15% 0.10259 289.31)",
+          "oklch(26% 0.10259 289.31)",
+          "oklch(38% 0.10259 289.31)",
+          "oklch(49% 0.10259 289.31)",
+          "oklch(61% 0.10259 289.31)",
+          "oklch(72% 0.10259 289.31)",
+          "oklch(84% 0.10259 289.31)",
+          "oklch(95% 0.10259 289.31)"
+        ]
       }
     },
     "typographyMeta": {
@@ -326,6 +446,15 @@
       "landing-caption": {
         "displayName": "Caption",
         "purpose": "Homepage / and illustrative landing preview only."
+      },
+      "workspace-page-title": {
+        "displayName": "Workspace Page Title"
+      },
+      "workspace-empty-title": {
+        "displayName": "Workspace Empty Title"
+      },
+      "workspace-label": {
+        "displayName": "Workspace Label"
       }
     },
     "shadows": [
@@ -353,6 +482,26 @@
         "name": "landing-glass-control",
         "value": "0 2px 5px -2px rgb(32 48 47 / 18%)",
         "purpose": "Subtle selected-subject elevation on the landing page."
+      },
+      {
+        "name": "workspace-panel",
+        "value": "0 10px 24px -18px rgb(32 48 47 / 25%), 0 2px 6px -3px rgb(32 48 47 / 12%)",
+        "purpose": "Smooth operating panels and history rows."
+      },
+      {
+        "name": "workspace-dialog",
+        "value": "0 20px 60px -24px rgb(32 48 47 / 32%), 0 4px 14px -6px rgb(32 48 47 / 16%)",
+        "purpose": "Opaque class, unit and AI-key dialogs."
+      },
+      {
+        "name": "workspace-popover",
+        "value": "0 12px 32px -16px rgb(32 48 47 / 24%), 0 2px 8px -4px rgb(32 48 47 / 12%)",
+        "purpose": "Opaque select, context and menu portals."
+      },
+      {
+        "name": "workspace-control-rim",
+        "value": "inset 0 1px 0 hsl(var(--card) / 85%), 0 2px 4px -2px rgb(32 48 47 / 16%)",
+        "purpose": "Selected operational controls, without a gradient."
       }
     ],
     "motion": [
@@ -474,17 +623,35 @@
       "description": "Static drop-in rendering of the shared Accordion trigger and open answer.",
       "html": "<div class=\"ds-landing-faq\"><button aria-expanded=\"true\" aria-controls=\"ds-landing-answer\">Do students need accounts?<svg aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"m6 9 6 6 6-6\"/></svg></button><div id=\"ds-landing-answer\" role=\"region\">No. Students view the board you present in class.</div></div>",
       "css": ".ds-landing-faq{border-bottom:1px solid var(--landing-line);color:var(--landing-ink);font-family:var(--landing-font-body)}.ds-landing-faq button{display:flex;align-items:center;justify-content:space-between;gap:var(--landing-space-5);width:100%;min-height:var(--landing-touch-target);padding:var(--landing-space-5) 0;border:0;background:transparent;color:inherit;text-align:left;font:500 var(--landing-text-body)/1.5 var(--landing-font-body);cursor:pointer}.ds-landing-faq button:hover{text-decoration:underline}.ds-landing-faq button:focus-visible{outline:2px solid var(--landing-ink);outline-offset:var(--landing-space-1);}.ds-landing-faq svg{width:1rem;height:1rem;transition:transform var(--landing-motion-menu,.2s) var(--landing-ease,cubic-bezier(0.16,1,0.3,1))}.ds-landing-faq button[aria-expanded=true] svg{transform:rotate(180deg)}.ds-landing-faq [role=region]{padding-bottom:1rem;font-size:var(--landing-text-small);line-height:var(--landing-leading-body)}@media(prefers-reduced-motion:reduce){.ds-landing-faq svg{transition:none}}"
+    },
+    {
+      "name": "Workspace shell and panels",
+      "kind": "custom",
+      "refersTo": "workspace-panel",
+      "description": "The existing workspace frame, smooth paper panels and uniform navigation; the real app alone supplies its far-background grain.",
+      "html": "<div class=\"ds-workspace\"><header><strong>Boardwork</strong><span aria-current=\"page\">Workspace</span><span>History</span></header><div class=\"ds-workspace-panes\"><section><strong>What are students working on today?</strong><label>Class context<textarea rows=\"2\" readonly>Cells and systems</textarea></label><button>Create board</button></section><article><strong>Edit your board</strong><p>Sketch a cell in fresh water and a cell in very salty water. Predict how each one changes.</p></article></div></div>",
+      "css": ".ds-workspace{font:400 14px/1.5 var(--app-font-sans);color:hsl(var(--foreground));background:hsl(var(--background));padding:12px}.ds-workspace header{display:flex;align-items:center;gap:16px;background:var(--workspace-paper);padding:8px 12px;border-bottom:1px solid hsl(var(--border))}.ds-workspace header strong{margin-right:auto}.ds-workspace [aria-current=page]{padding:8px 12px;border-radius:var(--landing-radius-pill);background:var(--workspace-selected);box-shadow:var(--workspace-control-rim)}.ds-workspace-panes{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:16px;margin-top:16px}.ds-workspace-panes>section,.ds-workspace-panes>article{min-width:0;background:var(--workspace-paper);border:1px solid hsl(var(--border));border-radius:var(--workspace-panel-radius);padding:16px;box-shadow:var(--teacher-card-shadow)}.ds-workspace label{display:grid;gap:4px;margin-top:12px}.ds-workspace textarea{box-sizing:border-box;width:100%;border:1px solid hsl(var(--input));border-radius:var(--workspace-control-radius);background:var(--workspace-paper);color:inherit;padding:8px;font:inherit}.ds-workspace button{width:100%;min-height:44px;margin-top:12px;border:0;border-radius:var(--workspace-control-radius);background:hsl(var(--primary));color:hsl(var(--primary-foreground));font:500 14px var(--app-font-sans)}.ds-workspace button:focus-visible{outline:2px solid hsl(var(--ring));outline-offset:2px}.ds-workspace p{font-size:18px;line-height:1.6;max-width:65ch}@media(max-width:440px){.ds-workspace-panes{grid-template-columns:1fr}}"
+    },
+    {
+      "name": "Workspace selected controls",
+      "kind": "chip",
+      "refersTo": "workspace-selected-control",
+      "description": "The existing technology selector uses solid fills and a quiet rim; no sheen or grain is applied.",
+      "html": "<div class=\"ds-workspace-segments\" role=\"group\" aria-label=\"Technology\"><button type=\"button\" aria-pressed=\"true\">No computer</button><button type=\"button\" aria-pressed=\"false\">Computer required</button></div>",
+      "css": ".ds-workspace-segments{display:flex;gap:0;padding:4px;border:1px solid hsl(var(--border));border-radius:var(--workspace-control-radius);background:var(--workspace-track);font:500 14px var(--app-font-sans)}.ds-workspace-segments button{flex:1;min-height:36px;padding:6px 8px;border:1px solid transparent;border-radius:var(--workspace-control-radius);background:transparent;color:hsl(var(--muted-foreground));font:inherit}.ds-workspace-segments button[aria-pressed=true]{background:var(--workspace-selected);color:hsl(var(--foreground));border-color:color-mix(in srgb,hsl(var(--primary)) 40%,var(--workspace-paper));box-shadow:var(--workspace-control-rim)}.ds-workspace-segments button:focus-visible{outline:2px solid hsl(var(--ring));outline-offset:2px}@media(pointer:coarse){.ds-workspace-segments button{min-height:44px}}@media(forced-colors:active){.ds-workspace-segments button[aria-pressed=true]{outline:1px solid Highlight;outline-offset:-1px}}"
     }
   ],
   "narrative": {
     "northStar": "The everyday art of starting class",
-    "overview": "This extension applies only to the public homepage at `/`, its illustrative examples, and its classroom-preview dialog. The original specification above continues to govern the teacher workspace at `/app`, plus `/history`, `/activity/:id`, `/present`, and `/present/:id`. The workspace visual restyle and README/portfolio work are deferred. The frontmatter records landing tokens only; it does not replace the app’s tokens.\n\nThe chosen Craft reference informs an airy composition, a floating navigation pill, generous paper surfaces, and light serif headings. The user’s later grainy purple/blue reference supplies the hero material: pale lavender and periwinkle with blue/cyan at the edges and lower field. The visual language remains connected to Boardwork through its local Bitter, Inter, Open Sans and BrandMark. This is a source-led adaptation, not an approved generated full-page comp.",
+    "overview": "This extension applies only to the public homepage at `/`, its illustrative examples, and its classroom-preview dialog. The original specification above continues to govern the teacher workspace at `/app`, plus `/history`, `/activity/:id`, `/present`, and `/present/:id`. The workspace visual restyle and README/portfolio work are deferred. The frontmatter records landing tokens only; it does not replace the app’s tokens.\n\nThe chosen Craft reference informs an airy composition, a floating navigation pill, generous paper surfaces, and light serif headings. The user’s later grainy purple/blue reference supplies the hero material: pale lavender and periwinkle with blue/cyan at the edges and lower field. The visual language remains connected to Boardwork through its local Bitter, Inter, Open Sans and BrandMark. This is a source-led adaptation, not an approved generated full-page comp.\n\nThe teacher workspace now shares the landing page’s warm paper, green-charcoal ink, restrained lavender selection and soft material edges. It retains the existing setup/editor columns, stacked mobile layout, field order, sticky creation actions, history workflow and save behavior. This is a visual refinement of the working UI, not a new information architecture.",
     "keyCharacteristics": [
       "A readable HTML board is the central product object.",
       "Warm paper, pastel demonstration fields and dark green-charcoal text.",
       "Fine-grained original purple/blue hero material with a calm light center.",
       "Restrained, once-only motion and explicit reduced-motion behavior.",
-      "Translucent glass navigation and demo chrome, with opaque reading surfaces."
+      "Translucent glass navigation and demo chrome, with opaque reading surfaces.",
+      "Smooth, opaque operating surfaces above far-background neutral grain.",
+      "Familiar teacher workflows with shared Boardwork ink, paper, selection and edges."
     ],
     "rules": [
       {
@@ -501,6 +668,11 @@
         "name": "The Material Depth Rule",
         "body": "Landing shadows describe floating navigation, the demo window and overlapping paper notes. The navigation and demo frame share a static glass material with a fine highlight and soft inner reflection; the board-reading area stays opaque paper. Student-facing Present and exported boards retain their existing flat framing.",
         "section": "elevation"
+      },
+      {
+        "name": "The Operating Surface Rule",
+        "body": "Grain belongs only to the far workspace background. Cards, fields, overlays and board-reading surfaces stay opaque and smooth. Main-app surfaces use solid colors, with no gradient treatment.",
+        "section": "Colors"
       }
     ],
     "dos": [
@@ -509,14 +681,21 @@
       "Do keep illustrative boards as semantic HTML with selectable subjects, accessible preview controls and truthful example labels.",
       "Do use visible keyboard focus, at least 44px principal controls, balanced headings and responsive stacking.",
       "Do disable entrance transforms, parallax, transitions and smooth scrolling for reduced motion.",
-      "Do limit glass to navigation, demo chrome and the selected subject; honor opaque fallbacks and contrast/transparency preferences."
+      "Do limit glass to navigation, demo chrome and the selected subject; honor opaque fallbacks and contrast/transparency preferences.",
+      "Do preserve the existing workspace layout, actions, content, save model and keyboard behavior.",
+      "Do confine neutral grain to the far background and keep UI surfaces smooth and opaque.",
+      "Do use the shared ink, paper, selection, border, focus and corner tokens across operating controls and portals.",
+      "Do preserve user-selected class colors and presentation themes, along with the student-reading and PNG contracts."
     ],
     "donts": [
       "Don’t apply this landing extension to the teacher workspace, live Present or PNG export.",
       "Don’t ship Craft’s fonts, imagery, logos or copied product claims.",
       "Don’t convert the grainy hero into a rainbow, animated glow or generic AI motif.",
       "Don’t animate continuously or hide essential content until an entrance runs.",
-      "Don’t add invented adoption figures, customer evidence, pricing or live-generation claims to the illustrative surface."
+      "Don’t add invented adoption figures, customer evidence, pricing or live-generation claims to the illustrative surface.",
+      "Don’t carry the landing gradient or sheen treatment onto main-app surfaces.",
+      "Don’t add grain to cards, fields, dialogs, editable text, student boards or PNG exports.",
+      "Don’t turn operational labels into display typography or add marketing motion to the workflow."
     ]
   }
 }

@@ -55,7 +55,6 @@ describe("BoardEditor presentation visual disclosure", () => {
     expect(screen.getByTestId("board-editor-header")).toHaveClass(
       "flex-col",
       "sm:flex-row",
-      "bg-card",
       "border-b",
       "px-5",
       "py-4",
