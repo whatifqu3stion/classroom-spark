@@ -172,7 +172,7 @@ function BoardDemo() {
   const current =
     examples.find((example) => example.id === subject) ?? examples[0];
   return (
-    <figure className="landing-demo" id="example-board">
+    <figure className="landing-demo landing-glass" id="example-board">
       <div className="landing-demo-toolbar">
         <span className="landing-demo-brand">
           <BrandMark /> Boardwork
@@ -284,7 +284,7 @@ function LandingNavigation() {
     </>
   );
   return (
-    <header className="landing-nav">
+    <header className="landing-nav landing-glass">
       <div className="landing-nav-bar">
         <Link href="/" className="landing-brand" aria-label="Boardwork home">
           <BrandMark />

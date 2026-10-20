@@ -33,3 +33,5 @@ Temporary source: /tmp/craft-reference/. Full-page captures at 1440, 768, 390; T
 
 ## Accepted steering
 The user replaced the hero collage direction with the attached grainy lavender/blue gradient. Keep two dominant hue families, organic transitions and fine film grain, and a pale calm central field for headline readability. Other landing sections and the later app restyle remain as scoped. The image is a generated original inspired by the supplied screenshot, without its text or branding.
+
+The user requested liquid glass on the navigation and sparingly elsewhere. Use a 64% paper/20px-blur nav with a bright edge, inner reflection and 32px radius; echo it in 68% paper/12px-blur demo chrome and the selected subject pill. Reading surfaces remain opaque. Static CSS enhancement only; opaque fallback for unsupported backdrop filtering, reduced transparency, increased contrast and forced colors.

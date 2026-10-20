@@ -15,7 +15,10 @@ colors:
   landing-butter: "#f8e8a4"
   landing-mint: "#cde4cf"
   landing-line: "#d7dfdc"
-  landing-nav-background: "rgb(255 254 250 / 94%)"
+  landing-nav-background: "rgb(255 254 250 / 64%)"
+  landing-glass-chrome-background: "rgb(255 254 250 / 68%)"
+  landing-glass-control-background: "rgb(255 254 250 / 80%)"
+  landing-glass-edge: "rgb(255 255 255 / 70%)"
   landing-selection: "#b6dac8"
   landing-hero-surface: "#d3cff3"
 typography:
@@ -66,6 +69,7 @@ typography:
     fontSize: "0.75rem"
 rounded:
   landing-section: "1.5rem"
+  landing-nav: "2rem"
   landing-panel: "1rem"
   landing-pill: "999px"
   landing-control: "6px"
@@ -100,11 +104,11 @@ components:
   landing-nav:
     backgroundColor: "{colors.landing-nav-background}"
     textColor: "{colors.landing-ink}"
-    rounded: "{rounded.landing-section}"
+    rounded: "{rounded.landing-nav}"
     padding: "0.5rem 0.75rem"
     width: "min(57.5rem, calc(100% - 4rem))"
   landing-demo:
-    backgroundColor: "{colors.landing-paper}"
+    backgroundColor: "{colors.landing-glass-chrome-background}"
     textColor: "{colors.landing-ink}"
     rounded: "{rounded.landing-panel}"
   landing-board:
@@ -458,6 +462,7 @@ The chosen Craft reference informs an airy composition, a floating navigation pi
 - Warm paper, pastel demonstration fields and dark green-charcoal text.
 - Fine-grained original purple/blue hero material with a calm light center.
 - Restrained, once-only motion and explicit reduced-motion behavior.
+- Translucent glass navigation and demo chrome, with opaque reading surfaces.
 
 ## Colors
 
@@ -478,10 +483,10 @@ The landing palette combines warm paper and green-charcoal ink with pastel class
 
 - **Canvas:** inherits the incumbent warm background, recorded as its current resolved HSL value in frontmatter.
 - **Paper:** demo window, notes and preview dialog. **Line:** understated toolbar and section separators.
-- **Navigation background:** the recorded 94% paper surface; it uses translucency without a marketing backdrop blur.
+- **Navigation background:** 64% warm paper, with a 20px backdrop blur and 1.3 saturation. **Demo chrome:** 68% paper with a quieter 12px blur. **Selected subject:** 80% paper and the same fine highlight. The track mixes 30% landing lavender into paper. A shared white sheen and 70% white edge describe the glass surface.
 - **Selection:** sage text-selection backing with landing ink.
 
-**The Surface Boundary Rule.** The homepage may use the approved original organic gradient, soft paper shadows and once-only entrances. These are exceptions to the app-only gradient and state-only motion guidance above; they do not authorize gradients, ambient motion or decorative depth in operating or presentation surfaces.
+**The Surface Boundary Rule.** The homepage may use the approved original organic gradient, restrained glass on navigation and demo chrome, soft paper shadows and once-only entrances. These are exceptions to the app-only gradient and state-only motion guidance above; they do not authorize gradients, ambient motion or decorative depth in operating or presentation surfaces.
 
 ## Typography
 
@@ -517,13 +522,15 @@ This marketing surface uses soft downward shadows around the product window, flo
 
 - **Window:** `0 22px 54px -22px rgb(32 48 47 / 30%), 0 5px 12px -5px rgb(32 48 47 / 12%)`; the main interactive product example.
 - **Paper:** `0 10px 24px -12px rgb(32 48 47 / 25%)`; class context and daily-intention notes.
-- **Navigation:** `0 10px 22px -12px rgb(32 48 47 / 25%)`; the fixed navigation surface.
+- **Navigation:** `0 12px 28px -14px rgb(32 48 47 / 28%), 0 2px 6px -3px rgb(32 48 47 / 8%)`; the fixed navigation surface.
+- **Glass rim:** `inset 0 1px 0 rgb(255 255 255 / 88%), inset 0 -1px 0 rgb(32 48 47 / 8%)`; a bright upper edge and a quiet lower lip.
+- **Glass control:** `0 2px 5px -2px rgb(32 48 47 / 18%)`; the selected subject tab.
 
-**The Material Depth Rule.** Landing shadows describe floating navigation, the demo window and overlapping paper notes. Student-facing Present and exported boards retain their existing flat framing.
+**The Material Depth Rule.** Landing shadows describe floating navigation, the demo window and overlapping paper notes. The navigation and demo frame share a static glass material with a fine highlight and soft inner reflection; the board-reading area stays opaque paper. Student-facing Present and exported boards retain their existing flat framing.
 
 ## Shapes
 
-Broad marketing sections use the 1.5rem radius; demo windows, board samples, saved examples and notes use 1rem. Action pills use the 999px landing token, while the shared Button landing size uses a fully rounded silhouette. Shared tab triggers retain their 6px corner treatment and selected surface/shadow. The shared dialog retains its 14px outer radius, with 1rem board corners inside. Thin separators group content without boxing every block. Keep these nested forms limited to actual product examples and paper overlaps.
+Broad marketing sections use the 1.5rem radius; demo windows, board samples, saved examples and notes use 1rem. Action pills use the 999px landing token, while the shared Button landing size uses a fully rounded silhouette. Landing navigation uses a 2rem radius that also fits its expanded compact menu. Subject tabs use the shared pill token and a selected glass highlight. The shared dialog retains its 14px outer radius, with 1rem board corners inside. Thin separators group content without boxing every block. Keep these nested forms limited to actual product examples and paper overlaps.
 
 ## Components
 
@@ -535,11 +542,11 @@ Landing anchors and buttons show a 2px solid landing-ink focus outline with 4px 
 
 ### Navigation
 
-Reuse BrandMark and the Boardwork name. The rounded paper navigation has no invented dropdown destinations. Its compact disclosure uses semantic expanded/controls state, closes after link selection, and closes with Escape while restoring focus to the trigger. Mobile link rows are at least 44px high.
+Reuse BrandMark and the Boardwork name. The glass navigation has no invented dropdown destinations. The shared `landing-glass` class provides opaque paper first, then uses `@supports` to add the shared translucent fill, sheen, border, inner rim, blur and saturation. Reduced transparency, increased contrast and forced-color preferences restore opaque paper and remove backdrop filtering. Forced colors retain a system-color border and a visible selected-tab border. Blur does not animate. Its compact disclosure uses semantic expanded/controls state, closes after link selection, and closes with Escape while restoring focus to the trigger. Mobile link rows are at least 44px high.
 
 ### Subject tabs and example boards
 
-The existing Tabs primitive supplies keyboard navigation and selected state. Landing overrides retain 44px controls and remove generic all-property transitions. Selecting a subject changes context and board content together; the change is a short opacity/5px translation. Demo window, board and illustrative captions are HTML, not a screenshot. Board padding is 24px × 32px on desktop and 20px on small screens. Its supporting list remains a coherent group, and materials sit below a quiet rule.
+The existing Tabs primitive supplies keyboard navigation and selected state. The landing-only pill track and selected highlight echo the navigation glass; demo chrome picks up the purple/blue field, while the example workspace and board surfaces remain opaque. Landing overrides retain 44px controls and remove generic all-property transitions. Selecting a subject changes context and board content together; the change is a short opacity/5px translation. Demo window, board and illustrative captions are HTML, not a screenshot. Board padding is 24px × 32px on desktop and 20px on small screens. Its supporting list remains a coherent group, and materials sit below a quiet rule.
 
 ### Classroom preview and FAQ
 
@@ -568,6 +575,7 @@ The exact generation prompt is retained at `.impeccable/assets/classroom-gradien
 - Do keep illustrative boards as semantic HTML with selectable subjects, accessible preview controls and truthful example labels.
 - Do use visible keyboard focus, at least 44px principal controls, balanced headings and responsive stacking.
 - Do disable entrance transforms, parallax, transitions and smooth scrolling for reduced motion.
+- Do limit glass to navigation, demo chrome and the selected subject; honor opaque fallbacks and contrast/transparency preferences.
 
 ### Don't:
 

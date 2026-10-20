@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-20T19:09:00.143847Z",
+  "generatedAt": "2026-10-20T20:13:08.600996Z",
   "title": "Design System: Boardwork — landing extension (/ only)",
   "extensions": {
     "colorMeta": {
@@ -202,7 +202,7 @@
       "landing-nav-background": {
         "role": "neutral",
         "displayName": "Nav Background",
-        "canonical": "rgb(255 254 250 / 94%)",
+        "canonical": "rgb(255 254 250 / 64%)",
         "tonalRamp": [
           "oklch(15% 0.00537 95.10)",
           "oklch(26% 0.00537 95.10)",
@@ -242,6 +242,51 @@
           "oklch(72% 0.04956 290.42)",
           "oklch(84% 0.04956 290.42)",
           "oklch(95% 0.04956 290.42)"
+        ]
+      },
+      "landing-glass-chrome-background": {
+        "role": "neutral",
+        "displayName": "Glass Chrome Background",
+        "canonical": "rgb(255 254 250 / 68%)",
+        "tonalRamp": [
+          "oklch(15% 0.00537 95.10)",
+          "oklch(26% 0.00537 95.10)",
+          "oklch(38% 0.00537 95.10)",
+          "oklch(49% 0.00537 95.10)",
+          "oklch(61% 0.00537 95.10)",
+          "oklch(72% 0.00537 95.10)",
+          "oklch(84% 0.00537 95.10)",
+          "oklch(95% 0.00537 95.10)"
+        ]
+      },
+      "landing-glass-control-background": {
+        "role": "neutral",
+        "displayName": "Glass Control Background",
+        "canonical": "rgb(255 254 250 / 80%)",
+        "tonalRamp": [
+          "oklch(15% 0.00537 95.10)",
+          "oklch(26% 0.00537 95.10)",
+          "oklch(38% 0.00537 95.10)",
+          "oklch(49% 0.00537 95.10)",
+          "oklch(61% 0.00537 95.10)",
+          "oklch(72% 0.00537 95.10)",
+          "oklch(84% 0.00537 95.10)",
+          "oklch(95% 0.00537 95.10)"
+        ]
+      },
+      "landing-glass-edge": {
+        "role": "neutral",
+        "displayName": "Glass Edge",
+        "canonical": "rgb(255 255 255 / 70%)",
+        "tonalRamp": [
+          "oklch(15% 0.00000 89.88)",
+          "oklch(26% 0.00000 89.88)",
+          "oklch(38% 0.00000 89.88)",
+          "oklch(49% 0.00000 89.88)",
+          "oklch(61% 0.00000 89.88)",
+          "oklch(72% 0.00000 89.88)",
+          "oklch(84% 0.00000 89.88)",
+          "oklch(95% 0.00000 89.88)"
         ]
       }
     },
@@ -296,8 +341,18 @@
       },
       {
         "name": "landing-nav",
-        "value": "0 10px 22px -12px rgb(32 48 47 / 25%)",
-        "purpose": "Landing fixed paper navigation only."
+        "value": "0 12px 28px -14px rgb(32 48 47 / 28%), 0 2px 6px -3px rgb(32 48 47 / 8%)",
+        "purpose": "Landing fixed glass navigation only."
+      },
+      {
+        "name": "landing-glass-rim",
+        "value": "inset 0 1px 0 rgb(255 255 255 / 88%), inset 0 -1px 0 rgb(32 48 47 / 8%)",
+        "purpose": "Fine inner reflection on landing glass surfaces."
+      },
+      {
+        "name": "landing-glass-control",
+        "value": "0 2px 5px -2px rgb(32 48 47 / 18%)",
+        "purpose": "Subtle selected-subject elevation on the landing page."
       }
     ],
     "motion": [
@@ -386,16 +441,16 @@
       "name": "Landing floating navigation",
       "kind": "nav",
       "refersTo": "landing-nav",
-      "description": "Paper navigation; compact disclosure replaces links below 56rem in the application.",
+      "description": "Glass navigation with 20px backdrop blur and opaque accessibility/browser fallbacks; compact disclosure replaces links below 56rem.",
       "html": "<nav class=\"ds-landing-nav\" aria-label=\"Homepage navigation\"><a class=\"ds-landing-brand\" href=\"/\">Boardwork</a><a href=\"#how-it-works\">How it works</a><a href=\"#questions\">Questions</a></nav>",
-      "css": ".ds-landing-nav{display:flex;align-items:center;gap:var(--landing-space-5);padding:var(--landing-space-2) var(--landing-space-3);max-width:var(--landing-nav-width);border-radius:var(--landing-radius-section);background:var(--landing-nav-background);color:var(--landing-ink);box-shadow:var(--landing-shadow-nav);font:400 var(--landing-text-small) var(--landing-font-body)}.ds-landing-nav a{display:inline-flex;align-items:center;min-height:var(--landing-touch-target);color:inherit;text-decoration:none}.ds-landing-nav .ds-landing-brand{font-size:1rem;font-weight:600;letter-spacing:-.025em;margin-right:auto}.ds-landing-nav a:hover{text-decoration:underline}.ds-landing-nav a:focus-visible{outline:2px solid var(--landing-ink);outline-offset:var(--landing-space-1);}"
+      "css": ".ds-landing-nav{display:flex;align-items:center;gap:var(--landing-space-5);padding:var(--landing-space-2) var(--landing-space-3);max-width:var(--landing-nav-width);border:1px solid var(--landing-glass-edge);border-radius:var(--landing-radius-nav);background:var(--landing-paper);color:var(--landing-ink);box-shadow:var(--landing-glass-rim),var(--landing-shadow-nav);font:400 var(--landing-text-small) var(--landing-font-body)}.ds-landing-nav a{display:inline-flex;align-items:center;min-height:var(--landing-touch-target);color:inherit;text-decoration:none}.ds-landing-nav .ds-landing-brand{font-size:1rem;font-weight:600;letter-spacing:-.025em;margin-right:auto}.ds-landing-nav a:hover{text-decoration:underline}.ds-landing-nav a:focus-visible{outline:2px solid var(--landing-ink);outline-offset:var(--landing-space-1);}@supports (backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px)){.ds-landing-nav{background:var(--landing-glass-sheen),var(--landing-nav-background);-webkit-backdrop-filter:blur(var(--landing-glass-blur)) saturate(var(--landing-glass-saturation));backdrop-filter:blur(var(--landing-glass-blur)) saturate(var(--landing-glass-saturation))}}@media(prefers-reduced-transparency:reduce),(prefers-contrast:more),(forced-colors:active){.ds-landing-nav{background:var(--landing-paper);-webkit-backdrop-filter:none;backdrop-filter:none}}@media(forced-colors:active){.ds-landing-nav{border-color:CanvasText;box-shadow:none}}"
     },
     {
       "name": "Landing subject tabs",
       "kind": "chip",
-      "description": "Shared Tabs visuals; selected surface and semantics accompany the subject color.",
+      "description": "Shared Tabs semantics with a pill track and subtle selected glass highlight.",
       "html": "<div class=\"ds-landing-tabs\" role=\"tablist\" aria-label=\"Example subject\"><button role=\"tab\" aria-selected=\"true\">Science</button><button role=\"tab\" aria-selected=\"false\">Design</button><button role=\"tab\" aria-selected=\"false\">Language</button></div>",
-      "css": ".ds-landing-tabs{display:inline-flex;align-items:center;padding:var(--landing-space-1);border-radius:.5rem;background:hsl(40 10% 95%);font-family:var(--landing-font-body)}.ds-landing-tabs button{min-height:var(--landing-touch-target);padding:.25rem var(--landing-space-5);border:0;border-radius:6px;background:transparent;color:hsl(220 10% 40%);font:500 .875rem var(--landing-font-body);cursor:pointer}.ds-landing-tabs button[aria-selected=true]{background:hsl(40 28% 96.5%);color:hsl(220 10% 15%);box-shadow:0 1px 3px 0 rgb(0 0 0 / 10%),0 1px 2px -1px rgb(0 0 0 / 10%)}.ds-landing-tabs button:focus-visible{outline:2px solid var(--landing-ink);outline-offset:var(--landing-space-1);}"
+      "css": ".ds-landing-tabs{display:inline-flex;align-items:center;padding:var(--landing-space-1);border-radius:var(--landing-radius-pill);background:var(--landing-glass-track-background);font-family:var(--landing-font-body)}.ds-landing-tabs button{min-height:var(--landing-touch-target);padding:.25rem var(--landing-space-5);border:1px solid transparent;border-radius:var(--landing-radius-pill);background:transparent;color:hsl(220 10% 40%);font:500 .875rem var(--landing-font-body);cursor:pointer}.ds-landing-tabs button[aria-selected=true]{background:var(--landing-glass-sheen),var(--landing-glass-control-background);color:var(--landing-ink);box-shadow:var(--landing-glass-rim),var(--landing-shadow-glass-control)}.ds-landing-tabs button:focus-visible{outline:2px solid var(--landing-ink);outline-offset:var(--landing-space-1);}@media(prefers-reduced-transparency:reduce),(prefers-contrast:more),(forced-colors:active){.ds-landing-tabs button[aria-selected=true]{background:var(--landing-paper)}}@media(forced-colors:active){.ds-landing-tabs button[aria-selected=true]{border-color:Highlight;box-shadow:none}}"
     },
     {
       "name": "Landing example board",
@@ -428,12 +483,13 @@
       "A readable HTML board is the central product object.",
       "Warm paper, pastel demonstration fields and dark green-charcoal text.",
       "Fine-grained original purple/blue hero material with a calm light center.",
-      "Restrained, once-only motion and explicit reduced-motion behavior."
+      "Restrained, once-only motion and explicit reduced-motion behavior.",
+      "Translucent glass navigation and demo chrome, with opaque reading surfaces."
     ],
     "rules": [
       {
         "name": "The Surface Boundary Rule",
-        "body": "The homepage may use the approved original organic gradient, soft paper shadows and once-only entrances. These are exceptions to the app-only gradient and state-only motion guidance above; they do not authorize gradients, ambient motion or decorative depth in operating or presentation surfaces.",
+        "body": "The homepage may use the approved original organic gradient, restrained glass on navigation and demo chrome, soft paper shadows and once-only entrances. These are exceptions to the app-only gradient and state-only motion guidance above; they do not authorize gradients, ambient motion or decorative depth in operating or presentation surfaces.",
         "section": "colors"
       },
       {
@@ -443,7 +499,7 @@
       },
       {
         "name": "The Material Depth Rule",
-        "body": "Landing shadows describe floating navigation, the demo window and overlapping paper notes. Student-facing Present and exported boards retain their existing flat framing.",
+        "body": "Landing shadows describe floating navigation, the demo window and overlapping paper notes. The navigation and demo frame share a static glass material with a fine highlight and soft inner reflection; the board-reading area stays opaque paper. Student-facing Present and exported boards retain their existing flat framing.",
         "section": "elevation"
       }
     ],
@@ -452,7 +508,8 @@
       "Do retain a light central hero field, dark legible copy and the two dominant purple/blue hue families.",
       "Do keep illustrative boards as semantic HTML with selectable subjects, accessible preview controls and truthful example labels.",
       "Do use visible keyboard focus, at least 44px principal controls, balanced headings and responsive stacking.",
-      "Do disable entrance transforms, parallax, transitions and smooth scrolling for reduced motion."
+      "Do disable entrance transforms, parallax, transitions and smooth scrolling for reduced motion.",
+      "Do limit glass to navigation, demo chrome and the selected subject; honor opaque fallbacks and contrast/transparency preferences."
     ],
     "donts": [
       "Don’t apply this landing extension to the teacher workspace, live Present or PNG export.",
