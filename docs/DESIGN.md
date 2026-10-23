@@ -1,6 +1,6 @@
 ---
-name: "Boardwork — landing and workspace"
-description: "Shared Boardwork palette and materials, with scoped landing and teacher-workspace roles; presentation contracts remain intact."
+name: "Boardwork — landing, workspace and Homebase"
+description: "Shared Boardwork palette and materials, with scoped landing, teacher-workspace and Homebase roles; presentation contracts remain intact."
 colors:
   landing-primary: "hsl(174 20% 16%)"
   landing-primary-foreground: "hsl(0 0% 100%)"
@@ -26,6 +26,12 @@ colors:
   workspace-selected: color-mix(in srgb, hsl(230.4 58.9744% 91.5686%) 65%, hsl(48 100% 99.0196%))
   workspace-control-border: hsl(168 9% 54%)
   workspace-focus: hsl(250 30% 42%)
+  homebase-canvas: "#eceee8"
+  homebase-signal-off: "#e1e4dd"
+  homebase-signal-border: "#87938b"
+  homebase-signal-red: "#a33c35"
+  homebase-signal-amber: "#e3b442"
+  homebase-signal-green: "#36745a"
 typography:
   landing-display:
     fontFamily: "Bitter, Georgia, serif"
@@ -78,6 +84,53 @@ typography:
     fontSize: 0.875rem
     fontWeight: 500
     lineHeight: 1.4286
+  homebase-note:
+    fontFamily: "Inter, sans-serif"
+    fontSize: "clamp(1rem, 1.6vw, 1.625rem)"
+    fontWeight: 400
+    lineHeight: 1.65
+  homebase-task:
+    fontFamily: "Inter, sans-serif"
+    fontSize: "clamp(1rem, 1.8vw, 1.875rem)"
+    fontWeight: 400
+    lineHeight: 1.65
+  homebase-agenda:
+    fontFamily: "Inter, sans-serif"
+    fontSize: "clamp(1rem, 1.4vw, 1.25rem)"
+    fontWeight: 400
+    lineHeight: 1.5
+  homebase-timer:
+    fontFamily: "Inter, sans-serif"
+    fontSize: "clamp(1.75rem, min(19cqw, 28cqh), 8rem)"
+    fontWeight: 500
+    lineHeight: 1.1
+    letterSpacing: "-0.035em"
+  homebase-timer-focus:
+    fontFamily: "Inter, sans-serif"
+    fontSize: "clamp(3rem, min(19cqw, 28cqh), 10rem)"
+    fontWeight: 500
+    lineHeight: 1.1
+    letterSpacing: "-0.035em"
+  homebase-clock:
+    fontFamily: "Inter, sans-serif"
+    fontSize: "clamp(1.5rem, 3.5vw, 3.75rem)"
+    fontWeight: 500
+    lineHeight: 1.1
+    letterSpacing: "-0.035em"
+  homebase-number:
+    fontFamily: "Inter, sans-serif"
+    fontSize: "clamp(2.5rem, 5vw, 5rem)"
+    fontWeight: 500
+    lineHeight: 1.1
+    letterSpacing: "-0.035em"
+  homebase-picker-result:
+    fontFamily: "Bitter, Georgia, serif"
+    fontSize: "clamp(1.5rem, 2.5vw, 2.5rem)"
+    fontWeight: 400
+    lineHeight: 1.3
+  homebase-dense-label:
+    fontFamily: "Inter, sans-serif"
+    fontSize: "0.6875rem"
 rounded:
   landing-section: "1.5rem"
   landing-nav: "2rem"
@@ -86,6 +139,9 @@ rounded:
   workspace-panel: 1rem
   workspace-control: 0.5rem
   workspace-popover: 0.75rem
+  homebase-compact-control: "0.375rem"
+  homebase-resize-handle: "0.25rem"
+  homebase-circle: "50%"
 spacing:
   landing-1: "0.25rem"
   landing-2: "0.5rem"
@@ -98,6 +154,8 @@ spacing:
   landing-12: "3rem"
   landing-16: "4rem"
   landing-20: "5rem"
+  homebase-board-row: "4rem"
+  homebase-board-gap: "1rem"
 components:
   landing-button-primary:
     backgroundColor: "{colors.landing-primary}"
@@ -162,6 +220,25 @@ components:
     textColor: '{colors.workspace-ink}'
     rounded: '{rounded.workspace-panel}'
     padding: 1.5rem
+  homebase-canvas:
+    backgroundColor: "{colors.homebase-canvas}"
+    textColor: "{colors.landing-ink}"
+    rounded: "{rounded.workspace-panel}"
+    padding: "1rem"
+  homebase-tool:
+    backgroundColor: "{colors.landing-paper}"
+    textColor: "{colors.landing-ink}"
+    rounded: "{rounded.workspace-panel}"
+  homebase-timer-tool:
+    backgroundColor: "{colors.landing-lavender}"
+    textColor: "{colors.landing-ink}"
+    typography: "{typography.homebase-timer}"
+    rounded: "{rounded.workspace-panel}"
+  homebase-note-tool:
+    backgroundColor: "{colors.landing-butter}"
+    textColor: "{colors.landing-ink}"
+    typography: "{typography.homebase-note}"
+    rounded: "{rounded.workspace-panel}"
 ---
 
 # Boardwork — UX & Visual Design Specification
@@ -692,3 +769,97 @@ No new entrance, background motion or animation library is introduced. Existing 
 - Don’t carry the landing gradient or sheen treatment onto main-app surfaces.
 - Don’t add grain to cards, fields, dialogs, editable text, student boards or PNG exports.
 - Don’t turn operational labels into display typography or add marketing motion to the workflow.
+
+---
+
+# Homebase extension — `/homebase` only
+
+## Overview
+
+**Creative North Star: "The everyday art of starting class"**
+
+Homebase extends the established teacher workspace with a movable classroom board. Its tools use the same green-charcoal ink, warm paper, lavender, butter and sage, with locally bundled Bitter and Inter. A quiet sage-neutral board backing separates smooth tool surfaces without adding a new visual identity. The original activity presentation and PNG contracts continue to govern their own routes.
+
+**Key Characteristics:**
+
+- A twelve-column board gives practical classroom tools a shared spatial rhythm.
+- Smooth, opaque tools use the established paper and pastel surfaces.
+- A container-sized timer stays readable in the board and in timer-only focus.
+- Layout controls yield to the classroom content during presentation.
+
+## Colors
+
+Homebase reuses the existing ink, subtle ink, paper, lavender, butter and mint primitives, whose original frontmatter names begin `landing-`. The new `homebase-` colors record operational additions from `src/features/homebase/homebase.css`; they do not replace the shared palette.
+
+### Secondary
+
+- **Signal red, amber and green:** active traffic-light states. Red also supplies the editor error text. These are functional signals, not additional board themes; pressed labels become bold and underlined so color is not the only state cue.
+
+### Neutral
+
+- **Homebase canvas:** the quieter sage-neutral backing for the paper board and the presentation/focus viewport. A paper tool retains the warmer shared paper fill. Lavender, butter and sage board choices use the existing shared shades.
+- **Signal off and signal border:** the subdued inactive light and its visible edge.
+
+The existing Operating Surface Rule applies: the board and every tool stay smooth and opaque. The workspace's grain remains behind the operating surface.
+
+## Typography
+
+Inter remains the control and classroom-tool face. The Homebase page title reuses the workspace page-title role; creation and empty-board headings use light Bitter. Bitter also supplies the name-picker result. Homebase activity copies and notes use Inter rather than inheriting the separate activity Present route's Bitter/Open Sans composition.
+
+The `homebase-note`, `homebase-task` and `homebase-agenda` roles provide fluid reading sizes within the board. Notes preserve authored line breaks and wrap long words. At the mobile stack, notes and task copies settle at 1.125rem. Tool headings remain 0.875rem semibold; compact sound options and mobile arrangement hints use the dense-label role. The timer status below the ring uses the existing 0.75rem caption size.
+
+Countdown readings use the documented board and focus roles, tabular numerals and the same restrained negative tracking. Their container units respond to both the face's width and height. Clock, stopwatch and event-countdown readings have their own functional scale; the mobile clock and large-number readings resolve to 3rem and 4rem. These operational sizes do not enlarge teacher navigation or alter the original presentation timer.
+
+## Layout
+
+The Homebase page is at most 100rem wide, with 2rem outer padding. Class/board selectors and actions wrap above the board. The board uses twelve equal columns, a 4rem row, 1rem gap and 1rem inset. Individual tools occupy explicit column and row spans, with a minimum two-column/two-row footprint. Moving or resizing a tool keeps its selected placement and moves colliding tools below it. DOM and mobile order follow row, then column.
+
+Tool headers are at least 3rem tall, with 0.5rem × 1rem padding; the scrollable body uses 0.5rem top and 1.25rem side/bottom padding. Between 701px and 1050px, header and body insets tighten while preserving the board grid.
+
+At 700px and below, the page inset becomes 1.25rem × 0.75rem and tools stack in one column with 0.625rem board padding and a 0.75rem gap. Resize handles disappear and pointer dragging yields to scrolling. Standard tools have a 12rem minimum height; timer, date, drawing and media tools reserve at least 23rem. A mobile timer body has a definite 20rem height so its size container and ring resolve reliably. Tool controls are at least 44px high on coarse pointers; frame actions are also at least 44px wide.
+
+Presentation and timer focus cover the viewport with a 1rem inset, reduced to 0.5rem on mobile. Timer focus expands the existing tool to at most 65rem wide, reserving bottom space for the exit control. These are Homebase layouts, separate from the fixed activity-export canvas.
+
+## Elevation & Depth
+
+Homebase tools use a quiet `0 3px 12px rgb(32 48 47 / 7%)` shadow to separate movable objects from the board. Creation options reuse the existing teacher-card shadow; drawers and editor sheets reuse shared opaque overlay primitives. A focused tool rises above neighboring tools only for interaction. No grain, glass, gradient, glow or decorative light falloff is added to a tool.
+
+## Shapes
+
+Board and tool frames reuse the 1rem workspace-panel corner. The compact frame and timer-option actions use the smaller Homebase control radius; the resize grip uses the Homebase handle radius. These tighter corners belong to the dense tool controls, not to a replacement global shape scale. Agenda markers and traffic lights use functional circles; the timer ring is SVG geometry with a centered radius of 45 in a 100 × 100 view box. Preserve those circles when tool dimensions change.
+
+## Components
+
+### Movable tool frame
+
+A compact title and move/edit/options group sit above a smooth, scrollable content region. Frame actions are 2rem targets on desktop and 2.75rem on mobile/coarse pointers, with a muted ink hover fill. Move and resize handles support one-cell arrow-key changes and three-cell Shift + arrow changes, with placement announcements. Layout locking removes the arrangement controls while tool actions remain available. Focus uses the shared 2px ring with a 3px offset.
+
+### Timer and timer-only focus
+
+The face is a size container with a full-area SVG ring; its intrinsic view box preserves a circle inside either a wide or tall tool. The reading stays centered within an 83% width limit, increasing to 85% in focus. Keep the status and pause/start/reset/focus actions below the face, with the compact sound selector and end-alarm control below those actions. The default label is “Sound off”; sound and alarm are explicit choices. Starting, pausing or completing the timer governs the optional calm sound.
+
+**The Live Tool Rule.** Presentation and timer focus change the framing of the existing mounted tools. They must preserve the running timer and its live controls rather than recreate its state.
+
+Both states expose a named modal scope, make the covered header and page controls inert, contain Tab focus and prevent background scrolling. Escape exits the current scope and returns focus to its trigger; leaving timer focus during presentation returns to the board presentation first. Keep a visible exit control within the scoped content.
+
+### Tool drawer and editor
+
+Reuse the shared Sheet and form primitives in a scrollable drawer at most 28rem wide, with 1.5rem padding. Search and grouped tool choices use Inter, quiet separators and solid hover feedback. Resource players retain a readable unloaded state and an explicit load action before remote media appears. Drawing and media regions remain smooth, contained surfaces.
+
+Only brief 160ms background-color feedback is added for creation/tool choices. Reduced motion disables Homebase transitions and animations. Forced colors add tool borders, retain a visible progress stroke and outline selected signals; traffic lights keep their functional signal colors alongside their labels.
+
+## Do's and Don'ts
+
+### Do:
+
+- Do reuse the existing paper, ink and pastel primitives for Homebase tools.
+- Do keep the twelve-column board rhythm and switch to ordered stacked tools at the Homebase mobile breakpoint.
+- Do size the timer from its face container and preserve a circular ring on narrow screens.
+- Do preserve mounted live tools, scoped keyboard focus and trigger return during presentation and timer focus.
+- Do pair traffic-light color with a labeled, visibly selected control.
+
+### Don't:
+
+- Don’t apply landing gradients, glass or grain to the Homebase board or its tools.
+- Don’t promote compact handle radii or functional timer sizes into global control or heading defaults.
+- Don’t apply the Homebase board grid, type fitting or timer-focus framing to the original activity Present or PNG export.

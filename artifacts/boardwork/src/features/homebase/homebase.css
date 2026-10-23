@@ -376,7 +376,9 @@
 }
 .hb-timer-face > svg {
   position: absolute;
-  height: min(100cqh, 100cqw);
+  inset: 0;
+  width: 100%;
+  height: 100%;
   max-width: 100%;
   fill: none;
   stroke-width: 3;
@@ -896,6 +898,7 @@
     padding: 0.75rem 1rem 1.5rem;
   }
   .hb-widget:has(.hb-timer) .hb-widget-content {
+    flex: none;
     height: 20rem;
   }
   .hb-widget:has(.hb-draw) .hb-widget-content,
@@ -940,6 +943,7 @@
     min-height: 0 !important;
   }
   .hb-widget-focused .hb-widget-content {
+    flex: 1 !important;
     height: 100% !important;
     max-height: none;
     padding-bottom: 6rem;

@@ -47,6 +47,7 @@ import { activityWidget, makeWidget, tools } from "./catalog";
 import { WidgetContent } from "./widgets";
 import { WidgetEditor } from "./widget-editor";
 import { arrangeWidgets } from "./layout";
+import { useFocusScope } from "./use-focus-scope";
 import { useHomebaseDraft } from "./use-homebase";
 
 type Props = {
@@ -80,6 +81,8 @@ export function HomebaseBoard({
   const root = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLDivElement>(null);
   const focusTrigger = useRef<HTMLElement | null>(null);
+  const presentationTrigger = useRef<HTMLElement | null>(null);
+  useFocusScope(root, presenting || !!focused, focused);
   const editing = !locked && !presenting && !focused;
   function commit(next: HomebaseContent) {
     setPast((values) => [...values, content].slice(-25));
@@ -136,6 +139,7 @@ export function HomebaseBoard({
       window.setTimeout(() => focusTrigger.current?.focus(), 0);
     } else {
       setPresenting(false);
+      window.setTimeout(() => presentationTrigger.current?.focus(), 0);
       if (document.fullscreenElement)
         void document.exitFullscreen().catch(() => {});
     }
@@ -150,7 +154,10 @@ export function HomebaseBoard({
   }, [focused, presenting]);
   useEffect(() => {
     const handler = () => {
-      if (!document.fullscreenElement) setPresenting(false);
+      if (!document.fullscreenElement) {
+        setPresenting(false);
+        window.setTimeout(() => presentationTrigger.current?.focus(), 0);
+      }
     };
     document.addEventListener("fullscreenchange", handler);
     return () => document.removeEventListener("fullscreenchange", handler);
@@ -173,6 +180,16 @@ export function HomebaseBoard({
   return (
     <div
       ref={root}
+      tabIndex={-1}
+      role={presenting || focused ? "dialog" : undefined}
+      aria-modal={presenting || focused ? true : undefined}
+      aria-label={
+        presenting || focused
+          ? focused
+            ? "Timer focus"
+            : "Homebase presentation"
+          : undefined
+      }
       className={`hb-board-root ${presenting ? "hb-presenting" : ""} ${focused ? "hb-focusing" : ""}`}
     >
       <div className="hb-board-toolbar">
@@ -233,7 +250,8 @@ export function HomebaseBoard({
             Add tool
           </Button>
           <Button
-            onClick={() => {
+            onClick={(event) => {
+              presentationTrigger.current = event.currentTarget;
               setPresenting(true);
               setToolbox(false);
               setEditId(null);

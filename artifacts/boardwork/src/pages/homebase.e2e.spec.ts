@@ -257,7 +257,41 @@ test("moves and resizes by pointer and keyboard, locks layout, and preserves a t
   await expect(
     page.getByRole("button", { name: "Edit Timer", exact: true }),
   ).toBeHidden();
-  await page.getByRole("button", { name: "Exit presentation" }).click();
+  const exitPresentation = page.getByRole("button", {
+    name: "Exit presentation",
+  });
+  await expect(exitPresentation).toBeFocused();
+  expect(
+    await page
+      .locator(".workspace-header")
+      .evaluate((element) => (element as HTMLElement).inert),
+  ).toBe(true);
+  expect(
+    await page
+      .locator(".hb-page-header")
+      .evaluate((element) => (element as HTMLElement).inert),
+  ).toBe(true);
+  for (let i = 0; i < 12; i++) {
+    await page.keyboard.press(i < 6 ? "Tab" : "Shift+Tab");
+    expect(
+      await page.evaluate(
+        () => !!document.activeElement?.closest(".hb-board-root"),
+      ),
+    ).toBe(true);
+  }
+  await page.keyboard.press("Escape");
+  await expect(
+    page.getByRole("button", { name: "Present", exact: true }),
+  ).toBeFocused();
+  expect(
+    await page
+      .locator(".workspace-header")
+      .evaluate((element) => (element as HTMLElement).inert),
+  ).toBe(false);
+  await page.setViewportSize({ width: 390, height: 844 });
+  const ring = timer.locator(".hb-timer-face > svg");
+  await expect(ring).toBeVisible();
+  expect((await ring.boundingBox())!.height).toBeGreaterThan(80);
   expect(state.errors).toEqual([]);
 });
 

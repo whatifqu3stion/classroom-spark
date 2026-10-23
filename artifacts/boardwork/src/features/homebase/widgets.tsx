@@ -201,7 +201,7 @@ function TimerWidget({ widget, focus }: WidgetProps) {
                 void audio.start(event.target.value);
             }}
           >
-            <option value="off">No background sound</option>
+            <option value="off">Sound off</option>
             <option value="tones">Soft tones</option>
             <option value="noise">Soft noise</option>
           </select>
