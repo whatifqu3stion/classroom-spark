@@ -3025,6 +3025,9 @@
   .landing-product-content > div {
     aspect-ratio: var(--landing-product-aspect-compact);
   }
+  .landing-product-content--homebase > div {
+    aspect-ratio: 2160 / 1500;
+  }
   .landing-demo-toolbar {
     flex-direction: column;
     align-items: stretch;

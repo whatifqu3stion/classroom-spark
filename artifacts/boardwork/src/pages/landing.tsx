@@ -278,7 +278,7 @@ function ProductDemo() {
           <TabsContent
             key={item.id}
             value={item.id}
-            className="landing-product-content"
+            className={`landing-product-content${item.id === "homebase" ? " landing-product-content--homebase" : ""}`}
           >
             <motion.div
               initial={reduced ? false : { opacity: 0.65 }}
