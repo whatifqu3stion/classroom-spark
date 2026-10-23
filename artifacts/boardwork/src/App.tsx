@@ -11,6 +11,8 @@ const queryClient = new QueryClient();
 const Workspace = lazy(() => import("@/pages/workspace"));
 
 function Router() {
+  if (import.meta.env.VITE_PUBLIC_SITE === "true") return <Landing />;
+
   return (
     <RoutedErrorBoundary>
       <Switch>
