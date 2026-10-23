@@ -8,6 +8,10 @@ Primary loop:
 
 The immediate goal is real classroom use. Keep it small, reliable, fast, and visually excellent.
 
+## Requested classroom expansion
+
+The user has explicitly requested saved movable classroom boards and practical classroom widgets. Homebase is authorized alongside the original activity workflow; see `docs/HOMEBASE.md`. The non-goals below still apply outside that requested scope.
+
 ## Non-goals
 Do not add features unless explicitly requested.
 

@@ -257,3 +257,8 @@ Do not turn Boardwork into:
 - a classroom management system.
 
 Those may be adjacent opportunities later, but they would weaken this MVP.
+
+
+## Classroom homebase expansion
+
+The user's October 2026 direction expands Boardwork with reusable classroom tools inspired by Classroomscreen. `/homebase` provides multiple saved boards per class or general scope, movable/resizable widgets, layout locking, timer focus, and clean presentation. It complements the entry-task generator rather than replacing it. See `docs/HOMEBASE.md` for the implemented tools, persistence boundaries, and next work. The previous classroom-management non-goal does not exclude these explicitly requested classroom tools. Student accounts, remote submissions, billing, and multi-teacher hosting remain deferred.

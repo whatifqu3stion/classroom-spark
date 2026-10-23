@@ -16,7 +16,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Landing} />
         <Route
-          path={/^\/(?:app|history|activity\/[^/]+|present(?:\/[^/]+)?)\/?$/}
+          path={/^\/(?:app|homebase|history|activity\/[^/]+|present(?:\/[^/]+)?)\/?$/}
         >
           <Suspense
             fallback={
