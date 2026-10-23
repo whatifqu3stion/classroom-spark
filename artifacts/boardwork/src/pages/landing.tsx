@@ -400,10 +400,26 @@ export default function Landing() {
     };
   }, []);
   return (
-    <div className="landing-page" style={motionTokens}>
+    <div
+      className={`landing-page${isPublicSite ? " landing-page--public" : ""}`}
+      style={motionTokens}
+    >
       <a className="landing-skip-link" href="#landing-main">
         Skip to content
       </a>
+      {isPublicSite && (
+        <aside className="landing-demo-banner" aria-label="About this demo">
+          <p>
+            <strong>Product demo</strong>
+            <span>App screens use sample content.</span>
+          </p>
+          <a
+            href={`${repositoryUrl}/blob/feat/classroom-homebase/docs/STANDALONE.md`}
+          >
+            Run the workspace <ArrowUpRight aria-hidden="true" />
+          </a>
+        </aside>
+      )}
       <LandingNavigation />
       <main id="landing-main">
         <section
@@ -661,9 +677,9 @@ export default function Landing() {
                   Can I use the workspace on this site?
                 </AccordionTrigger>
                 <AccordionContent>
-                  This site is a product tour with sample classroom content.
-                  The linked GitHub project includes instructions for running
-                  your own workspace with saving and optional AI drafting.
+                  This site is a product tour with sample classroom content. The
+                  linked GitHub project includes instructions for running your
+                  own workspace with saving and optional AI drafting.
                 </AccordionContent>
               </AccordionItem>
             )}
@@ -690,10 +706,10 @@ export default function Landing() {
                 Where are my classes and boards saved?
               </AccordionTrigger>
               <AccordionContent>
-                They are saved in your workspace installation’s database. The current app
-                is one shared teacher workspace. A public installation needs
-                access protection from its hosting provider; entering an AI key
-                does not create a private account.
+                They are saved in your workspace installation’s database. The
+                current app is one shared teacher workspace. A public
+                installation needs access protection from its hosting provider;
+                entering an AI key does not create a private account.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="planning">

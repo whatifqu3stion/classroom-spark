@@ -1,6 +1,8 @@
 # Public GitHub Pages site
 
-GitHub Pages serves the public Boardwork front page and its screenshot tour. It does not run the Express API, PostgreSQL, private curriculum storage, or AI generation. Public-site buttons point to the repository and the page identifies itself as a product preview.
+[Open the public demo](https://whatifqu3stion.github.io/classroom-spark/).
+
+GitHub Pages serves the public Boardwork front page and its screenshot tour. It does not run the Express API, PostgreSQL, private curriculum storage, or AI generation. A persistent top banner identifies it as a product demo with sample content and links to the full workspace setup guide. Public-site buttons point to the repository.
 
 The `VITE_PUBLIC_SITE=true` build keeps navigation on the public tour; the normal application build retains the workspace routes. `BASE_PATH` must match the repository Pages path, including a trailing slash. Product images and fonts use that base path.
 

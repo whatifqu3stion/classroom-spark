@@ -4,6 +4,10 @@
 
 Boardwork turns class context into editable student tasks and reusable classroom displays. It began with start-of-class activities and has grown into a classroom Homebase for tasks, timers, agendas, notes, and resources.
 
+[View the public demo](https://whatifqu3stion.github.io/classroom-spark/) · [Run the full workspace](docs/STANDALONE.md)
+
+The public demo is a screenshot tour with sample content. Editing, saving, and optional AI drafting run in a separately hosted workspace.
+
 The screenshots and implemented scope below follow the [current working branch](https://github.com/whatifqu3stion/classroom-spark/tree/feat/classroom-homebase) ([PR #3](https://github.com/whatifqu3stion/classroom-spark/pull/3)) while the application changes are under review.
 
 ![Boardwork Homebase with a student task, visual timer, agenda, and classroom clock](docs/screenshots/homebase.png)
@@ -117,5 +121,5 @@ See the [standalone guide](docs/STANDALONE.md) for development without Docker, o
 | Interaction and visual design | [Design specification](docs/DESIGN.md) |
 | Classroom tools and saving | [Homebase](docs/HOMEBASE.md) |
 | AI and source review | [Generation brief](docs/AI_GENERATION.md) · [Curriculum implementation](docs/CURRICULUM.md) |
-| Architecture and deployment | [Technical specification](docs/TECHNICAL.md) · [Standalone setup](docs/STANDALONE.md) |
+| Architecture and deployment | [Technical specification](docs/TECHNICAL.md) · [Standalone setup](docs/STANDALONE.md) · [Public demo hosting](docs/PAGES.md) |
 | Evidence and limits | [Verification record](docs/TESTING.md) |
