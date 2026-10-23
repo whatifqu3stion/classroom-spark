@@ -1,5 +1,11 @@
 # Boardwork — MVP Product Specification
 
+## Current product direction
+
+The intended scope now spans K–12, higher education, adult learning, and workplace training. The common purpose is to help educators prepare, facilitate, and improve learning activities while learners understand the task, contribute their thinking, and use feedback.
+
+The specification below records the original classroom MVP and its constraints. Broader audiences and shared learning sessions are proposed directions, not validated capabilities. See the [education strategy and Mural feature review](EDUCATION_STRATEGY.md) for adaptations, current gaps, and sequencing.
+
 ## 1. Problem
 Teachers need the opening minutes of class to take attendance, greet students, transition materials, and establish focus. Students need a predictable routine that lets them begin meaningful work independently without waiting for teacher instructions.
 
@@ -8,9 +14,9 @@ Creating a fresh, worthwhile “Do Now,” bell-ringer, warm-up, board work, or 
 Boardwork reduces that friction.
 
 ## 2. Target user
-Primary user: classroom teachers teaching approximately grades 4–12.
+Original MVP user: classroom teachers teaching approximately grades 4–12.
 
-The MVP should work especially well for middle-school contexts while remaining flexible enough for other age groups.
+The initial implementation emphasizes middle-school contexts. The current direction above expands the intended audience; guidance, language, and participation need validation across settings.
 
 Students are **viewers of the generated board**, not app users.
 
@@ -98,7 +104,7 @@ Contains:
 ## 5. Primary workflow
 
 ### A. First-time setup
-1. Teacher signs in.
+1. Teacher opens the workspace; host-level sign-in protects private deployments.
 2. Teacher creates a class.
 3. Teacher enters grade, subject, and useful course context.
 4. Teacher optionally adds persistent chips.
@@ -138,7 +144,7 @@ Teacher can generate activities ahead of time, save them, and open them from His
 - practice goal
 - persistent arrival instructions on/off
 
-Do not expose model settings, temperature, prompt engineering, tokens, or technical AI language.
+Keep model settings and prompt controls out of the classroom workflow. A subtle teacher-only usage line below Create board shows reported tokens this visit; details and the visitor’s API key live in AI settings.
 
 ## 7. Activity styles
 These are guidance categories, not rigid templates.
@@ -257,3 +263,8 @@ Do not turn Boardwork into:
 - a classroom management system.
 
 Those may be adjacent opportunities later, but they would weaken this MVP.
+
+
+## Classroom homebase expansion
+
+The user's October 2026 direction expands Boardwork with reusable classroom tools inspired by Classroomscreen. `/homebase` provides multiple saved boards per class or general scope, movable/resizable widgets, layout locking, timer focus, and clean presentation. It complements the entry-task generator rather than replacing it. See `docs/HOMEBASE.md` for the implemented tools, persistence boundaries, and next work. The previous classroom-management non-goal does not exclude these explicitly requested classroom tools. Student accounts, remote submissions, billing, and multi-teacher hosting remain deferred.

@@ -1,4 +1,4 @@
-# Boardwork — Replit Agent Build Stages
+# Boardwork — development Build Stages
 
 Use this document to keep Agent focused.
 
@@ -37,7 +37,7 @@ Questions Stage 1 must answer:
 
 ## Stage 2 — Make it durable
 Add:
-- Replit PostgreSQL
+- PostgreSQL
 - Drizzle
 - class persistence
 - chip persistence
@@ -61,7 +61,7 @@ Implemented:
 - materials and teacher-only notes
 - lightweight recent title/style summaries for variety
 
-Initial provider: OpenAI through Replit AI Integrations, configured with `AI_MODEL=gpt-5.6-luna`.
+Provider: direct OpenAI Responses with request-only BYOK; optional `BYOK_MODEL` defaults to `gpt-5-mini`.
 
 Keep AI invisible in the visual design.
 
