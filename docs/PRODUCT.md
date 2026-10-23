@@ -1,5 +1,11 @@
 # Boardwork — MVP Product Specification
 
+## Current product direction
+
+The intended scope now spans K–12, higher education, adult learning, and workplace training. The common purpose is to help educators prepare, facilitate, and improve learning activities while learners understand the task, contribute their thinking, and use feedback.
+
+The specification below records the original classroom MVP and its constraints. Broader audiences and shared learning sessions are proposed directions, not validated capabilities. See the [education strategy and Mural feature review](EDUCATION_STRATEGY.md) for adaptations, current gaps, and sequencing.
+
 ## 1. Problem
 Teachers need the opening minutes of class to take attendance, greet students, transition materials, and establish focus. Students need a predictable routine that lets them begin meaningful work independently without waiting for teacher instructions.
 
@@ -8,9 +14,9 @@ Creating a fresh, worthwhile “Do Now,” bell-ringer, warm-up, board work, or 
 Boardwork reduces that friction.
 
 ## 2. Target user
-Primary user: classroom teachers teaching approximately grades 4–12.
+Original MVP user: classroom teachers teaching approximately grades 4–12.
 
-The MVP should work especially well for middle-school contexts while remaining flexible enough for other age groups.
+The initial implementation emphasizes middle-school contexts. The current direction above expands the intended audience; guidance, language, and participation need validation across settings.
 
 Students are **viewers of the generated board**, not app users.
 

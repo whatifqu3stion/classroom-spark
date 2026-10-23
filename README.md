@@ -4,7 +4,7 @@
 
 Boardwork turns class context into editable student tasks and reusable classroom displays. It began with start-of-class activities and has grown into a classroom Homebase for tasks, timers, agendas, notes, and resources.
 
-An independent product by **Jason Arsenault**, developed from the practical constraints of teaching.
+The screenshots and implemented scope below follow the [current working branch](https://github.com/whatifqu3stion/classroom-spark/tree/feat/classroom-homebase) ([PR #3](https://github.com/whatifqu3stion/classroom-spark/pull/3)) while the application changes are under review.
 
 ![Boardwork Homebase with a student task, visual timer, agenda, and classroom clock](docs/screenshots/homebase.png)
 
@@ -88,6 +88,8 @@ Verification includes component tests, browser scenarios for layout, timers, foc
 
 ## What I would validate next
 
+The broader direction spans **K–12, higher education, adult learning, and workplace training**, with guidance and participation options suited to each group. The [education strategy and Mural feature review](docs/EDUCATION_STRATEGY.md) separates that direction from today's implemented scope.
+
 The priority is a teacher-reviewed AI evaluation set covering correctness, age appropriateness, first-action clarity, time, materials, and sparse context. It should support repeatable prompt and pipeline comparisons.
 
 Broader trials should measure time to a usable activity, editing required, repeat use, and whether students can begin independently. Homebase needs physical projector and device checks. These are evaluation plans, not proven time savings or learning gains.
@@ -97,12 +99,13 @@ Broader trials should measure time to a usable activity, editing required, repea
 With Docker and Compose v2 installed:
 
 ```sh
+git switch feat/classroom-homebase
 cp .env.example .env
 # Set a strong POSTGRES_PASSWORD in .env; leave visitor OpenAI keys out.
 docker compose up --build --detach --wait
 ```
 
-Open **http://localhost:8080**. Create a class and **Start blank**, or add a key through **AI key** to generate. The installation uses a fresh database and persistent volumes.
+From a cloned repository, the branch switch selects the version shown here. Open **http://localhost:8080** after startup. Create a class and **Start blank**, or add a key through **AI key** to generate. The installation uses a fresh database and persistent volumes.
 
 See the [standalone guide](docs/STANDALONE.md) for development without Docker, operations, and access protection; see [BYOK details](docs/BYOK.md) for key handling and usage accounting.
 
