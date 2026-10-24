@@ -38,5 +38,6 @@ jobs:
       - run: npm install --global pnpm@11.28.0 --ignore-scripts --audit=false
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @workspace/db exec drizzle-kit push --config ./drizzle.config.ts --force
-      - run: pnpm --filter @workspace/api-server run test
+      # Node's test runner executes origin-policy.test.mjs separately above.
+      - run: pnpm --filter @workspace/api-server exec vitest run --exclude tests/origin-policy.test.mjs
       - run: pnpm --filter @workspace/boardwork run build
