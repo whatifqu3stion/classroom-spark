@@ -8,6 +8,7 @@ import generationRouter from "./generation";
 import unitsRouter from "./units";
 import savedContextRouter from "./saved-context";
 import curriculumRouter from "./curriculum";
+import homebasesRouter from "./homebases";
 
 const router: IRouter = Router();
 
@@ -18,6 +19,7 @@ router.use(unitsRouter);
 router.use(chipsRouter);
 router.use(savedContextRouter);
 router.use(curriculumRouter);
+router.use(homebasesRouter);
 router.use(activitiesRouter);
 router.use(generationRouter);
 

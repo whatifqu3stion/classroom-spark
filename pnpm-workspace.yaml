@@ -1,12 +1,9 @@
-# Require published packages to age for one day before installation.
 minimumReleaseAge: 1440
-
 packages:
-  - artifacts/*
-  - lib/*
-  - lib/integrations/*
-  - scripts
-
+- artifacts/*
+- lib/*
+- lib/integrations/*
+- scripts
 catalog:
   '@tailwindcss/vite': ^4.1.14
   '@tanstack/react-query': ^5.90.21
@@ -19,9 +16,7 @@ catalog:
   drizzle-orm: ^0.45.2
   framer-motion: ^12.23.24
   lucide-react: ^0.545.0
-  # Must be this exact version because expo requires it
   react: 19.1.0
-  # Must be this exact version because expo requires it
   react-dom: 19.1.0
   tailwind-merge: ^3.3.1
   tailwindcss: ^4.1.14
@@ -29,18 +24,14 @@ catalog:
   vite: ^7.3.2
   wouter: ^3.3.5
   zod: ^3.25.76
-
 autoInstallPeers: false
-
-# pnpm 11 uses allowBuilds; legacy onlyBuiltDependencies is ignored.
 allowBuilds:
   esbuild@0.27.3: true
   msw@2.15.0: false
-
 overrides:
-  # Patch the runtime advisories identified during the security review.
-  proxy-addr: "2.0.8"
-  qs: "6.16.0"
-  # drizzle-kit uses esbuild internally on an older version that's vulnerable, this overrides it
-  "@esbuild-kit/esm-loader": "npm:tsx@^4.21.0"
-  esbuild: "0.27.3"
+  proxy-addr: 2.0.8
+  qs: 6.16.0
+  '@esbuild-kit/esm-loader': npm:tsx@^4.21.0
+  esbuild: 0.27.3
+  tinypool: ^2.1.2
+  undici@>=7 <8: ^7.30.1

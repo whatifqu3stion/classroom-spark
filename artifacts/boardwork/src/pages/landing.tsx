@@ -51,6 +51,29 @@ const MOTION = {
   stagger: 0.08,
 } as const;
 const EASE = [0.16, 1, 0.3, 1] as const;
+const isPublicSite = import.meta.env.VITE_PUBLIC_SITE === "true";
+const repositoryUrl = "https://github.com/whatifqu3stion/classroom-spark";
+
+function WorkspaceEntry({
+  children,
+  className,
+  onClick,
+}: {
+  children: ReactNode;
+  className?: string;
+  onClick?: () => void;
+}) {
+  return isPublicSite ? (
+    <a href={repositoryUrl} className={className} onClick={onClick}>
+      {children}
+    </a>
+  ) : (
+    <Link href="/app" className={className} onClick={onClick}>
+      {children}
+    </Link>
+  );
+}
+
 const motionTokens = {
   "--landing-motion-fast": `${MOTION.fast}s`,
   "--landing-motion-menu": `${MOTION.menu}s`,
@@ -59,6 +82,13 @@ const motionTokens = {
 } as CSSProperties;
 
 const productImages = {
+  homebase: {
+    file: "homebase.png",
+    width: 2160,
+    height: 1500,
+    label: "Homebase",
+    alt: "Boardwork Homebase with an editable student task, visual focus timer, daily agenda, and classroom clock.",
+  },
   workspace: {
     file: "workspace.webp",
     mobile: "workspace-mobile.webp",
@@ -118,6 +148,13 @@ const productViews = [
     image: productImages.history,
     description:
       "Find a saved board by class or subject. Adapt it for the next lesson.",
+  },
+  {
+    id: "homebase",
+    label: "Homebase",
+    image: productImages.homebase,
+    description:
+      "Keep the task, timer, agenda, and classroom tools on one reusable board.",
   },
 ] as const;
 const productImagePath = (file: string) =>
@@ -241,7 +278,7 @@ function ProductDemo() {
           <TabsContent
             key={item.id}
             value={item.id}
-            className="landing-product-content"
+            className={`landing-product-content${item.id === "homebase" ? " landing-product-content--homebase" : ""}`}
           >
             <motion.div
               initial={reduced ? false : { opacity: 0.65 }}
@@ -306,9 +343,10 @@ function LandingNavigation() {
           {links}
         </nav>
         <Button asChild size="landing" className="landing-nav-cta">
-          <Link href="/app">
-            Open workspace <ArrowUpRight aria-hidden="true" />
-          </Link>
+          <WorkspaceEntry>
+            {isPublicSite ? "View project" : "Open workspace"}{" "}
+            <ArrowUpRight aria-hidden="true" />
+          </WorkspaceEntry>
         </Button>
         <Button
           ref={menuRef}
@@ -335,9 +373,10 @@ function LandingNavigation() {
             transition={{ duration: reduced ? 0 : MOTION.menu, ease: EASE }}
           >
             {links}
-            <Link href="/app" onClick={() => setOpen(false)}>
-              Open workspace <ArrowUpRight aria-hidden="true" />
-            </Link>
+            <WorkspaceEntry onClick={() => setOpen(false)}>
+              {isPublicSite ? "View project" : "Open workspace"}{" "}
+              <ArrowUpRight aria-hidden="true" />
+            </WorkspaceEntry>
           </motion.nav>
         )}
       </AnimatePresence>
@@ -361,10 +400,26 @@ export default function Landing() {
     };
   }, []);
   return (
-    <div className="landing-page" style={motionTokens}>
+    <div
+      className={`landing-page${isPublicSite ? " landing-page--public" : ""}`}
+      style={motionTokens}
+    >
       <a className="landing-skip-link" href="#landing-main">
         Skip to content
       </a>
+      {isPublicSite && (
+        <aside className="landing-demo-banner" aria-label="About this demo">
+          <p>
+            <strong>Product demo</strong>
+            <span>App screens use sample content.</span>
+          </p>
+          <a
+            href={`${repositoryUrl}/blob/feat/classroom-homebase/docs/STANDALONE.md`}
+          >
+            Run the workspace <ArrowUpRight aria-hidden="true" />
+          </a>
+        </aside>
+      )}
       <LandingNavigation />
       <main id="landing-main">
         <section
@@ -407,16 +462,19 @@ export default function Landing() {
             </p>
             <div className="landing-hero-actions">
               <Button asChild size="landing">
-                <Link href="/app">
-                  Open your workspace <ArrowRight aria-hidden="true" />
-                </Link>
+                <WorkspaceEntry>
+                  {isPublicSite ? "View the project" : "Open your workspace"}{" "}
+                  <ArrowRight aria-hidden="true" />
+                </WorkspaceEntry>
               </Button>
               <a className="landing-text-link" href="#example-board">
                 See it in action <ArrowDown aria-hidden="true" />
               </a>
             </div>
             <span className="landing-hero-note">
-              Do Nows, bell-ringers, and warm-ups. One teacher workspace.
+              {isPublicSite
+                ? "Product preview · Explore the app screens below."
+                : "Do Nows, bell-ringers, and warm-ups. One teacher workspace."}
             </span>
           </div>
           <motion.div
@@ -496,9 +554,10 @@ export default function Landing() {
               Review and edit every word before presenting. You can also start
               with a blank board and write the task yourself.
             </p>
-            <Link className="landing-text-link" href="/app">
-              Prepare a board <ArrowRight aria-hidden="true" />
-            </Link>
+            <WorkspaceEntry className="landing-text-link">
+              {isPublicSite ? "Get the workspace" : "Prepare a board"}{" "}
+              <ArrowRight aria-hidden="true" />
+            </WorkspaceEntry>
           </Reveal>
         </section>
 
@@ -612,6 +671,18 @@ export default function Landing() {
             you might wonder.
           </h2>
           <Accordion type="single" collapsible className="landing-faq-list">
+            {isPublicSite && (
+              <AccordionItem value="preview">
+                <AccordionTrigger>
+                  Can I use the workspace on this site?
+                </AccordionTrigger>
+                <AccordionContent>
+                  This site is a product tour with sample classroom content. The
+                  linked GitHub project includes instructions for running your
+                  own workspace with saving and optional AI drafting.
+                </AccordionContent>
+              </AccordionItem>
+            )}
             <AccordionItem value="students">
               <AccordionTrigger>Do students need to sign in?</AccordionTrigger>
               <AccordionContent>
@@ -635,10 +706,10 @@ export default function Landing() {
                 Where are my classes and boards saved?
               </AccordionTrigger>
               <AccordionContent>
-                They are saved in this installation’s database. The current app
-                is one shared teacher workspace. A public installation needs
-                access protection from its hosting provider; entering an AI key
-                does not create a private account.
+                They are saved in your workspace installation’s database. The
+                current app is one shared teacher workspace. A public
+                installation needs access protection from its hosting provider;
+                entering an AI key does not create a private account.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="planning">
@@ -669,9 +740,10 @@ export default function Landing() {
               Give students a place to begin, and yourself room to welcome them.
             </p>
             <Button asChild size="landing">
-              <Link href="/app">
-                Open your workspace <ArrowRight aria-hidden="true" />
-              </Link>
+              <WorkspaceEntry>
+                {isPublicSite ? "View the project" : "Open your workspace"}{" "}
+                <ArrowRight aria-hidden="true" />
+              </WorkspaceEntry>
             </Button>
           </Reveal>
         </section>
