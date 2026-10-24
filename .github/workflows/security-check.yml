@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: '24.22.1'
       - run: node --experimental-strip-types --test artifacts/api-server/tests/origin-policy.test.mjs
-      - run: npm install --global pnpm@11.25.0 --ignore-scripts --audit=false
+      - run: npm install --global pnpm@11.28.0 --ignore-scripts --audit=false
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @workspace/api-server run test
       - run: pnpm --filter @workspace/boardwork run build
