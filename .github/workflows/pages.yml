@@ -22,12 +22,13 @@ jobs:
       - name: Check out the current product front page
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
+          persist-credentials: false
           # The working app is in PR #3; main currently publishes its documentation.
           ref: feat/classroom-homebase
       - name: Set up Node
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          node-version: 24
+          node-version: '24.22.1'
       - name: Install pnpm
         run: npm install --global pnpm@11.25.0
       - name: Configure Pages
