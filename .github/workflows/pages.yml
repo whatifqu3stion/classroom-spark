@@ -30,7 +30,7 @@ jobs:
         with:
           node-version: '24.22.1'
       - name: Install pnpm
-        run: npm install --global pnpm@11.25.0
+        run: npm install --global pnpm@11.28.0
       - name: Configure Pages
         id: pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5

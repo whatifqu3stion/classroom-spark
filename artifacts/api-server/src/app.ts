@@ -6,6 +6,7 @@ import {
   ACTIVITY_REQUEST_BODY_LIMIT_BYTES,
 } from "@workspace/api-zod";
 import router from "./routes";
+import { isAllowedOrigin } from "./lib/origin-policy";
 import { logger } from "./lib/logger";
 import { cookieMiddleware, requireAuth } from "./middlewares/auth";
 
@@ -30,6 +31,14 @@ app.use(
     },
   }),
 );
+// Reject untrusted browser origins before body parsing and authenticated mutations.
+app.use((req, res, next) => {
+  if (!isAllowedOrigin(req.headers.origin, req.get("host"), process.env["CORS_ALLOWED_ORIGINS"] ?? "")) {
+    res.status(403).json({ error: "origin_not_allowed" });
+    return;
+  }
+  next();
+});
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: ACTIVITY_REQUEST_BODY_LIMIT_BYTES }));
 app.use(
@@ -54,3 +63,4 @@ const bodyParserErrorHandler: ErrorRequestHandler = (error, _req, res, next) => 
 app.use(bodyParserErrorHandler);
 
 export default app;
+

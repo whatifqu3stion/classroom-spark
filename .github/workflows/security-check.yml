@@ -1,0 +1,43 @@
+name: Security origin checks
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: security_checks
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://test:test@127.0.0.1:5432/security_checks
+      PORT: 5173
+      BASE_PATH: /
+      VITE_PUBLIC_SITE: "true"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.22.1'
+      - run: node --experimental-strip-types --test artifacts/api-server/tests/origin-policy.test.mjs
+      - run: npm install --global pnpm@11.28.0 --ignore-scripts --audit=false
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @workspace/db exec drizzle-kit push --config ./drizzle.config.ts --force
+      # Node's test runner executes origin-policy.test.mjs separately above.
+      - run: pnpm --filter @workspace/api-server exec vitest run --exclude tests/origin-policy.test.mjs
+      - run: pnpm --filter @workspace/boardwork run build

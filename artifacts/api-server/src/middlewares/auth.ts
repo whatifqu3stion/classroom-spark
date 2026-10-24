@@ -5,7 +5,7 @@
  * /auth/*) requires a valid signed session cookie.  The cookie is set by
  * POST /api/auth/login and cleared by POST /api/auth/logout.
  *
- * When APP_PASSWORD is not set this middleware is a no-op, so development
+ * Production startup requires APP_PASSWORD. Without it this middleware is a no-op in development, so development
  * environments remain unaffected.
  *
  * Security properties:
@@ -39,14 +39,19 @@ const MIN_SECRET_LENGTH = 32;
  */
 export function validateAuthConfig(): void {
   const password = process.env["APP_PASSWORD"];
-  if (!password) return; // no gate → nothing to validate
+  if (!password) {
+    if (process.env["NODE_ENV"] === "production") {
+      throw new Error("APP_PASSWORD and SESSION_SECRET are required for production API deployments.");
+    }
+    return;
+  }
 
   const secret = process.env["SESSION_SECRET"];
   if (!secret || secret.length < MIN_SECRET_LENGTH) {
     throw new Error(
       `APP_PASSWORD is set but SESSION_SECRET is ${
         secret ? `too short (${secret.length} chars; need ≥ ${MIN_SECRET_LENGTH})` : "absent"
-      }. Set a strong SESSION_SECRET or leave APP_PASSWORD unset.`,
+      }. Set a strong SESSION_SECRET.`,
     );
   }
 
