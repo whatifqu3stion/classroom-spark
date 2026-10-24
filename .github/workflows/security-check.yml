@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
+      DATABASE_URL: postgresql://test:test@127.0.0.1:5432/security_checks
       PORT: 5173
       BASE_PATH: /
       VITE_PUBLIC_SITE: "true"
