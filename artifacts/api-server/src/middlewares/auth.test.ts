@@ -310,3 +310,13 @@ describe("token expiry — server-side enforcement", () => {
     expect(status).toBe(401);
   });
 });
+
+
+describe("production auth configuration", () => {
+  afterEach(() => vi.unstubAllEnvs());
+  it("fails closed when a production deployment omits its password", async () => {
+    setEnv({ NODE_ENV: "production", APP_PASSWORD: undefined, SESSION_SECRET: undefined });
+    const { validateAuthConfig } = await importAuth();
+    expect(() => validateAuthConfig()).toThrow("APP_PASSWORD");
+  });
+});
