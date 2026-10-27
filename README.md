@@ -1,125 +1,81 @@
 # Boardwork
 
-**An education tool for creating clear classroom activities and keeping everyday teaching tools in one place.**
+**An education tool for creating classroom activities and keeping everyday teaching tools in one place.**
 
-Boardwork turns class context into editable student tasks and reusable classroom displays. It began with start-of-class activities and has grown into a classroom Homebase for tasks, timers, agendas, notes, and resources.
+At the start of a lesson, I might be welcoming students, taking attendance, and finding materials. Students still need to know what to do. Boardwork grew out of that problem: prepare a clear activity, put it on the board, and keep the timer and other useful tools nearby.
 
-[View the public demo](https://whatifqu3stion.github.io/classroom-spark/) · [Run the full workspace](docs/STANDALONE.md)
+It began with start-of-class activities. The workspace now includes saved class context, editable tasks, and a classroom Homebase for timers, agendas, notes, and resources.
 
-The public demo is a screenshot tour with sample content. Editing, saving, and optional AI drafting run in a separately hosted workspace.
+[View the public demo](https://whatifqu3stion.github.io/classroom-spark/) · [Install and run Boardwork](#install-and-run-boardwork)
 
-The screenshots and implemented scope below follow the [current working branch](https://github.com/whatifqu3stion/classroom-spark/tree/feat/classroom-homebase) ([PR #3](https://github.com/whatifqu3stion/classroom-spark/pull/3)) while the application changes are under review.
+**Status:** working prototype. The public demo is a screenshot tour, not the editable application. The features shown here are on [`feat/classroom-homebase`](https://github.com/whatifqu3stion/classroom-spark/tree/feat/classroom-homebase), under review in [PR #3](https://github.com/whatifqu3stion/classroom-spark/pull/3).
 
-![Boardwork Homebase with a student task, visual timer, agenda, and classroom clock](docs/screenshots/homebase.png)
+![Boardwork Homebase with a student task, timer, agenda, and classroom clock](docs/screenshots/homebase.png)
 
-*A saved Homebase keeps the task, time, and routine together. Teachers can rearrange the layout, lock it, and switch to a clean presentation.*
+*A saved Homebase keeps the task and routine together. Rearrange the tools, lock the layout, and switch to presentation view.*
 
-[Product decisions](#design-decisions) · [Technical approach](#technical-approach) · [Run locally](#run-locally) · [Project documentation](#project-documentation)
+## What it does
 
-## The problem
+- **Prepare activities:** save classes and units, start with a blank task or an AI draft, then edit, save, duplicate, or export it.
+- **Present clearly:** show student instructions and timing without exposing teacher notes.
+- **Keep classroom tools together:** build reusable Homebases with timers, notes, agendas, drawing, participation tools, and linked media.
+- **Review AI context:** check imported curriculum summaries and source excerpts before approving them for future drafts.
 
-A teacher may be welcoming students, taking attendance, and preparing materials at the same time. Students still need to know what to do, how to begin, and how long they have. Finding instructions and switching between slides, timers, and other tools competes for the teacher's attention.
+![Activity editor with saved class context beside an editable task](docs/screenshots/activity-editor.png)
 
-The design connects two needs: reusable preparation for teachers and a clear next action for students. Instructional judgment stays with the teacher.
+*An almost-right draft should be something you can fix directly.*
 
-## My role
+![Student presentation with a task, prompts, and countdown](docs/screenshots/student-presentation.png)
 
-I lead problem definition, product scope, classroom workflows, interaction requirements, and content expectations. My teaching experience informs the initial requirements; broader user research remains a next step.
+*The student view focuses on what to do next. A separate PNG export fits into existing slide decks.*
 
-I use AI coding tools to develop and iterate the implementation and tests. My focus is translating user needs into a working experience, making tradeoffs, and refining the result. The onboarding, recovery flows, and documentation also reflect my experience helping people learn and adopt unfamiliar tools.
+Screenshots use illustrative content, not student records. [Capture notes](docs/screenshots/README.md).
 
-## From preparation to the classroom
+## A few decisions that mattered
 
-### 1. Remember the context; edit the task
+I wanted useful class context to carry over between lessons, without making today's task harder to change. AI is optional, and its output stays editable. Approving a curriculum source makes it available to the generator; it does not certify the resulting activity.
 
-Class profiles, units, and saved context reduce repeated setup. Today's topic, time, and device requirements shape the activity. Teachers can draft with AI or start blank, then edit directly.
+The editor and classroom display serve different people, so teacher notes stay out of presentations and exports. Actual projector feedback also led to larger, more widely spaced prompts. Looking good on a laptop was not enough.
 
-![Activity editor with remembered class and unit context beside an editable student task](docs/screenshots/activity-editor.png)
+Saving needs care too. Conflicting edits are rejected rather than silently overwriting work, and recovery drafts help preserve changes. Keyboard layout controls offer an alternative to dragging tools around.
 
-*Preparation controls stay beside the result, so an almost-right draft can be corrected directly.*
+I set the direction and classroom requirements, review the experience, and use AI coding tools to develop and revise the application and tests. My teaching experience informs the work; broader user testing is still needed.
 
-### 2. Give students a clear next action
+## Install and run Boardwork
 
-Presentation prioritizes the task, prompts, and time. Teacher-only notes stay out of the student view and PNG export. History supports reopening, favorites, duplication, and adaptation.
+You need Git and Docker with Compose v2. These steps use the working branch shown above and create a fresh database.
 
-![Student presentation showing a concise osmosis task, two prompts, and a countdown](docs/screenshots/student-presentation.png)
+1. **Clone the project and open its folder.**
 
-*A student display with a live timer; a separate 1920 × 1080 PNG export fits into existing slide decks.*
+   ```sh
+   git clone --branch feat/classroom-homebase https://github.com/whatifqu3stion/classroom-spark.git
+   cd classroom-spark
+   ```
 
-### 3. Make AI context reviewable
+2. **Create the local configuration.**
 
-Optional curriculum setup accepts teacher text and readable PDFs, plus discovery for supported public publisher sources. Interpretations begin as drafts. Teachers review the summary, objectives, excerpts, and applicability before approval.
+   ```sh
+   cp .env.example .env
+   ```
 
-![Curriculum review dialog with an editable interpretation, supporting excerpt, draft status, and approval action](docs/screenshots/curriculum-review.png)
+   Open `.env` in your editor and set a strong `POSTGRES_PASSWORD`. Do not put visitor OpenAI keys in this file.
 
-*Approval makes context eligible for future generation. It does not certify curriculum compliance or guarantee factual accuracy.*
+3. **Build and start the app and database.**
 
-Screenshots show the actual interface with illustrative content, not real student records or evidence of AI output quality. The curriculum view illustrates a protected setup. [Capture details](docs/screenshots/README.md).
+   ```sh
+   docker compose up --build --detach --wait
+   ```
 
-## Design decisions
+4. **Open `http://localhost:8080`.** Create a class and choose **Start blank**. To generate an activity, add your own OpenAI key through **AI key**; it stays in memory until refresh. Editing and presenting saved work do not need a key.
 
-| User constraint | Product response | Reasoning |
-| --- | --- | --- |
-| Teachers switch between classes with little preparation time. | Remember class context, defaults, units, and multiple named Homebases. | Keep useful setup available for the next lesson. |
-| Students need instructions while the teacher is occupied. | Use direct task language, a distinct presentation view, and visible timing. | Make the first action and time available easy to find. |
-| A draft may need one correction. | Make generated text editable; retain a blank-start path. | Keep the teacher in control. |
-| A classroom display serves a different audience from an editor. | Separate teacher notes and controls from student content. | Support preparation without placing that complexity on the projected board. |
-| Dragging and small screens can make layout work difficult. | Provide keyboard layout controls, focus restoration, and stacked phone layouts. | Offer alternatives to precise pointer interaction. |
-| A failed save should not erase preparation. | Retain Homebase drafts and offer a copy when revisions conflict. | Recover work without silently overwriting another version. |
+To stop the app while keeping its data, run `docker compose down`. See the [standalone guide](docs/STANDALONE.md) for non-Docker development, backups, and hosting.
 
-Classroom projector feedback identified crowded, small prompts despite unused space. That led to larger, more widely spaced prompts, with a compact treatment for long activities. [Verification notes](docs/TESTING.md) distinguish that classroom observation from browser checks.
+**Hosting boundary:** this is one shared teacher workspace, not a multi-user service. Keep it local or provide access protection at the hosting layer. Bringing an API key does not authenticate a visitor. Private account imports, teacher accounts, and billing are not implemented.
 
-## Implemented scope
+## Under the hood and next steps
 
-- **Activity workspace:** saved classes, units, and context; AI or blank drafting; editing and autosave; History, favorites, duplication, presentation, and PNG export.
-- **Classroom Homebase:** multiple boards, starting layouts, movable/resizable tools, lock, undo, duplication, presentation, and timer-only focus.
-- **21 tool types:** timing with optional ambient sound, notes and agendas, participation tools, drawing, and linked media. See the [tool inventory](docs/HOMEBASE.md).
-- **Reviewed curriculum context:** class- and unit-scoped sources, draft/approval lifecycle, and a stored source snapshot for generated activities.
-- **Optional AI:** bring your own OpenAI key, held in memory until refresh, with visit token usage. Editing and presenting saved work need no key.
+React, TypeScript, Vite, and Tailwind CSS on the frontend; Express, PostgreSQL, Drizzle, and shared Zod validation behind it. Docker Compose runs the app and database. [Verification notes](docs/TESTING.md) separate automated checks from classroom observations.
 
-Published Google Docs, Slides, and Sheets embeds work where providers permit them. Private account imports, remote student voting, live weather/news, teacher accounts, and billing are future work. This is a single shared teacher installation; the host supplies access protection.
+The next test is whether other teachers can reach a useful activity without help, how much editing they need, and whether students can begin independently. I also want to test the display on more actual projectors. Time savings and learning gains have not been measured.
 
-## Technical approach
-
-The application uses **React, TypeScript, Vite, Tailwind CSS, an Express API, PostgreSQL, Drizzle migrations, and shared Zod validation**. Docker Compose runs the app and database without the original hosting platform.
-
-- **AI boundaries:** structured responses, Zod validation, bounded repair, and validated-only saves. These checks do not establish instructional quality.
-- **Persistence:** Homebase saves are serialized and checked against an expected revision. Stale writes are rejected; a local recovery draft remains available.
-- **Audience separation:** presentation and export exclude teacher notes; Homebase task copies are independent of the original activity.
-- **Resource control:** external media loads on request with an open-in-new-tab fallback. Private curriculum requires host-level access protection; BYOK is not authentication.
-
-Verification includes component tests, browser scenarios for layout, timers, focus, and save recovery, and a [passing Docker/PostgreSQL smoke run](https://github.com/whatifqu3stion/classroom-spark/actions/runs/39900573693). See the [test record](docs/TESTING.md) and [Homebase notes](docs/HOMEBASE.md) for limits.
-
-## What I would validate next
-
-The broader direction spans **K–12, higher education, adult learning, and workplace training**, with guidance and participation options suited to each group. The [education strategy and Mural feature review](docs/EDUCATION_STRATEGY.md) separates that direction from today's implemented scope.
-
-The priority is a teacher-reviewed AI evaluation set covering correctness, age appropriateness, first-action clarity, time, materials, and sparse context. It should support repeatable prompt and pipeline comparisons.
-
-Broader trials should measure time to a usable activity, editing required, repeat use, and whether students can begin independently. Homebase needs physical projector and device checks. These are evaluation plans, not proven time savings or learning gains.
-
-## Run locally
-
-With Docker and Compose v2 installed:
-
-```sh
-git switch feat/classroom-homebase
-cp .env.example .env
-# Set a strong POSTGRES_PASSWORD in .env; leave visitor OpenAI keys out.
-docker compose up --build --detach --wait
-```
-
-From a cloned repository, the branch switch selects the version shown here. Open **http://localhost:8080** after startup. Create a class and **Start blank**, or add a key through **AI key** to generate. The installation uses a fresh database and persistent volumes.
-
-See the [standalone guide](docs/STANDALONE.md) for development without Docker, operations, and access protection; see [BYOK details](docs/BYOK.md) for key handling and usage accounting.
-
-## Project documentation
-
-| Area | Details |
-| --- | --- |
-| Product definition | [Original MVP and subsequent expansion](docs/PRODUCT.md) |
-| Interaction and visual design | [Design specification](docs/DESIGN.md) |
-| Classroom tools and saving | [Homebase](docs/HOMEBASE.md) |
-| AI and source review | [Generation brief](docs/AI_GENERATION.md) · [Curriculum implementation](docs/CURRICULUM.md) |
-| Architecture and deployment | [Technical specification](docs/TECHNICAL.md) · [Standalone setup](docs/STANDALONE.md) · [Public demo hosting](docs/PAGES.md) |
-| Evidence and limits | [Verification record](docs/TESTING.md) |
+[Product notes](docs/PRODUCT.md) · [Design](docs/DESIGN.md) · [Homebase tools](docs/HOMEBASE.md) · [AI and curriculum](docs/AI_GENERATION.md) · [Architecture](docs/TECHNICAL.md) · [Key handling](docs/BYOK.md) · [Broader education direction](docs/EDUCATION_STRATEGY.md)
