@@ -14,32 +14,47 @@ It began with start-of-class activities. The workspace now includes saved class 
 
 *A saved Homebase keeps the task and routine together. Rearrange the tools, lock the layout, and switch to presentation view.*
 
-## What it does
+## From preparation to the classroom
 
-- **Prepare activities:** save classes and units, start with a blank task or an AI draft, then edit, save, duplicate, or export it.
-- **Present clearly:** show student instructions and timing without exposing teacher notes.
-- **Keep classroom tools together:** build reusable Homebases with timers, notes, agendas, drawing, participation tools, and linked media.
-- **Review AI context:** check imported curriculum summaries and source excerpts before approving them for future drafts.
+### Keep the useful context; change today's task
+
+Classes and units carry forward the details a teacher would otherwise enter again. Start blank or draft with AI, then edit, save, duplicate, or export the activity. I wanted an almost-right draft to be something you could fix directly.
 
 ![Activity editor with saved class context beside an editable task](docs/screenshots/activity-editor.png)
 
-*An almost-right draft should be something you can fix directly.*
+### Give students a clear next action
+
+The student display focuses on instructions, prompts, and time. Teacher notes stay out of presentations and PNG exports. Actual projector feedback led to larger, more widely spaced prompts: a layout that worked on a laptop was still too crowded in the classroom.
 
 ![Student presentation with a task, prompts, and countdown](docs/screenshots/student-presentation.png)
 
-*The student view focuses on what to do next. A separate PNG export fits into existing slide decks.*
+### Let teachers inspect what AI will use
 
-Screenshots use illustrative content, not student records. [Capture notes](docs/screenshots/README.md).
+Curriculum summaries and source excerpts begin as drafts. Teachers can check and edit them before approval. Approving a source makes it available to the generator; it does not certify the resulting activity.
 
-## A few decisions that mattered
+![Curriculum review dialog with an editable summary, source excerpt, and approval action](docs/screenshots/curriculum-review.png)
 
-I wanted useful class context to carry over between lessons, without making today's task harder to change. AI is optional, and its output stays editable. Approving a curriculum source makes it available to the generator; it does not certify the resulting activity.
+*Screenshots use illustrative content, not student records. The curriculum view shows a protected setup. [Capture notes](docs/screenshots/README.md).*
 
-The editor and classroom display serve different people, so teacher notes stay out of presentations and exports. Actual projector feedback also led to larger, more widely spaced prompts. Looking good on a laptop was not enough.
+## Decisions beyond the first screen
 
-Saving needs care too. Conflicting edits are rejected rather than silently overwriting work, and recovery drafts help preserve changes. Keyboard layout controls offer an alternative to dragging tools around.
+The Homebase brings together timers, notes, agendas, drawing, participation tools, and linked media. There are [21 tool types](docs/HOMEBASE.md), but a teacher chooses which belong on a particular board. Keyboard layout controls provide an alternative to dragging, and the layout can be locked before presenting.
+
+Saving needs care too. A failed request should not erase a lesson's preparation. Conflicting edits are rejected rather than silently overwriting work, and recovery drafts give the teacher something to return to.
 
 I set the direction and classroom requirements, review the experience, and use AI coding tools to develop and revise the application and tests. My teaching experience informs the work; broader user testing is still needed.
+
+## How the app is put together
+
+**React, TypeScript, Vite, and Tailwind CSS** on the frontend; **Express, PostgreSQL, Drizzle, and shared Zod validation** behind it. Docker Compose runs the app and database without depending on the original hosting platform.
+
+The boundaries matter more than the list of tools:
+
+- **Drafting is separate from teaching.** Structured AI responses are validated before saving, with bounded repair for malformed output. Teachers still judge the content; a valid response shape does not make an activity correct or appropriate.
+- **Saving checks what changed.** Homebase writes are serialized and carry an expected revision. Stale writes are rejected, while a local recovery draft remains available. Copying a task into a Homebase does not change its original activity.
+- **Presentation has a different audience.** Student views exclude teacher notes. External media loads on request, with an open-in-new-tab fallback when embedding fails.
+
+[Architecture](docs/TECHNICAL.md) · [Homebase implementation](docs/HOMEBASE.md) · [Verification record](docs/TESTING.md)
 
 ## Install and run Boardwork
 
@@ -70,12 +85,12 @@ You need Git and Docker with Compose v2. These steps use the working branch show
 
 To stop the app while keeping its data, run `docker compose down`. See the [standalone guide](docs/STANDALONE.md) for non-Docker development, backups, and hosting.
 
-**Hosting boundary:** this is one shared teacher workspace, not a multi-user service. Keep it local or provide access protection at the hosting layer. Bringing an API key does not authenticate a visitor. Private account imports, teacher accounts, and billing are not implemented.
+**Hosting boundary:** this is one shared teacher workspace, not a multi-user service. Keep it local or provide access protection at the hosting layer. Bringing an API key does not authenticate a visitor. Private account imports, remote student voting, live weather/news, teacher accounts, and billing are not implemented.
 
-## Under the hood and next steps
+## What I'd test next
 
-React, TypeScript, Vite, and Tailwind CSS on the frontend; Express, PostgreSQL, Drizzle, and shared Zod validation behind it. Docker Compose runs the app and database. [Verification notes](docs/TESTING.md) separate automated checks from classroom observations.
+Can other teachers reach a useful activity without help? How much editing do they need, and can students begin independently? I also want to test more actual projectors and review AI drafts against a consistent set of teaching requirements. Time savings and learning gains have not been measured.
 
-The next test is whether other teachers can reach a useful activity without help, how much editing they need, and whether students can begin independently. I also want to test the display on more actual projectors. Time savings and learning gains have not been measured.
+The broader direction includes higher education, adult learning, and workplace training. That is [future scope](docs/EDUCATION_STRATEGY.md), not a claim that the current classroom prototype already serves all those settings.
 
-[Product notes](docs/PRODUCT.md) · [Design](docs/DESIGN.md) · [Homebase tools](docs/HOMEBASE.md) · [AI and curriculum](docs/AI_GENERATION.md) · [Architecture](docs/TECHNICAL.md) · [Key handling](docs/BYOK.md) · [Broader education direction](docs/EDUCATION_STRATEGY.md)
+[Product notes](docs/PRODUCT.md) · [Design](docs/DESIGN.md) · [AI generation](docs/AI_GENERATION.md) · [Curriculum review](docs/CURRICULUM.md) · [Key handling](docs/BYOK.md)
