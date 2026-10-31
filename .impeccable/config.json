@@ -1,0 +1,71 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "open sans",
+        "files": [
+          "artifacts/boardwork/src/index.css"
+        ],
+        "createdAt": "2026-10-31T22:31:42.797Z",
+        "reason": "Agent: existing presentation font explicitly specified in docs/DESIGN.md lines 286-291; unchanged by landing copy work."
+      },
+      {
+        "rule": "design-system-font",
+        "value": "cambria math",
+        "files": [
+          "artifacts/boardwork/src/index.css"
+        ],
+        "createdAt": "2026-10-31T22:31:42.816Z",
+        "reason": "Agent: existing MathML font fallback for mathematical notation, not landing typography."
+      },
+      {
+        "rule": "design-system-font",
+        "value": "times new roman",
+        "files": [
+          "artifacts/boardwork/src/index.css"
+        ],
+        "createdAt": "2026-10-31T22:31:42.849Z",
+        "reason": "Agent: existing mathematical notation fallback, not landing typography."
+      },
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "files": [
+          "artifacts/boardwork/src/index.css"
+        ],
+        "createdAt": "2026-10-31T22:34:20.470Z",
+        "reason": "Agent: established control/body face explicitly specified in docs/DESIGN.md; preserving existing visual identity for the landing-page copy rewrite."
+      },
+      {
+        "rule": "overused-font",
+        "value": "open sans",
+        "files": [
+          "artifacts/boardwork/src/index.css"
+        ],
+        "createdAt": "2026-10-31T22:34:20.488Z",
+        "reason": "Agent: existing student presentation face explicitly specified in docs/DESIGN.md lines 286-291; not a new font choice."
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "animate-bounce",
+        "files": [
+          "artifacts/boardwork/src/index.css"
+        ],
+        "createdAt": "2026-10-31T22:34:20.506Z",
+        "reason": "Agent: selector is inside prefers-reduced-motion and disables animations; it does not add bounce easing."
+      },
+      {
+        "rule": "layout-transition",
+        "value": "*",
+        "files": [
+          "artifacts/boardwork/src/index.css"
+        ],
+        "createdAt": "2026-10-31T22:34:31.268Z",
+        "reason": "Agent: current finding is the existing absolutely positioned presentation-layout-divider pseudo-element hover width; it does not reflow surrounding content. Detector provides no narrower extractable value."
+      }
+    ]
+  }
+}

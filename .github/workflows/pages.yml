@@ -39,6 +39,7 @@ jobs:
         env:
           BASE_PATH: ${{ steps.pages.outputs.base_path }}/
           VITE_PUBLIC_SITE: "true"
+          VITE_WORKSPACE_URL: ${{ vars.BOARDWORK_WORKSPACE_URL }}
         run: pnpm --filter @workspace/boardwork run build
       - name: Upload the static site
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4

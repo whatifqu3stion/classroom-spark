@@ -94,6 +94,7 @@ export function SavedContextControl({
   return (
     <div className="space-y-3" data-testid="saved-context-control">
       <h2 className="text-sm font-medium">Context <span className="font-normal text-muted-foreground">(optional)</span></h2>
+      <p className="text-sm leading-relaxed text-muted-foreground">Reuse teaching guidance, so you don’t have to explain it again.</p>
       {selectedContexts.length > 0 && (
         <div className="flex flex-wrap gap-2 items-center">
           {selectedContexts.map((ctx) => (

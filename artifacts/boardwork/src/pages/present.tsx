@@ -4,7 +4,6 @@ import {
   useBoardwork,
 } from "@/store/boardwork-context";
 import { Link, useLocation, useRoute } from "wouter";
-import { toPng } from "html-to-image";
 import { useToast } from "@/hooks/use-toast";
 import { useCountdownTimer } from "@/components/countdown-timer";
 import { PresentationCanvas } from "@/components/presentation-canvas";
@@ -197,6 +196,7 @@ export default function Present() {
     setIsExporting(true);
     try {
       await waitForPresentationFonts();
+      const { toPng } = await import("html-to-image");
       const dataUrl = await toPng(exportRef.current, {
         ...getPresentationExportOptions(
           resolvedTheme.colors.background,

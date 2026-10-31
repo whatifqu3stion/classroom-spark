@@ -131,7 +131,7 @@ describe("History", () => {
     expect(screen.getByRole("button", { name: `Unfavorite ${formulaTask}` })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: `Actions for ${formulaTask}` })).toBeInTheDocument();
     expect(activity).not.toHaveTextContent("Legacy activity title");
-    expect(screen.getByTestId("history-view-all")).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByTestId("history-view-all")).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByTestId("history-item-plain-activity")).toBeInTheDocument();
   });
 
@@ -140,10 +140,23 @@ describe("History", () => {
 
     fireEvent.click(screen.getByTestId("history-view-favorites"));
 
-    expect(screen.getByTestId("history-view-favorites")).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByTestId("history-view-favorites")).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByTestId("history-item-formula-activity")).toHaveClass("shadow-teacher-card");
     expect(screen.getByTestId("history-item-formula-activity").querySelector(".formula-rendered")).toBeInTheDocument();
     expect(screen.queryByTestId("history-item-plain-activity")).not.toBeInTheDocument();
+  });
+
+  it("explains empty favorites when other activities exist", () => {
+    vi.mocked(useBoardwork).mockReturnValue({
+      ...vi.mocked(useBoardwork)(),
+      appState: { ...appState, activities: appState.activities.map((activity) => ({ ...activity, favorite: false })) },
+    });
+    render(<History />);
+    fireEvent.click(screen.getByRole("button", { name: "Favorites (0)" }));
+    expect(screen.getByText("No favorites yet")).toBeInTheDocument();
+    expect(screen.queryByText("No activities yet")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Show all activities" }));
+    expect(screen.getByTestId("history-item-plain-activity")).toBeInTheDocument();
   });
 
   it("shows class grade and subject context for activities", () => {

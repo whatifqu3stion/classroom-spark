@@ -75,7 +75,7 @@ export default function Homebase() {
         <div className="hb-page-header">
           <div>
             <h1>Homebase</h1>
-            <p>A familiar start. Everything your room needs, in one place.</p>
+            <p>Your task, timer, and classroom tools. One place to look.</p>
           </div>
           <div className="hb-scope-controls">
             <label>
@@ -150,8 +150,8 @@ export default function Homebase() {
                 {board ? "Start another board." : "Your room, ready to begin."}
               </h2>
               <p>
-                Keep the task, timer, and daily reminders together. Saved
-                separately for each class.
+                Choose a starting point, then add the tools your class needs.
+                Keep boards for a class or use General boards across your day.
               </p>
             </div>
             <div className="hb-start-options">
@@ -196,7 +196,7 @@ export default function Homebase() {
               ))}
             </div>
             <p className="hb-small">
-              Boards save on this installation. Timers and random picks restart
+              Your tools and layout are saved here. Timers and random picks restart
               when you reopen a board.
             </p>
             {board ? (
@@ -205,7 +205,7 @@ export default function Homebase() {
               </Button>
             ) : (
               <Link href="/app" className="hb-resource-link">
-                Create a Boardwork activity first
+                Prepare a classroom activity
               </Link>
             )}
           </div>

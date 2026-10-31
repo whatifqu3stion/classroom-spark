@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useLocation, useRoute } from "wouter";
+import { Link, useLocation, useRoute } from "wouter";
 import { Shell } from "@/components/layout/shell";
 import { AIUsageControl } from "@/components/ai-settings";
 import {
@@ -785,7 +785,7 @@ export default function Home() {
           <div className="w-full max-w-md text-center">
             <h1 className="boardwork-page-title mb-2 text-2xl font-bold tracking-tight">Create your first class</h1>
             <p className="mx-auto mb-7 max-w-sm text-muted-foreground">
-              Add the essentials now. Add more class context later if you need it.
+              Save your class details once, so your next activity starts with the right students in mind.
             </p>
             <Button onClick={() => { setEditingClassId(null); setClassDialogOpen(true); }} size="lg" className="gap-2" data-testid="button-create-first-class">
               <Plus className="w-5 h-5" />
@@ -814,7 +814,7 @@ export default function Home() {
 
           {/* Left Column: Generator Controls */}
           <div
-            className="boardwork-creation-panel flex min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-[var(--workspace-panel-radius)] border bg-card shadow-teacher-card lg:h-full lg:w-[400px]"
+            className={`boardwork-creation-panel ${activityId ? "hidden lg:flex" : "flex"} min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-[var(--workspace-panel-radius)] border bg-card shadow-teacher-card lg:h-full lg:w-[400px]`}
             data-testid="creation-controls"
           >
             <div
@@ -865,11 +865,11 @@ export default function Home() {
             >
             <div className="space-y-6">
               <div className="max-w-xl flex flex-col gap-2">
-                <h1 className="text-lg font-semibold tracking-tight text-foreground text-balance m-0 p-0">
-                  <Label htmlFor="topic" className="text-lg font-semibold leading-tight">What are students working on today?</Label>
+                <h1 className="boardwork-setup-title text-foreground text-balance m-0 p-0">
+                  <Label htmlFor="topic" className="text-inherit">What are students working on today?</Label>
                 </h1>
                 <p id="boardwork-context-description" className="max-w-lg text-sm text-muted-foreground">
-                  Add a topic, learning goal, standard, concept, or anything else that should shape the Boardwork.
+                  What should students practise or explore? Add a topic or learning goal, then draft a task or start blank.
                 </p>
                 <Textarea
                   id="topic"
@@ -1165,18 +1165,23 @@ export default function Home() {
                   className="flex w-full max-w-md flex-col items-center text-center"
                   data-testid="empty-editor-content"
                 >
-                  <FilePlus className="w-12 h-12 mb-4 opacity-20" aria-hidden="true" />
+                  <FilePlus className="w-10 h-10 mb-4 text-muted-foreground" aria-hidden="true" />
                   <h3 className="board-editor-empty-state-title mb-2 w-full text-lg font-medium text-foreground">
-                    No activity created yet
+                    A clear task starts here
                   </h3>
                   <p className="board-editor-empty-state-copy mb-6 w-full max-w-sm">
-                    Add what students are working on in Board Setup, then choose Create board. You can also start blank.
+                    Tell us what your class is working on, then choose Create board for an AI draft. Prefer to write it yourself? Choose Start blank.
                   </p>
                 </div>
               </div>
             )}
           </div>
 
+          {activityId && (
+            <Button asChild variant="outline" className="lg:hidden">
+              <Link href="/app">Create another board</Link>
+            </Button>
+          )}
         </div>
       </div>
 

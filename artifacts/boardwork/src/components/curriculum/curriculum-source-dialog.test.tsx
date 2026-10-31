@@ -29,6 +29,7 @@ describe("CurriculumSourceDialog", () => {
       summary: "Init summary",
       status: "draft",
       version: 1,
+      objectives: [{ id: "objective-1", label: "Explain osmosis", selected: true, excerpt: "Water crosses a membrane." }],
       updatedAt: "2024-01-01T00:00:00Z"
     };
 
@@ -54,6 +55,12 @@ describe("CurriculumSourceDialog", () => {
 
     // Initial render sets title
     expect(screen.getByDisplayValue("Initial Title")).toBeInTheDocument();
+
+    expect(screen.getByRole("checkbox", { name: "Use objective 1: Explain osmosis" })).toBeChecked();
+    const objective = screen.getByRole("textbox", { name: "Objective 1 wording" });
+    expect(objective).toHaveAccessibleDescription('"Water crosses a membrane."');
+    fireEvent.change(objective, { target: { value: "Explain diffusion" } });
+    expect(screen.getByRole("checkbox", { name: "Use objective 1: Explain diffusion" })).toBeChecked();
 
     const approveButton = screen.getByRole("button", { name: "Approve" });
     fireEvent.click(approveButton);

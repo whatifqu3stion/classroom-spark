@@ -152,7 +152,7 @@ export const tools: {
   {
     kind: "image",
     title: "Image",
-    description: "Show a teacher-selected image from an HTTPS link.",
+    description: "Put an image beside the task for students to refer to.",
     group: "Resources",
     w: 6,
     h: 5,
@@ -168,7 +168,7 @@ export const tools: {
   {
     kind: "pdf",
     title: "PDF",
-    description: "Display a PDF from a direct HTTPS link.",
+    description: "Keep a reading or worksheet alongside the activity.",
     group: "Resources",
     w: 8,
     h: 6,

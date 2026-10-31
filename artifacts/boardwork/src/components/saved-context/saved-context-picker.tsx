@@ -42,11 +42,13 @@ export function SavedContextPicker({
   onCloseFocus,
 }: SavedContextPickerProps) {
   const [search, setSearch] = useState("");
+  const [formBusy, setFormBusy] = useState(false);
   const [editingItem, setEditingItem] = useState<SavedContext | "new" | null>(null);
   const previousEditId = useRef<string | null>(null);
 
   // Close form when dialog closes
   const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen && formBusy) return;
     if (!newOpen) {
       setEditingItem(null);
       setSearch("");
@@ -67,7 +69,7 @@ export function SavedContextPicker({
   useEffect(() => {
     if (editingItem === null && previousEditId.current) {
       const id = previousEditId.current;
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         if (id === "new") {
           const btn = document.querySelector(`[data-testid="button-create-context-picker"]`) as HTMLElement;
           btn?.focus();
@@ -77,7 +79,9 @@ export function SavedContextPicker({
         }
         previousEditId.current = null;
       }, 0);
+      return () => clearTimeout(timeout);
     }
+    return undefined;
   }, [editingItem]);
 
   const toggleSelection = useCallback(
@@ -163,6 +167,8 @@ export function SavedContextPicker({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         className="max-h-[92dvh] max-w-md overflow-hidden flex flex-col p-0 gap-0"
+        onEscapeKeyDown={(event) => { if (formBusy) event.preventDefault(); }}
+        onPointerDownOutside={(event) => { if (formBusy) event.preventDefault(); }}
         onCloseAutoFocus={(event) => {
           if (onCloseFocus) {
             event.preventDefault();
@@ -175,6 +181,7 @@ export function SavedContextPicker({
             classId={classId}
             initialData={editingItem === "new" ? null : editingItem}
             categories={data?.categories || []}
+            onBusyChange={setFormBusy}
             onClose={() => setEditingItem(null)}
             onSaved={(newId) => {
               if (editingItem === "new") {
@@ -203,8 +210,8 @@ export function SavedContextPicker({
           <>
             <DialogHeader className="p-4 pb-2 pr-12 text-left">
               <DialogTitle>Saved context</DialogTitle>
-              <DialogDescription className="sr-only">
-                Select predefined contexts to shape the generated activity.
+              <DialogDescription>
+                Choose teaching strategies, learning goals, or routines to guide this activity.
               </DialogDescription>
             </DialogHeader>
 
@@ -231,10 +238,10 @@ export function SavedContextPicker({
 
             <ScrollArea className="flex-1 min-h-[50vh]">
               {isLoading && !isError ? (
-                <div className="p-8 text-center text-sm text-muted-foreground">Loading...</div>
+                <div className="p-8 text-center text-sm text-muted-foreground" role="status">Loading your saved guidance…</div>
               ) : isError && !data ? (
                 <div className="p-8 flex flex-col items-center justify-center gap-3">
-                  <div className="text-sm text-destructive font-medium">Failed to load saved contexts.</div>
+                  <div className="text-sm text-destructive font-medium">Your saved guidance couldn’t load. Try again.</div>
                   <Button variant="outline" size="sm" onClick={() => onRefetch()} disabled={isFetching} data-testid="button-picker-retry">
                     {isFetching && <Loader2 className="mr-2 size-3 animate-spin" />}
                     Retry
@@ -242,7 +249,7 @@ export function SavedContextPicker({
                 </div>
               ) : groupedItems.length === 0 ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">
-                  {search ? "No matches found." : "No saved context yet."}
+                  {search ? "No matching guidance. Try another word or clear your search." : "Save a teaching strategy or routine here, then use it again across activities."}
                 </div>
               ) : (
                 <div className="p-2 pb-4 space-y-4">

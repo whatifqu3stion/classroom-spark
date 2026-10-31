@@ -405,7 +405,7 @@
   font-variant-numeric: tabular-nums;
 }
 .hb-timer-status {
-  font-size: clamp(0.625rem, 4cqw, 1rem);
+  font-size: clamp(0.75rem, 4cqw, 1rem);
   margin-top: 0.5rem;
 }
 .hb-timer-options {
@@ -993,4 +993,12 @@
   place-items: center;
   top: 0.5rem;
   right: 0.5rem;
+}
+
+.hb-layout-hint-mobile, .hb-layout-action-mobile { display: none; }
+@media (max-width: 700px) {
+  .hb-layout-hint-desktop, .hb-frame-controls .hb-move-handle, .hb-resize-handle { display: none; }
+  .hb-layout-hint-mobile { display: inline; }
+  .hb-layout-action-mobile { display: flex; }
+  .hb-board-hint { font-size: 0.75rem; }
 }

@@ -7,6 +7,11 @@ import {
 } from "react";
 import { Link } from "wouter";
 import {
+  getWorkspaceEntry,
+  repositoryUrl,
+  workspaceSetupUrl,
+} from "@/lib/workspace-entry";
+import {
   AnimatePresence,
   motion,
   useReducedMotion,
@@ -52,7 +57,10 @@ const MOTION = {
 } as const;
 const EASE = [0.16, 1, 0.3, 1] as const;
 const isPublicSite = import.meta.env.VITE_PUBLIC_SITE === "true";
-const repositoryUrl = "https://github.com/whatifqu3stion/classroom-spark";
+const workspaceEntry = getWorkspaceEntry(
+  isPublicSite,
+  import.meta.env.VITE_WORKSPACE_URL,
+);
 
 function WorkspaceEntry({
   children,
@@ -63,8 +71,8 @@ function WorkspaceEntry({
   className?: string;
   onClick?: () => void;
 }) {
-  return isPublicSite ? (
-    <a href={repositoryUrl} className={className} onClick={onClick}>
+  return workspaceEntry.external ? (
+    <a href={workspaceEntry.href} className={className} onClick={onClick}>
       {children}
     </a>
   ) : (
@@ -322,10 +330,10 @@ function LandingNavigation() {
   const links = (
     <>
       <a href="#how-it-works" onClick={() => setOpen(false)}>
-        How it works
+        Plan a task
       </a>
-      <a href="#made-for-class" onClick={() => setOpen(false)}>
-        Made for class
+      <a href="#homebase" onClick={() => setOpen(false)}>
+        Classroom tools
       </a>
       <a href="#questions" onClick={() => setOpen(false)}>
         Questions
@@ -344,7 +352,7 @@ function LandingNavigation() {
         </nav>
         <Button asChild size="landing" className="landing-nav-cta">
           <WorkspaceEntry>
-            {isPublicSite ? "View project" : "Open workspace"}{" "}
+            {workspaceEntry.available ? "Open workspace" : "See setup options"}{" "}
             <ArrowUpRight aria-hidden="true" />
           </WorkspaceEntry>
         </Button>
@@ -374,7 +382,7 @@ function LandingNavigation() {
           >
             {links}
             <WorkspaceEntry onClick={() => setOpen(false)}>
-              {isPublicSite ? "View project" : "Open workspace"}{" "}
+              {workspaceEntry.available ? "Open workspace" : "See setup options"}{" "}
               <ArrowUpRight aria-hidden="true" />
             </WorkspaceEntry>
           </motion.nav>
@@ -394,7 +402,7 @@ export default function Landing() {
   const paperY = useTransform(scrollYProgress, [0, 1], [0, 48]);
   useEffect(() => {
     const previous = document.title;
-    document.title = "Boardwork — Make the first minutes matter";
+    document.title = "Boardwork — Less juggling. More teaching.";
     return () => {
       document.title = previous;
     };
@@ -410,13 +418,20 @@ export default function Landing() {
       {isPublicSite && (
         <aside className="landing-demo-banner" aria-label="About this demo">
           <p>
-            <strong>Product demo</strong>
-            <span>App screens use sample content.</span>
+            <strong>Explore Boardwork</strong>
+            <span>
+              {workspaceEntry.available
+                ? "Take a look, then open your classroom workspace."
+                : "A screenshot tour. The hosted workspace is not available yet."}
+            </span>
           </p>
           <a
-            href={`${repositoryUrl}/blob/feat/classroom-homebase/docs/STANDALONE.md`}
+            href={
+              workspaceEntry.available ? workspaceEntry.href : workspaceSetupUrl
+            }
           >
-            Run the workspace <ArrowUpRight aria-hidden="true" />
+            {workspaceEntry.available ? "Open workspace" : "See setup options"}{" "}
+            <ArrowUpRight aria-hidden="true" />
           </a>
         </aside>
       )}
@@ -451,30 +466,35 @@ export default function Landing() {
               }
               transition={{ duration: MOTION.reveal, ease: EASE }}
             >
-              Make the first
+              Less juggling.
               <br />
-              minutes matter.
+              More teaching.
             </motion.h1>
             <p>
-              Create a purposeful first task students can begin on their own.
-              <br className="landing-desktop-break" /> Keep your attention on
-              arrivals, attendance, and the room.
+              Give your class a clear task, a visible timer, and a plan to follow.
+              Prepare activities and keep everyday classroom tools together,
+              so you can focus on the people in the room.
             </p>
             <div className="landing-hero-actions">
               <Button asChild size="landing">
-                <WorkspaceEntry>
-                  {isPublicSite ? "View the project" : "Open your workspace"}{" "}
-                  <ArrowRight aria-hidden="true" />
-                </WorkspaceEntry>
+                {workspaceEntry.available ? (
+                  <WorkspaceEntry>
+                    Open your workspace <ArrowRight aria-hidden="true" />
+                  </WorkspaceEntry>
+                ) : (
+                  <a href="#example-board">
+                    Explore Boardwork <ArrowRight aria-hidden="true" />
+                  </a>
+                )}
               </Button>
-              <a className="landing-text-link" href="#example-board">
-                See it in action <ArrowDown aria-hidden="true" />
+              <a className="landing-text-link" href="#homebase">
+                Explore the classroom tools <ArrowDown aria-hidden="true" />
               </a>
             </div>
             <span className="landing-hero-note">
               {isPublicSite
-                ? "Product preview · Explore the app screens below."
-                : "Do Nows, bell-ringers, and warm-ups. One teacher workspace."}
+                ? "Real app screens with sample classroom content."
+                : "Activities, classroom tools, and saved routines in one place."}
             </span>
           </div>
           <motion.div
@@ -501,28 +521,28 @@ export default function Landing() {
         >
           <Reveal>
             <h2 id="intro-heading">
-              You greet the room.
+              “What are we doing?”
               <br />
-              They know where to begin.
+              Put the answer on the board.
             </h2>
             <p>
-              Students are arriving. Attendance needs taking. Someone has a
-              question. A visible first task gives the class a place to begin
-              while you attend to the people in front of you.
+              The bell rings. You’re taking attendance, finding a resource, and
+              answering the same question again. Boardwork gives students a
+              shared place to look for the task, the time, and what comes next.
             </p>
           </Reveal>
           <ul className="landing-benefits">
             <li>
               <NotebookPen aria-hidden="true" />
-              <span>Tasks they can start independently</span>
+              <span>Give students a clear starting point</span>
             </li>
             <li>
               <PencilLine aria-hidden="true" />
-              <span>Less setup between classes</span>
+              <span>Keep your classroom tools together</span>
             </li>
             <li>
               <Monitor aria-hidden="true" />
-              <span>A routine you can build on</span>
+              <span>Reuse what worked last time</span>
             </li>
           </ul>
         </section>
@@ -536,26 +556,27 @@ export default function Landing() {
             <figure className="landing-product-figure landing-product-figure--setup">
               <ScreenshotPreview image={productImages.setup} />
               <figcaption>
-                Saved class. Reusable unit. Today's focus.
+                Choose your class, add today’s topic, and make the task your own.
               </figcaption>
             </figure>
           </Reveal>
           <Reveal className="landing-feature-copy" delay={MOTION.stagger}>
             <h2 id="context-heading">
-              Your class context. <br />
-              Ready for the next task.
+              A fresh task. <br />
+              Without starting from scratch.
             </h2>
             <p>
-              Keep your class details and reusable units ready. Add today's
-              topic, choose the time available and whether students need a
-              computer, then create a draft.
+              Keep each class’s subject, routines, and current unit ready for
+              next time. Add today’s topic and choose how long students have,
+              with or without devices.
             </p>
             <p>
-              Review and edit every word before presenting. You can also start
-              with a blank board and write the task yourself.
+              Write your own warm-up or ask AI for a first draft. Edit the
+              wording, add an image, and adjust the prompts until the activity
+              fits your students. You decide what reaches the screen.
             </p>
             <WorkspaceEntry className="landing-text-link">
-              {isPublicSite ? "Get the workspace" : "Prepare a board"}{" "}
+              {workspaceEntry.available ? "Prepare a board" : "See setup options"}{" "}
               <ArrowRight aria-hidden="true" />
             </WorkspaceEntry>
           </Reveal>
@@ -568,18 +589,18 @@ export default function Landing() {
         >
           <Reveal className="landing-feature-copy">
             <h2 id="present-heading">
-              A first task <br />
-              they can follow.
+              Keep the instructions visible. <br />
+              Keep everyone moving.
             </h2>
             <p>
-              Put the instructions, supporting prompts, and a timer on your
-              classroom display. Students can see what to do and how long they
-              have.
+              “What do I need?” “How long have we got?” Show the task,
+              supporting prompts, materials, and timer together on your
+              classroom display. Students can check back as they work.
             </p>
             <p>
-              Use the opening minutes to revisit prior learning, make a
-              prediction, or explain an idea. Notebook-based tasks let students
-              get started without opening a device.
+              Switch to a clean presentation view when you’re ready. Students
+              work in a notebook, sketchbook, or the resource you choose;
+              they don’t need a Boardwork account.
             </p>
             <span className="landing-feature-detail">
               <Monitor aria-hidden="true" /> Present in class or export a PNG
@@ -597,18 +618,64 @@ export default function Landing() {
         </section>
 
         <section
+          id="homebase"
+          className="landing-feature landing-feature--homebase landing-container"
+          aria-labelledby="homebase-heading"
+        >
+          <Reveal className="landing-feature-copy">
+            <h2 id="homebase-heading">
+              Your timer. Your agenda. <br />
+              One place to look.
+            </h2>
+            <p>
+              Keep the lesson moving without switching between a timer,
+              a list of instructions, and a handful of open tabs. Homebase
+              brings your classroom tools onto one board you can arrange and save.
+            </p>
+            <p>
+              Set up a board for arrivals, independent work, or the next class.
+              Add what you need, arrange it to suit the room, and present it
+              without the editing controls.
+            </p>
+          </Reveal>
+          <Reveal className="landing-projector-visual" delay={MOTION.stagger}>
+            <figure className="landing-product-figure">
+              <ScreenshotPreview image={productImages.homebase} />
+              <figcaption>A task, focus timer, agenda, and clock on one saved Homebase.</figcaption>
+            </figure>
+          </Reveal>
+          <dl className="landing-tool-outcomes">
+            <div>
+              <dt>Make time visible</dt>
+              <dd>Countdown timers, a stopwatch, and a clock help the class follow the pace.</dd>
+            </div>
+            <div>
+              <dt>Bring everyone into the activity</dt>
+              <dd>Pick names without repeats, make random groups, or roll dice for a prompt.</dd>
+            </div>
+            <div>
+              <dt>Show what happens next</dt>
+              <dd>Check off an agenda, leave a note, or display a work mode and traffic signal.</dd>
+            </div>
+            <div>
+              <dt>Keep resources within reach</dt>
+              <dd>Add links, images, and supported videos or documents beside the task.</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section
           className="landing-library landing-container"
           aria-labelledby="library-heading"
         >
           <Reveal className="landing-section-heading">
             <h2 id="library-heading">
-              Tomorrow has <br />a starting point.
+              That worked well. <br />Keep it for next time.
             </h2>
             <p>
-              Favorite the boards you want to revisit. Filter by class or
-              subject,
-              <br className="landing-desktop-break" /> then reopen, edit, or
-              duplicate a task for another lesson.
+              Star the activities worth keeping. Find them by class or subject,
+              then reopen or duplicate one and adapt it for your next group.
+              Your good ideas stay easy to find.
             </p>
           </Reveal>
           <Reveal className="landing-library-product">
@@ -628,34 +695,35 @@ export default function Landing() {
         >
           <Reveal>
             <h2 id="key-heading">
-              Your judgment.
+              Keep the context.
               <br />
-              Your final say.
+              Skip the retyping.
             </h2>
           </Reveal>
           <Reveal className="landing-key-copy" delay={MOTION.stagger}>
             <p>
-              Use your own OpenAI key for help drafting an activity, or start
-              with a blank board. Editing, saving, presenting, and exporting
-              work without a key.
+              Your teaching approach shouldn’t need explaining every time you
+              prepare a task. Save reusable guidance, unit details, and learning
+              goals to bring them into your next activity.
             </p>
             <ul>
               <li>
                 <Check aria-hidden="true" />
-                <span>Your key stays in memory until refresh.</span>
+                <span>Keep class routines and unit details close at hand.</span>
               </li>
               <li>
                 <Check aria-hidden="true" />
-                <span>See token use for this visit beneath Create board.</span>
+                <span>Reuse your teaching strategies and activity guidance.</span>
               </li>
               <li>
                 <Check aria-hidden="true" />
-                <span>You review the activity before students see it.</span>
+                <span>Review curriculum excerpts and choose the objectives to use.</span>
               </li>
             </ul>
             <p className="landing-key-note">
-              AI use is billed by OpenAI to the key you provide. The app passes
-              it to OpenAI through its server for the request.
+              Curriculum tools are available in a protected workspace. You
+              approve the material before it guides AI drafts, and review the
+              resulting task before presenting.
             </p>
           </Reveal>
         </section>
@@ -677,9 +745,9 @@ export default function Landing() {
                   Can I use the workspace on this site?
                 </AccordionTrigger>
                 <AccordionContent>
-                  This site is a product tour with sample classroom content. The
-                  linked GitHub project includes instructions for running your
-                  own workspace with saving and optional AI drafting.
+                  {workspaceEntry.available
+                    ? "Yes. Use Open workspace to go to the app. The screens on this page are examples, so you can explore before you begin."
+                    : "Not yet. This page lets you explore the app through screenshots. A hosted workspace is still being prepared. Setup options are available if you want to run your own."}
                 </AccordionContent>
               </AccordionItem>
             )}
@@ -696,20 +764,44 @@ export default function Landing() {
                 Can I make a board without AI?
               </AccordionTrigger>
               <AccordionContent>
-                Yes. Start with a blank board, write your own task, or edit
-                something you saved. An OpenAI key is only needed for AI
-                features.
+                Yes. Write a task from scratch, adapt a saved activity, or build
+                a Homebase with timers, agendas, and classroom tools. Editing,
+                saving, presenting, and PNG export work without AI.
+                An OpenAI key is only needed for AI features.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="ai-cost">
+              <AccordionTrigger>What do I need for AI drafting?</AccordionTrigger>
+              <AccordionContent>
+                An OpenAI API key with billing enabled. Add it in AI settings
+                when you want help drafting; OpenAI bills that usage separately.
+                The key lasts for your current visit and is cleared on refresh.
+                You can use the rest of Boardwork without one.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="homebase">
+              <AccordionTrigger>Will my classroom board be there next time?</AccordionTrigger>
+              <AccordionContent>
+                Yes. Homebase saves your tools, layout, and content, and you can
+                keep several boards for a class. Timers, stopwatch progress,
+                name picks, and generated groups start fresh when you reopen a
+                board. Your agenda checks, drawings, scores, and recorded votes
+                are saved.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="storage">
               <AccordionTrigger>
-                Where are my classes and boards saved?
+                Is my workspace private?
               </AccordionTrigger>
               <AccordionContent>
-                They are saved in your workspace installation’s database. The
-                current app is one shared teacher workspace. A public
-                installation needs access protection from its hosting provider;
-                entering an AI key does not create a private account.
+                The current app is a shared teacher workspace, without separate
+                teacher accounts. Whoever sets it up needs to restrict access
+                before you add private teaching materials. An AI key does not
+                provide sign-in or make a workspace private. See the{" "}
+                <a href={workspaceSetupUrl} className="landing-text-link">
+                  workspace setup guide
+                </a>{" "}
+                for details.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="planning">
@@ -717,10 +809,11 @@ export default function Landing() {
                 Is this a full lesson planner?
               </AccordionTrigger>
               <AccordionContent>
-                Boardwork focuses on the first few minutes: a clear, worthwhile
-                task students can begin independently. It is designed to fit
-                into your teaching routine, rather than replace your lesson
-                planning.
+                Boardwork helps you prepare short activities and run everyday
+                classroom routines. Homebase keeps your task, agenda, resources,
+                and classroom tools together throughout a lesson. It does not
+                collect student assignments, mark work, or replace your lesson
+                planner.
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -732,16 +825,18 @@ export default function Landing() {
         >
           <Reveal>
             <h2 id="close-heading">
-              A clearer start.
+              Your next class.
               <br />
-              More room to teach.
+              A little more together.
             </h2>
             <p>
-              Give students a place to begin, and yourself room to welcome them.
+              A task they can follow. Tools you can reach. Good ideas ready to use again.
             </p>
             <Button asChild size="landing">
               <WorkspaceEntry>
-                {isPublicSite ? "View the project" : "Open your workspace"}{" "}
+                {workspaceEntry.available
+                  ? "Open your workspace"
+                  : "See setup options"}{" "}
                 <ArrowRight aria-hidden="true" />
               </WorkspaceEntry>
             </Button>
@@ -753,12 +848,8 @@ export default function Landing() {
           <BrandMark />
           <span>Boardwork</span>
         </Link>
-        <p>Made for the first few minutes.</p>
-        <a
-          href="https://github.com/whatifqu3stion/classroom-spark"
-          target="_blank"
-          rel="noreferrer"
-        >
+        <p>For the everyday work of teaching.</p>
+        <a href={repositoryUrl} target="_blank" rel="noreferrer">
           View the project <ArrowUpRight aria-hidden="true" />
         </a>
       </footer>

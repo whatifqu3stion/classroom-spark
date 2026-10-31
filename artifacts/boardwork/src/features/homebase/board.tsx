@@ -349,7 +349,7 @@ export function HomebaseBoard({
         <span>
           {locked
             ? "Layout locked. Your tools still work."
-            : "Drag a tool by its handle. Arrow keys move it; Shift + arrows move further."}
+            : <><span className="hb-layout-hint-desktop">Drag a tool by its handle. Arrow keys move it; Shift + arrows move further.</span><span className="hb-layout-hint-mobile">Use each tool’s Options menu to move it up or down.</span></>}
         </span>
         <span>{content.widgets.length} / 40 tools</span>
       </div>
@@ -379,6 +379,29 @@ export function HomebaseBoard({
                 hidden={!!focused && focused !== widget.id}
                 update={(patch, history) => update(widget.id, patch, history)}
                 announce={announce}
+                move={(direction) => {
+                  const ordered = content.widgets.toSorted((a, b) => a.y - b.y || a.x - b.x);
+                  const index = ordered.findIndex((item) => item.id === widget.id);
+                  const neighbor = ordered[index + direction];
+                  if (!neighbor) return;
+                  // Repack the ordered tools into rows. This also handles widgets
+                  // sharing a row without creating overlaps when returning to desktop.
+                  [ordered[index], ordered[index + direction]] = [neighbor, widget];
+                  let y = 0;
+                  const widgets = ordered.map((item) => {
+                    const next = { ...item, x: 0, y };
+                    y += item.h;
+                    return next;
+                  });
+                  if (widgets.some((item) => item.y > 200)) {
+                    announce("This board has no more layout space. Remove or shorten a tool first.");
+                    return;
+                  }
+                  commit({ ...content, widgets });
+                  announce(`${widget.title} moved ${direction < 0 ? "up" : "down"}.`);
+                }}
+                canMoveUp={widget.id !== content.widgets.toSorted((a, b) => a.y - b.y || a.x - b.x)[0]?.id}
+                canMoveDown={widget.id !== content.widgets.toSorted((a, b) => a.y - b.y || a.x - b.x).at(-1)?.id}
                 edit={() => setEditId(widget.id)}
                 remove={() => {
                   commit({
@@ -457,7 +480,7 @@ export function HomebaseBoard({
           <SheetHeader>
             <SheetTitle>Add a tool</SheetTitle>
             <SheetDescription>
-              A few useful things, ready for your room.
+              Choose what your class needs next: a clear task, time to focus, or a way to take part.
             </SheetDescription>
           </SheetHeader>
           <input
@@ -480,7 +503,7 @@ export function HomebaseBoard({
               >
                 {activities.map((activity) => (
                   <option key={activity.id} value={activity.id}>
-                    {activity.title}
+                    {activity.title.trim() || "Untitled activity"}
                   </option>
                 ))}
               </select>
@@ -505,7 +528,7 @@ export function HomebaseBoard({
               );
               return matches.length ? (
                 <section className="hb-tool-group" key={group}>
-                  <h3>{group}</h3>
+                  <h3>{{ Teach: "Make the task clear", Time: "Keep time visible", Participate: "Bring everyone in", Routines: "Guide the routine", Resources: "Keep resources close" }[group]}</h3>
                   {matches.map((tool) => (
                     <button
                       type="button"
@@ -555,6 +578,9 @@ type FrameProps = {
   remove: () => void;
   duplicate: () => void;
   focus: () => void;
+  move: (direction: -1 | 1) => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
 };
 function WidgetFrame({
   widget,
@@ -568,6 +594,9 @@ function WidgetFrame({
   remove,
   duplicate,
   focus,
+  move,
+  canMoveUp,
+  canMoveDown,
 }: FrameProps) {
   const [preview, setPreview] = useState<Partial<HomebaseWidget> | null>(null);
   const gesture = useRef<{
@@ -721,6 +750,8 @@ function WidgetFrame({
                 >
                   Move to top
                 </DropdownMenuItem>
+                <DropdownMenuItem className="hb-layout-action-mobile" disabled={!canMoveUp} onSelect={() => move(-1)}>Move up</DropdownMenuItem>
+                <DropdownMenuItem className="hb-layout-action-mobile" disabled={!canMoveDown} onSelect={() => move(1)}>Move down</DropdownMenuItem>
                 <DropdownMenuItem onSelect={remove}>
                   <Trash2 size={15} />
                   Remove tool

@@ -143,8 +143,9 @@ export function BoardworkProvider({ children }: { children: ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div role="status" className="min-h-[100dvh] flex flex-col gap-3 items-center justify-center bg-background px-6 text-center">
+        <Loader2 aria-hidden="true" className="w-8 h-8 animate-spin motion-reduce:animate-none text-primary" />
+        <p className="text-sm text-muted-foreground">Loading your classes and boards…</p>
       </div>
     );
   }

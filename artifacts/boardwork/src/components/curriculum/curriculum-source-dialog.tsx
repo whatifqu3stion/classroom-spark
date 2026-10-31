@@ -137,10 +137,11 @@ export function CurriculumSourceDialog({
     <Dialog open={open} onOpenChange={(val) => { if (!val && !updateMut.isPending) onOpenChange(val); }}>
       <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader className="shrink-0">
-          <div className="flex items-start justify-between pr-4">
-            <div>
+          <div className="flex min-w-0 items-start justify-between">
+            <div className="min-w-0">
               <DialogTitle className="text-xl">{source.title}</DialogTitle>
-              <div className="flex items-center gap-2 mt-1">
+              <DialogDescription>Review the learning goals and choose what should guide your activities.</DialogDescription>
+              <div className="flex flex-wrap items-center gap-2 mt-2">
                 <span className="text-xs font-semibold uppercase tracking-wider px-1.5 py-0.5 bg-muted rounded-sm text-muted-foreground">
                   {source.status}
                 </span>
@@ -181,20 +182,21 @@ export function CurriculumSourceDialog({
             </div>
 
             <div className="space-y-1.5 min-w-0">
-              <Label htmlFor="source-summary">Extracted Summary / Interpretation</Label>
+              <Label htmlFor="source-summary">What this source covers</Label>
               <Textarea id="source-summary" value={summary} onChange={e => setSummary(e.target.value)} className="min-h-[100px] min-w-0" />
-              <p className="text-[10px] text-muted-foreground">You can correct the AI's interpretation here.</p>
+              <p className="text-sm text-muted-foreground">Check this summary against your source and correct anything that doesn’t fit.</p>
             </div>
 
             <div className="space-y-3">
               <Label>Objectives & Skills</Label>
               {objectives.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic">No objectives extracted.</p>
+                <p className="text-sm text-muted-foreground italic">No learning goals were found. Review the source before using it.</p>
               ) : (
                 <div className="space-y-3 border rounded-md p-1 bg-muted/10">
                   {objectives.map((obj, i) => (
                     <div key={obj.id} className="flex items-start space-x-3 p-2 rounded hover:bg-muted/50 transition-colors">
-                      <Checkbox 
+                      <Checkbox
+                        aria-label={`Use objective ${i + 1}: ${obj.label}`}
                         checked={obj.selected} 
                         onCheckedChange={(checked) => {
                           const next = [...objectives];
@@ -206,6 +208,8 @@ export function CurriculumSourceDialog({
                       <div className="space-y-1 min-w-0 flex-1">
                         <div className="flex justify-between items-start gap-2">
                           <Textarea
+                            aria-label={`Objective ${i + 1} wording`}
+                            aria-describedby={`objective-excerpt-${obj.id}`}
                             value={obj.label} 
                             onChange={(e) => {
                               const next = [...objectives];
@@ -214,9 +218,9 @@ export function CurriculumSourceDialog({
                             }}
                             className="min-h-16 text-sm font-medium border-transparent bg-transparent hover:border-input focus:bg-background -ml-2 resize-y"
                           />
-                          {obj.locator && <span className="text-[10px] bg-card border px-1.5 py-0.5 rounded text-muted-foreground shrink-0 mt-1.5">{obj.locator}</span>}
+                          {obj.locator && <span className="text-xs bg-card border px-1.5 py-0.5 rounded text-muted-foreground shrink-0 mt-1.5">{obj.locator}</span>}
                         </div>
-                        <p className="text-xs text-muted-foreground pl-1 border-l-2 border-primary/20 italic">
+                        <p id={`objective-excerpt-${obj.id}`} className="text-xs text-muted-foreground pl-2 border-l border-border italic">
                           "{obj.excerpt}"
                         </p>
                       </div>

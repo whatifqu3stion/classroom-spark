@@ -51,7 +51,7 @@ export function CurriculumSnapshotDetails({ snapshot, classId }: { snapshot?: Cu
               <div className="mt-3 pl-6 border-l-2 border-primary/20">
                 <p className="text-xs text-muted-foreground mb-1 italic">"{source.excerpt}"</p>
                 {source.locator && (
-                  <p className="text-[10px] text-muted-foreground font-medium uppercase mt-1.5">
+                  <p className="text-xs text-muted-foreground font-medium uppercase mt-1.5">
                     {source.locator}
                   </p>
                 )}

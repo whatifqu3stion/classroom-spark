@@ -43,7 +43,7 @@ export function AIUsageControl() {
     >
       {state.hasKey
         ? `Your key · ${compact.format(total)} tokens this visit${state.unreportedRequests ? "*" : ""}`
-        : "Use your own OpenAI key"}
+        : "AI drafting is optional · Set up AI"}
     </button>
   );
 }
@@ -69,15 +69,15 @@ export function AISettings() {
         data-testid="button-ai-settings"
       >
         <KeyRound aria-hidden="true" className="size-4" />
-        <span className="hidden sm:inline">AI key</span>
+        <span>AI settings</span>
       </Button>
       <Dialog open={state.settingsOpen} onOpenChange={changeOpen}>
         <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Your AI key</DialogTitle>
+            <DialogTitle>Help with your first draft</DialogTitle>
             <DialogDescription>
-              Use your own OpenAI account to create boards. Editing and
-              presenting saved boards do not need a key.
+              Connect your OpenAI account when you want help drafting. You can
+              write, save, present, and use classroom tools without AI.
             </DialogDescription>
           </DialogHeader>
           <form
@@ -119,11 +119,11 @@ export function AISettings() {
               />
               <p
                 id="key-privacy"
-                className="text-xs leading-relaxed text-muted-foreground"
+                className="text-sm leading-relaxed text-muted-foreground"
               >
-                Kept in memory until you refresh or close this page. Your key
-                passes through this server to OpenAI for each AI request; it is
-                never saved to the database or browser storage.
+                Your key is cleared when you refresh or close this page. It is
+                sent to OpenAI through the app for AI requests and is not saved.
+                OpenAI bills usage to your account.
               </p>
               {error ? (
                 <p
@@ -180,7 +180,7 @@ export function AISettings() {
             aria-label="Usage this visit"
           >
             <h3 className="text-sm font-medium">Usage this visit</h3>
-            <dl className="grid grid-cols-3 gap-3 text-sm">
+            <dl className="grid grid-cols-1 min-[360px]:grid-cols-3 gap-3 text-sm">
               <div>
                 <dt className="text-xs text-muted-foreground">AI requests</dt>
                 <dd className="mt-1 tabular-nums">
@@ -200,7 +200,7 @@ export function AISettings() {
                 </dd>
               </div>
             </dl>
-            <p className="text-xs leading-relaxed text-muted-foreground">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               OpenAI-reported usage for this key during this visit, including
               repair attempts and curriculum tools. Resets on refresh or key
               replacement. This is not your account balance or an exact bill;

@@ -132,8 +132,8 @@ export function ClassFormDialog({
           <DialogTitle>{initialData ? "Edit class profile" : "Create class"}</DialogTitle>
           <DialogDescription>
             {initialData
-              ? "Update what Boardwork remembers for this class."
-              : "Add the essentials now; add more context later if needed."}
+              ? "Keep the routines and learning needs you want to carry into the next task."
+              : "Start with the class name, age level, and subject. You can add routines and learning goals later."}
           </DialogDescription>
         </DialogHeader>
 

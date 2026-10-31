@@ -89,15 +89,15 @@ export function CurriculumAddDialog({
           <DialogDescription>
             {replacement
               ? "Import a new curriculum document. Once successful, the old source will be deactivated." 
-              : "Import curriculum to ground generated activities in your real class framework."}
+              : "Bring in your learning goals, then review what should guide future activities."}
           </DialogDescription>
         </DialogHeader>
         {replacementError && <p role="alert" className="text-sm text-destructive">{replacementError}</p>}
 
         <Tabs value={tab} onValueChange={(v: any) => setTab(v)} className="w-full mt-2">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="manual">Manual Text</TabsTrigger>
-            <TabsTrigger value="pdf" disabled={!isApiReady}>PDF Upload</TabsTrigger>
+          <TabsList className="grid h-auto w-full grid-cols-3">
+            <TabsTrigger value="manual">Text</TabsTrigger>
+            <TabsTrigger value="pdf" disabled={!isApiReady}>PDF</TabsTrigger>
             <TabsTrigger value="web" disabled={!isApiReady}>Discover</TabsTrigger>
           </TabsList>
 
@@ -214,7 +214,7 @@ function PdfUploadForm({ classId, unitId, replacement, initialTitle, onSuccess, 
       <div className="space-y-2">
         <Label htmlFor="pdf-file">PDF File</Label>
         <Input id="pdf-file" type="file" accept="application/pdf" onChange={e => setFile(e.target.files?.[0] || null)} required />
-        <p className="text-xs text-muted-foreground mt-1">Text-based PDFs only. Scanned images are not supported.</p>
+        <p className="text-sm text-muted-foreground mt-1">Text-based PDFs only. Scanned images are not supported.</p>
       </div>
       <div className="flex justify-end">
         <Button type="submit" disabled={uploading || updateMut.isPending || !title.trim() || !file}>

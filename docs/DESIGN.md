@@ -708,7 +708,7 @@ Seven product screenshots now ship under `public/images/landing/product/`: works
 
 **Creative North Star: "The everyday art of starting class"**
 
-The teacher workspace now shares the landing page’s warm paper, green-charcoal ink, restrained lavender selection and soft material edges. It retains the existing setup/editor columns, stacked mobile layout, field order, sticky creation actions, history workflow and save behavior. This is a visual refinement of the working UI, not a new information architecture.
+The teacher workspace now shares the landing page’s warm paper, green-charcoal ink, restrained lavender selection and soft material edges. Desktop retains the setup/editor columns. On phones, fresh creation starts with setup; saved-activity routes open directly in the editor with a Create another board link. Field order, sticky creation actions, history workflow and save behavior remain familiar.
 
 **Key Characteristics:**
 
@@ -733,9 +733,9 @@ Student task/prompt fonts remain the existing Bitter/Open Sans pairing. Theme se
 
 ## Layout
 
-Keep the existing slim sticky header: a 3.5rem inner row plus its 1px separator. Desktop retains the 400px setup pane, existing gap and dominant editor; mobile retains the same vertical order and sticky creation actions. History remains a filter row and lightweight saved-board list. No controls, destinations, workflows or factual copy are added or moved.
+Desktop keeps a 3.5rem sticky header and the 400px setup pane beside the editor. On phones, the header uses a brand/settings row and a second row of visibly labeled Homebase, Workspace and History links. Saved-activity routes show the editor first and offer Create another board below it; fresh creation retains setup and sticky creation actions. History uses pressed filter buttons, two-line task previews on phones, and 12px metadata.
 
-Navigation targets are at least 44px. Coarse-pointer input adds the same minimum target height to workspace controls without changing desktop density. At enlarged text, long editable blocks scroll into reach; short-height windows may use the full existing pane cap. Dialogs, selects and popovers continue to escape through their existing portals.
+Navigation targets are at least 44px. Coarse-pointer input adds the same minimum target height to workspace controls and native Homebase selects; icon-only actions and help triggers also have a 44px minimum width. At enlarged text, long editable blocks scroll into reach; short-height windows may use the full existing pane cap. Dialogs, selects and popovers continue to escape through their existing portals.
 
 ## Elevation & Depth
 
@@ -863,3 +863,18 @@ Only brief 160ms background-color feedback is added for creation/tool choices. R
 - Don’t apply landing gradients, glass or grain to the Homebase board or its tools.
 - Don’t promote compact handle radii or functional timer sizes into global control or heading defaults.
 - Don’t apply the Homebase board grid, type fitting or timer-focus framing to the original activity Present or PNG export.
+
+
+### Audit follow-up — October 31, 2026
+
+At widths up to 700px, Homebase uses a vertical tool list. Hide desktop move/resize grips and explain the Options menu’s Move up / Move down actions. Reordering saves a non-overlapping row layout, so returning to desktop preserves the same order. Locked boards hide arrangement actions. Loading states include visible status text and decorative icons; reduced motion uses immediate state changes without spinner or entrance animations.
+
+### Shared feature refinement — October 31, 2026
+
+Carry the front page’s teacher-focused approach into setup, History, saved context, curriculum, AI settings and Homebase. Lead with the classroom need and a useful next action: making a task clear, reusing teaching guidance, keeping time visible or helping everyone take part. Keep technical requirements beside the controls that need them. Explain that AI drafting is optional; blank activities and classroom tools remain useful without an AI key.
+
+Teacher dialogs, drawers and setup headings reuse Bitter at 1.5rem, regular weight, 1.3 line height and -0.025em tracking. Body copy and controls retain Inter. Use the existing opaque paper surfaces, green ink, quiet borders and lavender focus treatment. Shared overlays use a consistent 50% scrim and left-aligned headings. Recovery and not-found screens use these same roles.
+
+At widths up to 40rem or with a coarse pointer, dialog and drawer action targets are at least 44px high, and text-entry controls use at least 16px type. Close controls are 44px square at every width. Allow source selectors and toolbar actions to wrap, give short tab labels enough room, and keep long dialogs scrollable within the viewport. Empty and loading states explain what is happening and what the teacher can do next.
+
+These are teacher-interface rules. Preserve the activity presentation’s student-reading typography, fit calculations, timer behavior and PNG geometry. Homebase tools retain their documented operational sizing and accessible live-tool behavior.

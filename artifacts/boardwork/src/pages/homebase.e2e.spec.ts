@@ -407,3 +407,22 @@ test("class tools work on mobile without overflow and resources wait for a click
   ).toBe(true);
   expect(state.errors).toEqual([]);
 });
+
+
+test("reorders mobile tools through explicit menu actions and persists their order", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const state = await setup(page);
+  const titles = () => page.locator(".hb-canvas > .hb-widget > header h2").allTextContents();
+  const before = await titles();
+  expect(before.length).toBeGreaterThan(1);
+  await expect(page.getByRole("button", { name: `Move ${before[0]}`, exact: true })).toBeHidden();
+  await page.getByRole("button", { name: `Options for ${before[0]}`, exact: true }).click();
+  await expect(page.getByRole("menuitem", { name: "Move up", exact: true })).toBeDisabled();
+  await page.getByRole("menuitem", { name: "Move down", exact: true }).click();
+  const reordered = [before[1], before[0], ...before.slice(2)];
+  await expect.poll(titles).toEqual(reordered);
+  await expect.poll(() => state.records[0].widgets.toSorted((a, b) => a.y - b.y || a.x - b.x).map((widget) => widget.title)).toEqual(reordered);
+  await page.reload();
+  await expect.poll(titles).toEqual(reordered);
+  expect(state.errors).toEqual([]);
+});

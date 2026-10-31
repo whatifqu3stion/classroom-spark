@@ -36,6 +36,7 @@ interface SavedContextFormProps {
   initialData: SavedContext | null;
   categories: ContextCategory[];
   onClose: () => void;
+  onBusyChange?: (busy: boolean) => void;
   onSaved: (id: string) => void;
   onArchived: (id: string) => void;
   onScopeChange: (id: string, newScope: string, classId?: string | null) => void;
@@ -61,6 +62,7 @@ export function SavedContextForm({
   initialData,
   categories,
   onClose,
+  onBusyChange,
   onSaved,
   onArchived,
   onScopeChange,
@@ -85,8 +87,14 @@ export function SavedContextForm({
   const isSaving = createMut.isPending || updateMut.isPending || createCatMut.isPending;
   const isArchiving = archiveMut.isPending;
 
+  useEffect(() => {
+    onBusyChange?.(isSaving || isArchiving);
+    return () => onBusyChange?.(false);
+  }, [isSaving, isArchiving, onBusyChange]);
+
   const mountedRef = useRef(true);
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
       mountedRef.current = false;
     };
@@ -200,7 +208,7 @@ export function SavedContextForm({
         </Button>
         <div className="flex-1">
           <DialogTitle>{initialData ? "Edit context" : "Create context"}</DialogTitle>
-          <DialogDescription className="sr-only">Form to create or edit a saved context snippet.</DialogDescription>
+          <DialogDescription>Save guidance you want to use again, such as a teaching strategy or classroom routine.</DialogDescription>
         </div>
       </DialogHeader>
 
