@@ -1,5 +1,35 @@
 import { expect, test } from "@playwright/test";
 
+for (const width of [1440, 390]) {
+  test(`expanded features show readable screenshots and open their full view at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const apiRequests: string[] = [];
+    await page.route("**/api/**", route => {
+      apiRequests.push(route.request().url());
+      return route.abort();
+    });
+    await page.goto("/");
+    for (const [label, filename] of [
+      ["lesson routines", "lesson-routines"],
+      ["participation tools", "participation"],
+      ["saved teaching guidance", "teaching-context"],
+    ]) {
+      const trigger = page.getByRole("button", { name: `Enlarge ${label} screenshot`, exact: true });
+      await trigger.scrollIntoViewIfNeeded();
+      const image = trigger.getByRole("img");
+      await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
+      const variant = width < 640 && filename !== "teaching-context" ? "-mobile" : "";
+      await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.currentSrc)).toContain(`${filename}${variant}.png`);
+      await trigger.click();
+      await expect(page.getByRole("dialog").getByRole("img")).toHaveAttribute("src", new RegExp(`${filename}\\.png$`));
+      await page.keyboard.press("Escape");
+      await expect(trigger).toBeFocused();
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(apiRequests).toEqual([]);
+  });
+}
+
 test("opening the workspace loads the editable app", async ({ page }) => {
   await page.route("**/api/app-state", (route) =>
     route.fulfill({

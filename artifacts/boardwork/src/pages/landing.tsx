@@ -22,7 +22,6 @@ import {
   ArrowDown,
   ArrowRight,
   ArrowUpRight,
-  Check,
   Expand,
   Menu,
   Monitor,
@@ -90,6 +89,33 @@ const motionTokens = {
 } as CSSProperties;
 
 const productImages = {
+  routines: {
+    file: "lesson-routines.png",
+    mobile: "lesson-routines-mobile.png",
+    width: 2272,
+    height: 672,
+    mobileWidth: 692,
+    mobileHeight: 762,
+    label: "Lesson routines",
+    alt: "Homebase classroom tools with a seven-minute visual timer for independent thinking.",
+  },
+  participation: {
+    file: "participation.png",
+    mobile: "participation-mobile.png",
+    width: 2272,
+    height: 672,
+    mobileWidth: 692,
+    mobileHeight: 558,
+    label: "Participation tools",
+    alt: "Homebase group maker showing sample learners arranged in pairs for discussion.",
+  },
+  teachingContext: {
+    file: "teaching-context.png",
+    width: 896,
+    height: 1316,
+    label: "Saved teaching guidance",
+    alt: "Saved context library with reusable guidance for clear instructions, explaining with evidence, and think-pair-share.",
+  },
   homebase: {
     file: "homebase.png",
     width: 2160,
@@ -619,49 +645,53 @@ export default function Landing() {
 
         <section
           id="homebase"
-          className="landing-feature landing-feature--homebase landing-container"
+          className="landing-feature landing-feature--homebase landing-feature--wide landing-container"
           aria-labelledby="homebase-heading"
         >
           <Reveal className="landing-feature-copy">
             <h2 id="homebase-heading">
-              Your timer. Your agenda. <br />
-              One place to look.
+              Fewer tabs to juggle. <br />
+              More attention for the room.
             </h2>
             <p>
-              Keep the lesson moving without switching between a timer,
-              a list of instructions, and a handful of open tabs. Homebase
-              brings your classroom tools onto one board you can arrange and save.
+              Switching from instructions to a timer to a lesson plan pulls
+              your attention away from learners. Put the task, time, and next
+              steps together on one Homebase board.
             </p>
             <p>
-              Set up a board for arrivals, independent work, or the next class.
-              Add what you need, arrange it to suit the room, and present it
-              without the editing controls.
+              Keep a board for arrivals, independent work, or discussion.
+              Arrange your tools once, check off the agenda as you go, and
+              reopen the layout next time. Add a resource link, image, or
+              supported video or document beside the activity.
             </p>
           </Reveal>
-          <Reveal className="landing-projector-visual" delay={MOTION.stagger}>
+          <Reveal className="landing-feature-wide-visual" delay={MOTION.stagger}>
             <figure className="landing-product-figure">
-              <ScreenshotPreview image={productImages.homebase} />
-              <figcaption>A task, focus timer, agenda, and clock on one saved Homebase.</figcaption>
+              <ScreenshotPreview image={productImages.routines} />
+              <figcaption>Task, time, and next steps together. Enlarge to explore the full board with sample content.</figcaption>
             </figure>
           </Reveal>
-          <dl className="landing-tool-outcomes">
-            <div>
-              <dt>Make time visible</dt>
-              <dd>Countdown timers, a stopwatch, and a clock help the class follow the pace.</dd>
-            </div>
-            <div>
-              <dt>Bring everyone into the activity</dt>
-              <dd>Pick names without repeats, make random groups, or roll dice for a prompt.</dd>
-            </div>
-            <div>
-              <dt>Show what happens next</dt>
-              <dd>Check off an agenda, leave a note, or display a work mode and traffic signal.</dd>
-            </div>
-            <div>
-              <dt>Keep resources within reach</dt>
-              <dd>Add links, images, and supported videos or documents beside the task.</dd>
-            </div>
-          </dl>
+        </section>
+
+        <section
+          className="landing-participation landing-container"
+          aria-labelledby="participation-heading"
+        >
+          <Reveal className="landing-section-heading">
+            <h2 id="participation-heading">The same hands go up.<br />Make room for more voices.</h2>
+            <p>
+              Choosing who speaks and sorting out groups can interrupt a good
+              discussion. Pick names without repeats, shuffle learners into
+              groups, and record a show-of-hands vote on the board. You guide
+              the conversation; the tools handle the organising.
+            </p>
+          </Reveal>
+          <Reveal>
+            <figure className="landing-product-figure">
+              <ScreenshotPreview image={productImages.participation} />
+              <figcaption>Sample names, pairs, and votes recorded by the teacher. Learners participate in the room; no student login is needed.</figcaption>
+            </figure>
+          </Reveal>
         </section>
 
         <section
@@ -690,41 +720,36 @@ export default function Landing() {
         </section>
 
         <section
-          className="landing-key-section landing-container"
+          className="landing-feature landing-feature--guidance landing-container"
           aria-labelledby="key-heading"
         >
-          <Reveal>
+          <Reveal className="landing-feature-copy">
             <h2 id="key-heading">
               Keep the context.
-              <br />
+              <br />{" "}
               Skip the retyping.
             </h2>
-          </Reveal>
-          <Reveal className="landing-key-copy" delay={MOTION.stagger}>
             <p>
-              Your teaching approach shouldn’t need explaining every time you
-              prepare a task. Save reusable guidance, unit details, and learning
-              goals to bring them into your next activity.
+              You’ve already worked out the routines and prompts that help
+              your learners. Save them as teaching guidance, then choose what
+              fits today’s activity instead of rewriting the same instructions.
             </p>
-            <ul>
-              <li>
-                <Check aria-hidden="true" />
-                <span>Keep class routines and unit details close at hand.</span>
-              </li>
-              <li>
-                <Check aria-hidden="true" />
-                <span>Reuse your teaching strategies and activity guidance.</span>
-              </li>
-              <li>
-                <Check aria-hidden="true" />
-                <span>Review curriculum excerpts and choose the objectives to use.</span>
-              </li>
-            </ul>
+            <p>
+              Keep guidance for one class or reuse it across classes. Bring
+              unit details and selected learning goals into preparation, while
+              keeping control of the wording students actually see.
+            </p>
             <p className="landing-key-note">
               Curriculum tools are available in a protected workspace. You
               approve the material before it guides AI drafts, and review the
               resulting task before presenting.
             </p>
+          </Reveal>
+          <Reveal className="landing-guidance-visual" delay={MOTION.stagger}>
+            <figure className="landing-product-figure">
+              <ScreenshotPreview image={productImages.teachingContext} />
+              <figcaption>Save your own strategies and routines. These examples show how the library can be organised.</figcaption>
+            </figure>
           </Reveal>
         </section>
 
