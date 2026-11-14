@@ -43,10 +43,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { activityWidget, makeWidget, tools } from "./catalog";
+import { activityWidget, boardActivityLabel, makeWidget, tools } from "./catalog";
 import { WidgetContent } from "./widgets";
 import { WidgetEditor } from "./widget-editor";
-import { arrangeWidgets } from "./layout";
+import { arrangeWidgets, moveInReadingOrder } from "./layout";
 import { useFocusScope } from "./use-focus-scope";
 import { useHomebaseDraft } from "./use-homebase";
 
@@ -78,6 +78,19 @@ export function HomebaseBoard({
   const [busy, setBusy] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [activityId, setActivityId] = useState(activities[0]?.id || "");
+  const query = search.trim().toLowerCase();
+  const matchingActivities = activities.filter((activity) =>
+    `saved boardwork activity ${boardActivityLabel(activity)} ${activity.task}`.toLowerCase().includes(query),
+  );
+  const selectedActivity = matchingActivities.find((item) => item.id === activityId) ?? matchingActivities[0];
+  const matchingTools = tools.filter((tool) =>
+    tool.kind !== "task" && `${tool.group} ${tool.title} ${tool.description}`.toLowerCase().includes(query),
+  );
+  const orderedWidgets = content.widgets.toSorted((a, b) => a.y - b.y || a.x - b.x);
+  const nextRow = content.widgets.reduce((end, item) => Math.max(end, item.y + item.h), 0);
+  const capacityMessage = content.widgets.length >= 40
+    ? "This board has 40 tools. Remove a tool to add another."
+    : nextRow > 200 ? "The board is full. Move a tool higher or start another board." : "";
   const root = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLDivElement>(null);
   const focusTrigger = useRef<HTMLElement | null>(null);
@@ -123,10 +136,8 @@ export function HomebaseBoard({
     announce(`${widget.title} added.`);
   }
   function addActivity() {
-    const activity = activities.find((item) => item.id === activityId);
-    if (!activity || content.widgets.length >= 40) return;
-    const widget = activityWidget(activity, content.widgets);
-    if (widget.y > 200) return;
+    if (!selectedActivity || capacityMessage) return;
+    const widget = activityWidget(selectedActivity, content.widgets);
     commit({ ...content, widgets: [...content.widgets, widget] });
     setToolbox(false);
     announce(
@@ -243,13 +254,14 @@ export function HomebaseBoard({
           </Button>
           <Button
             variant="outline"
-            onClick={() => setToolbox(true)}
+              onClick={() => { setSearch(""); setToolbox(true); }}
             disabled={busy}
           >
             <Plus size={17} />
             Add tool
           </Button>
           <Button
+            disabled={!content.widgets.length}
             onClick={(event) => {
               presentationTrigger.current = event.currentTarget;
               setPresenting(true);
@@ -367,9 +379,7 @@ export function HomebaseBoard({
         }
       >
         {content.widgets.length ? (
-          content.widgets
-            .toSorted((a, b) => a.y - b.y || a.x - b.x)
-            .map((widget) => (
+          orderedWidgets.map((widget, index) => (
               <WidgetFrame
                 key={widget.id}
                 widget={widget}
@@ -380,28 +390,17 @@ export function HomebaseBoard({
                 update={(patch, history) => update(widget.id, patch, history)}
                 announce={announce}
                 move={(direction) => {
-                  const ordered = content.widgets.toSorted((a, b) => a.y - b.y || a.x - b.x);
-                  const index = ordered.findIndex((item) => item.id === widget.id);
-                  const neighbor = ordered[index + direction];
-                  if (!neighbor) return;
-                  // Repack the ordered tools into rows. This also handles widgets
-                  // sharing a row without creating overlaps when returning to desktop.
-                  [ordered[index], ordered[index + direction]] = [neighbor, widget];
-                  let y = 0;
-                  const widgets = ordered.map((item) => {
-                    const next = { ...item, x: 0, y };
-                    y += item.h;
-                    return next;
-                  });
-                  if (widgets.some((item) => item.y > 200)) {
+                  const widgets = moveInReadingOrder(orderedWidgets, index, direction);
+                  if (!widgets) {
                     announce("This board has no more layout space. Remove or shorten a tool first.");
                     return;
                   }
                   commit({ ...content, widgets });
                   announce(`${widget.title} moved ${direction < 0 ? "up" : "down"}.`);
                 }}
-                canMoveUp={widget.id !== content.widgets.toSorted((a, b) => a.y - b.y || a.x - b.x)[0]?.id}
-                canMoveDown={widget.id !== content.widgets.toSorted((a, b) => a.y - b.y || a.x - b.x).at(-1)?.id}
+                canMoveUp={index > 0}
+                canMoveDown={index < orderedWidgets.length - 1}
+                canDuplicate={!capacityMessage}
                 edit={() => setEditId(widget.id)}
                 remove={() => {
                   commit({
@@ -437,7 +436,7 @@ export function HomebaseBoard({
               Add a task, a timer, or a reminder. Build the board you want
               students to see.
             </p>
-            <Button onClick={() => setToolbox(true)}>
+            <Button onClick={() => { setSearch(""); setToolbox(true); }}>
               <Plus size={17} />
               Add your first tool
             </Button>
@@ -472,6 +471,7 @@ export function HomebaseBoard({
       </p>
       <WidgetEditor
         widget={editWidget}
+        widgets={content.widgets}
         close={() => setEditId(null)}
         save={(next) => update(next.id, next)}
       />
@@ -490,27 +490,27 @@ export function HomebaseBoard({
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
-          {activities.length &&
-          (!search || "activity boardwork".includes(search.toLowerCase())) ? (
+          {capacityMessage && <p className="hb-small" role="status">{capacityMessage}</p>}
+          {selectedActivity ? (
             <div className="hb-saved-activity">
               <label htmlFor="homebase-activity">
                 From your saved activities
               </label>
               <select
                 id="homebase-activity"
-                value={activityId}
+                value={selectedActivity.id}
                 onChange={(event) => setActivityId(event.target.value)}
               >
-                {activities.map((activity) => (
+                {matchingActivities.map((activity) => (
                   <option key={activity.id} value={activity.id}>
-                    {activity.title.trim() || "Untitled activity"}
+                    {boardActivityLabel(activity)}
                   </option>
                 ))}
               </select>
               <Button
                 variant="outline"
                 onClick={addActivity}
-                disabled={!activityId || content.widgets.length >= 40}
+                disabled={!!capacityMessage}
               >
                 Add activity
               </Button>
@@ -518,14 +518,7 @@ export function HomebaseBoard({
           ) : null}
           {["Teach", "Time", "Participate", "Routines", "Resources"].map(
             (group) => {
-              const matches = tools.filter(
-                (tool) =>
-                  tool.group === group &&
-                  tool.kind !== "task" &&
-                  `${tool.title} ${tool.description}`
-                    .toLowerCase()
-                    .includes(search.toLowerCase()),
-              );
+              const matches = matchingTools.filter((tool) => tool.group === group);
               return matches.length ? (
                 <section className="hb-tool-group" key={group}>
                   <h3>{{ Teach: "Make the task clear", Time: "Keep time visible", Participate: "Bring everyone in", Routines: "Guide the routine", Resources: "Keep resources close" }[group]}</h3>
@@ -535,7 +528,7 @@ export function HomebaseBoard({
                       key={tool.kind}
                       className="hb-tool-option"
                       onClick={() => add(tool.kind)}
-                      disabled={content.widgets.length >= 40}
+                      disabled={!!capacityMessage}
                     >
                       <span>
                         <strong>{tool.title}</strong>
@@ -548,17 +541,11 @@ export function HomebaseBoard({
               ) : null;
             },
           )}
-          {search &&
-          !tools.some(
-            (tool) =>
-              tool.kind !== "task" &&
-              `${tool.title} ${tool.description}`
-                .toLowerCase()
-                .includes(search.toLowerCase()),
-          ) ? (
-            <p className="hb-small">
-              No matching tools. Try “timer”, “note”, or “link”.
-            </p>
+          {query && !matchingTools.length && !selectedActivity ? (
+            <div className="hb-search-empty">
+              <p role="status">No tools or saved activities match “{search.trim()}”.</p>
+              <Button variant="outline" size="sm" onClick={() => setSearch("")}>Show all tools</Button>
+            </div>
           ) : null}
         </SheetContent>
       </Sheet>
@@ -581,8 +568,10 @@ type FrameProps = {
   move: (direction: -1 | 1) => void;
   canMoveUp: boolean;
   canMoveDown: boolean;
+  canDuplicate: boolean;
 };
 function WidgetFrame({
+  canDuplicate,
   widget,
   canvas,
   editing,
@@ -706,7 +695,7 @@ function WidgetFrame({
       data-widget-id={widget.id}
     >
       <header className="hb-widget-header">
-        <h2>{widget.title}</h2>
+        <h2 title={widget.title}>{widget.title}</h2>
         {editing ? (
           <div className="hb-frame-controls">
             <button
@@ -739,7 +728,7 @@ function WidgetFrame({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onSelect={duplicate}>
+                <DropdownMenuItem onSelect={duplicate} disabled={!canDuplicate}>
                   <Copy size={15} />
                   Duplicate tool
                 </DropdownMenuItem>
@@ -767,6 +756,7 @@ function WidgetFrame({
           update={(patch) => update(patch, false)}
           focus={focus}
           editing={editing}
+          edit={edit}
         />
       </div>
       {editing ? (

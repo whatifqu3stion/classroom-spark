@@ -228,7 +228,7 @@ export function template(kind: "arrival" | "focus" | "blank"): HomebaseContent {
       {
         ...makeWidget("note"),
         title: "Welcome. Start here.",
-        text: "Add the first thing students should do when they arrive.",
+        text: "Think back to the last lesson. Write down one thing you remember and one question you still have.",
         x: 0,
         y: 0,
         w: 8,
@@ -238,6 +238,7 @@ export function template(kind: "arrival" | "focus" | "blank"): HomebaseContent {
       {
         ...makeWidget("agenda"),
         title: "Today's plan",
+        items: ["Think on your own", "Compare with a partner", "Share one question"],
         x: 0,
         y: 4,
         w: 8,
@@ -253,7 +254,7 @@ export function activityWidget(
 ): HomebaseWidget {
   return {
     ...makeWidget("task", widgets),
-    title: activity.title.slice(0, 100),
+    title: boardActivityLabel(activity),
     text: activity.task,
     items: activity.prompts,
     minutes: activity.durationMinutes,
@@ -261,6 +262,9 @@ export function activityWidget(
       ? activity.resourceUrl
       : "",
   };
+}
+export function boardActivityLabel(activity: ActivityDraft) {
+  return (activity.title.trim() || activity.task.trim() || "Boardwork activity").replace(/\s+/gu, " ").slice(0, 100);
 }
 export function shuffle<T>(items: T[]): T[] {
   const result = [...items];

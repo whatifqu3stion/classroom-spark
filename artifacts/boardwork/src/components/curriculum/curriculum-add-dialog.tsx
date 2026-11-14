@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { useCreateCurriculumSource, useUpdateCurriculumSource, useDiscoverCurriculumReferences, getListCurriculumSourcesQueryKey, getGetCurriculumSourceQueryKey, type CurriculumSource } from "@workspace/api-client-react";
+import { useCreateCurriculumSource, useUpdateCurriculumSource, useDiscoverCurriculumReferences, getListCurriculumSourcesQueryKey, getGetCurriculumSourceQueryKey, type CurriculumSource, type CurriculumCapabilities } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, FileText, Globe, UploadCloud } from "lucide-react";
 
@@ -20,6 +20,13 @@ type ImportFormProps = {
   onSuccess: () => void;
   onReplacementError: (message: string) => void;
 };
+
+function importErrorMessage(detail: unknown, fallback: string) {
+  if (!detail || typeof detail !== "object") return fallback;
+  if ("message" in detail && typeof detail.message === "string") return detail.message;
+  if ("error" in detail && typeof detail.error === "string" && !detail.error.startsWith("[")) return detail.error;
+  return fallback;
+}
 
 function handleReplacementSuccess(
   newSource: CurriculumSource,
@@ -65,6 +72,7 @@ export function CurriculumAddDialog({
   classId,
   unitId,
   isApiReady,
+  capabilities,
   replacement,
   initialTitle,
   onReplaced
@@ -74,10 +82,13 @@ export function CurriculumAddDialog({
   classId: string;
   unitId: string | null;
   isApiReady: boolean;
+  capabilities?: CurriculumCapabilities;
   replacement?: ReplacementSource;
   initialTitle?: string;
   onReplaced?: () => void;
 }) {
+  const pdfAvailable = isApiReady && (capabilities?.pdfUpload ?? true);
+  const discoveryAvailable = isApiReady && (capabilities?.discovery ?? true);
   const [tab, setTab] = useState<"manual" | "pdf" | "web">("manual");
   const [replacementError, setReplacementError] = useState<string | null>(null);
   
@@ -94,12 +105,13 @@ export function CurriculumAddDialog({
         </DialogHeader>
         {replacementError && <p role="alert" className="text-sm text-destructive">{replacementError}</p>}
 
-        <Tabs value={tab} onValueChange={(v: any) => setTab(v)} className="w-full mt-2">
+        <Tabs value={(tab === "pdf" && !pdfAvailable) || (tab === "web" && !discoveryAvailable) ? "manual" : tab} onValueChange={(v: any) => setTab(v)} className="w-full mt-2">
           <TabsList className="grid h-auto w-full grid-cols-3">
             <TabsTrigger value="manual">Text</TabsTrigger>
-            <TabsTrigger value="pdf" disabled={!isApiReady}>PDF</TabsTrigger>
-            <TabsTrigger value="web" disabled={!isApiReady}>Discover</TabsTrigger>
+            <TabsTrigger value="pdf" disabled={!pdfAvailable}>PDF</TabsTrigger>
+            <TabsTrigger value="web" disabled={!discoveryAvailable}>Discover</TabsTrigger>
           </TabsList>
+          {capabilities?.message && (!pdfAvailable || !discoveryAvailable) && <p className="mt-3 text-sm text-muted-foreground">{capabilities.message} You can paste curriculum text below.</p>}
 
           <TabsContent value="manual" className="mt-4">
             <ManualAddForm classId={classId} unitId={unitId} onSuccess={onReplaced || (() => onOpenChange(false))} replacement={replacement} initialTitle={initialTitle} onReplacementError={setReplacementError} />
@@ -139,8 +151,8 @@ function ManualAddForm({ classId, unitId, replacement, initialTitle, onSuccess, 
       onSuccess: (newSource) => {
         handleReplacementSuccess(newSource, replacement, updateMut, queryClient, classId, onSuccess, toast, onReplacementError);
       },
-      onError: () => {
-        toast({ title: "Could not save source", variant: "destructive" });
+      onError: (error) => {
+        toast({ title: "Could not save source", description: importErrorMessage(error.data, "Try saving your text again."), variant: "destructive" });
       }
     });
   };
@@ -168,6 +180,7 @@ function ManualAddForm({ classId, unitId, replacement, initialTitle, onSuccess, 
 function PdfUploadForm({ classId, unitId, replacement, initialTitle, onSuccess, onReplacementError }: ImportFormProps) {
   const [title, setTitle] = useState(initialTitle || "");
   const [file, setFile] = useState<File | null>(null);
+  const [uploadError, setUploadError] = useState("");
   const [uploading, setUploading] = useState(false);
   const updateMut = useUpdateCurriculumSource();
   const queryClient = useQueryClient();
@@ -177,6 +190,7 @@ function PdfUploadForm({ classId, unitId, replacement, initialTitle, onSuccess, 
     e.preventDefault();
     if (!title.trim() || !file) return;
     
+    setUploadError("");
     setUploading(true);
     try {
       const url = new URL(`/api/classes/${classId}/curriculum/pdf`, window.location.origin);
@@ -193,13 +207,15 @@ function PdfUploadForm({ classId, unitId, replacement, initialTitle, onSuccess, 
       });
       
       if (!res.ok) {
-        throw new Error(await res.text());
+        const detail = await res.json().catch(() => null);
+        setUploadError(importErrorMessage(detail, "The PDF could not be imported. Try again or paste the curriculum text."));
+        return;
       }
       
       const newSource = await res.json();
       handleReplacementSuccess(newSource, replacement, updateMut, queryClient, classId, onSuccess, toast, onReplacementError);
-    } catch (err) {
-      toast({ title: "Upload failed", description: "Scanned or oversized PDFs may not be supported. Try a smaller text-based PDF.", variant: "destructive" });
+    } catch {
+      setUploadError("The upload was interrupted. Check your connection and try again.");
     } finally {
       setUploading(false);
     }
@@ -208,6 +224,7 @@ function PdfUploadForm({ classId, unitId, replacement, initialTitle, onSuccess, 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
+        {uploadError && <p role="alert" className="text-sm text-destructive">{uploadError}</p>}
         <Label htmlFor="pdf-title">Document title</Label>
         <Input id="pdf-title" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. IB MYP Design Guide 2024" required />
       </div>
@@ -233,10 +250,13 @@ function WebDiscoverForm({ classId, unitId, replacement, onSuccess, onReplacemen
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  const [searchError, setSearchError] = useState("");
   const handleDiscover = () => {
+    setSearchError("");
     discoverMut.mutate({ classId }, {
-      onError: () => {
-        toast({ title: "Discovery failed", description: "Make sure your class profile includes a subject and curriculum framework.", variant: "destructive" });
+      onError: (error) => {
+        const detail = error.data;
+        setSearchError(importErrorMessage(detail, "Search could not finish. Try again or paste curriculum text."));
       }
     });
   };
@@ -254,8 +274,8 @@ function WebDiscoverForm({ classId, unitId, replacement, onSuccess, onReplacemen
       onSuccess: (newSource) => {
         handleReplacementSuccess(newSource, replacement, updateMut, queryClient, classId, onSuccess, toast, onReplacementError);
       },
-      onError: () => {
-        toast({ title: "Import failed", variant: "destructive" });
+      onError: (error) => {
+        toast({ title: "Import failed", description: importErrorMessage(error.data, "Try again or paste the source text."), variant: "destructive" });
       }
     });
   };
@@ -266,6 +286,7 @@ function WebDiscoverForm({ classId, unitId, replacement, onSuccess, onReplacemen
         Search for official curriculum sources using your class subject, framework, and programme year.
       </p>
       
+      {searchError && <p role="alert" className="text-sm text-destructive">{searchError}</p>}
       {!discoverMut.data ? (
         <div className="flex justify-center py-6">
           <Button onClick={handleDiscover} disabled={discoverMut.isPending}>
@@ -282,11 +303,11 @@ function WebDiscoverForm({ classId, unitId, replacement, onSuccess, onReplacemen
             <ul className="space-y-3">
               {discoverMut.data.map((result, idx) => (
                 <li key={idx} className="p-3 border rounded-md bg-muted/20">
-                  <div className="flex justify-between items-start gap-4">
-                    <div>
+                  <div className="flex flex-wrap justify-between items-start gap-3">
+                    <div className="min-w-0 flex-1 basis-48 break-words">
                       <p className="text-sm font-medium">{result.title}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">{result.publisher}</p>
-                      <a href={result.url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline mt-1 inline-block truncate max-w-[300px]">
+                      <a href={result.url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline mt-1 inline-block max-w-full break-all underline">
                         {result.url}
                       </a>
                     </div>

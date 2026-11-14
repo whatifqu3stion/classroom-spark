@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import {
-  CalendarDays,
+  Check,
   ExternalLink,
   Focus,
   Pause,
@@ -12,7 +12,6 @@ import {
   UserRound,
   MessagesSquare,
   Pencil,
-  Hand,
   Loader2,
 } from "lucide-react";
 import type { HomebaseWidget } from "@workspace/api-zod";
@@ -25,7 +24,16 @@ export type WidgetProps = {
   update: (patch: Partial<HomebaseWidget>) => void;
   focus: () => void;
   editing: boolean;
+  edit: () => void;
 };
+function ToolSetup({ label, action, editing, edit }: Pick<WidgetProps, "editing" | "edit"> & { label: string; action: string }) {
+  return (
+    <div className="hb-placeholder">
+      <p>{label}</p>
+      {editing && <Button variant="outline" size="sm" onClick={edit}>{action}</Button>}
+    </div>
+  );
+}
 function ResourceLink({
   url,
   children,
@@ -176,6 +184,7 @@ function TimerWidget({ widget, focus }: WidgetProps) {
           size="icon"
           variant="ghost"
           aria-label="Reset timer"
+          title="Reset timer"
           onClick={timer.resetTimer}
         >
           <RotateCcw size={16} />
@@ -184,6 +193,7 @@ function TimerWidget({ widget, focus }: WidgetProps) {
           size="icon"
           variant="ghost"
           aria-label="Focus on timer"
+          title="Focus on timer"
           onClick={focus}
         >
           <Focus size={17} />
@@ -209,6 +219,7 @@ function TimerWidget({ widget, focus }: WidgetProps) {
         <button
           type="button"
           aria-label={alarmEnabled ? "Mute end alarm" : "Enable end alarm"}
+          title={alarmEnabled ? "Mute end alarm" : "Enable end alarm"}
           aria-pressed={alarmEnabled}
           onClick={() => setAlarmEnabled(!alarmEnabled)}
         >
@@ -253,7 +264,7 @@ function Stopwatch() {
           }}
         >
           {running ? <Pause size={16} /> : <Play size={16} />}
-          {running ? "Pause" : "Start"}
+          {running ? "Pause" : elapsed > 0 ? "Resume" : "Start"}
         </Button>
         <Button
           variant="ghost"
@@ -274,8 +285,12 @@ function Stopwatch() {
 function Clock({ calendar = false }: { calendar?: boolean }) {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
-    const id = window.setInterval(() => setNow(new Date()), 1000);
-    return () => window.clearInterval(id);
+    let id: number;
+    const schedule = () => {
+      id = window.setTimeout(() => { setNow(new Date()); schedule(); }, 60_000 - Date.now() % 60_000);
+    };
+    schedule();
+    return () => window.clearTimeout(id);
   }, []);
   if (!calendar)
     return (
@@ -310,6 +325,7 @@ function Clock({ calendar = false }: { calendar?: boolean }) {
           <span
             key={i}
             className={i + 1 === now.getDate() ? "hb-today" : ""}
+            aria-current={i + 1 === now.getDate() ? "date" : undefined}
             aria-label={`${i + 1}${i + 1 === now.getDate() ? ", today" : ""}`}
           >
             {i + 1}
@@ -319,7 +335,7 @@ function Clock({ calendar = false }: { calendar?: boolean }) {
     </div>
   );
 }
-function EventCountdown({ widget }: WidgetProps) {
+function EventCountdown({ widget, editing, edit }: WidgetProps) {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 30_000);
@@ -327,10 +343,7 @@ function EventCountdown({ widget }: WidgetProps) {
   }, []);
   if (!widget.target)
     return (
-      <p className="hb-placeholder">
-        <CalendarDays size={28} />
-        Choose a date in Edit tool.
-      </p>
+      <ToolSetup label="No event date yet." action="Choose a date" editing={editing} edit={edit} />
     );
   const today = new Date(now);
   const target = new Date(`${widget.target}T00:00:00`);
@@ -342,10 +355,8 @@ function EventCountdown({ widget }: WidgetProps) {
   );
   return (
     <div className="hb-centered">
-      <span className="hb-large-number">{Math.abs(days)}</span>
-      <span>
-        {days === 0 ? "Today!" : days < 0 ? "days ago" : "days to go"}
-      </span>
+      <span className="hb-large-number">{days === 0 ? "Today" : Math.abs(days)}</span>
+      {days !== 0 && <span>{Math.abs(days) === 1 ? "day" : "days"} {days < 0 ? "ago" : "to go"}</span>}
       <p className="hb-small">
         {target.toLocaleDateString([], {
           month: "long",
@@ -356,7 +367,7 @@ function EventCountdown({ widget }: WidgetProps) {
     </div>
   );
 }
-function Picker({ widget }: WidgetProps) {
+function Picker({ widget, editing, edit }: WidgetProps) {
   const [used, setUsed] = useState<number[]>([]);
   const [picked, setPicked] = useState<number | null>(null);
   const key = widget.items.join("\n");
@@ -366,7 +377,7 @@ function Picker({ widget }: WidgetProps) {
   }, [key]);
   if (!widget.items.length)
     return (
-      <p className="hb-placeholder">Add one name per line in Edit tool.</p>
+      <ToolSetup label="No names in this round yet." action="Add names" editing={editing} edit={edit} />
     );
   const done = used.length >= widget.items.length;
   return (
@@ -394,6 +405,7 @@ function Picker({ widget }: WidgetProps) {
         <Button
           size="sm"
           variant="ghost"
+          disabled={used.length === 0}
           onClick={() => {
             setUsed([]);
             setPicked(null);
@@ -405,7 +417,7 @@ function Picker({ widget }: WidgetProps) {
     </div>
   );
 }
-function Groups({ widget }: WidgetProps) {
+function Groups({ widget, editing, edit }: WidgetProps) {
   const [groups, setGroups] = useState<string[][]>([]);
   const key = `${widget.items.join("\n")}:${widget.number}`;
   useEffect(() => setGroups([]), [key]);
@@ -427,7 +439,7 @@ function Groups({ widget }: WidgetProps) {
                 setGroups(next);
               }}
             >
-              Make groups
+              {groups.length ? "Shuffle again" : "Make groups"}
             </Button>
             <span className="hb-small">Up to {widget.number} per group</span>
           </div>
@@ -441,9 +453,7 @@ function Groups({ widget }: WidgetProps) {
           </div>
         </>
       ) : (
-        <p className="hb-placeholder">
-          Add names in Edit tool, then make groups.
-        </p>
+        <ToolSetup label="No names to group yet." action="Add names" editing={editing} edit={edit} />
       )}
     </div>
   );
@@ -483,8 +493,9 @@ function Dice({ widget }: WidgetProps) {
     </div>
   );
 }
-function Score({ widget, update }: WidgetProps) {
+function Score({ widget, update, editing, edit }: WidgetProps) {
   const vote = widget.kind === "poll";
+  if (!widget.items.length) return <ToolSetup label={vote ? "No vote options yet." : "No teams yet."} action={vote ? "Add options" : "Add teams"} editing={editing} edit={edit} />;
   function change(index: number, delta: number) {
     update({
       values: widget.items.map((_, i) =>
@@ -510,6 +521,7 @@ function Score({ widget, update }: WidgetProps) {
                 variant="ghost"
                 size="icon"
                 aria-label={`Subtract from ${item}`}
+                disabled={(widget.values[i] || 0) <= (vote ? 0 : -999)}
                 onClick={() => change(i, -1)}
               >
                 −
@@ -518,6 +530,7 @@ function Score({ widget, update }: WidgetProps) {
                 variant="outline"
                 size="icon"
                 aria-label={`Add to ${item}`}
+                disabled={widget.values[i] >= 9999}
                 onClick={() => change(i, 1)}
               >
                 +
@@ -529,6 +542,7 @@ function Score({ widget, update }: WidgetProps) {
       <Button
         size="sm"
         variant="ghost"
+        disabled={!widget.values.some(Boolean)}
         onClick={() => update({ values: widget.items.map(() => 0) })}
       >
         Reset {vote ? "votes" : "scores"}
@@ -567,7 +581,7 @@ function Work({ widget, update }: WidgetProps) {
 function Traffic({ widget, update }: WidgetProps) {
   return (
     <div className="hb-centered">
-      <div className="hb-traffic" aria-label="Classroom signal">
+      <div className="hb-traffic" role="group" aria-label="Classroom signal">
         {[
           { value: "stop", label: "Stop", tone: "red" },
           { value: "ready", label: "Get ready", tone: "amber" },
@@ -692,7 +706,7 @@ function Draw({ widget, update }: WidgetProps) {
     </div>
   );
 }
-function Resource({ widget }: WidgetProps) {
+function Resource({ widget, editing, edit }: WidgetProps) {
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
   const [ready, setReady] = useState(false);
@@ -702,7 +716,7 @@ function Resource({ widget }: WidgetProps) {
     setReady(false);
   }, [widget.url]);
   if (!widget.url)
-    return <p className="hb-placeholder">Add a resource link in Edit tool.</p>;
+    return <ToolSetup label="No resource linked yet." action="Add a link" editing={editing} edit={edit} />;
   if (widget.kind === "link")
     return (
       <div className="hb-resource">
@@ -743,7 +757,7 @@ function Resource({ widget }: WidgetProps) {
   if (failed)
     return (
       <div className="hb-resource">
-        <p>
+        <p role="alert">
           The resource couldn't load. Check the link or open it in a new tab.
         </p>
         <ResourceLink url={widget.url} />
@@ -751,7 +765,7 @@ function Resource({ widget }: WidgetProps) {
           variant="outline"
           onClick={() => {
             setFailed(false);
-            setLoaded(false);
+            setReady(false);
           }}
         >
           Try again
@@ -780,10 +794,9 @@ function Resource({ widget }: WidgetProps) {
         />
       )}
       {!ready ? (
-        <Loader2
-          className="hb-media-loading animate-spin"
-          aria-label="Loading resource"
-        />
+        <span className="hb-media-loading" role="status">
+          <Loader2 className="size-4 animate-spin" aria-hidden="true" /> Loading resource…
+        </span>
       ) : null}
       <ResourceLink url={widget.url}>Open in new tab</ResourceLink>
     </div>
@@ -844,8 +857,8 @@ export function WidgetContent(props: WidgetProps) {
                   })
                 }
               >
-                <span className="hb-agenda-marker">
-                  {widget.values[i] ? <Hand size={16} /> : i + 1}
+                <span className="hb-agenda-marker" aria-hidden="true">
+                  {widget.values[i] ? <Check size={16} /> : i + 1}
                 </span>
                 <span>{item}</span>
               </button>
@@ -853,12 +866,14 @@ export function WidgetContent(props: WidgetProps) {
           ))}
         </ol>
       ) : (
-        <p className="hb-placeholder">Add the lesson steps in Edit tool.</p>
+        <ToolSetup label="No lesson steps yet." action="Add steps" {...props} />
       );
     default:
       return (
         <div className={`hb-note ${widget.kind === "task" ? "hb-task" : ""}`}>
-          <p>{widget.text || "Add your instructions in Edit tool."}</p>
+          {widget.text ? <p>{widget.text}</p> : !widget.items.length && !widget.url && (
+            <ToolSetup label="No instructions yet." action="Add instructions" {...props} />
+          )}
           {widget.items.length ? (
             <ul>
               {widget.items.map((item, i) => (

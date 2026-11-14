@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { embedUrl } from "./catalog";
 import { HomebaseWidget } from "@workspace/api-zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,10 +14,12 @@ import {
 
 export function WidgetEditor({
   widget,
+  widgets,
   save,
   close,
 }: {
   widget: HomebaseWidget | null;
+  widgets: HomebaseWidget[];
   save: (widget: HomebaseWidget) => void;
   close: () => void;
 }) {
@@ -38,6 +41,7 @@ export function WidgetEditor({
           <EditorForm
             key={widget.id}
             widget={widget}
+            widgets={widgets}
             save={save}
             close={close}
           />
@@ -48,10 +52,12 @@ export function WidgetEditor({
 }
 function EditorForm({
   widget,
+  widgets,
   save,
   close,
 }: {
   widget: HomebaseWidget;
+  widgets: HomebaseWidget[];
   save: (widget: HomebaseWidget) => void;
   close: () => void;
 }) {
@@ -80,7 +86,10 @@ function EditorForm({
   const hasUrl = ["task", "link", "image", "embed", "video", "pdf"].includes(
     widget.kind,
   );
+  const linkOnly = ["pdf", "video", "embed"].includes(widget.kind) && draft.url.startsWith("https://") && !embedUrl(widget.kind, draft.url);
   const names = ["groups", "randomizer"].includes(widget.kind);
+  const nameLists = names ? widgets.filter((item) => item.id !== widget.id &&
+    ["groups", "randomizer"].includes(item.kind) && item.items.length) : [];
   return (
     <form
       className="hb-edit-form"
@@ -126,6 +135,18 @@ function EditorForm({
           />
         </label>
       ) : null}
+      {nameLists.length > 0 && !items.trim() && (
+        <label>
+          Use names already on this board
+          <select value="" onChange={(event) => {
+            const source = nameLists.find((item) => item.id === event.target.value);
+            if (source) setItems(source.items.join("\n"));
+          }}>
+            <option value="">Choose a name list…</option>
+            {nameLists.map((item) => <option key={item.id} value={item.id}>{item.title} ({item.items.length})</option>)}
+          </select>
+        </label>
+      )}
       {hasItems ? (
         <label>
           {names
@@ -160,6 +181,7 @@ function EditorForm({
             maxLength={2000}
           />
           <span className="hb-small">
+            {linkOnly && "This link will open in a new tab. "}
             {widget.kind === "embed"
               ? "Paste a published Google document/sheet link, Google Slides embed URL, or Spotify embed URL. Private account imports aren't connected."
               : widget.kind === "video"

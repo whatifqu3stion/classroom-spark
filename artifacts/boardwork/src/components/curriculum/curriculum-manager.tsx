@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useListCurriculumSources } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Loader2, FileText, Search, Plus, AlertCircle, BookOpen } from "lucide-react";
+import { curriculumStatusLabel } from "./curriculum-status";
 import { CurriculumSourceDialog } from "./curriculum-source-dialog";
 import { CurriculumAddDialog } from "./curriculum-add-dialog";
 import { useBoardwork } from "@/store/boardwork-context";
@@ -95,7 +96,7 @@ export function CurriculumManager({ classId }: { classId: string }) {
                   <p className="text-sm font-medium truncate boardwork-user-content">{source.title}</p>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold px-1.5 py-0.5 bg-muted rounded-sm">
-                      {source.status}
+                      {curriculumStatusLabel[source.status]}
                     </span>
                     {source.subject && (
                       <span className="text-xs text-muted-foreground truncate">{source.subject}</span>
@@ -115,6 +116,7 @@ export function CurriculumManager({ classId }: { classId: string }) {
         classId={classId}
         unitId={activeUnitId}
         isApiReady={listResponse.ready}
+        capabilities={listResponse.capabilities}
       />
 
       {selectedSourceId && (
@@ -123,6 +125,7 @@ export function CurriculumManager({ classId }: { classId: string }) {
           onOpenChange={(open) => !open && setSelectedSourceId(null)}
           classId={classId}
           sourceId={selectedSourceId}
+          capabilities={listResponse.capabilities}
         />
       )}
     </div>

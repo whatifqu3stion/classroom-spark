@@ -68,6 +68,7 @@ export function SavedContextForm({
   onScopeChange,
 }: SavedContextFormProps) {
   const queryClient = useQueryClient();
+  const labelInput = useRef<HTMLInputElement>(null);
   const [label, setLabel] = useState(initialData?.label || "");
   const [details, setDetails] = useState(initialData?.details || "");
   const [categoryId, setCategoryId] = useState<string | null>(initialData?.categoryId || null);
@@ -103,6 +104,7 @@ export function SavedContextForm({
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!label.trim()) {
+      labelInput.current?.focus();
       setError("Label is required.");
       return;
     }
@@ -214,7 +216,7 @@ export function SavedContextForm({
 
       <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-4 space-y-5">
         {error && (
-          <div className="text-sm font-medium text-destructive bg-destructive/10 p-2 rounded-md" data-testid="context-form-error">
+          <div className="text-sm font-medium text-destructive bg-destructive/10 p-2 rounded-md" role="alert" id="context-form-error" data-testid="context-form-error">
             {error}
           </div>
         )}
@@ -222,6 +224,10 @@ export function SavedContextForm({
         <div className="space-y-2">
           <Label htmlFor="context-label">Label</Label>
           <Input
+            ref={labelInput}
+            aria-required="true"
+            aria-invalid={!!error && !label.trim()}
+            aria-describedby={error && !label.trim() ? "context-form-error" : undefined}
             id="context-label"
             value={label}
             onChange={(e) => {

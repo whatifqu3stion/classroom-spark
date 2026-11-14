@@ -1026,7 +1026,7 @@ describe("Home presentation defaults", () => {
     expect(screen.getByRole("heading", { name: "A clear task starts here" })).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Tell us what your class is working on, then choose Create board for an AI draft. Prefer to write it yourself? Choose Start blank.",
+        "Choose Draft with AI to use your class details, or Start blank to write the activity yourself.",
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText("Board preview")).not.toBeInTheDocument();

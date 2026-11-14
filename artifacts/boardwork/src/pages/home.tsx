@@ -1073,7 +1073,7 @@ export default function Home() {
                 ) : (
                   <Play className="w-5 h-5 fill-current" />
                 )}
-                {isGenerating ? "Creating board..." : "Create board"}
+                {isGenerating ? "Drafting…" : "Draft with AI"}
               </Button>
               <AIUsageControl />
               <div className="grid grid-cols-2 gap-3">
@@ -1170,7 +1170,7 @@ export default function Home() {
                     A clear task starts here
                   </h3>
                   <p className="board-editor-empty-state-copy mb-6 w-full max-w-sm">
-                    Tell us what your class is working on, then choose Create board for an AI draft. Prefer to write it yourself? Choose Start blank.
+                    Choose Draft with AI to use your class details, or Start blank to write the activity yourself.
                   </p>
                 </div>
               </div>
