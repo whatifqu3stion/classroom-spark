@@ -11,33 +11,7 @@
       "deviceScaleFactor": 2,
       "element": "viewport",
       "data": "Prewritten illustrative classroom fixtures; no student records or API credentials",
-      "createdAt": "2026-11-02T02:01:30.281Z"
-    },
-    {
-      "file": "participation.png",
-      "source": "participation.png",
-      "route": "/homebase",
-      "viewport": {
-        "width": 1200,
-        "height": 850
-      },
-      "deviceScaleFactor": 2,
-      "element": "viewport",
-      "data": "Prewritten illustrative classroom fixtures; no student records or API credentials",
-      "createdAt": "2026-11-02T02:01:30.494Z"
-    },
-    {
-      "file": "participation-mobile.png",
-      "source": "participation-mobile.png",
-      "route": "/homebase",
-      "viewport": {
-        "width": 390,
-        "height": 844
-      },
-      "deviceScaleFactor": 2,
-      "element": null,
-      "data": "Prewritten illustrative classroom fixtures; no student records or API credentials",
-      "createdAt": "2026-11-02T02:01:30.580Z"
+      "createdAt": "2026-11-14T21:04:47.847Z"
     },
     {
       "file": "lesson-routines-mobile.png",
@@ -50,7 +24,33 @@
       "deviceScaleFactor": 2,
       "element": null,
       "data": "Prewritten illustrative classroom fixtures; no student records or API credentials",
-      "createdAt": "2026-11-02T02:01:30.681Z"
+      "createdAt": "2026-11-14T21:04:48.455Z"
+    },
+    {
+      "file": "participation.png",
+      "source": "participation.png",
+      "route": "/homebase",
+      "viewport": {
+        "width": 1200,
+        "height": 850
+      },
+      "deviceScaleFactor": 2,
+      "element": "viewport",
+      "data": "Prewritten illustrative classroom fixtures; no student records or API credentials",
+      "createdAt": "2026-11-14T21:04:48.159Z"
+    },
+    {
+      "file": "participation-mobile.png",
+      "source": "participation-mobile.png",
+      "route": "/homebase",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "deviceScaleFactor": 2,
+      "element": null,
+      "data": "Prewritten illustrative classroom fixtures; no student records or API credentials",
+      "createdAt": "2026-11-14T21:04:48.345Z"
     },
     {
       "file": "teaching-context.png",
@@ -63,7 +63,7 @@
       "deviceScaleFactor": 2,
       "element": null,
       "data": "Prewritten illustrative classroom fixtures; no student records or API credentials",
-      "createdAt": "2026-11-02T02:01:31.865Z"
+      "createdAt": "2026-11-14T21:04:50.176Z"
     }
   ],
   "errors": [],
