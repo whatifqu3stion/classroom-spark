@@ -566,3 +566,37 @@ test("writes formatted board text and creates a scannable classroom link", async
   await expect(formatted).toHaveText("Bring your sketchbook");
   expect(state.errors).toEqual([]);
 });
+
+test("picks a local photo, reopens it on mobile, and can switch back to a link", async ({ page }) => {
+  const image = { ...makeWidget("image"), text: "Classroom board", url: "https://example.org/board.jpg" };
+  const state = await setup(page, [{ ...initial(), widgets: [image] }]);
+  const filePath = fileURLToPath(new URL("../../public/images/landing/product/homebase.png", import.meta.url));
+  await edit(page, image.title);
+  const picker = page.getByLabel("Choose photo", { exact: true });
+  await picker.setInputFiles({ name: "damaged.jpg", mimeType: "image/jpeg", buffer: Buffer.from("invalid") });
+  await expect(page.getByRole("alert")).toContainText("couldn’t be opened");
+  await expect(page.getByLabel("Resource link")).toHaveValue(image.url);
+  await picker.setInputFiles(filePath);
+  await expect(page.getByAltText("Selected photo preview")).toBeVisible();
+  await apply(page);
+  await expect.poll(() => state.records[0].widgets[0].photo?.startsWith("data:image/jpeg;base64,")).toBe(true);
+  expect(state.records[0].widgets[0].url).toBe("");
+  const photo = page.getByAltText("Classroom board", { exact: true });
+  await expect.poll(() => photo.evaluate(el => (el as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.reload();
+  await expect(photo).toBeVisible();
+  await edit(page, image.title);
+  await page.getByLabel("Replace photo").setInputFiles(filePath);
+  await expect(page.getByRole("button", { name: "Remove photo" })).toBeEnabled();
+  await page.getByRole("button", { name: "Remove photo" }).click();
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(photo).toBeVisible();
+  await edit(page, image.title);
+  await page.getByRole("button", { name: "Remove photo" }).click();
+  await page.getByLabel("Resource link").fill(image.url);
+  await apply(page);
+  await expect.poll(() => state.records[0].widgets[0].url).toBe(image.url);
+  expect(state.records[0].widgets[0].photo).toBeUndefined();
+  await expect(page.getByRole("button", { name: "Load image" })).toBeVisible();
+});

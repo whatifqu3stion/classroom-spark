@@ -41,6 +41,11 @@ export const HomebaseUrl = z
       return false;
     }
   }, "Use a full https:// link without a username or password.");
+// Forty photos at this size fit inside the API's 16 MiB JSON body limit.
+export const HOMEBASE_PHOTO_DATA_LIMIT = 256 * 1024;
+const HomebasePhoto = z.string().max(HOMEBASE_PHOTO_DATA_LIMIT)
+  .regex(/^data:image\/jpeg;base64,\/9j\/[A-Za-z0-9+/]+={0,2}$/, "Choose a photo from your device.");
+
 const Point = z.object({
   x: z.number().min(0).max(1000),
   y: z.number().min(0).max(600),
@@ -59,6 +64,7 @@ export const HomebaseWidget = z
     font: z.enum(["sans", "serif", "mono"]).optional(),
     textRuns: z.array(z.custom<InlineTextRun>(run => InlineTextRunSchema.safeParse(run).success)).max(8000).optional(),
     url: HomebaseUrl.default(""),
+    photo: HomebasePhoto.optional(),
     items: z.array(z.string().max(200)).max(100).default([]),
     values: z.array(z.int().min(-999).max(9999)).max(100).default([]),
     minutes: z.number().min(0.05).max(1440).default(5),
@@ -87,6 +93,8 @@ export const HomebaseWidget = z
       .max(100)
       .default([]),
   })
+  .refine(widget => !widget.photo || (widget.kind === "image" && !widget.url),
+    "Choose either a photo or an image link.")
   .refine(widget => !widget.textRuns || widget.textRuns.map(run => run.text).join("") === widget.text,
     "Formatting must match the text.")
   .refine(widget => widget.kind !== "qr" || new TextEncoder().encode(widget.url).length <= 2000,

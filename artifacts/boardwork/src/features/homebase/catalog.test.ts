@@ -3,6 +3,7 @@ import {
   HomebaseContent,
   HomebaseWidget,
   HomebaseUrl,
+  HOMEBASE_PHOTO_DATA_LIMIT,
 } from "@workspace/api-zod";
 import {
   activityWidget,
@@ -55,6 +56,18 @@ describe("classroom board content and resources", () => {
         target: "2026-02-31",
       }).success,
     ).toBe(false);
+  });
+  it("keeps device photos scoped to image tools and separate from external links", () => {
+    const image = { ...makeWidget("image"), photo: "data:image/jpeg;base64,/9j/2Q==" };
+    expect(HomebaseWidget.safeParse(image).success).toBe(true);
+    for (const changes of [
+      { kind: "note" },
+      { url: "https://example.org/photo.jpg" },
+      { photo: "data:image/svg+xml;base64,PHN2Zz4=" },
+      { photo: image.photo.slice(0, -2) + "A".repeat(HOMEBASE_PHOTO_DATA_LIMIT) },
+    ]) {
+      expect(HomebaseWidget.safeParse({ ...image, ...changes }).success).toBe(false);
+    }
   });
   it("validates formatting against the saved text and limits QR data by encoded size", () => {
     const note = { ...makeWidget("note"), text: "Read this" };

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { prepareHomebasePhoto } from "./prepare-photo";
 import { embedUrl } from "./catalog";
 import { InlineEditor } from "@/components/inline-editor";
 import { HomebaseWidget } from "@workspace/api-zod";
@@ -65,6 +66,8 @@ function EditorForm({
   const [draft, setDraft] = useState(widget);
   const [items, setItems] = useState(widget.items.join("\n"));
   const [error, setError] = useState("");
+  const [readingPhoto, setReadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState("");
   const patch = (value: Partial<HomebaseWidget>) =>
     setDraft((current) => ({ ...current, ...value }));
   const hasText = [
@@ -84,7 +87,7 @@ function EditorForm({
     "scoreboard",
     "poll",
   ].includes(widget.kind);
-  const hasUrl = ["task", "link", "qr", "image", "embed", "video", "pdf"].includes(
+  const hasUrl = ["task", "link", "qr", "embed", "video", "pdf"].includes(
     widget.kind,
   );
   const linkOnly = ["pdf", "video", "embed"].includes(widget.kind) && draft.url.startsWith("https://") && !embedUrl(widget.kind, draft.url);
@@ -96,6 +99,7 @@ function EditorForm({
       className="hb-edit-form"
       onSubmit={(event) => {
         event.preventDefault();
+        if (readingPhoto) return;
         const result = HomebaseWidget.safeParse({
           ...draft,
           items: hasItems
@@ -124,6 +128,43 @@ function EditorForm({
           autoFocus
         />
       </label>
+      {widget.kind === "image" && (
+        <div className="hb-photo-picker">
+          {draft.photo && <img className="hb-photo-preview" src={draft.photo} alt="Selected photo preview" />}
+          <div className="hb-photo-actions">
+            <label className="hb-choose-photo">
+              {draft.photo ? "Replace photo" : "Choose photo"}
+              <input type="file" accept="image/*" className="sr-only" disabled={readingPhoto}
+                aria-describedby="hb-photo-help"
+                onChange={async event => {
+                  const file = event.currentTarget.files?.[0];
+                  event.currentTarget.value = "";
+                  if (!file) return;
+                  setReadingPhoto(true);
+                  setPhotoError("");
+                  try {
+                    const photo = await prepareHomebasePhoto(file);
+                    patch({ photo, url: "" });
+                  } catch (cause) {
+                    setPhotoError(cause instanceof Error ? cause.message : "Choose another photo and try again.");
+                  } finally {
+                    setReadingPhoto(false);
+                  }
+                }}
+              />
+            </label>
+            {draft.photo && <Button type="button" variant="ghost" disabled={readingPhoto}
+              onClick={() => { patch({ photo: undefined }); setPhotoError(""); }}>Remove photo</Button>}
+          </div>
+          <p className="hb-small" id="hb-photo-help">Choose a photo up to 20 MB from this device.</p>
+          {readingPhoto && <p role="status" className="hb-small">Preparing photo…</p>}
+          {photoError && <p role="alert" className="hb-error">{photoError}</p>}
+          {!draft.photo && <label>Or paste an image link
+            <Input aria-label="Resource link" type="url" placeholder="https://" maxLength={2000}
+              disabled={readingPhoto} value={draft.url} onChange={event => patch({ url: event.target.value })} />
+          </label>}
+        </div>
+      )}
       {hasText ? (
         <fieldset className="hb-writing-panel">
           <legend>{widget.kind === "image" ? "Image description" : "Text"}</legend>
@@ -194,8 +235,6 @@ function EditorForm({
               ? "Paste a published Google document/sheet link, Google Slides embed URL, or Spotify embed URL. Private account imports aren't connected."
               : widget.kind === "qr"
                 ? "Students can scan this HTTPS link from the board."
-              : widget.kind === "image"
-                ? "Paste a direct HTTPS image link, then choose Load image on the board."
               : widget.kind === "video"
                 ? "Paste a YouTube watch, share, or embed link."
                 : widget.kind === "pdf"
@@ -267,7 +306,7 @@ function EditorForm({
         <Button type="button" variant="outline" onClick={close}>
           Cancel
         </Button>
-        <Button type="submit">Apply changes</Button>
+        <Button type="submit" disabled={readingPhoto}>Apply changes</Button>
       </div>
     </form>
   );

@@ -779,11 +779,13 @@ function Resource({ widget, editing, edit }: WidgetProps) {
     setFailed(false);
     setReady(false);
   }, [widget.url]);
+  if (widget.kind === "image" && widget.photo)
+    return <div className="hb-media"><img src={widget.photo} alt={widget.text || widget.title} /></div>;
   if (!widget.url)
     return (
       <ToolSetup
-        label="No resource linked yet."
-        action="Add a link"
+        label={widget.kind === "image" ? "No image yet." : "No resource linked yet."}
+        action={widget.kind === "image" ? "Add image" : "Add a link"}
         editing={editing}
         edit={edit}
       />
