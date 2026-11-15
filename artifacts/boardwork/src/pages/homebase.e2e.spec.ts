@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 import { expect, test, type Page } from "@playwright/test";
 import { HomebaseRecord } from "@workspace/api-zod";
@@ -392,6 +393,9 @@ test("class tools work on mobile without overflow and resources wait for a click
   await page.mouse.move(box!.x + 100, box!.y + 100);
   await page.mouse.up();
   await expect(drawing.locator("path")).toHaveCount(1);
+  await page.getByRole("button", { name: "Clear drawing" }).click();
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(drawing.locator("path")).toHaveCount(1);
   await page.getByRole("button", { name: "Undo stroke" }).click();
   await expect(drawing.locator("path")).toHaveCount(0);
   expect(mediaRequests).toBe(0);
@@ -456,4 +460,49 @@ test("reorders mobile tools through explicit menu actions and persists their ord
   await page.reload();
   await expect.poll(titles).toEqual(reordered);
   expect(state.errors).toEqual([]);
+});
+
+test("shows the entire month, keeps drawings proportional and renders both PDF pages", async ({
+  page,
+}) => {
+  const record = initial();
+  record.widgets = [];
+  for (const kind of ["calendar", "draw", "pdf"] as const) {
+    const tool = makeWidget(kind, record.widgets);
+    if (kind === "pdf") tool.url = "https://classroom.example/worksheet.pdf";
+    record.widgets.push(tool);
+  }
+  await page.route("https://classroom.example/worksheet.pdf", (route) =>
+    route.fulfill({
+      path: fileURLToPath(
+        new URL("./fixtures/homebase-pages.pdf", import.meta.url),
+      ),
+      headers: {
+        "content-type": "application/pdf",
+        "access-control-allow-origin": "*",
+      },
+    }),
+  );
+  await page.clock.setFixedTime(new Date(2026, 7, 31, 10));
+  await setup(page, [record]);
+  const pdf = page.getByRole("article", { name: "PDF", exact: true });
+  await pdf.getByRole("button", { name: "Load PDF" }).click();
+  for (const width of [1280, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    const calendar = page.getByRole("article", { name: "Date", exact: true });
+    await expect(calendar.locator('[aria-current="date"]')).toHaveText("31");
+    expect(
+      await calendar
+        .locator(".hb-widget-content")
+        .evaluate((el) => el.scrollHeight - el.clientHeight),
+    ).toBeLessThanOrEqual(1);
+    const box = await page
+      .getByRole("img", { name: /Drawing board/ })
+      .boundingBox();
+    expect(box!.width / box!.height).toBeCloseTo(5 / 3, 2);
+    await pdf.getByRole("button", { name: "Next page" }).click();
+    await expect(pdf.getByRole("img", { name: "PDF, page 2" })).toBeVisible();
+    await pdf.getByRole("button", { name: "Previous page" }).click();
+    await expect(pdf.getByRole("img", { name: "PDF, page 1" })).toBeVisible();
+  }
 });

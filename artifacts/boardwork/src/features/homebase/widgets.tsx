@@ -1,6 +1,10 @@
-import { useEffect, useRef, useState, type PointerEvent } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type PointerEvent } from "react";
 import {
   Check,
+  ChevronDown,
+  Dice1, Dice2, Dice3, Dice4, Dice5, Dice6,
+  FileText, Image as ImageIcon, PanelsTopLeft, Video,
+  Undo2, Trash2,
   ExternalLink,
   Focus,
   Minus,
@@ -20,6 +24,8 @@ import type { HomebaseWidget } from "@workspace/api-zod";
 import { useCountdownTimer } from "@/components/countdown-timer";
 import { Button } from "@/components/ui/button";
 import { embedUrl, formatSeconds, shuffle } from "./catalog";
+
+const PdfPreview = lazy(() => import("./pdf-preview"));
 
 export type WidgetProps = {
   widget: HomebaseWidget;
@@ -213,7 +219,7 @@ function TimerWidget({ widget, focus }: WidgetProps) {
                 void audio.start(event.target.value);
             }}
           >
-            <option value="off">Sound off</option>
+            <option value="off">Ambient sound off</option>
             <option value="tones">Soft tones</option>
             <option value="noise">Soft noise</option>
           </select>
@@ -225,7 +231,8 @@ function TimerWidget({ widget, focus }: WidgetProps) {
           aria-pressed={alarmEnabled}
           onClick={() => setAlarmEnabled(!alarmEnabled)}
         >
-          {alarmEnabled ? <Volume2 size={17} /> : <VolumeX size={17} />}
+          {alarmEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+          {alarmEnabled ? "Alarm on" : "Alarm off"}
         </button>
       </div>
       {audio.error ? (
@@ -314,8 +321,8 @@ function Clock({ calendar = false }: { calendar?: boolean }) {
   return (
     <div className="hb-calendar">
       <p>{now.toLocaleDateString([], { month: "long", year: "numeric" })}</p>
-      <div className="hb-month" aria-label="Current month">
-        {["S", "M", "T", "W", "T", "F", "S"].map((label, index) => (
+      <div className={start + total > 35 ? "hb-month hb-six-weeks" : "hb-month"} aria-label="Current month">
+        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((label, index) => (
           <b key={`day-${index}`} aria-hidden="true">
             {label}
           </b>
@@ -328,7 +335,7 @@ function Clock({ calendar = false }: { calendar?: boolean }) {
             key={i}
             className={i + 1 === now.getDate() ? "hb-today" : ""}
             aria-current={i + 1 === now.getDate() ? "date" : undefined}
-            aria-label={`${i + 1}${i + 1 === now.getDate() ? ", today" : ""}`}
+            aria-label={new Date(now.getFullYear(), now.getMonth(), i + 1).toLocaleDateString([], { dateStyle: "full" })}
           >
             {i + 1}
           </span>
@@ -460,17 +467,17 @@ function Groups({ widget, editing, edit }: WidgetProps) {
     </div>
   );
 }
+const dieFaces = [Dice1, Dice2, Dice3, Dice4, Dice5, Dice6];
 function Dice({ widget }: WidgetProps) {
   const [rolls, setRolls] = useState<number[]>([]);
   return (
     <div className="hb-centered">
       <div className="hb-dice" aria-live="polite">
         {rolls.length ? (
-          rolls.map((roll, i) => (
-            <span key={i} aria-label={`Die ${i + 1}: ${roll}`}>
-              {roll}
-            </span>
-          ))
+          rolls.map((roll, i) => {
+            const Face = dieFaces[roll - 1];
+            return <span key={i} role="img" aria-label={`Die ${i + 1}: ${roll}`}><Face aria-hidden="true" /></span>;
+          })
         ) : (
           <p className="hb-small">Ready to roll</p>
         )}
@@ -573,18 +580,21 @@ function Work({ widget, update }: WidgetProps) {
   return (
     <div className="hb-centered">
       <Icon className="hb-work-icon" aria-hidden="true" />
-      <strong className="hb-work-label">{mode.label}</strong>
-      <select
-        aria-label="Work mode"
-        value={mode.value}
-        onChange={(event) => update({ mode: event.target.value })}
-      >
-        {workModes.map((item) => (
-          <option key={item.value} value={item.value}>
-            {item.label}
-          </option>
-        ))}
-      </select>
+      <div className="hb-work-choice">
+        <span aria-hidden="true">{mode.label}</span>
+        <ChevronDown size={18} aria-hidden="true" />
+        <select
+          aria-label="Work mode"
+          value={mode.value}
+          onChange={(event) => update({ mode: event.target.value })}
+        >
+          {workModes.map((item) => (
+            <option key={item.value} value={item.value}>
+              {item.label}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 }
@@ -617,6 +627,7 @@ function Draw({ widget, update }: WidgetProps) {
   const [color, setColor] =
     useState<HomebaseWidget["strokes"][number]["color"]>("#20302f");
   const [points, setPoints] = useState<{ x: number; y: number }[]>([]);
+  const [confirmClear, setConfirmClear] = useState(false);
   const drawing = useRef(false);
   const live = useRef(points);
   function point(event: PointerEvent<SVGSVGElement>) {
@@ -646,61 +657,96 @@ function Draw({ widget, update }: WidgetProps) {
   }
   return (
     <div className="hb-draw">
-      <div className="hb-widget-actions">
-        {(["#20302f", "#654fa3", "#a33c35", "#27684f"] as const).map(
-          (value, index) => (
-            <button
-              key={value}
-              type="button"
-              className="hb-pen"
-              style={{ color: value }}
-              aria-label={`${["Charcoal", "Purple", "Red", "Green"][index]} pen`}
-              aria-pressed={color === value}
-              onClick={() => setColor(value)}
+      <div className="hb-draw-toolbar" role="group" aria-label="Drawing tools">
+        {confirmClear ? (
+          <div className="hb-clear-prompt">
+            <span>Clear the drawing?</span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setConfirmClear(false)}
             >
-              <Pencil size={18} />
-            </button>
-          ),
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                update({ strokes: [] });
+                setConfirmClear(false);
+              }}
+            >
+              Clear all
+            </Button>
+          </div>
+        ) : (
+          <>
+            <div>
+              {(["#20302f", "#654fa3", "#a33c35", "#27684f"] as const).map(
+                (value, index) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className="hb-pen"
+                    style={{ color: value }}
+                    title={`${["Charcoal", "Purple", "Red", "Green"][index]} pen`}
+                    aria-label={`${["Charcoal", "Purple", "Red", "Green"][index]} pen`}
+                    aria-pressed={color === value}
+                    onClick={() => setColor(value)}
+                  >
+                    <Pencil size={18} />
+                  </button>
+                ),
+              )}
+            </div>
+            <div>
+              <Button
+                size="sm"
+                variant="ghost"
+                aria-label="Undo stroke"
+                title="Undo stroke"
+                disabled={!widget.strokes.length}
+                onClick={() => update({ strokes: widget.strokes.slice(0, -1) })}
+              >
+                <Undo2 size={18} aria-hidden="true" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                aria-label="Clear drawing"
+                title="Clear drawing"
+                disabled={!widget.strokes.length}
+                onClick={() => setConfirmClear(true)}
+              >
+                <Trash2 size={18} aria-hidden="true" />
+              </Button>
+            </div>
+          </>
         )}
-        <Button
-          size="sm"
-          variant="ghost"
-          disabled={!widget.strokes.length}
-          onClick={() => update({ strokes: widget.strokes.slice(0, -1) })}
-        >
-          Undo stroke
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          disabled={!widget.strokes.length}
-          onClick={() => update({ strokes: [] })}
-        >
-          Clear
-        </Button>
       </div>
-      <svg
-        viewBox="0 0 1000 600"
-        preserveAspectRatio="none"
-        role="img"
-        aria-label="Drawing board. Use a mouse, pen, or touch to draw."
-        onPointerDown={(event) => {
-          if (event.button !== 0) return;
-          event.currentTarget.setPointerCapture(event.pointerId);
-          drawing.current = true;
-          live.current = [point(event)];
-          setPoints(live.current);
-        }}
-        onPointerMove={(event) => {
-          if (!drawing.current || live.current.length >= 1200) return;
-          live.current = [...live.current, point(event)];
-          setPoints(live.current);
-        }}
-        onPointerUp={finish}
-        onPointerCancel={finish}
-      >
-        {[...widget.strokes, ...(points.length ? [{ color, points }] : [])].map(
-          (stroke, i) => (
+      <div className="hb-drawing-area">
+        <svg
+          viewBox="0 0 1000 600"
+          role="img"
+          aria-label="Drawing board. Use a mouse, pen, or touch to draw."
+          onPointerDown={(event) => {
+            if (event.button !== 0) return;
+            event.currentTarget.setPointerCapture(event.pointerId);
+            drawing.current = true;
+            live.current = [point(event)];
+            setPoints(live.current);
+          }}
+          onPointerMove={(event) => {
+            if (!drawing.current || live.current.length >= 1200) return;
+            live.current = [...live.current, point(event)];
+            setPoints(live.current);
+          }}
+          onPointerUp={finish}
+          onPointerCancel={finish}
+        >
+          {[
+            ...widget.strokes,
+            ...(points.length ? [{ color, points }] : []),
+          ].map((stroke, i) => (
             <path
               key={i}
               d={`M${stroke.points.map((p) => `${p.x},${p.y}`).join(" L")} l0.01,0.01`}
@@ -710,15 +756,16 @@ function Draw({ widget, update }: WidgetProps) {
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-          ),
-        )}
-      </svg>
+          ))}
+        </svg>
+      </div>
     </div>
   );
 }
 function Resource({ widget, editing, edit }: WidgetProps) {
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
+  const reportFailure = useCallback(() => setFailed(true), []);
   const [ready, setReady] = useState(false);
   useEffect(() => {
     setLoaded(false);
@@ -726,11 +773,18 @@ function Resource({ widget, editing, edit }: WidgetProps) {
     setReady(false);
   }, [widget.url]);
   if (!widget.url)
-    return <ToolSetup label="No resource linked yet." action="Add a link" editing={editing} edit={edit} />;
+    return (
+      <ToolSetup
+        label="No resource linked yet."
+        action="Add a link"
+        editing={editing}
+        edit={edit}
+      />
+    );
   if (widget.kind === "link")
     return (
       <div className="hb-resource">
-        <p>{widget.text}</p>
+        {widget.text && <p className="hb-resource-caption">{widget.text}</p>}
         <ResourceLink url={widget.url}>
           {new URL(widget.url).hostname}
         </ResourceLink>
@@ -748,43 +802,68 @@ function Resource({ widget, editing, edit }: WidgetProps) {
         <ResourceLink url={widget.url} />
       </div>
     );
-  if (!loaded)
+  if (!loaded) {
+    const Icon =
+      widget.kind === "pdf"
+        ? FileText
+        : widget.kind === "image"
+          ? ImageIcon
+          : widget.kind === "video"
+            ? Video
+            : PanelsTopLeft;
+    const label =
+      widget.kind === "pdf"
+        ? "PDF"
+        : widget.kind === "embed"
+          ? "resource"
+          : widget.kind;
     return (
       <div className="hb-resource">
-        <p>
-          {widget.text ||
-            (widget.kind === "embed"
-              ? "Published documents, sheets, slides, and Spotify players can appear here."
-              : `Load this ${widget.kind} when you're ready.`)}
+        <p className="hb-resource-source">
+          <Icon size={18} aria-hidden="true" />
+          <span>{new URL(url).hostname}</span>
         </p>
-        <Button variant="outline" onClick={() => setLoaded(true)}>
-          Load {widget.kind === "embed" ? "resource" : widget.kind}
-        </Button>
-        <p className="hb-small">Loads content from {new URL(url).hostname}.</p>
-        <ResourceLink url={widget.url} />
+        {widget.text && <p className="hb-resource-caption">{widget.text}</p>}
+        <div className="hb-resource-actions">
+          <Button onClick={() => setLoaded(true)}>Load {label}</Button>
+          <ResourceLink url={widget.url}>Open in new tab</ResourceLink>
+        </div>
       </div>
     );
+  }
   if (failed)
     return (
       <div className="hb-resource">
         <p role="alert">
-          The resource couldn't load. Check the link or open it in a new tab.
+          {widget.kind === "pdf"
+            ? "We couldn’t preview this PDF here. You can still open the original."
+            : "The resource couldn't load. Check the link or open it in a new tab."}
         </p>
-        <ResourceLink url={widget.url} />
-        <Button
-          variant="outline"
-          onClick={() => {
-            setFailed(false);
-            setReady(false);
-          }}
-        >
-          Try again
-        </Button>
+        <div className="hb-resource-actions">
+          <Button
+            onClick={() => {
+              setFailed(false);
+              setReady(false);
+            }}
+          >
+            Try again
+          </Button>
+          <ResourceLink url={widget.url}>Open in new tab</ResourceLink>
+        </div>
       </div>
     );
   return (
     <div className="hb-media">
-      {widget.kind === "image" ? (
+      {widget.kind === "pdf" ? (
+        <Suspense fallback={<span role="status">Loading PDF…</span>}>
+          <PdfPreview
+            key={url}
+            url={url}
+            title={widget.title}
+            onError={reportFailure}
+          />
+        </Suspense>
+      ) : widget.kind === "image" ? (
         <img
           src={url}
           alt={widget.text || widget.title}
@@ -803,9 +882,10 @@ function Resource({ widget, editing, edit }: WidgetProps) {
           onError={() => setFailed(true)}
         />
       )}
-      {!ready ? (
+      {!ready && widget.kind !== "pdf" ? (
         <span className="hb-media-loading" role="status">
-          <Loader2 className="size-4 animate-spin" aria-hidden="true" /> Loading resource…
+          <Loader2 className="size-4 animate-spin" aria-hidden="true" /> Loading
+          resource…
         </span>
       ) : null}
       <ResourceLink url={widget.url}>Open in new tab</ResourceLink>

@@ -123,6 +123,11 @@ typography:
     fontWeight: 500
     lineHeight: 1.1
     letterSpacing: "-0.035em"
+  homebase-mobile-number:
+    fontFamily: "Inter, sans-serif"
+    fontSize: "4rem"
+    fontWeight: 500
+    lineHeight: 1.1
   homebase-picker-result:
     fontFamily: "Bitter, Georgia, serif"
     fontSize: "clamp(1.5rem, 2.5vw, 2.5rem)"
@@ -806,7 +811,7 @@ The existing Operating Surface Rule applies: the board and every tool stay smoot
 
 Inter remains the control and classroom-tool face. The Homebase page title reuses the workspace page-title role; creation and empty-board headings use light Bitter. Bitter also supplies the name-picker result. Homebase activity copies and notes use Inter rather than inheriting the separate activity Present route's Bitter/Open Sans composition.
 
-The `homebase-note`, `homebase-task` and `homebase-agenda` roles provide fluid reading sizes within the board. Notes preserve authored line breaks and wrap long words. At the mobile stack, notes and task copies settle at 1.125rem. Tool headings remain 0.875rem semibold; compact sound options and mobile arrangement hints use the dense-label role. The timer status below the ring uses the existing 0.75rem caption size.
+The `homebase-note`, `homebase-task` and `homebase-agenda` roles provide fluid reading sizes within the board. Notes preserve authored line breaks and wrap long words. At the mobile stack, notes and task copies settle at 1.125rem. Tool headings and sound controls use 0.875rem type. Mobile arrangement hints use the dense-label role. The timer status below the ring uses the existing 0.75rem caption size.
 
 Countdown readings use the documented board and focus roles, tabular numerals and the same restrained negative tracking. Their container units respond to both the face's width and height. Clock, stopwatch and event-countdown readings have their own functional scale; the mobile clock and large-number readings resolve to 3rem and 4rem. These operational sizes do not enlarge teacher navigation or alter the original presentation timer.
 
@@ -816,7 +821,7 @@ The Homebase page is at most 100rem wide, with 2rem outer padding. Class/board s
 
 Tool headers are at least 3rem tall, with 0.5rem × 1rem padding; the scrollable body uses 0.5rem top and 1.25rem side/bottom padding. Between 701px and 1050px, header and body insets tighten while preserving the board grid.
 
-At 700px and below, the page inset becomes 1.25rem × 0.75rem and tools stack in one column with 0.625rem board padding and a 0.75rem gap. Resize handles disappear and pointer dragging yields to scrolling. Standard tools have a 12rem minimum height; timer, date, drawing and media tools reserve at least 23rem. A mobile timer body has a definite 20rem height so its size container and ring resolve reliably. Tool controls are at least 44px high on coarse pointers; frame actions are also at least 44px wide.
+At 700px and below, the page inset becomes 1.25rem × 0.75rem and tools stack in one column with 0.625rem board padding and a 0.75rem gap. Resize handles disappear and pointer dragging yields to scrolling. Standard tools have a 12rem minimum height; timer, date and loaded media tools reserve at least 23rem. The drawing surface keeps its 5:3 proportions as its card changes size. A mobile timer body has a definite 20rem height so its size container and ring resolve reliably. Tool controls are at least 44px high on coarse pointers; frame actions are also at least 44px wide.
 
 Presentation and timer focus cover the viewport with a 1rem inset, reduced to 0.5rem on mobile. Timer focus expands the existing tool to at most 65rem wide, reserving bottom space for the exit control. These are Homebase layouts, separate from the fixed activity-export canvas.
 
@@ -836,7 +841,7 @@ A compact title and move/edit/options group sit above a smooth, scrollable conte
 
 ### Timer and timer-only focus
 
-The face is a size container with a full-area SVG ring; its intrinsic view box preserves a circle inside either a wide or tall tool. The reading stays centered within an 83% width limit, increasing to 85% in focus. Keep the status and pause/start/reset/focus actions below the face, with the compact sound selector and end-alarm control below those actions. The default label is “Sound off”; sound and alarm are explicit choices. Starting, pausing or completing the timer governs the optional calm sound.
+The face is a size container with a full-area SVG ring; its intrinsic view box preserves a circle inside either a wide or tall tool. The reading stays centered within an 83% width limit, increasing to 85% in focus. Keep the status and pause/start/reset/focus actions below the face, with the compact sound selector and end-alarm control below those actions. “Ambient sound off” and “Alarm off” identify the two independent sound controls. Starting, pausing or completing the timer governs the optional calm sound.
 
 **The Live Tool Rule.** Presentation and timer focus change the framing of the existing mounted tools. They must preserve the running timer and its live controls rather than recreate its state.
 
