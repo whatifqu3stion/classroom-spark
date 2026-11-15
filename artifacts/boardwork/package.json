@@ -100,6 +100,7 @@
     "@tiptap/extensions": "^3.31.3",
     "@tiptap/pm": "^3.31.3",
     "@tiptap/react": "^3.31.3",
-    "pdfjs-dist": "6.4.299"
+    "pdfjs-dist": "6.4.299",
+    "qrcode.react": "4.2.0"
   }
 }

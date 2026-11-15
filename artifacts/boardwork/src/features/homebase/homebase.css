@@ -508,25 +508,60 @@
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
-.hb-dice {
+.hb-dice-tool, .hb-qr {
+  height: 100%;
   display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: stretch;
   gap: 0.5rem;
 }
-.hb-dice > span {
-  display: inline-flex;
+.hb-dice-stage, .hb-qr-face {
+  container-type: size;
+  display: grid;
+  place-items: center;
+  flex: 1;
+  min-height: 2.25rem;
+}
+.hb-dice {
+  --row: calc((100cqw - (var(--dice-count) - 1) * 0.35rem) / var(--dice-count));
+  --half-row: calc((100cqw - (var(--dice-columns) - 1) * 0.35rem) / var(--dice-columns));
+  --face: max(min(var(--row), 100cqh), min(var(--half-row), calc((100cqh - 0.35rem) / 2)));
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  gap: 0.35rem;
+}
+.hb-dice > span, .hb-dice-ready {
+  width: calc(var(--face) - 0.1px);
+  aspect-ratio: 1;
+  display: block;
   color: #20302f;
 }
+.hb-dice > span {
+  animation: hb-roll 510ms cubic-bezier(.22,.68,.22,1) both;
+  animation-delay: calc(var(--die-index) * 22ms);
+}
 .hb-dice svg {
-  width: 2.75rem;
-  height: 2.75rem;
+  height: auto;
   fill: #cde4cf;
   stroke-width: 1.5;
 }
-.hb-dice svg path {
-  stroke-width: 3;
+.hb-dice > span svg { width: 100%; }
+.hb-dice > span svg path { stroke-width: 3; }
+@keyframes hb-roll {
+  0% { transform: translateY(5%) rotate(calc(-24deg * var(--die-direction))) scale(.78); }
+  35% { transform: translateY(-5%) perspective(24rem) rotateX(52deg) rotate(calc(18deg * var(--die-direction))) scale(.94); }
+  72% { transform: translateY(2%) rotate(calc(-6deg * var(--die-direction))) scale(1.02,.97); }
+  100% { transform: none; }
 }
+.hb-qr-face svg {
+  display: block;
+  width: min(100cqw, 100cqh);
+  height: auto;
+}
+.hb-qr > a { align-self: center; max-width: 100%; overflow-wrap: anywhere; }
 .hb-scoreboard {
   container-type: inline-size;
   color: #20302f;
@@ -654,25 +689,33 @@
   opacity: 0;
   cursor: pointer;
 }
+.hb-signal-tool {
+  container-type: size;
+  display: grid;
+  place-items: center;
+  height: 100%;
+  min-height: 4rem;
+}
 .hb-traffic {
-  display: flex;
-  justify-content: center;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: start;
-  gap: 0.75rem;
-  flex-wrap: wrap;
 }
 .hb-traffic button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-size: 0.75rem;
+  justify-self: center;
+  font-size: clamp(.75rem, 4cqw, 2.5rem);
+  line-height: 1.25;
   gap: 0.5rem;
   padding: 0.25rem;
   border-radius: 0.5rem;
 }
 .hb-light {
-  width: 3rem;
-  height: 3rem;
+  width: max(1.5rem, min(27cqw, calc(100cqh - 1.5em - 1rem)));
+  aspect-ratio: 1;
   border-radius: 50%;
   background: #e1e4dd;
   border: 1px solid #87938b;
@@ -886,6 +929,37 @@
 .hb-edit-form .hb-small {
   font-weight: 400;
 }
+[data-hb-font="sans"] { font-family: var(--app-font-sans); }
+[data-hb-font="serif"] { font-family: "Bitter", var(--app-font-serif); }
+[data-hb-font="mono"] { font-family: var(--font-mono); }
+.hb-writing-panel {
+  display: grid;
+  gap: .5rem;
+  min-width: 0;
+}
+.hb-writing-panel legend { font-weight: 600; margin-bottom: .5rem; }
+.hb-writing-panel .hb-font-choice { display: flex; align-items: center; justify-content: space-between; }
+.hb-writing-panel .inline-editor-wrapper {
+  border: 1px solid hsl(var(--input));
+  border-radius: .5rem;
+  background: var(--hb-surface, #fffefa);
+}
+.hb-writing-panel [role="toolbar"] {
+  border: 0;
+  border-radius: .5rem .5rem 0 0;
+  border-bottom: 1px solid hsl(var(--input));
+  box-shadow: none;
+  background: #eceee8;
+}
+.hb-writing-panel .hb-writing-area {
+  margin: 0;
+  padding: .75rem;
+  min-height: 7rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
 .hb-edit-actions {
   display: flex;
   justify-content: end;
@@ -1094,6 +1168,11 @@
     max-height: 38rem;
     padding: 0.75rem 1rem 1.5rem;
   }
+  .hb-widget:has(.hb-dice-tool, .hb-signal-tool, .hb-qr) .hb-widget-content {
+    flex: none;
+    height: clamp(11rem, 48vw, 18rem);
+  }
+  .hb-widget:has(.hb-qr) .hb-widget-content { height: 17rem; }
   .hb-widget:has(.hb-timer) .hb-widget-content {
     flex: none;
     height: 20rem;

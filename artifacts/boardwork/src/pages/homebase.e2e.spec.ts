@@ -506,3 +506,63 @@ test("shows the entire month, keeps drawings proportional and renders both PDF p
     await expect(pdf.getByRole("img", { name: "PDF, page 1" })).toBeVisible();
   }
 });
+
+test("dice and traffic lights grow with the panel and respect reduced motion", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const dice = { ...makeWidget("dice"), number: 6 };
+  const signal = { ...makeWidget("traffic"), y: 9 };
+  await setup(page, [{ ...initial(), widgets: [dice, signal] }]);
+  const roll = page.getByRole("button", { name: "Roll dice", exact: true });
+  const face = page.locator(".hb-dice [role=img]").first();
+  await roll.click();
+  await expect(page.locator(".hb-dice [role=img]")).toHaveCount(6);
+  const firstFace = await face.elementHandle();
+  await roll.click();
+  expect(await firstFace!.evaluate(element => element.isConnected)).toBe(false);
+  await expect(face).toHaveCSS("animation-name", "hb-roll");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(face).toHaveCSS("animation-name", "none");
+  for (const [widget, target] of [[dice, face], [signal, page.locator(".hb-light").first()]] as const) {
+    const before = (await target.boundingBox())!.width;
+    const resize = page.getByRole("button", { name: `Resize ${widget.title}`, exact: true });
+    await resize.press("ArrowRight");
+    await resize.press("ArrowRight");
+    await resize.press("ArrowDown");
+    await resize.press("ArrowDown");
+    await expect.poll(async () => (await target.boundingBox())!.width).toBeGreaterThan(before * 1.2);
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const element of await page.locator(".hb-dice [role=img], .hb-light").all()) {
+    const bounds = (await element.boundingBox())!;
+    expect(bounds.width).toBeGreaterThan(35);
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(390);
+  }
+});
+
+test("writes formatted board text and creates a scannable classroom link", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const note = makeWidget("note");
+  const qr = makeWidget("qr", [note]);
+  const state = await setup(page, [{ ...initial(), widgets: [note, qr] }]);
+  await edit(page, note.title);
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Font", { exact: true }).selectOption("serif");
+  const text = dialog.getByRole("textbox", { name: "Text", exact: true });
+  await text.fill("Bring your sketchbook");
+  await text.press("ControlOrMeta+a");
+  await dialog.getByRole("button", { name: "Bold", exact: true }).click();
+  await apply(page);
+  const formatted = page.locator('.hb-note [data-hb-font="serif"] .boardwork-inline-bold');
+  await expect(formatted).toHaveText("Bring your sketchbook");
+  await edit(page, qr.title);
+  const url = "https://example.org/classroom?group=2";
+  await dialog.getByLabel("Resource link").fill(url);
+  await apply(page);
+  await expect.poll(() => state.records[0].widgets[1].url).toBe(url);
+  await page.reload();
+  const code = page.getByRole("article", { name: qr.title, exact: true });
+  await expect(code.getByRole("img", { name: "Scan to open example.org" })).toBeVisible();
+  await expect(code.getByRole("link")).toHaveAttribute("href", url);
+  await expect(formatted).toHaveText("Bring your sketchbook");
+  expect(state.errors).toEqual([]);
+});

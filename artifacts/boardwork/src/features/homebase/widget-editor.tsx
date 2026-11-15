@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { embedUrl } from "./catalog";
+import { InlineEditor } from "@/components/inline-editor";
 import { HomebaseWidget } from "@workspace/api-zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,7 +84,7 @@ function EditorForm({
     "scoreboard",
     "poll",
   ].includes(widget.kind);
-  const hasUrl = ["task", "link", "image", "embed", "video", "pdf"].includes(
+  const hasUrl = ["task", "link", "qr", "image", "embed", "video", "pdf"].includes(
     widget.kind,
   );
   const linkOnly = ["pdf", "video", "embed"].includes(widget.kind) && draft.url.startsWith("https://") && !embedUrl(widget.kind, draft.url);
@@ -124,16 +125,23 @@ function EditorForm({
         />
       </label>
       {hasText ? (
-        <label>
-          {widget.kind === "image" ? "Image description" : "Text"}
-          <Textarea
-            aria-label={widget.kind === "image" ? "Image description" : "Text"}
-            rows={5}
-            value={draft.text}
-            onChange={(e) => patch({ text: e.target.value })}
-            maxLength={8000}
-          />
-        </label>
+        <fieldset className="hb-writing-panel">
+          <legend>{widget.kind === "image" ? "Image description" : "Text"}</legend>
+          <div className="hb-font-choice">
+            <label htmlFor="hb-text-font">Font</label>
+            <select id="hb-text-font" value={draft.font || ""} onChange={event => patch({ font: (event.target.value || undefined) as HomebaseWidget["font"] })}>
+              <option value="">Tool default</option>
+              <option value="sans">Sans serif · Inter</option>
+              <option value="serif">Serif · Bitter</option>
+              <option value="mono">Monospace</option>
+            </select>
+          </div>
+          <div data-hb-font={draft.font}>
+            <InlineEditor multiline toolbar="fixed" aria-label={widget.kind === "image" ? "Image description" : "Text"}
+              className="hb-writing-area" value={draft.text} runs={draft.textRuns}
+              onChange={(text, runs) => patch({ text, textRuns: runs?.some(run => run.bold || run.underline || run.highlight) ? runs : undefined })} />
+          </div>
+        </fieldset>
       ) : null}
       {nameLists.length > 0 && !items.trim() && (
         <label>
@@ -184,6 +192,10 @@ function EditorForm({
             {linkOnly && "This link will open in a new tab. "}
             {widget.kind === "embed"
               ? "Paste a published Google document/sheet link, Google Slides embed URL, or Spotify embed URL. Private account imports aren't connected."
+              : widget.kind === "qr"
+                ? "Students can scan this HTTPS link from the board."
+              : widget.kind === "image"
+                ? "Paste a direct HTTPS image link, then choose Load image on the board."
               : widget.kind === "video"
                 ? "Paste a YouTube watch, share, or embed link."
                 : widget.kind === "pdf"

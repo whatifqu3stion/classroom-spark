@@ -1,5 +1,8 @@
 import { z } from "zod/v4";
 
+import type { InlineTextRun } from "./generated/types";
+import { InlineTextRunSchema } from "./inline-formatting";
+
 export const widgetKinds = [
   "task",
   "note",
@@ -18,6 +21,7 @@ export const widgetKinds = [
   "draw",
   "image",
   "link",
+  "qr",
   "embed",
   "video",
   "pdf",
@@ -52,6 +56,8 @@ export const HomebaseWidget = z
     title: z.string().max(100),
     tone: HomebaseTone,
     text: z.string().max(8000).default(""),
+    font: z.enum(["sans", "serif", "mono"]).optional(),
+    textRuns: z.array(z.custom<InlineTextRun>(run => InlineTextRunSchema.safeParse(run).success)).max(8000).optional(),
     url: HomebaseUrl.default(""),
     items: z.array(z.string().max(200)).max(100).default([]),
     values: z.array(z.int().min(-999).max(9999)).max(100).default([]),
@@ -81,6 +87,10 @@ export const HomebaseWidget = z
       .max(100)
       .default([]),
   })
+  .refine(widget => !widget.textRuns || widget.textRuns.map(run => run.text).join("") === widget.text,
+    "Formatting must match the text.")
+  .refine(widget => widget.kind !== "qr" || new TextEncoder().encode(widget.url).length <= 2000,
+    "Use a shorter link for this QR code.")
   .refine(
     (widget) => widget.kind !== "dice" || widget.number <= 6,
     "Choose between one and six dice.",

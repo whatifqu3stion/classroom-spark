@@ -1,8 +1,8 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState, type PointerEvent } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import {
   Check,
   ChevronDown,
-  Dice1, Dice2, Dice3, Dice4, Dice5, Dice6,
+  Dices, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6,
   FileText, Image as ImageIcon, PanelsTopLeft, Video,
   Undo2, Trash2,
   ExternalLink,
@@ -21,6 +21,9 @@ import {
   Loader2,
 } from "lucide-react";
 import type { HomebaseWidget } from "@workspace/api-zod";
+import { QRCodeSVG } from "qrcode.react";
+import { FormattedBoardText } from "@/components/formatted-board-text";
+import { getInlineHighlightStyle } from "@/lib/inline-formatting";
 import { useCountdownTimer } from "@/components/countdown-timer";
 import { Button } from "@/components/ui/button";
 import { embedUrl, formatSeconds, shuffle } from "./catalog";
@@ -469,36 +472,34 @@ function Groups({ widget, editing, edit }: WidgetProps) {
 }
 const dieFaces = [Dice1, Dice2, Dice3, Dice4, Dice5, Dice6];
 function Dice({ widget }: WidgetProps) {
-  const [rolls, setRolls] = useState<number[]>([]);
+  const [result, setResult] = useState({ turn: 0, rolls: [] as number[] });
+  const { rolls } = result;
+  function rollDice() {
+    const next = Array.from({ length: widget.number }, () => Math.floor(Math.random() * 6) + 1);
+    setResult(last => ({ turn: last.turn + 1, rolls: next }));
+  }
   return (
-    <div className="hb-centered">
-      <div className="hb-dice" aria-live="polite">
-        {rolls.length ? (
-          rolls.map((roll, i) => {
-            const Face = dieFaces[roll - 1];
-            return <span key={i} role="img" aria-label={`Die ${i + 1}: ${roll}`}><Face aria-hidden="true" /></span>;
-          })
-        ) : (
-          <p className="hb-small">Ready to roll</p>
-        )}
+    <div className="hb-dice-tool">
+      <div className="hb-dice-stage">
+        <div className="hb-dice" key={result.turn} style={{
+          "--dice-count": rolls.length || 1,
+          "--dice-columns": Math.ceil((rolls.length || 1) / 2),
+        } as CSSProperties}>
+          {rolls.length ? rolls.map((value, index) => {
+            const Face = dieFaces[value - 1];
+            return <span key={index} role="img" aria-label={`Die ${index + 1}: ${value}`}
+              style={{ "--die-index": index, "--die-direction": index % 2 ? -1 : 1 } as CSSProperties}>
+              <Face aria-hidden="true" />
+            </span>;
+          }) : <Dices className="hb-dice-ready" aria-label="Ready to roll" role="img" />}
+        </div>
       </div>
-      <Button
-        onClick={() =>
-          setRolls(
-            Array.from(
-              { length: Math.min(6, widget.number) },
-              () => Math.floor(Math.random() * 6) + 1,
-            ),
-          )
-        }
-      >
-        Roll {widget.number === 1 ? "die" : "dice"}
-      </Button>
-      {rolls.length > 1 ? (
-        <span className="hb-small">
-          Total: {rolls.reduce((sum, roll) => sum + roll, 0)}
+      <div className="hb-widget-actions">
+        <Button onClick={rollDice}>Roll {widget.number === 1 ? "die" : "dice"}</Button>
+        <span className={rolls.length > 1 ? "hb-small" : "sr-only"} aria-live="polite" aria-atomic="true">
+          {rolls.length > 1 ? `Total: ${rolls.reduce((sum, value) => sum + value, 0)}` : rolls.length ? `Rolled ${rolls[0]}` : ""}
         </span>
-      ) : null}
+      </div>
     </div>
   );
 }
@@ -600,7 +601,7 @@ function Work({ widget, update }: WidgetProps) {
 }
 function Traffic({ widget, update }: WidgetProps) {
   return (
-    <div className="hb-centered">
+    <div className="hb-signal-tool">
       <div className="hb-traffic" role="group" aria-label="Classroom signal">
         {[
           { value: "stop", label: "Stop", tone: "red" },
@@ -762,6 +763,12 @@ function Draw({ widget, update }: WidgetProps) {
     </div>
   );
 }
+function WidgetText({ widget, className }: { widget: HomebaseWidget; className?: string }) {
+  return <p className={className} data-hb-font={widget.font} style={getInlineHighlightStyle()}>
+    <FormattedBoardText runs={widget.textRuns}>{widget.text}</FormattedBoardText>
+  </p>;
+}
+
 function Resource({ widget, editing, edit }: WidgetProps) {
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -781,10 +788,19 @@ function Resource({ widget, editing, edit }: WidgetProps) {
         edit={edit}
       />
     );
+  if (widget.kind === "qr")
+    return (
+      <div className="hb-qr">
+        <div className="hb-qr-face">
+          <QRCodeSVG value={widget.url} level="M" marginSize={4} title={`Scan to open ${new URL(widget.url).hostname}`} role="img" />
+        </div>
+        <ResourceLink url={widget.url}>{new URL(widget.url).hostname}</ResourceLink>
+      </div>
+    );
   if (widget.kind === "link")
     return (
       <div className="hb-resource">
-        {widget.text && <p className="hb-resource-caption">{widget.text}</p>}
+        {widget.text && <WidgetText className="hb-resource-caption" widget={widget} />}
         <ResourceLink url={widget.url}>
           {new URL(widget.url).hostname}
         </ResourceLink>
@@ -823,7 +839,7 @@ function Resource({ widget, editing, edit }: WidgetProps) {
           <Icon size={18} aria-hidden="true" />
           <span>{new URL(url).hostname}</span>
         </p>
-        {widget.text && <p className="hb-resource-caption">{widget.text}</p>}
+        {widget.text && <WidgetText className="hb-resource-caption" widget={widget} />}
         <div className="hb-resource-actions">
           <Button onClick={() => setLoaded(true)}>Load {label}</Button>
           <ResourceLink url={widget.url}>Open in new tab</ResourceLink>
@@ -910,7 +926,7 @@ export function WidgetContent(props: WidgetProps) {
     case "groups":
       return <Groups {...props} />;
     case "dice":
-      return <Dice {...props} />;
+      return <Dice key={widget.number} {...props} />;
     case "scoreboard":
     case "poll":
       return <Score {...props} />;
@@ -921,6 +937,7 @@ export function WidgetContent(props: WidgetProps) {
     case "draw":
       return <Draw {...props} />;
     case "image":
+    case "qr":
     case "link":
     case "embed":
     case "video":
@@ -961,7 +978,7 @@ export function WidgetContent(props: WidgetProps) {
     default:
       return (
         <div className={`hb-note ${widget.kind === "task" ? "hb-task" : ""}`}>
-          {widget.text ? <p>{widget.text}</p> : !widget.items.length && !widget.url && (
+          {widget.text ? <WidgetText widget={widget} /> : !widget.items.length && !widget.url && (
             <ToolSetup label="No instructions yet." action="Add instructions" {...props} />
           )}
           {widget.items.length ? (

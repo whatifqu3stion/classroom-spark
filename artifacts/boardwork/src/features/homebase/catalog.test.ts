@@ -56,6 +56,14 @@ describe("classroom board content and resources", () => {
       }).success,
     ).toBe(false);
   });
+  it("validates formatting against the saved text and limits QR data by encoded size", () => {
+    const note = { ...makeWidget("note"), text: "Read this" };
+    expect(HomebaseWidget.safeParse({ ...note, textRuns: [{ text: note.text, bold: true }] }).success).toBe(true);
+    for (const textRuns of [[null], [{ text: "stale" }], [{ text: note.text, bold: "yes" }]]) {
+      expect(HomebaseWidget.safeParse({ ...note, textRuns }).success).toBe(false);
+    }
+    expect(HomebaseWidget.safeParse({ ...makeWidget("qr"), url: "https://example.org/" + "語".repeat(700) }).success).toBe(false);
+  });
   it("limits embedding to supported provider paths and uses the privacy-enhanced video player", () => {
     expect(embedUrl("video", "https://youtu.be/abcdefghijk")).toBe(
       "https://www.youtube-nocookie.com/embed/abcdefghijk",

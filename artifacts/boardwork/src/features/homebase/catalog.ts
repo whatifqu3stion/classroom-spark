@@ -150,6 +150,14 @@ export const tools: {
     h: 3,
   },
   {
+    kind: "qr",
+    title: "QR code",
+    description: "Let students scan a link from the board.",
+    group: "Resources",
+    w: 4,
+    h: 4,
+  },
+  {
     kind: "image",
     title: "Image",
     description: "Put an image beside the task for students to refer to.",
@@ -256,6 +264,7 @@ export function activityWidget(
     ...makeWidget("task", widgets),
     title: boardActivityLabel(activity),
     text: activity.task,
+    textRuns: activity.contentFormatting?.task,
     items: activity.prompts,
     minutes: activity.durationMinutes,
     url: activity.resourceUrl?.startsWith("https://")
