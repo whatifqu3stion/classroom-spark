@@ -409,6 +409,37 @@ test("class tools work on mobile without overflow and resources wait for a click
 });
 
 
+test("keeps vote adjustments grouped and makes clearing the tally deliberate", async ({ page }) => {
+  const record = initial();
+  const poll = { ...makeWidget("poll"), title: "What should we explore?", w: 4,
+    items: ["Test a prediction", "Compare examples"], values: [8, 12] };
+  record.widgets = [poll];
+  await setup(page, [record]);
+  const card = page.getByRole("article", { name: poll.title });
+  const stepper = card.getByRole("group", { name: poll.items[0] });
+  const minus = stepper.getByRole("button", { name: "Subtract from Test a prediction" });
+  const plus = stepper.getByRole("button", { name: "Add to Test a prediction" });
+  for (const width of [1200, 390]) {
+    await page.setViewportSize({ width, height: 850 });
+    const left = await minus.boundingBox();
+    const right = await plus.boundingBox();
+    expect(left!.height).toBeGreaterThanOrEqual(44);
+    expect(left!.width).toBe(right!.width);
+    expect(left!.y).toBe(right!.y);
+    await expect(card.getByText("20 votes cast")).toBeVisible();
+  }
+  await plus.click();
+  await expect(card.getByText("21 votes cast")).toBeVisible();
+  await minus.click();
+  await card.getByRole("button", { name: "Reset votes" }).click();
+  await card.getByRole("button", { name: "Cancel" }).click();
+  await expect(card.getByText("20 votes cast")).toBeVisible();
+  await card.getByRole("button", { name: "Reset votes" }).click();
+  await card.getByRole("button", { name: "Reset all" }).click();
+  await expect(card.getByText("0 votes cast")).toBeVisible();
+  await expect(minus).toBeDisabled();
+});
+
 test("reorders mobile tools through explicit menu actions and persists their order", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const state = await setup(page);

@@ -3,6 +3,8 @@ import {
   Check,
   ExternalLink,
   Focus,
+  Minus,
+  Plus,
   Pause,
   Play,
   RotateCcw,
@@ -495,6 +497,8 @@ function Dice({ widget }: WidgetProps) {
 }
 function Score({ widget, update, editing, edit }: WidgetProps) {
   const vote = widget.kind === "poll";
+  const [confirmReset, setConfirmReset] = useState(false);
+  const total = widget.items.reduce((sum, _, i) => sum + (widget.values[i] ?? 0), 0);
   if (!widget.items.length) return <ToolSetup label={vote ? "No vote options yet." : "No teams yet."} action={vote ? "Add options" : "Add teams"} editing={editing} edit={edit} />;
   function change(index: number, delta: number) {
     update({
@@ -508,45 +512,51 @@ function Score({ widget, update, editing, edit }: WidgetProps) {
   }
   return (
     <div className="hb-scoreboard">
-      {vote ? (
-        <p className="hb-small">Show of hands. Record votes here.</p>
-      ) : null}
-      <div className="hb-scores">
-        {widget.items.map((item, i) => (
-          <div key={i}>
-            <span className="hb-score-label">{item}</span>
-            <strong aria-live="polite">{widget.values[i] || 0}</strong>
-            <div>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label={`Subtract from ${item}`}
-                disabled={(widget.values[i] || 0) <= (vote ? 0 : -999)}
-                onClick={() => change(i, -1)}
-              >
-                −
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                aria-label={`Add to ${item}`}
-                disabled={widget.values[i] >= 9999}
-                onClick={() => change(i, 1)}
-              >
-                +
-              </Button>
-            </div>
-          </div>
-        ))}
+      <ul className="hb-scores">
+        {widget.items.map((item, i) => {
+          const value = widget.values[i] ?? 0;
+          return (
+            <li key={i}>
+              <div className="hb-score-row">
+                <span className="hb-score-label">{item}</span>
+                <div className="hb-stepper" role="group" aria-label={item}>
+                  <button type="button" aria-label={`Subtract from ${item}`}
+                    disabled={value <= (vote ? 0 : -999)} onClick={() => change(i, -1)}>
+                    <Minus size={16} aria-hidden="true" />
+                  </button>
+                  <strong aria-live="polite" aria-atomic="true">{value}</strong>
+                  <button type="button" aria-label={`Add to ${item}`}
+                    disabled={value >= 9999} onClick={() => change(i, 1)}>
+                    <Plus size={16} aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+              {vote && <div className="hb-vote-track" aria-hidden="true">
+                <span style={{ width: `${total ? value / total * 100 : 0}%` }} />
+              </div>}
+            </li>
+          );
+        })}
+      </ul>
+      <div className="hb-tally-footer">
+        {confirmReset ? (
+          <>
+            <span>Reset all {vote ? "votes" : "scores"}?</span>
+            <button type="button" onClick={() => setConfirmReset(false)}>Cancel</button>
+            <button type="button" onClick={() => {
+              update({ values: widget.items.map(() => 0) });
+              setConfirmReset(false);
+            }}>Reset all</button>
+          </>
+        ) : (
+          <>
+            <span>{vote ? `${total} ${total === 1 ? "vote" : "votes"} cast` : `${widget.items.length} ${widget.items.length === 1 ? "team" : "teams"}`}</span>
+            <button type="button" disabled={!widget.values.some(Boolean)} onClick={() => setConfirmReset(true)}>
+              <RotateCcw size={14} aria-hidden="true" />Reset {vote ? "votes" : "scores"}
+            </button>
+          </>
+        )}
       </div>
-      <Button
-        size="sm"
-        variant="ghost"
-        disabled={!widget.values.some(Boolean)}
-        onClick={() => update({ values: widget.items.map(() => 0) })}
-      >
-        Reset {vote ? "votes" : "scores"}
-      </Button>
     </div>
   );
 }
