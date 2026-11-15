@@ -7,6 +7,7 @@ import {
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { byokContext } from "./middlewares/byok";
+import { previewAccess } from "./middlewares/preview-access";
 import { serveFrontend } from "./lib/serve-frontend";
 
 const app: Express = express();
@@ -31,6 +32,8 @@ app.use(
   }),
 );
 // Same-origin frontend only; never reflect arbitrary credentialed CORS origins.
+if (process.env.BOARDWORK_PREVIEW_PASSWORD !== undefined)
+  app.use(previewAccess(process.env.BOARDWORK_PREVIEW_PASSWORD));
 app.use("/api", byokContext);
 app.use(express.json({ limit: ACTIVITY_REQUEST_BODY_LIMIT_BYTES }));
 app.use(
