@@ -1352,3 +1352,14 @@
   .hb-presenting .hb-canvas {flex:1; min-height:0; overflow-y:auto;}
   .hb-presenting .hb-widget {flex-shrink:0;}
 }
+@media (max-width:700px) {
+  .hb-toolbar-actions {
+    display:grid;
+    width:100%;
+    grid-template-columns:44px 44px minmax(0,1fr) minmax(0,1fr) 44px;
+  }
+  .hb-toolbar-actions > button {min-width:0; padding-inline:.25rem; gap:.25rem;}
+}
+@media (max-width:360px) {
+  .hb-toolbar-actions > button:has(.hb-copy-mobile) svg {display:none;}
+}
