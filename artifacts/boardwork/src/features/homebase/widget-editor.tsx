@@ -102,7 +102,7 @@ function EditorForm({
         if (readingPhoto) return;
         const result = HomebaseWidget.safeParse({
           ...draft,
-          items: hasItems
+          items: draft.kind === "agenda" && draft.mode === "timed" ? draft.stages?.map(stage => stage.label.trim()) : hasItems
             ? items
                 .split("\n")
                 .map((item) => item.trim())
@@ -196,7 +196,30 @@ function EditorForm({
           </select>
         </label>
       )}
-      {hasItems ? (
+      {widget.kind === "agenda" && <label>Agenda style
+        <select value={draft.mode === "timed" ? "timed" : "checklist"} onChange={event => {
+          if (event.target.value === "timed") {
+            const labels = items.split("\n").map(s => s.trim()).filter(Boolean);
+            patch({ mode: "timed", stages: (labels.length ? labels : ["First stage"]).map((label, i) => ({
+              label, minutes: draft.stages?.[i]?.minutes || 2,
+            })) });
+          } else {
+            setItems(draft.stages?.map(stage => stage.label).join("\n") || items);
+            patch({ mode: "", stages: undefined });
+          }
+        }}>
+          <option value="checklist">Checklist</option><option value="timed">Timed · Now / Next</option>
+        </select>
+      </label>}
+      {widget.kind === "agenda" && draft.mode === "timed" && <fieldset className="hb-stage-editor"><legend>Stages</legend>
+        {draft.stages?.map((stage,i,all) => <div className="hb-edit-stage" key={i}>
+          <label>Stage {i + 1}<Input required maxLength={200} value={stage.label} onChange={e => patch({stages: all.map((s,j)=>j===i ? {...s,label:e.target.value} : s)})}/></label>
+          <label>Minutes<Input aria-label={`Minutes for stage ${i+1}`} type="number" min={1} max={120} required value={stage.minutes || ""} onChange={e=>patch({stages:all.map((s,j)=>j===i ? {...s,minutes:Number(e.target.value)} : s)})}/></label>
+          {all.length > 1 && <Button type="button" variant="ghost" size="sm" aria-label={`Remove stage ${i+1}`} onClick={()=>patch({stages:all.filter((_,j)=>j!==i)})}>×</Button>}
+        </div>)}
+        <Button type="button" variant="outline" disabled={(draft.stages?.length || 0) >= 100} onClick={()=>patch({stages:[...(draft.stages || []),{label:"",minutes:2}]})}>Add stage</Button>
+      </fieldset>}
+      {hasItems && !(widget.kind === "agenda" && draft.mode === "timed") ? (
         <label>
           {names
             ? "Names, one per line"

@@ -7,6 +7,7 @@ import {
 } from "@workspace/api-zod";
 import {
   activityWidget,
+  adaptBoard,
   embedUrl,
   makeWidget,
   template,
@@ -30,6 +31,21 @@ describe("classroom board content and resources", () => {
           ).toBe(true);
         }
     }
+  });
+  it("keeps the lesson when adapting and resets class-specific lists and results", () => {
+    const source = {...template("blank"), widgets:[
+      {...makeWidget("randomizer"),items:["Sam"]},
+      {...makeWidget("poll"),items:["Flat","Folded"],values:[2,12]},
+      {...makeWidget("agenda"),mode:"timed",stages:[{label:"Predict",minutes:2}],values:[1]},
+    ]};
+    const next = HomebaseContent.parse(adaptBoard(source, "Period two"));
+    expect(next.widgets[0].items).toEqual([]);
+    expect(next.widgets[1].items).toEqual(["Flat","Folded"]);
+    expect(next.widgets[1].values).toEqual([]);
+    expect(next.widgets[2].stages).toEqual(source.widgets[2].stages);
+    expect(next.widgets[2].id).not.toBe(source.widgets[2].id);
+    expect(source.widgets[0].items).toEqual(["Sam"]);
+    expect(source.widgets[1].values).toEqual([2,12]);
   });
   it("rejects code URLs, credentials, duplicate IDs, and tools outside the board", () => {
     for (const url of [

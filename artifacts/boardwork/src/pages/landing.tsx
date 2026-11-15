@@ -19,7 +19,6 @@ import {
   useTransform,
 } from "framer-motion";
 import {
-  ArrowDown,
   ArrowRight,
   ArrowUpRight,
   Expand,
@@ -378,7 +377,7 @@ function LandingNavigation() {
         </nav>
         <Button asChild size="landing" className="landing-nav-cta">
           <WorkspaceEntry>
-            {workspaceEntry.available ? "Open workspace" : "See setup options"}{" "}
+            {workspaceEntry.available ? "Open workspace" : "Open warm-up"}{" "}
             <ArrowUpRight aria-hidden="true" />
           </WorkspaceEntry>
         </Button>
@@ -408,7 +407,7 @@ function LandingNavigation() {
           >
             {links}
             <WorkspaceEntry onClick={() => setOpen(false)}>
-              {workspaceEntry.available ? "Open workspace" : "See setup options"}{" "}
+              {workspaceEntry.available ? "Open workspace" : "Open warm-up"}{" "}
               <ArrowUpRight aria-hidden="true" />
             </WorkspaceEntry>
           </motion.nav>
@@ -448,15 +447,15 @@ export default function Landing() {
             <span>
               {workspaceEntry.available
                 ? "Take a look, then open your classroom workspace."
-                : "A screenshot tour. The hosted workspace is not available yet."}
+                : "Try a five-minute science warm-up with your class."}
             </span>
           </p>
           <a
             href={
-              workspaceEntry.available ? workspaceEntry.href : workspaceSetupUrl
+              workspaceEntry.available ? workspaceEntry.href : `${import.meta.env.BASE_URL}warmups/paper-bridges.html`
             }
           >
-            {workspaceEntry.available ? "Open workspace" : "See setup options"}{" "}
+            {workspaceEntry.available ? "Open workspace" : "Open warm-up"}{" "}
             <ArrowUpRight aria-hidden="true" />
           </a>
         </aside>
@@ -508,13 +507,13 @@ export default function Landing() {
                     Open your workspace <ArrowRight aria-hidden="true" />
                   </WorkspaceEntry>
                 ) : (
-                  <a href="#example-board">
-                    Explore Boardwork <ArrowRight aria-hidden="true" />
+                  <a href={`${import.meta.env.BASE_URL}warmups/paper-bridges.html`}>
+                    Try the bridge warm-up <ArrowRight aria-hidden="true" />
                   </a>
                 )}
               </Button>
-              <a className="landing-text-link" href="#homebase">
-                Explore the classroom tools <ArrowDown aria-hidden="true" />
+              <a className="landing-text-link" href={workspaceEntry.available ? `${import.meta.env.BASE_URL}warmups/paper-bridges.html` : "#homebase"}>
+                {workspaceEntry.available ? "Try the bridge warm-up" : "Explore the classroom tools"} <ArrowRight aria-hidden="true" />
               </a>
             </div>
             <span className="landing-hero-note">

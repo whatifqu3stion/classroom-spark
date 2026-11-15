@@ -7,7 +7,7 @@ import {
   type PointerEvent,
 } from "react";
 import {
-  Copy,
+  Copy, Timer, ListChecks, Type, Image as ImageIcon, Layers,
   Grip,
   LockKeyhole,
   Maximize,
@@ -55,6 +55,7 @@ type Props = {
   activities: ActivityDraft[];
   saved: (board: HomebaseRecord) => void;
   copy: (content: HomebaseContent) => Promise<void>;
+  adapt: (content: HomebaseContent) => void;
   remove: (revision: number) => Promise<void>;
 };
 export function HomebaseBoard({
@@ -62,6 +63,7 @@ export function HomebaseBoard({
   activities,
   saved,
   copy,
+  adapt,
   remove,
 }: Props) {
   const draft = useHomebaseDraft(board, saved);
@@ -118,7 +120,7 @@ export function HomebaseBoard({
     if (history) commit(next);
     else setContent(next);
   }
-  function add(kind: WidgetKind) {
+  function add(kind: WidgetKind, quick = false) {
     if (content.widgets.length >= 40) {
       announce("This board has 40 tools. Remove one before adding another.");
       return;
@@ -132,7 +134,13 @@ export function HomebaseBoard({
     }
     commit({ ...content, widgets: [...content.widgets, widget] });
     setToolbox(false);
-    setEditId(widget.id);
+    if (quick && kind === "timer") {
+      requestAnimationFrame(() => {
+        const card = document.getElementById("tool-" + widget.id);
+        card?.scrollIntoView({block:"nearest"});
+        card?.querySelector<HTMLButtonElement>(".hb-widget-content button")?.focus({preventScroll:true});
+      });
+    } else setEditId(widget.id);
     announce(`${widget.title} added.`);
   }
   function addActivity() {
@@ -252,13 +260,8 @@ export function HomebaseBoard({
           >
             {locked ? <LockKeyhole size={18} /> : <UnlockKeyhole size={18} />}
           </Button>
-          <Button
-            variant="outline"
-              onClick={() => { setSearch(""); setToolbox(true); }}
-            disabled={busy}
-          >
-            <Plus size={17} />
-            Add tool
+          <Button variant="outline" disabled={busy || draft.dirty || draft.saving} aria-label="Use for another class" onClick={() => adapt(content)}>
+            <Layers size={16} /><span className="hb-copy-desktop">Use for another class</span><span className="hb-copy-mobile">Class copy</span>
           </Button>
           <Button
             disabled={!content.widgets.length}
@@ -357,6 +360,12 @@ export function HomebaseBoard({
           </Button>
         </div>
       ) : null}
+      {editing && <div className="hb-quick-dock" role="group" aria-label="Quick tools">
+        {([{kind:"timer",label:"Timer",Icon:Timer},{kind:"agenda",label:"Agenda",Icon:ListChecks},
+          {kind:"note",label:"Text",Icon:Type},{kind:"image",label:"Image",Icon:ImageIcon}] as const).map(({kind,label,Icon}) =>
+          <button type="button" key={kind} aria-label={`Add ${label}`} disabled={busy || !!capacityMessage} onClick={()=>add(kind,true)}><Icon size={18}/>{label}</button>)}
+        <button type="button" aria-label="Add tool" onClick={()=>{setSearch("");setToolbox(true)}}><Plus size={18}/>All tools</button>
+      </div>}
       <div className="hb-board-hint">
         <span>
           {locked
@@ -382,6 +391,7 @@ export function HomebaseBoard({
           orderedWidgets.map((widget, index) => (
               <WidgetFrame
                 key={widget.id}
+                boardId={board.id}
                 widget={widget}
                 canvas={canvas}
                 editing={editing}
@@ -554,6 +564,7 @@ export function HomebaseBoard({
 }
 
 type FrameProps = {
+  boardId: string;
   widget: HomebaseWidget;
   canvas: React.RefObject<HTMLDivElement | null>;
   editing: boolean;
@@ -571,6 +582,7 @@ type FrameProps = {
   canDuplicate: boolean;
 };
 function WidgetFrame({
+  boardId,
   canDuplicate,
   widget,
   canvas,
@@ -687,6 +699,7 @@ function WidgetFrame({
   return (
     <article
       className={`hb-widget hb-tone-${widget.tone} ${focused ? "hb-widget-focused" : ""} ${hidden ? "hb-widget-hidden" : ""}`}
+      id={"tool-" + widget.id}
       aria-label={widget.title}
       style={{
         gridColumn: `${shown.x + 1} / span ${shown.w}`,
@@ -752,6 +765,7 @@ function WidgetFrame({
       </header>
       <div className="hb-widget-content">
         <WidgetContent
+          boardId={boardId}
           widget={widget}
           update={(patch) => update(patch, false)}
           focus={focus}

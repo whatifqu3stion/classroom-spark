@@ -65,6 +65,10 @@ export const HomebaseWidget = z
     textRuns: z.array(z.custom<InlineTextRun>(run => InlineTextRunSchema.safeParse(run).success)).max(8000).optional(),
     url: HomebaseUrl.default(""),
     photo: HomebasePhoto.optional(),
+    stages: z.array(z.object({
+      label: z.string().trim().min(1).max(200),
+      minutes: z.number().int().min(1).max(120),
+    })).min(1).max(100).optional(),
     items: z.array(z.string().max(200)).max(100).default([]),
     values: z.array(z.int().min(-999).max(9999)).max(100).default([]),
     minutes: z.number().min(0.05).max(1440).default(5),

@@ -328,3 +328,12 @@ export function embedUrl(kind: WidgetKind, value: string): string | null {
   }
   return null;
 }
+
+export function adaptBoard(source: HomebaseContent, name: string): HomebaseContent {
+  return {...source, name, widgets:source.widgets.map(widget => ({
+    ...widget, id:crypto.randomUUID(), values:[],
+    items:["groups","randomizer"].includes(widget.kind) ? [] : widget.items,
+    strokes:widget.kind === "draw" ? [] : widget.strokes,
+    mode:widget.kind === "traffic" ? "ready" : widget.mode,
+  }))};
+}

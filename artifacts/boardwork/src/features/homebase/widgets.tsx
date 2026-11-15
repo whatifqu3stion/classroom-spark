@@ -1,3 +1,4 @@
+import { TimedAgenda } from "./timed-agenda";
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import {
   Check,
@@ -31,6 +32,7 @@ import { embedUrl, formatSeconds, shuffle } from "./catalog";
 const PdfPreview = lazy(() => import("./pdf-preview"));
 
 export type WidgetProps = {
+  boardId?: string;
   widget: HomebaseWidget;
   update: (patch: Partial<HomebaseWidget>) => void;
   focus: () => void;
@@ -946,6 +948,8 @@ export function WidgetContent(props: WidgetProps) {
     case "pdf":
       return <Resource {...props} />;
     case "agenda":
+      if (widget.mode === "timed" && widget.stages?.length)
+        return <TimedAgenda key={JSON.stringify(widget.stages)} sessionId={props.boardId + ":" + widget.id} stages={widget.stages} />;
       return widget.items.length ? (
         <ol className="hb-agenda">
           {widget.items.map((item, i) => (

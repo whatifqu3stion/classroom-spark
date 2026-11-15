@@ -1298,3 +1298,57 @@
   .hb-layout-action-mobile { display: flex; }
   .hb-board-hint { font-size: 0.75rem; }
 }
+
+.hb-quick-dock {color:#20302f; display:flex; align-items:stretch; flex-wrap:wrap; width:fit-content; max-width:100%; background:#fffefa; padding:.25rem; border:1px solid #c7cec6; border-radius:.85rem; margin:.75rem 0;}
+.hb-quick-dock button {display:inline-flex; gap:.45rem; align-items:center; justify-content:center; min-height:44px; padding:.4rem .85rem; font-size:.875rem; font-weight:600; border-radius:.55rem; cursor:pointer;}
+.hb-quick-dock button:hover {background:#edf0e8;}
+.hb-quick-dock button:last-child {color:#465453;}
+.hb-quick-dock button:disabled {opacity:.5;}
+.hb-stages {display:grid; gap:.6rem; color:#20302f; align-content:center; min-height:100%; container-type:inline-size;}
+.hb-stage-position,.hb-stage-current,.hb-stage-next,.hb-stage-controls,.hb-stage-done {display:flex; align-items:center; gap:.6rem;}
+.hb-stage-position {justify-content:space-between; font-size:.8rem; color:#465453;}
+.hb-stage-position strong {background:#d0e3c9; color:#223f32; border-radius:.4rem; padding:.15rem .5rem;}
+.hb-stage-current {justify-content:space-between; align-items:baseline;}
+.hb-stage-current h3 {font:500 clamp(1.2rem,6cqw,2.2rem)/1.15 Bitter,Georgia,serif; overflow-wrap:anywhere;}
+.hb-stage-current time {font-variant-numeric:tabular-nums; font-size:clamp(1.25rem,7cqw,2.6rem); font-weight:550; line-height:1.1; flex:none;}
+.hb-stage-next {align-items:baseline; font-size:.95rem; border-top:1px solid #bcc9bc; padding-top:.55rem; overflow-wrap:anywhere;}
+.hb-stage-next strong {color:#465453; font-size:.8rem;}
+.hb-stage-controls {flex-wrap:wrap; gap:.25rem;}
+.hb-stage-controls button {min-height:40px;}
+.hb-stage-done {min-height:100%;justify-content:center;flex-direction:column;}
+.hb-stage-editor {display:grid;gap:.75rem;}
+.hb-stage-editor legend {margin-bottom:.5rem;font-weight:600;}
+.hb-edit-stage {display:grid;grid-template-columns:minmax(0,1fr) 4.3rem auto;align-items:end;gap:.45rem;}
+.hb-start-options:has(.hb-bridge-option) {grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr));}
+.hb-bridge-option img {height:4.5rem;width:100%;object-fit:cover;object-position:center 60%;border-radius:.35rem;}
+.bw-bridge {background:#f7f6f0;color:#20302f;min-height:100svh;padding:clamp(.85rem,3vw,3rem);}
+.bw-bridge nav,.bw-bridge-layout {max-width:78rem;margin-inline:auto;}
+.bw-bridge nav,.bw-bridge nav div,.bw-bridge-brand {display:flex;align-items:center;gap:.5rem;}
+.bw-bridge nav {justify-content:space-between;margin-bottom:clamp(1.25rem,4vh,3rem);flex-wrap:wrap;}
+.bw-bridge-brand {font-weight:600;}
+.bw-bridge-layout {display:grid;grid-template-columns:1fr 1.08fr;grid-template-areas:"task photo" "agenda photo";gap:1rem;align-items:stretch;}
+.bw-bridge-text {grid-area:task;padding:clamp(1rem,2.8vw,2.5rem);background:#f6eab9;border-radius:1rem;}
+.bw-bridge h1 {font:450 clamp(2rem,4.3vw,4.5rem)/1.04 Bitter,Georgia,serif;letter-spacing:-.035em;}
+.bw-bridge-text p {margin-top:1rem;max-width:36ch;font-size:clamp(1rem,1.5vw,1.4rem);line-height:1.45;}
+.bw-bridge figure {grid-area:photo;display:flex;flex-direction:column;min-width:0;background:#ebe5da;border-radius:1rem;overflow:hidden;justify-content:center;}
+.bw-bridge figure img {width:100%;height:auto;display:block;}
+.bw-bridge figcaption {display:flex;justify-content:space-around;padding:.85rem;font-size:.9rem;font-weight:600;}
+.bw-bridge-routine {grid-area:agenda;background:#e5edde;border-radius:1rem;padding:clamp(1rem,2.3vw,2rem);}
+.bw-bridge.is-projecting nav {justify-content:flex-end;}
+@media(max-width:700px){
+  .bw-bridge-layout {grid-template-columns:minmax(0,1fr);grid-template-areas:"task" "photo" "agenda";gap:.7rem;}
+  .bw-bridge nav {gap:.7rem;}
+  .bw-bridge nav div {flex-wrap:wrap;}
+  .hb-quick-dock {width:100%; flex-wrap:nowrap;}
+  .hb-quick-dock button {flex:1; flex-direction:column;gap:.1rem;padding:.3rem .15rem; font-size:.75rem;}
+}
+
+.hb-copy-mobile {display:none;}
+@media(max-width:700px){
+  .hb-copy-desktop {display:none;}
+  .hb-copy-mobile {display:inline;}
+  .hb-presenting {display:flex; flex-direction:column; overflow:hidden;}
+  .hb-presenting .hb-presentation-controls {position:static; flex:none; justify-content:flex-end; padding:.4rem 0 env(safe-area-inset-bottom);}
+  .hb-presenting .hb-canvas {flex:1; min-height:0; overflow-y:auto;}
+  .hb-presenting .hb-widget {flex-shrink:0;}
+}

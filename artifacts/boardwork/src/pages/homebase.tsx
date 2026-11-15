@@ -14,13 +14,24 @@ import { Button } from "@/components/ui/button";
 import { useBoardwork } from "@/store/boardwork-context";
 import { homebaseRequest } from "@/features/homebase/use-homebase";
 import { HomebaseBoard } from "@/features/homebase/board";
-import { template } from "@/features/homebase/catalog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Input } from "@/components/ui/input";
+import bridgePhoto from "@/assets/paper-bridges.jpg";
+import { bridgeBoard } from "@/features/homebase/bridge-lesson";
+import { adaptBoard, template } from "@/features/homebase/catalog";
 import "@/features/homebase/homebase.css";
 
 export default function Homebase() {
   const { appState, activeClassId } = useBoardwork();
   const [scope, setScope] = useState(activeClassId || "general");
   const [selected, setSelected] = useState<string | null>(null);
+  const [adaptSource, setAdaptSource] = useState<HomebaseContent | null>(() =>
+    new URLSearchParams(window.location.search).get("template") === "bridge" ? bridgeBoard() : null);
+  const [destination,setDestination] = useState(activeClassId || "general");
+  const [copyName,setCopyName] = useState("Paper bridge warm-up");
+  function openAdapt(content: HomebaseContent, target: string) {
+    setDestination(target); setCopyName(content.name); setAdaptSource(content); setError("");
+  }
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -38,20 +49,21 @@ export default function Homebase() {
   });
   const board =
     boards.data?.find((item) => item.id === selected) || boards.data?.[0];
-  async function create(content: HomebaseContent) {
+  async function create(content: HomebaseContent, target = scope) {
     setCreating(true);
     setError("");
     try {
       const next = HomebaseRecord.parse(
         await homebaseRequest("", {
           method: "POST",
-          body: JSON.stringify({ ...content, classId }),
+          body: JSON.stringify({ ...content, classId: target === "general" ? null : target }),
         }),
       );
-      queryClient.setQueryData<HomebaseRecord[]>(queryKey, (values) => [
+      queryClient.setQueryData<HomebaseRecord[]>(["homebases",target], (values) => [
         next,
         ...(values || []),
       ]);
+      setScope(target);
       setSelected(next.id);
       setShowCreate(false);
     } catch (cause) {
@@ -155,6 +167,11 @@ export default function Homebase() {
               </p>
             </div>
             <div className="hb-start-options">
+              <button className="hb-bridge-option" disabled={creating} onClick={()=>openAdapt(bridgeBoard(),scope)}>
+                <img src={bridgePhoto} alt=""/><strong>Paper bridge warm-up</strong>
+                <span>Predict, compare, and share with a five-minute timed agenda.</span>
+                <span className="hb-start-link">Use warm-up <Plus size={16}/></span>
+              </button>
               {[
                 {
                   kind: "arrival",
@@ -214,6 +231,7 @@ export default function Homebase() {
             key={board.id}
             board={board}
             activities={activities}
+            adapt={content=>openAdapt(content,appState?.classes.find(c=>c.id!==classId)?.id || "general")}
             saved={(next) =>
               queryClient.setQueryData<HomebaseRecord[]>(
                 queryKey,
@@ -247,6 +265,23 @@ export default function Homebase() {
             }}
           />
         )}
+        <Sheet open={!!adaptSource} onOpenChange={open=>{if(!open && !creating)setAdaptSource(null)}}>
+          <SheetContent className="hb-sheet"><SheetHeader><SheetTitle>Use for another class</SheetTitle>
+            <SheetDescription>Keep the lesson, tools, and layout. Your copy starts with fresh timing, scores, and name lists.</SheetDescription>
+          </SheetHeader>
+          <form className="hb-edit-form" onSubmit={async e=>{e.preventDefault();if(!adaptSource || creating)return;
+            try {await create(adaptBoard(adaptSource,copyName.trim()),destination); setAdaptSource(null);
+              if(new URLSearchParams(location.search).has("template")) window.history.replaceState(window.history.state,"",location.pathname);
+            } catch { /* The form displays the server error. */ }
+          }}>
+            <label>Destination class<select value={destination} onChange={e=>setDestination(e.target.value)}>
+              <option value="general">General boards</option>{appState?.classes.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+            </select></label>
+            <label>Board name<Input required maxLength={100} value={copyName} onChange={e=>setCopyName(e.target.value)}/></label>
+            {error && <p role="alert">{error}</p>}
+            <Button type="submit" disabled={creating || !copyName.trim()}>{creating ? "Creating…" : "Create class copy"}</Button>
+          </form></SheetContent>
+        </Sheet>
       </div>
     </Shell>
   );
