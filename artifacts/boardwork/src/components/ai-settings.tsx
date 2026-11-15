@@ -43,7 +43,7 @@ export function AIUsageControl() {
     >
       {state.hasKey
         ? `Your key · ${compact.format(total)} tokens this visit${state.unreportedRequests ? "*" : ""}`
-        : "Use your own OpenAI key"}
+        : "AI drafting is optional · Set up AI"}
     </button>
   );
 }
@@ -51,6 +51,7 @@ export function AIUsageControl() {
 export function AISettings() {
   const state = useAIState();
   const queryClient = useQueryClient();
+  const opener = useRef<HTMLElement | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
   const changeOpen = (open: boolean) => {
@@ -69,15 +70,26 @@ export function AISettings() {
         data-testid="button-ai-settings"
       >
         <KeyRound aria-hidden="true" className="size-4" />
-        <span className="hidden sm:inline">AI key</span>
+        <span>AI settings</span>
       </Button>
       <Dialog open={state.settingsOpen} onOpenChange={changeOpen}>
-        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
+        <DialogContent
+          className="max-h-[calc(100dvh-2rem)] overflow-y-auto"
+          onOpenAutoFocus={() => {
+            opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+          }}
+          onCloseAutoFocus={(event) => {
+            if (opener.current?.isConnected) {
+              event.preventDefault();
+              opener.current.focus();
+            }
+          }}
+        >
           <DialogHeader>
-            <DialogTitle>Your AI key</DialogTitle>
+            <DialogTitle>Help with your first draft</DialogTitle>
             <DialogDescription>
-              Use your own OpenAI account to create boards. Editing and
-              presenting saved boards do not need a key.
+              Connect your OpenAI account when you want help drafting. You can
+              write, save, present, and use classroom tools without AI.
             </DialogDescription>
           </DialogHeader>
           <form
@@ -87,6 +99,7 @@ export function AISettings() {
               try {
                 const value = input.current?.value.trim() ?? "";
                 if (!value) {
+                  input.current?.focus();
                   setError("Paste your OpenAI API key first.");
                   return;
                 }
@@ -97,6 +110,7 @@ export function AISettings() {
                 });
                 changeOpen(false);
               } catch (e) {
+                input.current?.focus();
                 setError(
                   e instanceof Error ? e.message : "Check your API key.",
                 );
@@ -115,15 +129,16 @@ export function AISettings() {
                 placeholder={state.hasKey ? "Paste a replacement key" : "sk-…"}
                 maxLength={503}
                 aria-invalid={Boolean(error)}
-                aria-describedby="key-privacy key-error"
+                onChange={() => { if (error) setError(""); }}
+                aria-describedby={error ? "key-privacy key-error" : "key-privacy"}
               />
               <p
                 id="key-privacy"
-                className="text-xs leading-relaxed text-muted-foreground"
+                className="text-sm leading-relaxed text-muted-foreground"
               >
-                Kept in memory until you refresh or close this page. Your key
-                passes through this server to OpenAI for each AI request; it is
-                never saved to the database or browser storage.
+                Your key is cleared when you refresh or close this page. It is
+                sent to OpenAI through the app for AI requests and is not saved.
+                OpenAI bills usage to your account.
               </p>
               {error ? (
                 <p
@@ -174,54 +189,56 @@ export function AISettings() {
               </div>
             </div>
           </form>
-          <Separator />
-          <section
-            className="flex flex-col gap-3"
-            aria-label="Usage this visit"
-          >
-            <h3 className="text-sm font-medium">Usage this visit</h3>
-            <dl className="grid grid-cols-3 gap-3 text-sm">
-              <div>
-                <dt className="text-xs text-muted-foreground">AI requests</dt>
-                <dd className="mt-1 tabular-nums">
-                  {state.requests.toLocaleString()}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">Input tokens</dt>
-                <dd className="mt-1 tabular-nums">
-                  {state.inputTokens.toLocaleString()}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs text-muted-foreground">Output tokens</dt>
-                <dd className="mt-1 tabular-nums">
-                  {state.outputTokens.toLocaleString()}
-                </dd>
-              </div>
-            </dl>
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              OpenAI-reported usage for this key during this visit, including
-              repair attempts and curriculum tools. Resets on refresh or key
-              replacement. This is not your account balance or an exact bill;
-              search tools may add charges.
-            </p>
-            {state.unreportedRequests ? (
-              <p className="text-xs text-muted-foreground" role="status">
-                * {state.unreportedRequests} request(s) returned no usage data.
-                Tokens or charges from those requests may be missing.
-              </p>
-            ) : null}
-            <a
-              href="https://platform.openai.com/usage"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex min-h-8 items-center gap-1.5 self-start rounded-sm text-xs text-muted-foreground underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          {state.hasKey && <>
+            <Separator />
+            <section
+              className="flex flex-col gap-3"
+              aria-label="Usage this visit"
             >
-              View OpenAI usage{" "}
-              <ExternalLink className="size-3.5" aria-hidden="true" />
-            </a>
-          </section>
+              <h3 className="text-sm font-medium">Usage this visit</h3>
+              <dl className="grid grid-cols-1 min-[360px]:grid-cols-3 gap-3 text-sm">
+                <div>
+                  <dt className="text-xs text-muted-foreground">AI requests</dt>
+                  <dd className="mt-1 tabular-nums">
+                    {state.requests.toLocaleString()}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Input tokens</dt>
+                  <dd className="mt-1 tabular-nums">
+                    {state.inputTokens.toLocaleString()}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Output tokens</dt>
+                  <dd className="mt-1 tabular-nums">
+                    {state.outputTokens.toLocaleString()}
+                  </dd>
+                </div>
+              </dl>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                OpenAI-reported usage for this key during this visit, including
+                repair attempts and curriculum tools. Resets on refresh or key
+                replacement. This is not your account balance or an exact bill;
+                search tools may add charges.
+              </p>
+              {state.unreportedRequests ? (
+                <p className="text-xs text-muted-foreground" role="status">
+                  * {state.unreportedRequests} request(s) returned no usage data.
+                  Tokens or charges from those requests may be missing.
+                </p>
+              ) : null}
+              <a
+                href="https://platform.openai.com/usage"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-8 items-center gap-1.5 self-start rounded-sm text-xs text-muted-foreground underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                View OpenAI usage{" "}
+                <ExternalLink className="size-3.5" aria-hidden="true" />
+              </a>
+            </section>
+          </>}
         </DialogContent>
       </Dialog>
     </>

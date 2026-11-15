@@ -2,7 +2,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 
 const APPROVED_HEADING = "What are students working on today?";
 const APPROVED_SUPPORTING_COPY =
-  "Add a topic, learning goal, standard, concept, or anything else that should shape the Boardwork.";
+  "What should students practise or explore? Add a topic or learning goal, then draft a task or start blank.";
 
 const appState = {
   activeClassId: "class-1",
@@ -597,6 +597,7 @@ test("keeps the workspace canvas warm while separating white panels", async ({ p
 });
 
 test("keeps creation examples readable in dark mode", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/app");
   await page.evaluate(() => {
@@ -913,11 +914,11 @@ test("keeps the empty editor preview visually quiet", async ({ page }) => {
   await expect(editorPanel).toHaveClass(/boardwork-editor-panel/);
   await expect(editorPanel).toHaveClass(/\bborder\b/);
   await expect(
-    emptyState.getByRole("heading", { name: "No activity created yet" }),
+    emptyState.getByRole("heading", { name: "A clear task starts here" }),
   ).toBeVisible();
   await expect(
     emptyState.getByText(
-      "Add what students are working on in Board Setup, then choose Create board. You can also start blank.",
+      "Choose Draft with AI to use your class details, or Start blank to write the activity yourself.",
     ),
   ).toBeVisible();
   await expect(emptyState.locator("svg")).toHaveAttribute("aria-hidden", "true");

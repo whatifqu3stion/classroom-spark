@@ -39,10 +39,10 @@ export function SavedContextSnapshotDetails({ snapshot }: SavedContextSnapshotDe
         {snapshot.map((item, i) => (
           <div key={item.contextId || i} className="rounded bg-background p-2 border shadow-sm">
             <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 min-w-0">
+              <div className="flex flex-wrap items-center gap-2 min-w-0">
                 <span className="min-w-0 text-sm font-semibold [overflow-wrap:anywhere]" dir="auto">{item.label}</span>
                 {item.category && (
-                  <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground px-1.5 py-0.5 rounded bg-muted whitespace-nowrap shrink-0" dir="auto">
+                  <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground px-1.5 py-0.5 rounded bg-muted max-w-full [overflow-wrap:anywhere]" dir="auto">
                     {item.category}
                   </span>
                 )}

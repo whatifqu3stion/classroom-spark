@@ -368,6 +368,7 @@ test("keeps saved context snapshots through library edits, archive, history copy
     await page.getByTestId("button-add-context").click();
     await page.getByTestId(`button-edit-context-${globalId}`).click();
     await page.getByTestId("button-archive-context").click();
+    await expect(page.getByTestId("input-context-search")).toBeVisible();
     await expect(globalRow).toHaveCount(0);
     await page.keyboard.press("Escape");
     await expect(page.getByTestId("button-add-context-empty")).toBeFocused();

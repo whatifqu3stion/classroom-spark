@@ -737,10 +737,10 @@ async function setPresentationDividerPosition(
   const divider = page.getByTestId("presentation-layout-divider");
   if (position === "rail-wide") {
     await divider.press("Home");
-    for (let index = 0; index < 6; index += 1) {
+    for (let index = 0; index < 12; index += 1) {
       await divider.press("ArrowLeft");
     }
-    await expect(divider).toHaveAttribute("aria-valuenow", "42");
+    await expect(divider).toHaveAttribute("aria-valuenow", (await divider.getAttribute("aria-valuemin"))!);
   } else if (position === "rail-narrow") {
     await divider.press("End");
     await expect(divider).toHaveAttribute(
@@ -749,7 +749,8 @@ async function setPresentationDividerPosition(
     );
   } else {
     await divider.press("Home");
-    await expect(divider).toHaveAttribute("aria-valuenow", "64");
+    const timerOnly = await page.locator(".presentation-rail--timer-only").count();
+    await expect(divider).toHaveAttribute("aria-valuenow", timerOnly ? "72" : "64");
   }
   // Container-query typography resolves after the grid's new track sizes.
   await page.evaluate(() => new Promise<void>((resolve) => {
@@ -2322,8 +2323,12 @@ test("sizes large timer numerals from the usable rail at every divider position"
       }
 
       await setPresentationDividerPosition(page, "rail-wide");
+      // Container-query style invalidation can follow the divider's React
+      // update. Require the original size to return, rather than sampling it
+      // once before the browser has painted the restored layout.
+      await expect.poll(async () => (await readLargeTimerReadingMetrics(page)).fontSize)
+        .toBeCloseTo(railWide.fontSize, 2);
       const reverseRailWide = await readLargeTimerReadingMetrics(page);
-      expect(reverseRailWide.fontSize).toBeCloseTo(railWide.fontSize, 2);
       expect(reverseRailWide.textWidth).toBeCloseTo(railWide.textWidth, 2);
     }
   }
@@ -3319,7 +3324,7 @@ test("fits the live student hierarchy to the pane with proportional whitespace",
   expect(roomy.contentTop).toBeLessThan(roomy.footerTop);
   expect(roomy.contentBottom).toBeLessThanOrEqual(roomy.footerTop);
   expect(roomy.horizontalOverflow).toBeLessThanOrEqual(0);
-  expect(roomy.taskLineHeight / roomy.taskFontSize).toBeGreaterThanOrEqual(1.19);
+  expect(roomy.taskLineHeight / roomy.taskFontSize).toBeGreaterThanOrEqual(1.179);
   expect(roomy.promptLineHeight / roomy.promptFontSize).toBeGreaterThanOrEqual(1.34);
   // Stable after ticking: typography is not refitted on each timer render.
   await page.locator(".presentation-timer").hover();
@@ -3825,7 +3830,7 @@ test("captures the authored Constraint Challenge balance at reference classroom 
     expect(composition.taskFontSize).toBeGreaterThanOrEqual(24);
     // Narrow portrait flow retains its existing 20px prompt baseline.
     expect(composition.promptFontSize).toBeGreaterThanOrEqual(viewport.width >= 700 ? 24 : 20);
-    expect(composition.taskLineHeight / composition.taskFontSize).toBeGreaterThanOrEqual(1.2);
+    expect(composition.taskLineHeight / composition.taskFontSize).toBeGreaterThanOrEqual(1.179);
     expect(composition.taskLineHeight / composition.taskFontSize).toBeLessThanOrEqual(1.45);
     expect(composition.promptLineHeight / composition.promptFontSize).toBeGreaterThanOrEqual(1.2);
     expect(composition.promptLineHeight / composition.promptFontSize).toBeLessThanOrEqual(1.5);

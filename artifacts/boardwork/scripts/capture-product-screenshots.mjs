@@ -4,10 +4,11 @@
  *
  * node scripts/capture-product-screenshots.mjs http://127.0.0.1:5173 /tmp/boardwork-product
  * Optional: PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH for an already installed Chromium.
- * Outputs PNG originals and a capture manifest. Shipping WebPs are encoded from
- * these originals (Pillow: lossless=True, method=6); no UI is painted into images.
+ * Outputs PNG originals and a capture manifest; no UI is painted into images.
+ * Pass --expanded-only to capture routines, participation, and saved guidance.
  */
 import { chromium } from "@playwright/test";
+import { randomUUID } from "node:crypto";
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -185,6 +186,36 @@ const browser = await chromium.launch({
     ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH }
     : {}),
 });
+const names = ["Alex", "Sam", "Morgan", "Robin", "Casey", "Jordan"];
+const widget = (kind, title, x, y, w, h, extra = {}) => ({
+  id: randomUUID(), kind, title, x, y, w, h, tone: "paper", ...extra,
+});
+const homebases = [
+  {
+    id: randomUUID(), classId: null, name: "Ready for independent work", tone: "sage", revision: 1, updatedAt: stamp,
+    widgets: [
+      widget("note", "Start here", 0, 0, 5, 4, { tone: "butter", text: "Sketch your prediction.\nExplain it using one observation.\nBe ready to compare with a partner." }),
+      widget("timer", "Time to think", 5, 0, 4, 4, { tone: "lavender", minutes: 7 }),
+      widget("agenda", "Our next steps", 9, 0, 3, 4, { items: ["Think on your own", "Compare with a partner", "Share one idea"], values: [1, 0, 0] }),
+    ],
+  },
+  {
+    id: randomUUID(), classId: null, name: "Make room for more voices", tone: "paper", revision: 1, updatedAt: stamp,
+    widgets: [
+      widget("randomizer", "Who will share next?", 0, 0, 4, 4, { items: names, tone: "butter" }),
+      widget("groups", "New partners, new ideas", 4, 0, 4, 4, { items: names, number: 2, tone: "sage" }),
+      widget("poll", "What should we explore?", 8, 0, 4, 4, { items: ["Test a prediction", "Compare examples"], values: [8, 12] }),
+    ],
+  },
+];
+const contexts = [
+  ["Explain with evidence", "Ask learners to connect a claim to one observation or example.", "Thinking routines"],
+  ["Think, pair, share", "Give quiet thinking time before partners compare and share an idea.", "Thinking routines"],
+  ["Make the first step clear", "Start with one concrete action. Keep instructions short and direct.", "Clear instructions"],
+].map(([label, details, categoryName], index) => ({
+  id: `sample-context-${index}`, label, details, categoryName, categoryId: `category-${categoryName}`,
+  scope: "global", classId: null, archived: false, lastUsedAt: null, createdAt: stamp, updatedAt: stamp,
+}));
 const captures = [];
 const errors = [];
 let blockedRequests = 0;
@@ -203,10 +234,14 @@ async function newPage(width, height) {
       return route.abort("blockedbyclient");
     }
     if (!url.pathname.startsWith("/api/")) return route.continue();
+    if (url.pathname === "/api/auth/status")
+      return route.fulfill({ json: { passwordRequired: false, authenticated: true } });
+    if (url.pathname === "/api/homebases")
+      return route.fulfill({ json: homebases });
     if (url.pathname === "/api/app-state")
       return route.fulfill({ json: state });
     if (url.pathname === "/api/saved-context")
-      return route.fulfill({ json: { items: [], categories: [] } });
+      return route.fulfill({ json: { items: contexts, categories: [] } });
     if (url.pathname.includes("/curriculum"))
       return route.fulfill({
         json: { ready: false, reason: "setup_required", items: [] },
@@ -222,15 +257,16 @@ async function newPage(width, height) {
   });
   return page;
 }
-async function capture(page, name, locator = page) {
+async function capture(page, name, locator = page, options = {}) {
   await page.evaluate(() => document.fonts.ready);
   await page.mouse.move(0, 0);
   await locator.screenshot({
     path: path.join(output, `${name}.png`),
     animations: "disabled",
+    ...options,
   });
   captures.push({
-    file: `${name}.webp`,
+    file: `${name}.png`,
     source: `${name}.png`,
     route: new URL(page.url()).pathname,
     viewport: page.viewportSize(),
@@ -241,7 +277,15 @@ async function capture(page, name, locator = page) {
     createdAt: new Date().toISOString(),
   });
 }
+async function captureTools(page, name) {
+  const canvas = await page.getByTestId("homebase-canvas").boundingBox();
+  const tools = await page.getByTestId("homebase-canvas").getByRole("article").all();
+  const bounds = await Promise.all(tools.map(tool => tool.boundingBox()));
+  const bottom = Math.max(...bounds.map(box => box.y + box.height));
+  await capture(page, name, page, { clip: { ...canvas, height: bottom - canvas.y + 16 } });
+}
 try {
+  if (!process.argv.includes("--expanded-only")) {
   const desktop = await newPage(1280, 960);
   await desktop.goto(new URL("/activity/sample-osmosis", origin).href);
   await desktop.getByTestId("board-editor").waitFor();
@@ -280,6 +324,25 @@ try {
   await mobile.getByTestId("history-item-sample-osmosis").waitFor();
   await capture(mobile, "history-mobile");
   await mobile.close();
+  }
+  const expanded = await newPage(1200, 850);
+  await expanded.goto(new URL("/homebase", origin).href);
+  await expanded.getByTestId("homebase-canvas").waitFor();
+  await captureTools(expanded, "lesson-routines");
+  await expanded.getByLabel("Saved homebase", { exact: true }).selectOption(homebases[1].id);
+  await expanded.getByRole("button", { name: "Pick a name", exact: true }).click();
+  await expanded.getByRole("button", { name: "Make groups", exact: true }).click();
+  await captureTools(expanded, "participation");
+  await expanded.setViewportSize({ width: 390, height: 844 });
+  await capture(expanded, "participation-mobile", expanded.getByRole("article", { name: "New partners, new ideas", exact: true }));
+  await expanded.getByLabel("Saved homebase", { exact: true }).selectOption(homebases[0].id);
+  await capture(expanded, "lesson-routines-mobile", expanded.getByRole("article", { name: "Time to think", exact: true }));
+  await expanded.setViewportSize({ width: 1200, height: 850 });
+  await expanded.goto(new URL("/app", origin).href);
+  await expanded.getByTestId("button-add-context-empty").click();
+  await expanded.getByTestId("context-row-sample-context-0").waitFor();
+  await capture(expanded, "teaching-context", expanded.getByRole("dialog"));
+  await expanded.close();
   assert.deepEqual(errors, []);
   assert.equal(
     blockedRequests,

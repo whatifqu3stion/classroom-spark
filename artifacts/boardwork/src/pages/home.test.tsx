@@ -25,6 +25,7 @@ vi.mock("@/store/boardwork-context", async (importOriginal) => ({
 }));
 
 vi.mock("wouter", () => ({
+  Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a>,
   useRoute: () => [!!mocks.activityId, mocks.activityId ? { id: mocks.activityId } : undefined],
   useLocation: () => ["/", mocks.setLocation],
 }));
@@ -979,7 +980,7 @@ describe("Home presentation defaults", () => {
       }),
     ).toBeInTheDocument();
     const contextDescription = screen.getByText(
-      "Add a topic, learning goal, standard, concept, or anything else that should shape the Boardwork.",
+      "What should students practise or explore? Add a topic or learning goal, then draft a task or start blank.",
     );
     const contextInput = screen.getByTestId("input-topic");
     expect(contextDescription).toHaveAttribute("id", "boardwork-context-description");
@@ -1022,10 +1023,10 @@ describe("Home presentation defaults", () => {
     expect(editorPanel).toHaveClass("shadow-teacher-card");
     expect(screen.getByTestId("creation-controls")).toHaveClass("shadow-teacher-card");
     expect(screen.getByTestId("button-generate")).toHaveClass("shadow-sm");
-    expect(screen.getByRole("heading", { name: "No activity created yet" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "A clear task starts here" })).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Add what students are working on in Board Setup, then choose Create board. You can also start blank.",
+        "Choose Draft with AI to use your class details, or Start blank to write the activity yourself.",
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText("Board preview")).not.toBeInTheDocument();
@@ -1082,7 +1083,7 @@ describe("Home presentation defaults", () => {
       ).toBeVisible();
       expect(
         within(controls).getByText(
-          "Add a topic, learning goal, standard, concept, or anything else that should shape the Boardwork.",
+          "What should students practise or explore? Add a topic or learning goal, then draft a task or start blank.",
         ),
       ).toBeVisible();
 

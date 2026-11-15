@@ -11,12 +11,14 @@ const queryClient = new QueryClient();
 const Workspace = lazy(() => import("@/pages/workspace"));
 
 function Router() {
+  if (import.meta.env.VITE_PUBLIC_SITE === "true") return <Landing />;
+
   return (
     <RoutedErrorBoundary>
       <Switch>
         <Route path="/" component={Landing} />
         <Route
-          path={/^\/(?:app|history|activity\/[^/]+|present(?:\/[^/]+)?)\/?$/}
+          path={/^\/(?:app|homebase|history|activity\/[^/]+|present(?:\/[^/]+)?)\/?$/}
         >
           <Suspense
             fallback={

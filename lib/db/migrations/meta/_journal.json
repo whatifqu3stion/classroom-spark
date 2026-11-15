@@ -71,6 +71,13 @@
       "when": 1790025706454,
       "tag": "0009_wise_richard_fisk",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792727261135,
+      "tag": "0010_messy_lady_deathstrike",
+      "breakpoints": true
     }
   ]
 }

@@ -74,7 +74,7 @@ describe("curriculum replacement with reviewed source versions", () => {
     const state = fixture({ holdPatch: true });
     if (kind === "manual") submitManual();
     else {
-      fireEvent.mouseDown(screen.getByRole("tab", { name: "PDF Upload" }), { button: 0, ctrlKey: false });
+      fireEvent.mouseDown(screen.getByRole("tab", { name: "PDF" }), { button: 0, ctrlKey: false });
       const file = new File(["%PDF-1.4 fixture"], "curriculum.pdf", { type: "application/pdf" });
       fireEvent.change(screen.getByLabelText("PDF File"), { target: { files: [file] } });
       // jsdom does not populate the native file-input value from a synthetic FileList.

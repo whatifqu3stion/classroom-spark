@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-20T21:49:14.954Z",
-  "title": "Design System: Boardwork — landing and workspace",
+  "generatedAt": "2026-10-23T04:26:50.302Z",
+  "title": "Design System: Boardwork — landing, workspace and Homebase",
   "extensions": {
     "colorMeta": {
       "landing-primary": {
@@ -363,6 +363,96 @@
           "oklch(84% 0.10259 289.31)",
           "oklch(95% 0.10259 289.31)"
         ]
+      },
+      "homebase-canvas": {
+        "role": "neutral",
+        "displayName": "Homebase Canvas",
+        "canonical": "#eceee8",
+        "tonalRamp": [
+          "oklch(15% 0.00824 121.63)",
+          "oklch(26% 0.00824 121.63)",
+          "oklch(38% 0.00824 121.63)",
+          "oklch(49% 0.00824 121.63)",
+          "oklch(61% 0.00824 121.63)",
+          "oklch(72% 0.00824 121.63)",
+          "oklch(84% 0.00824 121.63)",
+          "oklch(95% 0.00824 121.63)"
+        ]
+      },
+      "homebase-signal-off": {
+        "role": "neutral",
+        "displayName": "Signal Off",
+        "canonical": "#e1e4dd",
+        "tonalRamp": [
+          "oklch(15% 0.00990 125.69)",
+          "oklch(26% 0.00990 125.69)",
+          "oklch(38% 0.00990 125.69)",
+          "oklch(49% 0.00990 125.69)",
+          "oklch(61% 0.00990 125.69)",
+          "oklch(72% 0.00990 125.69)",
+          "oklch(84% 0.00990 125.69)",
+          "oklch(95% 0.00990 125.69)"
+        ]
+      },
+      "homebase-signal-border": {
+        "role": "neutral",
+        "displayName": "Signal Border",
+        "canonical": "#87938b",
+        "tonalRamp": [
+          "oklch(15% 0.01814 156.69)",
+          "oklch(26% 0.01814 156.69)",
+          "oklch(38% 0.01814 156.69)",
+          "oklch(49% 0.01814 156.69)",
+          "oklch(61% 0.01814 156.69)",
+          "oklch(72% 0.01814 156.69)",
+          "oklch(84% 0.01814 156.69)",
+          "oklch(95% 0.01814 156.69)"
+        ]
+      },
+      "homebase-signal-red": {
+        "role": "secondary",
+        "displayName": "Signal Red",
+        "canonical": "#a33c35",
+        "tonalRamp": [
+          "oklch(15% 0.13795 27.09)",
+          "oklch(26% 0.13795 27.09)",
+          "oklch(38% 0.13795 27.09)",
+          "oklch(49% 0.13795 27.09)",
+          "oklch(61% 0.13795 27.09)",
+          "oklch(72% 0.13795 27.09)",
+          "oklch(84% 0.13795 27.09)",
+          "oklch(95% 0.13795 27.09)"
+        ]
+      },
+      "homebase-signal-amber": {
+        "role": "secondary",
+        "displayName": "Signal Amber",
+        "canonical": "#e3b442",
+        "tonalRamp": [
+          "oklch(15% 0.13838 85.75)",
+          "oklch(26% 0.13838 85.75)",
+          "oklch(38% 0.13838 85.75)",
+          "oklch(49% 0.13838 85.75)",
+          "oklch(61% 0.13838 85.75)",
+          "oklch(72% 0.13838 85.75)",
+          "oklch(84% 0.13838 85.75)",
+          "oklch(95% 0.13838 85.75)"
+        ]
+      },
+      "homebase-signal-green": {
+        "role": "secondary",
+        "displayName": "Signal Green",
+        "canonical": "#36745a",
+        "tonalRamp": [
+          "oklch(15% 0.07728 163.93)",
+          "oklch(26% 0.07728 163.93)",
+          "oklch(38% 0.07728 163.93)",
+          "oklch(49% 0.07728 163.93)",
+          "oklch(61% 0.07728 163.93)",
+          "oklch(72% 0.07728 163.93)",
+          "oklch(84% 0.07728 163.93)",
+          "oklch(95% 0.07728 163.93)"
+        ]
       }
     },
     "typographyMeta": {
@@ -402,6 +492,42 @@
       },
       "workspace-label": {
         "displayName": "Workspace Label"
+      },
+      "homebase-note": {
+        "displayName": "Homebase Note",
+        "purpose": "Fluid Inter reading role for sticky-note content; mobile resolves to 1.125rem."
+      },
+      "homebase-task": {
+        "displayName": "Homebase Task",
+        "purpose": "Fluid Inter reading role for student-facing activity copies; separate from the activity Present and PNG typography."
+      },
+      "homebase-agenda": {
+        "displayName": "Homebase Agenda",
+        "purpose": "Fluid checklist reading role with 1.5 leading."
+      },
+      "homebase-timer": {
+        "displayName": "Homebase Timer",
+        "purpose": "Tabular countdown numerals sized by both face-container dimensions; used in the board."
+      },
+      "homebase-timer-focus": {
+        "displayName": "Homebase Timer Focus",
+        "purpose": "Larger tabular countdown role for the same mounted timer in timer-only focus."
+      },
+      "homebase-clock": {
+        "displayName": "Homebase Clock",
+        "purpose": "Functional current-time reading; mobile resolves to 3rem."
+      },
+      "homebase-number": {
+        "displayName": "Homebase Number",
+        "purpose": "Functional stopwatch and event-countdown readings; mobile resolves to 4rem."
+      },
+      "homebase-picker-result": {
+        "displayName": "Homebase Picker Result",
+        "purpose": "Light Bitter result for the no-repeat name picker."
+      },
+      "homebase-dense-label": {
+        "displayName": "Homebase Dense Label",
+        "purpose": "Compact timer-sound options and mobile arrangement hints; not a general body-text size."
       }
     },
     "shadows": [
@@ -449,6 +575,11 @@
         "name": "workspace-control-rim",
         "value": "inset 0 1px 0 hsl(var(--card) / 85%), 0 2px 4px -2px rgb(32 48 47 / 16%)",
         "purpose": "Selected operational controls, without a gradient."
+      },
+      {
+        "name": "homebase-tool",
+        "value": "0 3px 12px rgb(32 48 47 / 7%)",
+        "purpose": "Quiet separation of smooth movable tools from the Homebase canvas."
       }
     ],
     "motion": [
@@ -491,6 +622,11 @@
         "name": "landing-hero-image-scroll",
         "value": "0px–48px",
         "purpose": "Bounded hero artwork translation; disabled for reduced motion."
+      },
+      {
+        "name": "homebase-choice-feedback",
+        "value": "160ms",
+        "purpose": "Background-color feedback for creation and tool choices only; disabled for reduced motion."
       }
     ],
     "breakpoints": [
@@ -505,6 +641,14 @@
       {
         "name": "landing-mobile",
         "value": "40rem"
+      },
+      {
+        "name": "homebase-compact",
+        "value": "1050px"
+      },
+      {
+        "name": "homebase-stack",
+        "value": "700px"
       }
     ]
   },
@@ -582,7 +726,7 @@
   ],
   "narrative": {
     "northStar": "The everyday art of starting class",
-    "overview": "This extension applies only to the public homepage at `/`, its actual-product screenshot tour, and its screenshot-enlargement dialogs. The original specification above continues to govern the teacher workspace at `/app`, plus `/history`, `/activity/:id`, `/present`, and `/present/:id`. The workspace cohesion refinement is documented below; README/portfolio work remains deferred. Frontmatter names beginning `landing-` govern marketing roles, while `workspace-` names record the shared palette and operating-surface roles.\n\nThe chosen Craft reference informs an airy composition, a floating navigation pill, generous paper surfaces, and light serif headings. The user’s later grainy purple/blue reference supplies the hero material: pale lavender and periwinkle with blue/cyan at the edges and lower field. The visual language remains connected to Boardwork through its local Bitter, Inter, Open Sans and BrandMark. The tour now shows screenshots of the refined app with prewritten sample classroom content; it replaces the illustrative HTML subject boards and overlapping paper mockups.\n\nThe teacher workspace now shares the landing page’s warm paper, green-charcoal ink, restrained lavender selection and soft material edges. It retains the existing setup/editor columns, stacked mobile layout, field order, sticky creation actions, history workflow and save behavior. This is a visual refinement of the working UI, not a new information architecture.",
+    "overview": "This extension applies only to the public homepage at `/`, its actual-product screenshot tour, and its screenshot-enlargement dialogs. The original specification above continues to govern the teacher workspace at `/app`, plus `/history`, `/activity/:id`, `/present`, and `/present/:id`. The workspace cohesion refinement is documented below; README/portfolio work remains deferred. Frontmatter names beginning `landing-` govern marketing roles, while `workspace-` names record the shared palette and operating-surface roles.\n\nThe chosen Craft reference informs an airy composition, a floating navigation pill, generous paper surfaces, and light serif headings. The user’s later grainy purple/blue reference supplies the hero material: pale lavender and periwinkle with blue/cyan at the edges and lower field. The visual language remains connected to Boardwork through its local Bitter, Inter, Open Sans and BrandMark. The tour now shows screenshots of the refined app with prewritten sample classroom content; it replaces the illustrative HTML subject boards and overlapping paper mockups.\n\nThe teacher workspace now shares the landing page’s warm paper, green-charcoal ink, restrained lavender selection and soft material edges. It retains the existing setup/editor columns, stacked mobile layout, field order, sticky creation actions, history workflow and save behavior. This is a visual refinement of the working UI, not a new information architecture.\n\nHomebase extends the established teacher workspace with a movable classroom board. Its tools use the same green-charcoal ink, warm paper, lavender, butter and sage, with locally bundled Bitter and Inter. A quiet sage-neutral board backing separates smooth tool surfaces without adding a new visual identity. The original activity presentation and PNG contracts continue to govern their own routes.",
     "keyCharacteristics": [
       "Actual workspace, setup, presentation and history screenshots make the product tangible.",
       "Warm paper, pastel demonstration fields and dark green-charcoal text.",
@@ -590,7 +734,11 @@
       "Restrained, once-only motion and explicit reduced-motion behavior.",
       "Translucent glass navigation and demo chrome, with opaque reading surfaces.",
       "Smooth, opaque operating surfaces above far-background neutral grain.",
-      "Familiar teacher workflows with shared Boardwork ink, paper, selection and edges."
+      "Familiar teacher workflows with shared Boardwork ink, paper, selection and edges.",
+      "A twelve-column board gives practical classroom tools a shared spatial rhythm.",
+      "Smooth, opaque tools use the established paper and pastel surfaces.",
+      "A container-sized timer stays readable in the board and in timer-only focus.",
+      "Layout controls yield to the classroom content during presentation."
     ],
     "rules": [
       {
@@ -612,6 +760,11 @@
         "name": "The Operating Surface Rule",
         "body": "Grain belongs only to the far workspace background. Cards, fields, overlays and board-reading surfaces stay opaque and smooth. Main-app surfaces use solid colors, with no gradient treatment.",
         "section": "Colors"
+      },
+      {
+        "name": "The Live Tool Rule",
+        "body": "Presentation and timer focus change the framing of the existing mounted tools. They must preserve the running timer and its live controls rather than recreate its state.",
+        "section": "components"
       }
     ],
     "dos": [
@@ -624,7 +777,12 @@
       "Do preserve the existing workspace layout, actions, content, save model and keyboard behavior.",
       "Do confine neutral grain to the far background and keep UI surfaces smooth and opaque.",
       "Do use the shared ink, paper, selection, border, focus and corner tokens across operating controls and portals.",
-      "Do preserve user-selected class colors and presentation themes, along with the student-reading and PNG contracts."
+      "Do preserve user-selected class colors and presentation themes, along with the student-reading and PNG contracts.",
+      "Do reuse the existing paper, ink and pastel primitives for Homebase tools.",
+      "Do keep the twelve-column board rhythm and switch to ordered stacked tools at the Homebase mobile breakpoint.",
+      "Do size the timer from its face container and preserve a circular ring on narrow screens.",
+      "Do preserve mounted live tools, scoped keyboard focus and trigger return during presentation and timer focus.",
+      "Do pair traffic-light color with a labeled, visibly selected control."
     ],
     "donts": [
       "Don’t apply this landing extension to the teacher workspace, live Present or PNG export.",
@@ -634,7 +792,10 @@
       "Don’t add invented adoption figures, customer evidence, pricing, measured learning gains or live-generation claims to the product tour.",
       "Don’t carry the landing gradient or sheen treatment onto main-app surfaces.",
       "Don’t add grain to cards, fields, dialogs, editable text, student boards or PNG exports.",
-      "Don’t turn operational labels into display typography or add marketing motion to the workflow."
+      "Don’t turn operational labels into display typography or add marketing motion to the workflow.",
+      "Don’t apply landing gradients, glass or grain to the Homebase board or its tools.",
+      "Don’t promote compact handle radii or functional timer sizes into global control or heading defaults.",
+      "Don’t apply the Homebase board grid, type fitting or timer-focus framing to the original activity Present or PNG export."
     ]
   }
 }

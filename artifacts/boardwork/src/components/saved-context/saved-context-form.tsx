@@ -36,6 +36,7 @@ interface SavedContextFormProps {
   initialData: SavedContext | null;
   categories: ContextCategory[];
   onClose: () => void;
+  onBusyChange?: (busy: boolean) => void;
   onSaved: (id: string) => void;
   onArchived: (id: string) => void;
   onScopeChange: (id: string, newScope: string, classId?: string | null) => void;
@@ -61,11 +62,13 @@ export function SavedContextForm({
   initialData,
   categories,
   onClose,
+  onBusyChange,
   onSaved,
   onArchived,
   onScopeChange,
 }: SavedContextFormProps) {
   const queryClient = useQueryClient();
+  const labelInput = useRef<HTMLInputElement>(null);
   const [label, setLabel] = useState(initialData?.label || "");
   const [details, setDetails] = useState(initialData?.details || "");
   const [categoryId, setCategoryId] = useState<string | null>(initialData?.categoryId || null);
@@ -85,8 +88,14 @@ export function SavedContextForm({
   const isSaving = createMut.isPending || updateMut.isPending || createCatMut.isPending;
   const isArchiving = archiveMut.isPending;
 
+  useEffect(() => {
+    onBusyChange?.(isSaving || isArchiving);
+    return () => onBusyChange?.(false);
+  }, [isSaving, isArchiving, onBusyChange]);
+
   const mountedRef = useRef(true);
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
       mountedRef.current = false;
     };
@@ -95,6 +104,7 @@ export function SavedContextForm({
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!label.trim()) {
+      labelInput.current?.focus();
       setError("Label is required.");
       return;
     }
@@ -200,13 +210,13 @@ export function SavedContextForm({
         </Button>
         <div className="flex-1">
           <DialogTitle>{initialData ? "Edit context" : "Create context"}</DialogTitle>
-          <DialogDescription className="sr-only">Form to create or edit a saved context snippet.</DialogDescription>
+          <DialogDescription>Save guidance you want to use again, such as a teaching strategy or classroom routine.</DialogDescription>
         </div>
       </DialogHeader>
 
       <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-4 space-y-5">
         {error && (
-          <div className="text-sm font-medium text-destructive bg-destructive/10 p-2 rounded-md" data-testid="context-form-error">
+          <div className="text-sm font-medium text-destructive bg-destructive/10 p-2 rounded-md" role="alert" id="context-form-error" data-testid="context-form-error">
             {error}
           </div>
         )}
@@ -214,6 +224,10 @@ export function SavedContextForm({
         <div className="space-y-2">
           <Label htmlFor="context-label">Label</Label>
           <Input
+            ref={labelInput}
+            aria-required="true"
+            aria-invalid={!!error && !label.trim()}
+            aria-describedby={error && !label.trim() ? "context-form-error" : undefined}
             id="context-label"
             value={label}
             onChange={(e) => {

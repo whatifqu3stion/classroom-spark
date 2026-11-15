@@ -58,6 +58,27 @@ describe('InlineEditor', () => {
     await waitFor(() => expect(screen.queryByRole('toolbar')).not.toBeInTheDocument());
   });
 
+  it('captures the complete native keyboard selection before tabbing into formatting', async () => {
+    render(<InlineEditor value="Study the diagram." onChange={vi.fn()} />);
+    const textbox = screen.getByRole('textbox') as HTMLElement & { editor: Editor };
+    await act(async () => {
+      textbox.editor.commands.focus();
+      textbox.editor.commands.setTextSelection({ from: 1, to: 5 });
+    });
+    await screen.findByRole('toolbar');
+    const text = textbox.querySelector('p')!.firstChild!;
+    const native = document.createRange();
+    native.setStart(text, 0);
+    native.setEnd(text, 5);
+    window.getSelection()!.removeAllRanges();
+    window.getSelection()!.addRange(native);
+    fireEvent.keyDown(textbox, { key: 'Tab' });
+    expect(textbox.editor.state.selection.to).toBe(6);
+    expect(screen.getByRole('button', { name: 'Bold' })).toHaveFocus();
+    await userEvent.click(screen.getByRole('button', { name: 'Highlight' }));
+    expect(textbox.querySelector('mark')).toHaveTextContent('Study');
+  });
+
   it('expands partial formula selections for applying and clearing marks', async () => {
     const onChange = vi.fn();
     render(<InlineEditor value={'Read $x^2$ now.'} onChange={onChange} />);

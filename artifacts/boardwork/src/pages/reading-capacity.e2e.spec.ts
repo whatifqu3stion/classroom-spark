@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { installReadingCapacityFixture } from "../test/fixtures/reading-capacity-fixture";
 
 const viewports = [
@@ -126,7 +127,7 @@ for (const theme of themes) {
       test(`Design Critique after ${theme} ${mode} ${viewport.width}x${viewport.height}`, async ({
         page,
       }, testInfo) => {
-       const evidenceDir = resolve("evidence/reading-capacity/after", testInfo.project.name);
+       const evidenceDir = testInfo.outputPath("reading-capacity");
       await mkdir(evidenceDir, { recursive: true });
       const { activityId } = await installReadingCapacityFixture(page, withVisual, theme);
       await page.setViewportSize(viewport);
@@ -139,18 +140,30 @@ for (const theme of themes) {
       await expect(liveSurface.locator(".presentation-prompt u")).toHaveText("frustration");
       const geometry = await readGeometry(page);
       expect(geometry.document.scrollWidth).toBeLessThanOrEqual(viewport.width);
-       const overflow = await liveSurface.locator(
-         ".presentation-task, .presentation-prompts, .presentation-prompt",
-       ).evaluateAll((elements) => elements.some((element) =>
-         element.scrollWidth > element.clientWidth + 1 ||
-         element.scrollHeight > element.clientHeight + 1,
-       ));
-       expect(overflow, "authored marked text must not clip").toBe(false);
+      const clippedText = await liveSurface.locator(
+        ".presentation-task, .presentation-prompt",
+      ).evaluateAll((elements) => elements.some((element) => {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        const text = range.getBoundingClientRect();
+        // Visible glyph overhang is not clipping. Test the actual text bounds
+        // against every ancestor that clips or scrolls it.
+        for (let ancestor: Element | null = element; ancestor; ancestor = ancestor.parentElement) {
+          const style = getComputedStyle(ancestor);
+          const rect = ancestor.getBoundingClientRect();
+          if (/(hidden|clip|auto|scroll)/.test(style.overflowX) &&
+              (text.left < rect.left - 1 || text.right > rect.right + 1)) return true;
+          if (/(hidden|clip|auto|scroll)/.test(style.overflowY) &&
+              (text.top < rect.top - 1 || text.bottom > rect.bottom + 1)) return true;
+        }
+        return false;
+      }));
+      expect(clippedText, "authored marked text must not clip").toBe(false);
       if (viewport.width >= 1280) {
         expect(geometry.document.scrollHeight).toBeLessThanOrEqual(viewport.height);
         expect(geometry.content!.bottom).toBeLessThan(viewport.height - 24);
       }
-      expect(geometry.task!.fontFamily).toContain("Inter");
+      expect(geometry.task!.fontFamily).toContain("Bitter");
       if (viewport.width >= 700 && viewport.width >= viewport.height) {
         expect(Number.parseFloat(geometry.task!.fontSize)).toBeGreaterThanOrEqual(24);
         expect(Number.parseFloat(geometry.firstPrompt!.fontSize)).toBeGreaterThanOrEqual(24);
@@ -174,7 +187,7 @@ for (const theme of themes) {
             beforeSize,
           );
           const before = JSON.parse(await readFile(resolve(
-            "evidence/reading-capacity/before",
+            fileURLToPath(new URL("../../evidence/reading-capacity/before/", import.meta.url)),
             `${mode}-${viewport.width}x${viewport.height}.json`,
           ), "utf8"));
           expect(Number.parseFloat(geometry.firstPrompt!.fontSize)).toBeGreaterThan(
@@ -319,7 +332,7 @@ test("converges bounded probes across split, mode, font, and fullscreen changes"
 });
 
 test("fixed editor-preview and PNG-export baseline geometry", async ({ page }, testInfo) => {
-  const evidenceDir = resolve("evidence/reading-capacity/after", testInfo.project.name);
+  const evidenceDir = testInfo.outputPath("reading-capacity");
   await mkdir(evidenceDir, { recursive: true });
   const { activityId, activity } = await installReadingCapacityFixture(page, true);
   await page.setViewportSize({ width: 1280, height: 720 });
@@ -382,7 +395,7 @@ test("fixed editor-preview and PNG-export baseline geometry", async ({ page }, t
     };
   });
   const fixedBaseline = JSON.parse(await readFile(
-    resolve("evidence/reading-capacity/before/fixed-layouts-1280x720.json"),
+    new URL("../../evidence/reading-capacity/before/fixed-layouts-1280x720.json", import.meta.url),
     "utf8",
   ));
   const actual = { editorPreview: editorGeometry, export: exportGeometry };

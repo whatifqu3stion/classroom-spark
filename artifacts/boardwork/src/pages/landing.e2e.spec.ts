@@ -1,5 +1,79 @@
 import { expect, test } from "@playwright/test";
 
+for (const width of [1440, 390]) {
+  test(`expanded features show readable screenshots and open their full view at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const apiRequests: string[] = [];
+    await page.route("**/api/**", route => {
+      apiRequests.push(route.request().url());
+      return route.abort();
+    });
+    await page.goto("/");
+    for (const [label, filename] of [
+      ["lesson routines", "lesson-routines"],
+      ["participation tools", "participation"],
+      ["saved teaching guidance", "teaching-context"],
+    ]) {
+      const trigger = page.getByRole("button", { name: `Enlarge ${label} screenshot`, exact: true });
+      await trigger.scrollIntoViewIfNeeded();
+      const image = trigger.getByRole("img");
+      await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
+      const variant = width < 640 && filename !== "teaching-context" ? "-mobile" : "";
+      await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.currentSrc)).toContain(`${filename}${variant}.png`);
+      await trigger.click();
+      await expect(page.getByRole("dialog").getByRole("img")).toHaveAttribute("src", new RegExp(`${filename}\\.png$`));
+      await page.keyboard.press("Escape");
+      await expect(trigger).toBeFocused();
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(apiRequests).toEqual([]);
+  });
+}
+
+test("opening the workspace loads the editable app", async ({ page }) => {
+  await page.route("**/api/app-state", (route) =>
+    route.fulfill({
+      json: {
+        activeClassId: "class-1",
+        classes: [
+          {
+            id: "class-1",
+            name: "Advisory",
+            grade: "5",
+            subject: "Science",
+            color: "#2563eb",
+            defaultDuration: 7,
+            defaultDeviceMode: "off",
+            arrivalRoutine: null,
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z",
+          },
+        ],
+        chips: [],
+        instructionalContexts: [],
+        units: [],
+        activities: [],
+      },
+    }),
+  );
+  await page.route("**/api/saved-context?*", (route) =>
+    route.fulfill({ json: { items: [], categories: [] } }),
+  );
+  await page.route("**/api/auth/status", (route) =>
+    route.fulfill({ json: { passwordRequired: false, authenticated: true } }),
+  );
+  await page.goto("/");
+  await page
+    .getByRole("link", { name: "Open your workspace", exact: true })
+    .first()
+    .click();
+  await expect(page).toHaveURL(/\/app$/);
+  await expect(
+    page.getByRole("heading", { name: "What are students working on today?" }),
+  ).toBeVisible();
+  await expect(page.getByTestId("button-blank")).toBeVisible();
+});
+
 test("the public product tour shows real UI captures without teacher data or AI requests", async ({
   page,
 }) => {
@@ -10,7 +84,7 @@ test("the public product tour shows real UI captures without teacher data or AI 
   });
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "Make the first minutes matter." }),
+    page.getByRole("heading", { name: "Less juggling. More teaching." }),
   ).toBeVisible();
   await expect(page.getByRole("tabpanel").getByRole("img")).toHaveAttribute(
     "src",

@@ -44,6 +44,10 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: { input: {
+      main: path.resolve(import.meta.dirname, "index.html"),
+      bridge: path.resolve(import.meta.dirname, "warmups/paper-bridges.html"),
+    } },
   },
   server: {
     port,

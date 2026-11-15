@@ -19,7 +19,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "PORT=19516 BASE_PATH=/ pnpm run dev",
+    command: "PORT=19516 BASE_PATH=/ pnpm exec vite --config vite.config.ts --host 127.0.0.1",
     url: "http://127.0.0.1:19516",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

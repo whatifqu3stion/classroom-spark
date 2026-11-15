@@ -10,7 +10,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { SavedContextForm } from "./saved-context-form";
 
@@ -42,11 +41,13 @@ export function SavedContextPicker({
   onCloseFocus,
 }: SavedContextPickerProps) {
   const [search, setSearch] = useState("");
+  const [formBusy, setFormBusy] = useState(false);
   const [editingItem, setEditingItem] = useState<SavedContext | "new" | null>(null);
   const previousEditId = useRef<string | null>(null);
 
   // Close form when dialog closes
   const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen && formBusy) return;
     if (!newOpen) {
       setEditingItem(null);
       setSearch("");
@@ -67,7 +68,7 @@ export function SavedContextPicker({
   useEffect(() => {
     if (editingItem === null && previousEditId.current) {
       const id = previousEditId.current;
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         if (id === "new") {
           const btn = document.querySelector(`[data-testid="button-create-context-picker"]`) as HTMLElement;
           btn?.focus();
@@ -77,7 +78,9 @@ export function SavedContextPicker({
         }
         previousEditId.current = null;
       }, 0);
+      return () => clearTimeout(timeout);
     }
+    return undefined;
   }, [editingItem]);
 
   const toggleSelection = useCallback(
@@ -99,7 +102,7 @@ export function SavedContextPicker({
     let items = data.items.filter((item) => !item.archived);
 
     if (search.trim()) {
-      const q = search.toLowerCase();
+      const q = search.trim().toLowerCase();
       items = items.filter(
         (item) =>
           item.label.toLowerCase().includes(q) ||
@@ -163,6 +166,8 @@ export function SavedContextPicker({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         className="max-h-[92dvh] max-w-md overflow-hidden flex flex-col p-0 gap-0"
+        onEscapeKeyDown={(event) => { if (formBusy) event.preventDefault(); }}
+        onPointerDownOutside={(event) => { if (formBusy) event.preventDefault(); }}
         onCloseAutoFocus={(event) => {
           if (onCloseFocus) {
             event.preventDefault();
@@ -175,6 +180,7 @@ export function SavedContextPicker({
             classId={classId}
             initialData={editingItem === "new" ? null : editingItem}
             categories={data?.categories || []}
+            onBusyChange={setFormBusy}
             onClose={() => setEditingItem(null)}
             onSaved={(newId) => {
               if (editingItem === "new") {
@@ -203,8 +209,8 @@ export function SavedContextPicker({
           <>
             <DialogHeader className="p-4 pb-2 pr-12 text-left">
               <DialogTitle>Saved context</DialogTitle>
-              <DialogDescription className="sr-only">
-                Select predefined contexts to shape the generated activity.
+              <DialogDescription>
+                Choose teaching strategies, learning goals, or routines to guide this activity.
               </DialogDescription>
             </DialogHeader>
 
@@ -229,20 +235,21 @@ export function SavedContextPicker({
               </div>
             )}
 
-            <ScrollArea className="flex-1 min-h-[50vh]">
+            <div className="min-h-0 overflow-y-auto">
               {isLoading && !isError ? (
-                <div className="p-8 text-center text-sm text-muted-foreground">Loading...</div>
+                <div className="p-8 text-center text-sm text-muted-foreground" role="status">Loading your saved guidance…</div>
               ) : isError && !data ? (
                 <div className="p-8 flex flex-col items-center justify-center gap-3">
-                  <div className="text-sm text-destructive font-medium">Failed to load saved contexts.</div>
+                  <div className="text-sm text-destructive font-medium">Your saved guidance couldn’t load. Try again.</div>
                   <Button variant="outline" size="sm" onClick={() => onRefetch()} disabled={isFetching} data-testid="button-picker-retry">
                     {isFetching && <Loader2 className="mr-2 size-3 animate-spin" />}
                     Retry
                   </Button>
                 </div>
               ) : groupedItems.length === 0 ? (
-                <div className="p-8 text-center text-sm text-muted-foreground">
-                  {search ? "No matches found." : "No saved context yet."}
+                <div className="p-6 text-center text-sm text-muted-foreground">
+                  <p role="status">{search.trim() ? "No matching guidance." : "Save a teaching strategy or routine here, then use it again across activities."}</p>
+                  {search.trim() && <Button variant="ghost" size="sm" onClick={() => setSearch("")}>Clear search</Button>}
                 </div>
               ) : (
                 <div className="p-2 pb-4 space-y-4">
@@ -261,7 +268,7 @@ export function SavedContextPicker({
                               key={item.id}
                               className={cn(
                                 "flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-muted focus-within:bg-muted transition-colors",
-                                isSelected && "bg-muted"
+                                isSelected && "bg-accent"
                               )}
                             >
                               <button
@@ -306,12 +313,11 @@ export function SavedContextPicker({
                   ))}
                 </div>
               )}
-            </ScrollArea>
+            </div>
 
-            <div className="p-4 border-t bg-background">
+            <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t bg-card px-4 py-3">
               <Button
-                className="w-full hover:bg-muted hover:text-foreground"
-                variant="outline"
+                variant="ghost"
                 onClick={() => handleEditClick("new")}
                 disabled={selectedIds.length >= 20 || isFetching || (isError && !data)}
                 title={selectedIds.length >= 20 ? "Remove a selected item before creating and selecting another context." : undefined}
@@ -320,6 +326,10 @@ export function SavedContextPicker({
                 <Plus className="mr-2 size-4" />
                 Create context
               </Button>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-muted-foreground" role="status">{selectedIds.length} selected</span>
+                <Button onClick={() => handleOpenChange(false)}>Done</Button>
+              </div>
             </div>
           </>
         )}

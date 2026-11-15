@@ -12,7 +12,7 @@ import History from '@tiptap/extension-history';
 import Placeholder from '@tiptap/extension-placeholder';
 import Highlight from '@tiptap/extension-highlight';
 import { Extension } from '@tiptap/core';
-import { Plugin, PluginKey, type Selection } from '@tiptap/pm/state';
+import { Plugin, PluginKey, TextSelection, type Selection } from '@tiptap/pm/state';
 import { Bold as BoldIcon, Highlighter, Underline as UnderlineIcon, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -34,6 +34,7 @@ export interface InlineEditorProps {
   onChange: (value: string, runs?: InlineTextRun[]) => void;
   placeholder?: string;
   multiline?: boolean;
+  toolbar?: 'selection' | 'fixed';
   className?: string;
   presentationTheme?: PresentationThemeSelection | null;
   'aria-label'?: string;
@@ -155,6 +156,7 @@ export function InlineEditor({
   onChange,
   placeholder = "",
   multiline = false,
+  toolbar = "selection",
   className,
   presentationTheme,
   'aria-label': ariaLabel,
@@ -243,7 +245,20 @@ export function InlineEditor({
           view.dispatch(view.state.tr.setMeta(menuKey, "hide"));
           return true;
         }
-        if (event.key === "Tab" && !event.shiftKey && !view.state.selection.empty &&
+        if (event.key === "Tab" && !event.shiftKey) {
+          // Native Shift+Arrow selection can be one selectionchange event ahead
+          // of ProseMirror. Capture it before focus moves into the toolbar, or
+          // the last selected character can be left out of the formatting.
+          const selection = view.dom.ownerDocument.getSelection();
+          if (selection?.anchorNode && selection.focusNode &&
+              view.dom.contains(selection.anchorNode) && view.dom.contains(selection.focusNode)) {
+            const anchor = view.posAtDOM(selection.anchorNode, selection.anchorOffset);
+            const head = view.posAtDOM(selection.focusNode, selection.focusOffset);
+            const next = TextSelection.create(view.state.doc, anchor, head);
+            if (!next.eq(view.state.selection)) view.dispatch(view.state.tr.setSelection(next));
+          }
+        }
+        if (toolbar === "selection" && event.key === "Tab" && !event.shiftKey && !view.state.selection.empty &&
           !dismissedSelection.current?.eq(view.state.selection) && toolbarRef.current?.isConnected) {
           toolbarRef.current.querySelector("button")?.focus();
           return true;
@@ -293,7 +308,7 @@ export function InlineEditor({
   }, [value, runs, editor]);
 
   useEffect(() => {
-    if (!editor || editor.isDestroyed || !toolbarRef.current) return;
+    if (toolbar === "fixed" || !editor || editor.isDestroyed || !toolbarRef.current) return;
     
     const plugin = BubbleMenuPlugin({
       pluginKey: menuKey,
@@ -324,15 +339,15 @@ export function InlineEditor({
     return () => {
       editor.unregisterPlugin(menuKey);
     };
-  }, [editor, menuKey, menuElement]);
+  }, [editor, menuKey, menuElement, toolbar]);
 
   if (!editor) return null;
 
   const handleToolbarKeydown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
       e.preventDefault();
-      editor.commands.focus();
       dismissedSelection.current = editor.state.selection;
+      editor.view.focus();
       editor.view.dispatch(editor.state.tr.setMeta(menuKey, "hide"));
       return;
     }
@@ -351,10 +366,7 @@ export function InlineEditor({
     }
   };
 
-  return (
-    <div className="relative w-full inline-editor-wrapper" style={getInlineHighlightStyle(presentationTheme)}>
-      <EditorContent editor={editor} className="w-full" />
-      {createPortal(
+  const formattingToolbar = (
         <div 
           ref={toolbarRef}
           role="toolbar"
@@ -459,7 +471,12 @@ export function InlineEditor({
           <TooltipContent>Clear formatting</TooltipContent>
           </Tooltip>
         </div>
-      , menuElement)}
+  );
+  return (
+    <div className="relative w-full inline-editor-wrapper" style={getInlineHighlightStyle(presentationTheme)}>
+      {toolbar === "fixed" && formattingToolbar}
+      <EditorContent editor={editor} className="w-full" />
+      {toolbar === "selection" && createPortal(formattingToolbar, menuElement)}
     </div>
   );
 }

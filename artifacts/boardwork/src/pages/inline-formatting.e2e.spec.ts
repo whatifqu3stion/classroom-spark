@@ -188,11 +188,11 @@ test("desktop formatting persists, retries, reopens, duplicates, presents, and e
 
   await toolbar.getByRole("button", { name: "Clear formatting", exact: true }).click();
   await expect(task.locator("strong, u, mark")).toHaveCount(0);
-  await task.press("Control+z");
+  await task.press("ControlOrMeta+z");
   await expectMarkedText(task, "mark", "evidence carefully");
-  await task.press("Control+Shift+z");
+  await task.press("ControlOrMeta+Shift+z");
   await expect(task.locator("strong, u, mark")).toHaveCount(0);
-  await task.press("Control+z");
+  await task.press("ControlOrMeta+z");
   await expectMarkedText(task, "strong", "evidence carefully");
 
   await expect.poll(() => fixture.getPatchBodies().length).toBeGreaterThan(0);
@@ -308,10 +308,11 @@ test("narrow keyboard and touch-sized formatting preserves Unicode, breaks, and 
   const toolbar = formattingToolbar(page);
   await expect(toolbar).toBeHidden();
   await task.click();
-  await task.press("Control+Home");
+  await task.press(process.platform === "darwin" ? "Meta+ArrowUp" : "Control+Home");
   for (let index = 0; index < "Study".length; index += 1) {
     await task.press("Shift+ArrowRight");
   }
+  await expect.poll(() => page.evaluate(() => window.getSelection()?.toString())).toBe("Study");
   await expect(toolbar).toBeVisible();
   await task.press("Tab");
   await expect(toolbar.getByRole("button", { name: "Bold", exact: true })).toBeFocused();

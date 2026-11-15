@@ -93,7 +93,7 @@ export function UnitFormDialog({
         <DialogHeader>
           <DialogTitle>{initialUnit ? "Edit unit" : "Add a reusable unit"}</DialogTitle>
           <DialogDescription>
-            Keep unit details separate from the class so you can reuse them later.
+            Save the topics and skills you’ll return to across several lessons.
           </DialogDescription>
         </DialogHeader>
 
@@ -164,7 +164,7 @@ export function UnitFormDialog({
               dir="auto"
               value={values.standardsObjectives}
               onChange={(event) => update("standardsObjectives", event.target.value)}
-              placeholder="Optional short notes—not a standards lookup"
+              placeholder="e.g. Explain a prediction using evidence"
               className="min-h-16 resize-y boardwork-user-content"
               data-testid="textarea-unit-objectives"
             />

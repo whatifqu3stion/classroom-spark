@@ -173,17 +173,19 @@ export default function History() {
     <Shell>
       <div className="container mx-auto px-4 md:px-8 py-8 max-w-5xl min-h-[calc(100dvh-3.5rem)]">
         <div className="flex flex-col gap-4 mb-8 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="boardwork-page-title text-2xl font-bold tracking-tight text-foreground">History</h1>
+          <div className="min-w-0">
+            <h1 className="boardwork-page-title text-2xl font-bold tracking-tight text-foreground">History</h1>
+            <p className="boardwork-page-description">Find what worked. Adapt it for your next class.</p>
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <div
-              role="tablist"
+              role="group"
               aria-label="History view"
               className="boardwork-history-tabs inline-flex items-center rounded-md border bg-muted/30 p-1"
             >
               <button
                 type="button"
-                role="tab"
-                aria-selected={historyView === "all"}
+                aria-pressed={historyView === "all"}
                 onClick={() => setHistoryView("all")}
                 className={`rounded px-3 py-1.5 text-sm font-medium transition-colors ${
                   historyView === "all"
@@ -196,8 +198,7 @@ export default function History() {
               </button>
               <button
                 type="button"
-                role="tab"
-                aria-selected={historyView === "favorites"}
+                aria-pressed={historyView === "favorites"}
                 onClick={() => setHistoryView("favorites")}
                 className={`rounded px-3 py-1.5 text-sm font-medium transition-colors ${
                   historyView === "favorites"
@@ -315,7 +316,7 @@ export default function History() {
                   Clear filters
                 </Button>
               </>
-            ) : historyView === "favorites" && favoriteActivities.length > 0 ? (
+            ) : historyView === "favorites" ? (
               <>
                 <h3 className="text-lg font-medium text-foreground mb-2">No favorites yet</h3>
                 <p className="text-muted-foreground max-w-sm mb-6">
@@ -329,10 +330,10 @@ export default function History() {
               <>
                 <h3 className="text-lg font-medium text-foreground mb-2">No activities yet</h3>
                 <p className="text-muted-foreground max-w-sm mb-6">
-                   Create a board to see it here.
+                   Your saved activities will appear here, ready to reopen, adapt, or present.
                 </p>
                 <Button asChild variant="outline">
-                  <Link href="/app" data-testid="link-history-empty-workspace">Back to Workspace</Link>
+                  <Link href="/app" data-testid="link-history-empty-workspace">Create a board</Link>
                 </Button>
               </>
             )}
@@ -349,12 +350,12 @@ export default function History() {
                 .filter((label): label is string => Boolean(label));
               return (
                 <div key={activity.id} className="boardwork-history-item group flex min-w-0 items-center justify-between rounded-[var(--workspace-panel-radius)] border bg-card p-4 shadow-teacher-card transition-colors hover:border-foreground/20" data-testid={`history-item-${activity.id}`}>
-                  <div className="flex items-center gap-4 min-w-0 flex-1">
+                  <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
                      <Tooltip>
                        <TooltipTrigger asChild>
                          <button
                            onClick={() => handleFavorite(activity.id, !activity.favorite)}
-                           className={`shrink-0 rounded-md p-1 transition-colors ${activity.favorite ? "text-amber-500 hover:text-amber-600" : "text-muted-foreground/30 hover:text-muted-foreground"}`}
+                           className={`shrink-0 rounded-md p-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${activity.favorite ? "text-foreground hover:text-foreground/80" : "text-muted-foreground hover:text-foreground"}`}
                             aria-label={`${activity.favorite ? "Unfavorite" : "Favorite"} ${activityLabel}`}
                            disabled={favoriteMutation.isPending}
                            data-testid={`button-favorite-${activity.id}`}
@@ -368,12 +369,12 @@ export default function History() {
                      </Tooltip>
                     
                     <Link href={`/activity/${activity.id}`} className="flex-1 min-w-0 block" data-testid={`link-open-${activity.id}`}>
-                      <div className="flex items-baseline gap-2 mb-1">
-                         <span className="font-semibold text-foreground truncate block boardwork-user-content" dir="auto">
+                      <div className="flex min-w-0 flex-col items-start gap-1 mb-1 sm:flex-row sm:items-baseline sm:gap-2">
+                         <span className="font-semibold text-foreground line-clamp-2 sm:line-clamp-1 min-w-0 boardwork-user-content" dir="auto">
                              <FormulaText>{activityLabel}</FormulaText>
                         </span>
                         {activity.eyebrow && (
-                           <span className="text-[10px] font-bold tracking-wider text-muted-foreground shrink-0 px-1.5 py-0.5 rounded-sm bg-muted/50 boardwork-user-content" dir="auto">
+                           <span className="text-xs font-bold tracking-wider text-muted-foreground shrink-0 px-1.5 py-0.5 rounded-sm bg-muted/50 boardwork-user-content" dir="auto">
                             {activity.eyebrow}
                           </span>
                         )}
